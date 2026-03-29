@@ -1,0 +1,16 @@
+# Ignorar todo el directorio viejo por defecto
+/*
+
+# Excepciones que SI irán a GitHub (Arquitectura Nueva)
+!/frontend/
+!/backend/
+!/.gitignore
+
+# Excepciones comunes
+.DS_Store
+node_modules/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
