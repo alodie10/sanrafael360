@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "categorias",
+  "info": {
+    "singularName": "categoria",
+    "pluralName": "categorias",
+    "displayName": "Categoría",
+    "description": "Categorías principales de negocios (Hoteles, Gastronomía, etc.)"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "nombre",
+      "required": true
+    },
+    "descripcion": {
+      "type": "text"
+    },
+    "icono": {
+      "type": "string",
+      "description": "Nombre del ícono (emoji o clase CSS)"
+    },
+    "imagen": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "negocios": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::negocio.negocio",
+      "mappedBy": "categoria"
+    }
+  }
+}

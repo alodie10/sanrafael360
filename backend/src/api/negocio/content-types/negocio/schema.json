@@ -1,0 +1,91 @@
+{
+  "kind": "collectionType",
+  "collectionName": "negocios",
+  "info": {
+    "singularName": "negocio",
+    "pluralName": "negocios",
+    "displayName": "Negocio",
+    "description": "Directorio de negocios de San Rafael 360"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "nombre",
+      "required": true
+    },
+    "descripcion": {
+      "type": "richtext"
+    },
+    "direccion": {
+      "type": "string"
+    },
+    "telefono": {
+      "type": "string"
+    },
+    "whatsapp": {
+      "type": "string"
+    },
+    "email": {
+      "type": "email"
+    },
+    "website": {
+      "type": "string"
+    },
+    "instagram": {
+      "type": "string"
+    },
+    "facebook": {
+      "type": "string"
+    },
+    "latitud": {
+      "type": "decimal"
+    },
+    "longitud": {
+      "type": "decimal"
+    },
+    "logo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "imagen_portada": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "galeria": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "categoria": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::categoria.categoria",
+      "inversedBy": "negocios"
+    },
+    "verificado": {
+      "type": "boolean",
+      "default": false
+    },
+    "reclamar_habilitado": {
+      "type": "boolean",
+      "default": false,
+      "description": "Toggle: habilita que el dueño reclame este perfil"
+    },
+    "horario_apertura": {
+      "type": "json",
+      "description": "Objeto JSON con horarios por día de la semana"
+    }
+  }
+}
