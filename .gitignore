@@ -1,16 +1,34 @@
-# Ignorar todo el directorio viejo por defecto
-/*
-
-# Excepciones que SI irán a GitHub (Arquitectura Nueva)
-!/frontend/
-!/backend/
-!/.gitignore
-
-# Excepciones comunes
-.DS_Store
+# Dependency folders
 node_modules/
+
+# Next.js build output
+.next/
+
+# Strapi build & cache output
+dist/
+.tmp/
+.cache/
+.strapi/
+
+# Environmental variables (MUST stay local!)
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
+
+# Databases (SQLite)
+*.db
+*.db-journal
+
+# Logs & Temp
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Sensitive files
+id_rsa
+id_rsa.pub
+*.pem
+*.key

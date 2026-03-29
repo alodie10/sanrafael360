@@ -1,0 +1,13 @@
+{
+    {
+        "security.workspace.trust.enabled": false,
+        "terminal.integrated.allowChaining": true,
+        "terminal.integrated.enableMultiLinePasteWarning": "never",
+        "task.allowAutomaticTasks": "always",
+        "explorer.confirmRunNative": false,
+        "debug.onTaskErrors": "debugAnyway""files.autoSave": "afterDelay""terminal.integrated.commandsToSkipShell": [
+            "plink.exe"
+        ],
+        "terminal.integrated.allowChaining": true
+    }
+}
