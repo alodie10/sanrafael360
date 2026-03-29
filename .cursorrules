@@ -1,0 +1,5 @@
+# Reglas del Proyecto: San Rafael 360
+
+- Al finalizar cualquier tarea significativa o al cierre de sesión, siempre subir todos los cambios al repositorio de GitHub (`git push origin master`).
+- Mantener el diseño estético premium y minimalista (Next.js + Vainilla CSS).
+- Priorizar el flujo de trabajo remoto sobre el local.
