@@ -28,8 +28,8 @@ const config = ({ env }) => {
         postgres: {
             connection: (env('DATABASE_URL') ? {
                 connectionString: env('DATABASE_URL'),
-                ssl: env.bool('DATABASE_SSL', false) && {
-                    rejectUnauthorized: env.bool('DATABASE_SSL_REJECT_UNAUTHORIZED', true),
+                ssl: env.bool('DATABASE_SSL', true) && {
+                    rejectUnauthorized: env.bool('DATABASE_SSL_REJECT_UNAUTHORIZED', false),
                 },
                 schema: env('DATABASE_SCHEMA', 'public'),
             } : {
@@ -38,8 +38,8 @@ const config = ({ env }) => {
                 database: env('DATABASE_NAME', 'strapi'),
                 user: env('DATABASE_USERNAME', 'strapi'),
                 password: env('DATABASE_PASSWORD', 'strapi'),
-                ssl: env.bool('DATABASE_SSL', false) && {
-                    rejectUnauthorized: env.bool('DATABASE_SSL_REJECT_UNAUTHORIZED', true),
+                ssl: env.bool('DATABASE_SSL', true) && {
+                    rejectUnauthorized: env.bool('DATABASE_SSL_REJECT_UNAUTHORIZED', false),
                 },
                 schema: env('DATABASE_SCHEMA', 'public'),
             }),
