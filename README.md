@@ -1,38 +1,61 @@
-# San Rafael 360 - Entorno de Desarrollo Remoto y Portable
+# 🚀 Getting started with Strapi
 
-Este repositorio contiene el código fuente de **San Rafael 360** (Next.js + Strapi). Está diseñado para ser **100% portable y remoto**, eliminando la necesidad de infraestructura local pesada.
+Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
 
-## Flujo de Trabajo (Portable)
+### `develop`
 
-Como el desarrollo se realiza contra un **host remoto (Hostinger)**, no necesitas instalar Node.js ni bases de datos en tu computadora local. El proceso para trabajar desde cualquier PC es:
+Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
 
-1. **Clonar**: Baja el código de GitHub.
-2. **Modificar**: Realiza cambios visuales o de lógica en el código.
-3. **Commit \u0026 Push**: Sube los cambios a GitHub.
-4. **Desplegar**: Tus cambios se reflejarán en el dominio remoto configurado (ej: `v2.sanrafael360.com`).
+```
+npm run develop
+# or
+yarn develop
+```
 
-## Estructura del Proyecto
+### `start`
 
-- `/frontend`: Aplicación Next.js (Visual).
-- `/backend`: API de Strapi (Datos y Administración).
-- `/scripts/legacy`: Carpeta con los scripts antiguos de migración, CSVs, ZIPs e imágenes para referencia histórica y seguridad.
+Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-start)
 
-## Configuración de Entorno (Remoto)
+```
+npm run start
+# or
+yarn start
+```
 
-Para que tu editor (VS Code, etc.) reconozca las conexiones, asegúrate de configurar los archivos `.env`:
+### `build`
 
-- `/frontend/.env.local`: Apunta a la URL de Strapi en el servidor remoto.
-- `/backend/.env`: Configura las credenciales de la base de datos PostgreSQL de Hostinger.
+Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-build)
 
-*Usa los archivos `.env.example` de cada carpeta como guía.*
+```
+npm run build
+# or
+yarn build
+```
 
-## Despliegue en Hostinger
+## ⚙️ Deployment
 
-El servidor remoto está configurado para ejecutar Next.js y Strapi. 
-- **Backend Admin**: [https://v2.sanrafael360.com/admin](https://v2.sanrafael360.com/admin)
-- **Frontend Live**: [https://v2.sanrafael360.com](https://v2.sanrafael360.com)
+Strapi gives you many possible deployment options for your project including [Strapi Cloud](https://cloud.strapi.io). Browse the [deployment section of the documentation](https://docs.strapi.io/dev-docs/deployment) to find the best solution for your use case.
 
-## Notas Importantes
+```
+yarn strapi deploy
+```
 
-- **Sin ejecución local**: Para evitar problemas de rendimiento y discrepancias de datos, **no ejecutes `npm install` ni `npm run dev` localmente**.
-- **Base de Datos**: Siempre utiliza la base de datos en la nube (Hostinger) para que los cambios de contenido sean visibles desde todas tus notebooks.
+## 📚 Learn more
+
+- [Resource center](https://strapi.io/resource-center) - Strapi resource center.
+- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation.
+- [Strapi tutorials](https://strapi.io/tutorials) - List of tutorials made by the core team and the community.
+- [Strapi blog](https://strapi.io/blog) - Official Strapi blog containing articles made by the Strapi team and the community.
+- [Changelog](https://strapi.io/changelog) - Find out about the Strapi product updates, new features and general improvements.
+
+Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/strapi). Your feedback and contributions are welcome!
+
+## ✨ Community
+
+- [Discord](https://discord.strapi.io) - Come chat with the Strapi community including the core team.
+- [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
+- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
+
+---
+
+<sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>
