@@ -1,5 +1,0 @@
-[phases.install]
-cmds = ['npm install']
-
-[start]
-cmd = 'node railway-db-test.js; npm start'
