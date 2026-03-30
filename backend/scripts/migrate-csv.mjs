@@ -15,9 +15,9 @@ import { Readable } from 'stream';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-const STRAPI_URL = 'http://localhost:1337';
+const STRAPI_URL = process.env.STRAPI_URL || 'https://mediumturquoise-dinosaur-686641.hostingersite.com';
 const STRAPI_TOKEN = process.env.STRAPI_TOKEN || '15eb44fac98bef78f58aa794d90486352e5b2d997de60c8de87c2b6d670dbb09479f1fee55e48b3949b00f0d2fad335913020ab63c22c0e0478ab56a5fa6e38798f56968b9f6e9593c3ffbe1a2273187481d610714c801b5a9b47181432740da11664e09b8dd1481197c3264076d8b6352d0ed2d7eba47ec81871acdb9c75899';
-const CSV_PATH = path.resolve(__dirname, '../../importar_listeo_geocodificado.csv');
+const CSV_PATH = path.resolve(__dirname, '../../scripts/legacy/importar_listeo_geocodificado.csv');
 // ────────────────────────────────────────────────────────────────────────────
 
 const jsonHeaders = {
