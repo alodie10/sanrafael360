@@ -47,24 +47,43 @@ export default function Home() {
           </div>
         ) : (
           <div className={styles.grid}>
-            {negocios.map((negocio: any) => (
-              <div key={negocio.id} className={styles.card}>
-                <div className={styles.cardHeader}>
-                  {negocio.imagen_portada?.url ? (
-                    <img src={getStrapiMedia(negocio.imagen_portada.url)!} alt={negocio.nombre} loading="lazy" />
-                  ) : (
-                    <div className={styles.placeholder}>🖼️</div>
-                  )}
-                </div>
-                <div className={styles.cardBody}>
-                  <h3>{negocio.nombre}</h3>
-                  <p>{negocio.descripcion?.substring(0, 100)}...</p>
-                  <div className={styles.cardFooter}>
-                    <span>📍 {negocio.direccion || "San Rafael"}</span>
+            {negocios.map((negocio: any) => {
+              const attributes = negocio; // Strapi 5 root attributes
+              const imageUrl = attributes.imagen?.url;
+              
+              return (
+                <div key={negocio.id} className={styles.card}>
+                  <div className={styles.cardHeader}>
+                    {imageUrl ? (
+                      <img 
+                        src={getStrapiMedia(imageUrl)!} 
+                        alt={attributes.nombre} 
+                        className={styles.logoImage}
+                        loading="lazy" 
+                      />
+                    ) : (
+                      <div className={styles.placeholder}>
+                        <span>{attributes.nombre?.charAt(0)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.cardBody}>
+                    <div className={styles.categoryBadge}>
+                      {attributes.categoria?.nombre || "General"}
+                    </div>
+                    <h3 className={styles.cardTitle}>{attributes.nombre}</h3>
+                    <p className={styles.cardDescription}>
+                      {attributes.descripcion 
+                        ? attributes.descripcion.substring(0, 70) + '...' 
+                        : 'Experiencia única en San Rafael.'}
+                    </p>
+                    <div className={styles.cardFooter}>
+                      <span className={styles.location}>📍 {attributes.direccion || "San Rafael"}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
