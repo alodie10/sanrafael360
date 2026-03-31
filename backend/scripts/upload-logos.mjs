@@ -7,9 +7,9 @@ const API_TOKEN = '6ee12bf2e9646870143ec904da3255ac0b8e238cc19d4444e1a296caa7ada
 const MAPPING_PATH = 'c:/sanrafael360/backend/scripts/image_mapping.json';
 
 async function uploadLogos() {
-  console.log('🖼️ Iniciando carga masiva de logos (Versión Railway Final)...');
+  console.log('🖼️ Iniciando carga masiva de logos (Optimizado para 365 Negocios)...');
 
-  const normalize = (s: string) => s ? s.toLowerCase()
+  const normalize = (s) => s ? s.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[–—]/g, '-')
     .replace(/\s+/g, ' ')
@@ -20,33 +20,34 @@ async function uploadLogos() {
   const negResp = await fetch(`${STRAPI_API_URL}/negocios?pagination[limit]=1000`, {
     headers: { Authorization: `Bearer ${API_TOKEN}` }
   });
-  const negsData: any = await negResp.json();
-  const businessIdMap: { [name: string]: number } = {};
-  negsData.data.forEach((n: any) => { businessIdMap[normalize(n.nombre)] = n.id; });
+  const negsData = await negResp.json();
+  const businessIdMap = {};
+  negsData.data.forEach((n) => { businessIdMap[normalize(n.nombre)] = n.id; });
 
-  // 2. Cargar mapeo JSON (Sin BOM)
+  // 2. Cargar y agrupar por negocio único
   const rawMapping = fs.readFileSync(MAPPING_PATH, 'utf-8');
-  const cleanMapping = rawMapping.replace(/^\uFEFF/, '');
-  const mapping = JSON.parse(cleanMapping);
+  const mapping = JSON.parse(rawMapping.replace(/^\uFEFF/, ''));
 
-  const processed = new Set<string>();
+  const uniqueLogos = new Map();
+  mapping.forEach(entry => {
+    const nombre = entry.post_title?.trim();
+    const url = entry._thumbnail_id?.trim();
+    if (nombre && url && url.startsWith('http') && !url.includes('imagen-no-disponible')) {
+      if (!uniqueLogos.has(nombre)) {
+        uniqueLogos.set(nombre, url);
+      }
+    }
+  });
+
+  console.log(`🚀 Procesando ${uniqueLogos.size} logos únicos...`);
   let count = 0;
-  console.log(`Procesando ${mapping.length} entradas de imágenes...`);
 
-  for (const entry of mapping) {
-    const nombreRaw = entry.post_title?.trim();
-    const imageUrl = entry._thumbnail_id?.trim();
-
-    if (!nombreRaw || !imageUrl || imageUrl.includes('imagen-no-disponible') || !imageUrl.startsWith('http')) continue;
-    
+  for (const [nombreRaw, imageUrl] of uniqueLogos.entries()) {
     const nombreNorm = normalize(nombreRaw);
     const businessId = businessIdMap[nombreNorm];
     if (!businessId) continue;
 
-    if (processed.has(nombreNorm)) continue;
-    processed.add(nombreNorm);
-
-    console.log(`🚀 [${++count}/${mapping.length}] Subiendo logo: ${nombreRaw}`);
+    process.stdout.write(`\r🚀 [${++count}/${uniqueLogos.size}] Subiendo: ${nombreRaw.substring(0, 30)}...`);
 
     try {
       const imgResp = await fetch(imageUrl);
@@ -59,26 +60,24 @@ async function uploadLogos() {
       form.append('files', blob, fileName);
       form.append('refId', businessId.toString());
       form.append('ref', 'api::negocio.negocio');
-      form.append('field', 'logo'); // CORRECCIÓN: el campo se llama 'logo' en Strapi 5
+      form.append('field', 'logo');
 
       const uploadResp = await fetch(`${STRAPI_API_URL.replace('/api', '')}/api/upload`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${API_TOKEN}` },
-        body: form as any
+        body: form
       });
 
-      if (uploadResp.ok) {
-        console.log(`✅ OK: ${nombreRaw}`);
-      } else {
+      if (!uploadResp.ok) {
         const err = await uploadResp.json();
-        console.error(`❌ Error en Strapi (${nombreRaw}):`, err.error?.message || 'Error desconocido');
+        console.error(`\n❌ Error en Strapi (${nombreRaw}):`, err.error?.message || 'Error desconocido');
       }
-    } catch (e: any) {
-      console.error(`⚠️ Error al procesar ${nombreRaw}: ${e.message}`);
+    } catch (e) {
+      console.error(`\n⚠️ Error al procesar ${nombreRaw}: ${e.message}`);
     }
   }
 
-  console.log('✅ Finalizado.');
+  console.log('\n✅ Carga de logos finalizada.');
 }
 
 uploadLogos();

@@ -12,42 +12,17 @@
   --color-secondary-l: 52%;
   --color-secondary: hsl(var(--color-secondary-h), var(--color-secondary-s), var(--color-secondary-l));
 
-  /* Light Theme Defaults */
-  --bg-main: #f8fafc;
-  --bg-surface: #ffffff;
-  --bg-surface-glass: rgba(255, 255, 255, 0.7);
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border-color: #e2e8f0;
-  
-  /* Elevación y Sombras Suaves */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
-  --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.3);
-
-  /* Espaciado, Radios */
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-  
-  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Dark Theme forced by default for Premium Aesthetic */
+  --bg-main: #020617;
+  --bg-surface: #0f172a;
+  --bg-surface-glass: rgba(15, 23, 42, 0.6);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #1e293b;
+  --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.2);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-main: #020617;
-    --bg-surface: #0f172a;
-    --bg-surface-glass: rgba(15, 23, 42, 0.6);
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --border-color: #1e293b;
-    --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.2);
-  }
-}
-
+/* Base styles ensure dark mode consistency */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -55,7 +30,7 @@
 }
 
 body {
-  background-color: var(--bg-main);
+  background-color: var(--bg-main) !important;
   color: var(--text-main);
   font-family: var(--font-inter), sans-serif;
   line-height: 1.6;
