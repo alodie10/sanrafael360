@@ -17,33 +17,34 @@ export default {
    * run jobs, or perform some special logic.
    */
   async bootstrap({ strapi }: { strapi: any }) {
-    // Automatizar permisos para el rol Público
     try {
       const publicRole = await strapi.query('plugin::users-permissions.role').findOne({
         where: { type: 'public' },
       });
 
       if (publicRole) {
-        const permissions = [
-          { action: 'api::negocio.negocio.find', role: publicRole.id },
-          { action: 'api::negocio.negocio.findOne', role: publicRole.id },
-          { action: 'api::categoria.categoria.find', role: publicRole.id },
-          { action: 'api::categoria.categoria.findOne', role: publicRole.id },
+        const actions = [
+          'api::negocio.negocio.find',
+          'api::negocio.negocio.findOne',
+          'api::categoria.categoria.find',
+          'api::categoria.categoria.findOne',
         ];
 
-        for (const perm of permissions) {
+        for (const action of actions) {
           const exists = await strapi.query('plugin::users-permissions.permission').findOne({
-            where: { action: perm.action, role: publicRole.id },
+            where: { action, role: publicRole.id },
           });
 
           if (!exists) {
-            await strapi.query('plugin::users-permissions.permission').create({ data: perm });
+            await strapi.query('plugin::users-permissions.permission').create({
+              data: { action, role: publicRole.id, target: null },
+            });
           }
         }
-        console.log('✅ Permisos públicos configurados automáticamente.');
+        console.log('✅ Permisos de Strapi configurados correctamente.');
       }
     } catch (error) {
-      console.error('❌ Error configurando permisos:', error);
+      console.error('❌ Error configurando permisos en bootstrap:', error);
     }
   },
 };
