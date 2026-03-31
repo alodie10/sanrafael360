@@ -9,21 +9,22 @@
 
 .hero {
   position: relative;
-  min-height: 70vh;
+  min-height: 85vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 4rem 2rem;
   overflow: hidden;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: #000;
 }
 
 .heroContent {
   position: relative;
-  z-index: 2;
+  z-index: 10;
   text-align: center;
   max-width: 900px;
-  animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .title {
@@ -307,6 +308,83 @@
   color: var(--text-muted);
 }
 
+/* Carousel Styles */
+.carousel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.carouselImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out, transform 10s linear;
+  transform: scale(1.1);
+}
+
+.carouselImage.active {
+  opacity: 0.6;
+  transform: scale(1);
+}
+
+.heroOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, 
+    rgba(2, 6, 23, 0.3) 0%,
+    rgba(2, 6, 23, 0.7) 100%
+  );
+  z-index: 2;
+}
+
+.logoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s ease;
+}
+
+.cardHeaderImg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.4;
+  filter: blur(10px);
+}
+
+.cardLogoWrapper {
+  position: relative;
+  z-index: 2;
+  width: 100px;
+  height: 100px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 10px;
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cardLogoWrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(40px); }
@@ -314,7 +392,8 @@
 }
 
 @media (max-width: 768px) {
-  .hero { padding: 4rem 1.5rem; }
+  .hero { padding: 4rem 1.5rem; min-height: 60vh; }
   .sectionTitle { font-size: 2.25rem; }
   .container { padding: 4rem 1.5rem; }
+  .title { font-size: 3rem; }
 }

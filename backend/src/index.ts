@@ -16,5 +16,34 @@ export default {
    * This gives you an opportunity to set up your data model,
    * run jobs, or perform some special logic.
    */
-  bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {},
+  async bootstrap({ strapi }: { strapi: any }) {
+    // Automatizar permisos para el rol Público
+    try {
+      const publicRole = await strapi.query('plugin::users-permissions.role').findOne({
+        where: { type: 'public' },
+      });
+
+      if (publicRole) {
+        const permissions = [
+          { action: 'api::negocio.negocio.find', role: publicRole.id },
+          { action: 'api::negocio.negocio.findOne', role: publicRole.id },
+          { action: 'api::categoria.categoria.find', role: publicRole.id },
+          { action: 'api::categoria.categoria.findOne', role: publicRole.id },
+        ];
+
+        for (const perm of permissions) {
+          const exists = await strapi.query('plugin::users-permissions.permission').findOne({
+            where: { action: perm.action, role: publicRole.id },
+          });
+
+          if (!exists) {
+            await strapi.query('plugin::users-permissions.permission').create({ data: perm });
+          }
+        }
+        console.log('✅ Permisos públicos configurados automáticamente.');
+      }
+    } catch (error) {
+      console.error('❌ Error configurando permisos:', error);
+    }
+  },
 };

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import { fetchFromStrapi, getStrapiMedia } from "@/lib/strapi";
+import HeroCarousel from "@/components/home/HeroCarousel";
 
 export default function Home() {
   const [negocios, setNegocios] = useState<any[]>([]);
@@ -13,7 +14,7 @@ export default function Home() {
     const loadData = async () => {
       try {
         const [negRes, catRes] = await Promise.all([
-          fetchFromStrapi("negocios?populate=*&sort=nombre:asc&pagination[pageSize]=24"),
+          fetchFromStrapi("negocios?populate=*&sort=nombre:asc&pagination[pageSize]=50"),
           fetchFromStrapi("categorias?populate=*&sort=nombre:asc")
         ]);
         setNegocios(negRes.data || []);
@@ -29,17 +30,17 @@ export default function Home() {
 
   return (
     <main className={styles.main}>
-      {/* SECCIÓN HERO - CARGA INSTANTÁNEA */}
+      {/* SECCIÓN HERO - PAISAJES REALES */}
       <div className={styles.hero}>
+        <HeroCarousel />
         <div className={styles.heroContent}>
-          <h1 className={styles.title}>Descubre <span>San Rafael</span></h1>
-          <p className={styles.subtitle}>El directorio oficial de la ciudad.</p>
+          <h1 className={styles.title}>Vive <span>San Rafael</span></h1>
+          <p className={styles.subtitle}>Encuentra las mejores experiencias, gastronomía y alojamiento en el corazón de Mendoza.</p>
           <div className={styles.searchContainer}>
-            <input type="text" placeholder="¿Qué buscás?" className={styles.searchInput} />
+            <input type="text" placeholder="¿Qué estás buscando hoy?" className={styles.searchInput} />
             <button className={styles.searchButton}>Buscar</button>
           </div>
         </div>
-        <div className={styles.heroBackground}></div>
       </div>
 
       <div className={styles.container}>
@@ -53,11 +54,11 @@ export default function Home() {
                 {coverUrl ? (
                   <img src={getStrapiMedia(coverUrl)!} alt={cat.nombre} className={styles.categoryImg} />
                 ) : (
-                  <div className={styles.categoryPlaceholder}>📸</div>
+                  <div className={styles.categoryPlaceholder}>🏔️</div>
                 )}
                 <div className={styles.categoryInfo}>
                   <h3>{cat.nombre}</h3>
-                  <span>Descubrir más</span>
+                  <span>{cat.negocios?.length || 0} Lugares</span>
                 </div>
               </div>
             );
@@ -69,42 +70,54 @@ export default function Home() {
         {loading ? (
           <div className={styles.loadingState}>
             <div className={styles.spinner}></div>
-            <p>Buscando lo mejor de San Rafael...</p>
+            <p>Conectando con San Rafael...</p>
+          </div>
+        ) : negocios.length === 0 ? (
+          <div className={styles.loadingState}>
+            <p>No se encontraron negocios aún. Asegúrate de que estén publicados en Strapi.</p>
           </div>
         ) : (
           <div className={styles.grid}>
             {negocios.map((negocio: any) => {
-              const attributes = negocio; // Strapi 5 root attributes
-              const imageUrl = attributes.imagen?.url;
+              const attrs = negocio;
+              const logoUrl = attrs.logo?.url;
+              const coverUrl = attrs.imagen_portada?.url;
               
               return (
                 <div key={negocio.id} className={styles.card}>
                   <div className={styles.cardHeader}>
-                    {imageUrl ? (
-                      <img 
-                        src={getStrapiMedia(imageUrl)!} 
-                        alt={attributes.nombre} 
-                        className={styles.logoImage}
-                        loading="lazy" 
-                      />
-                    ) : (
-                      <div className={styles.placeholder}>
-                        <span>{attributes.nombre?.charAt(0)}</span>
-                      </div>
+                    {/* Imagen de fondo (portada desenfocada) */}
+                    {coverUrl && (
+                      <img src={getStrapiMedia(coverUrl)!} alt="" className={styles.cardHeaderImg} />
                     )}
+                    
+                    {/* Logo central */}
+                    <div className={styles.cardLogoWrapper}>
+                      {logoUrl ? (
+                        <img 
+                          src={getStrapiMedia(logoUrl)!} 
+                          alt={attrs.nombre} 
+                          loading="lazy" 
+                        />
+                      ) : (
+                        <div className={styles.placeholder}>
+                          <span>{attrs.nombre?.charAt(0)}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.cardBody}>
                     <div className={styles.categoryBadge}>
-                      {attributes.categoria?.nombre || "General"}
+                      {attrs.categoria?.nombre || "General"}
                     </div>
-                    <h3 className={styles.cardTitle}>{attributes.nombre}</h3>
+                    <h3 className={styles.cardTitle}>{attrs.nombre}</h3>
                     <p className={styles.cardDescription}>
-                      {attributes.descripcion 
-                        ? attributes.descripcion.substring(0, 70) + '...' 
+                      {attrs.descripcion 
+                        ? attrs.descripcion.replace(/<[^>]*>?/gm, '').substring(0, 80) + '...' 
                         : 'Experiencia única en San Rafael.'}
                     </p>
                     <div className={styles.cardFooter}>
-                      <span className={styles.location}>📍 {attributes.direccion || "San Rafael"}</span>
+                      <span className={styles.location}>📍 {attrs.direccion || "San Rafael"}</span>
                     </div>
                   </div>
                 </div>
