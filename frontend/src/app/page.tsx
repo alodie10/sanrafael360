@@ -6,20 +6,25 @@ import { fetchFromStrapi, getStrapiMedia } from "@/lib/strapi";
 
 export default function Home() {
   const [negocios, setNegocios] = useState<any[]>([]);
+  const [categorias, setCategorias] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadNegocios = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetchFromStrapi("negocios?populate=*&sort=nombre:asc&pagination[pageSize]=24");
-        setNegocios(response.data || []);
+        const [negRes, catRes] = await Promise.all([
+          fetchFromStrapi("negocios?populate=*&sort=nombre:asc&pagination[pageSize]=24"),
+          fetchFromStrapi("categorias?populate=*&sort=nombre:asc")
+        ]);
+        setNegocios(negRes.data || []);
+        setCategorias(catRes.data || []);
       } catch (error) {
-        console.error("Error cargando negocios:", error);
+        console.error("Error cargando datos:", error);
       } finally {
         setLoading(false);
       }
     };
-    loadNegocios();
+    loadData();
   }, []);
 
   return (
@@ -38,6 +43,27 @@ export default function Home() {
       </div>
 
       <div className={styles.container}>
+        <h2 className={styles.sectionTitle}>Explorar por Categoría</h2>
+        <div className={styles.categoryGrid}>
+          {categorias.map((cat: any) => {
+            const coverUrl = cat.imagen_portada?.url;
+            return (
+              <div key={cat.id} className={styles.categoryCard}>
+                <div className={styles.categoryOverlay}></div>
+                {coverUrl ? (
+                  <img src={getStrapiMedia(coverUrl)!} alt={cat.nombre} className={styles.categoryImg} />
+                ) : (
+                  <div className={styles.categoryPlaceholder}>📸</div>
+                )}
+                <div className={styles.categoryInfo}>
+                  <h3>{cat.nombre}</h3>
+                  <span>Descubrir más</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
         <h2 className={styles.sectionTitle}>Negocios Destacados</h2>
 
         {loading ? (
