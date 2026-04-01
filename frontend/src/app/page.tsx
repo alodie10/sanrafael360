@@ -24,21 +24,28 @@ export default function Home() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [negRes, catRes, heroRes] = await Promise.all([
+        const [negRes, catRes] = await Promise.all([
           fetchFromStrapi("negocios?populate=*&sort=nombre:asc&pagination[pageSize]=100"),
           fetchFromStrapi("categorias?populate=*&sort=nombre:asc"),
-          fetchFromStrapi("hero?populate=*")
         ]);
         setNegocios(negRes.data || []);
         setCategorias(catRes.data || []);
-        if (heroRes?.data) {
-          setHeroData({
-            titulo: heroRes.data.titulo,
-            subtitulo: heroRes.data.subtitulo
-          });
+
+        // Intento de carga de hero de forma aislada
+        try {
+          const heroRes = await fetchFromStrapi("hero?populate=*");
+          if (heroRes?.data) {
+            setHeroData({
+              titulo: heroRes.data.titulo,
+              subtitulo: heroRes.data.subtitulo
+            });
+          }
+        } catch (heroError) {
+          console.warn("Hero data not yet available or permission denied:", heroError);
         }
+
       } catch (error) {
-        console.error("Error cargando datos:", error);
+        console.error("Error cargando datos principales:", error);
       } finally {
         setLoading(false);
       }
