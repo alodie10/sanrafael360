@@ -27,14 +27,17 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
       {/* Portada con Zoom */}
       <div className="relative h-64 overflow-hidden">
         {coverUrl ? (
-          <motion.img
-            src={getStrapiMedia(coverUrl)!}
-            alt={negocio.nombre}
-            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-          />
+          <>
+            <motion.img
+              src={getStrapiMedia(coverUrl)!}
+              alt={negocio.nombre}
+              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-black/20" />
+          </>
         ) : (
           <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-            <span className="text-4xl opacity-20">🏝️</span>
+            <span className="text-4xl opacity-20 filter grayscale">🏝️</span>
           </div>
         )}
 
