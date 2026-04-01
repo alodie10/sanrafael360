@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchFromStrapi, getStrapiMedia } from "@/lib/strapi";
 import HeroCarousel from "@/components/home/HeroCarousel";
 import BusinessGrid from "@/components/home/BusinessGrid";
+import CategoryGrid from "@/components/home/CategoryGrid";
 import { Search, MapPin, Star, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -74,41 +75,16 @@ export default function Home() {
         {/* CATEGORIES */}
         <div className="mb-20">
           <div className="flex items-center justify-between mb-10">
-            <h2 className="text-3xl font-heading font-bold">Explorar por Categoría</h2>
-            <button className="text-primary font-semibold flex items-center gap-2 hover:underline">
-              Ver todas <ArrowRight className="w-4 h-4" />
+            <div className="max-w-xl">
+              <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-2">Explorar por Categoría</h2>
+              <p className="text-slate-400 text-sm">Descubre San Rafael según tus intereses y necesidades.</p>
+            </div>
+            <button className="text-primary font-bold flex items-center gap-2 hover:underline group text-sm md:text-base">
+              Ver todas <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
           
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {loading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-40 rounded-2xl bg-muted animate-pulse" />
-              ))
-            ) : (
-              categorias.map((cat: Categoria) => {
-                const coverUrl = cat.imagen_portada?.url;
-                return (
-                  <motion.div 
-                    key={cat.id} 
-                    whileHover={{ scale: 1.02 }}
-                    className="relative h-48 rounded-2xl overflow-hidden group cursor-pointer"
-                  >
-                    {coverUrl ? (
-                      <img src={getStrapiMedia(coverUrl)!} alt={cat.nombre} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                    ) : (
-                      <div className="absolute inset-0 bg-slate-800 flex items-center justify-center text-4xl opacity-50">🏔️</div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    <div className="absolute bottom-4 left-4">
-                      <h3 className="text-xl font-bold text-white">{cat.nombre}</h3>
-                      <span className="text-xs text-slate-300 uppercase tracking-widest">{cat.negocios?.length || 0} Lugares</span>
-                    </div>
-                  </motion.div>
-                );
-              })
-            )}
-          </div>
+          <CategoryGrid categorias={categorias} loading={loading} />
         </div>
 
         {/* FEATURED PLACES */}

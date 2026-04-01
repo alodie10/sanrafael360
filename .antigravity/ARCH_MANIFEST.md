@@ -14,10 +14,15 @@ Este documento contiene los blueprints de la arquitectura actual del proyecto pa
   - **Base de Datos:** PostgreSQL (Railway) / SQLite (Local)
   - **Media:** Proveedor local (`/public/uploads`)
 
-## 🔗 Conectividad
-
-- **API URL:** Definida por `NEXT_PUBLIC_STRAPI_URL`.
 - **Media URL:** Procesada a través del helper `getStrapiMedia` para alternar entre local y producción.
+
+## 🖼️ Estado de Media (Deuda Técnica)
+
+Actualmente, el proyecto **no cuenta con assets reales** de producción:
+- **Sin Logos:** Los comercios no tienen logos cargados en el backend.
+- **Sin Galería:** Falta el set de fotos interactivo de cada negocio.
+- **Sin Carátulas:** Las categorías no tienen imágenes de portada definidas.
+- **Solución Temporal:** Se utilizan placeholders dinámicos y gradientes premium de Tailwind para mantener la estética "Pro Vibe".
 
 ## 📂 Organización de Archivos
 
