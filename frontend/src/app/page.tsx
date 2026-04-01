@@ -5,6 +5,7 @@ import { fetchFromStrapi, getStrapiMedia } from "@/lib/strapi";
 import HeroCarousel from "@/components/home/HeroCarousel";
 import BusinessGrid from "@/components/home/BusinessGrid";
 import CategoryGrid from "@/components/home/CategoryGrid";
+import FilterBar from "@/components/home/FilterBar";
 import { Search, MapPin, Star, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,10 @@ export default function Home() {
   const [negocios, setNegocios] = useState<Negocio[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Estados de Filtrado
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -32,6 +37,14 @@ export default function Home() {
     };
     loadData();
   }, []);
+
+  // Lógica de Filtrado Dinámico
+  const filteredNegocios = negocios.filter((negocio) => {
+    const matchesSearch = negocio.nombre.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         negocio.descripcion?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategoryId ? negocio.categoria?.id === selectedCategoryId : true;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <main className="min-h-screen">
@@ -61,6 +74,8 @@ export default function Home() {
                   type="text" 
                   placeholder="¿Qué estás buscando hoy?" 
                   className="bg-transparent border-none outline-none w-full text-white placeholder:text-slate-400 text-sm md:text-base"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <button className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold text-sm md:text-base transition-all hover:scale-105 active:scale-95 shadow-lg">
@@ -71,7 +86,14 @@ export default function Home() {
         </motion.div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-20 bg-background">
+      {/* FILTER BAR STICKY */}
+      <FilterBar 
+        categorias={categorias} 
+        selectedCategoryId={selectedCategoryId} 
+        onSelectCategory={setSelectedCategoryId} 
+      />
+
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 bg-background">
         {/* CATEGORIES */}
         <div className="mb-20">
           <div className="flex items-center justify-between mb-10">
@@ -103,7 +125,7 @@ export default function Home() {
             </button>
           </div>
 
-          <BusinessGrid negocios={negocios} loading={loading} />
+          <BusinessGrid negocios={filteredNegocios} loading={loading} />
         </section>
       </div>
     </main>

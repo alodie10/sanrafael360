@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { LucideIcon, Bed, Utensils, Mountain, Wine, Camera, MapPin, Info } from "lucide-react";
+import { LucideIcon, Bed, Utensils, Mountain, Wine, Camera, MapPin, Info, ShoppingBasket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Categoria } from "@/types/strapi";
 
@@ -19,6 +19,7 @@ const iconMap: Record<string, LucideIcon> = {
   "Turismo Aventura": Mountain,
   "Bodegas": Wine,
   "Vinos": Wine,
+  "Productos Gourmet": ShoppingBasket,
   "Cultura": Camera,
   "Puntos de Interés": MapPin,
 };
@@ -28,6 +29,7 @@ const gradientMap: Record<string, string> = {
   "Gastronomía": "from-orange-500 to-red-600",
   "Actividades": "from-emerald-500 to-teal-600",
   "Bodegas": "from-amber-600 to-orange-700",
+  "Productos Gourmet": "from-rose-500 to-pink-600",
   "Default": "from-slate-700 to-slate-900",
 };
 
