@@ -1,54 +1,19 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { LucideIcon, Bed, Utensils, Mountain, Wine, Camera, MapPin, Info, ShoppingBasket, Hotel, Home, Users, Globe } from "lucide-react";
+import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Categoria } from "@/types/strapi";
+import { getCategoryIcon, getCategoryGradient } from "@/lib/icons";
 
 interface CategoryCardProps {
   categoria: Categoria;
   index: number;
 }
 
-const iconMap: Record<string, LucideIcon> = {
-  "Alojamiento": Bed,
-  "Alojamiento Especial": Bed,
-  "Gastronomía": Utensils,
-  "Restaurantes": Utensils,
-  "Actividades": Mountain,
-  "Turismo Aventura": Mountain,
-  "Bodegas": Wine,
-  "Vinos": Wine,
-  "Productos Gourmet": ShoppingBasket,
-  "Cultura": Camera,
-  "Puntos de Interés": MapPin,
-  "Apart Hoteles": Hotel,
-  "Posadas": Home,
-  "Agencias de Viaje": Globe,
-  "Hostels": Users,
-};
-
-const gradientMap: Record<string, string> = {
-  "Alojamiento": "from-indigo-600 to-violet-600",
-  "Gastronomía": "from-orange-500 to-red-600",
-  "Actividades": "from-emerald-500 to-teal-600",
-  "Bodegas": "from-amber-600 to-orange-700",
-  "Productos Gourmet": "from-rose-500 to-pink-600",
-  "Apart Hoteles": "from-blue-600 to-cyan-600",
-  "Posadas": "from-teal-600 to-emerald-600",
-  "Agencias de Viaje": "from-sky-500 to-indigo-500",
-  "Hostels": "from-purple-600 to-pink-600",
-  "Default": "from-slate-700 to-slate-900",
-};
-
 export default function CategoryCard({ categoria, index }: CategoryCardProps) {
-  const Icon = Object.entries(iconMap).find(([key]) => 
-    categoria.nombre.toLowerCase().includes(key.toLowerCase())
-  )?.[1] || Info;
-
-  const gradient = Object.entries(gradientMap).find(([key]) => 
-    categoria.nombre.toLowerCase().includes(key.toLowerCase())
-  )?.[1] || gradientMap.Default;
+  const Icon = getCategoryIcon(categoria.nombre);
+  const gradient = getCategoryGradient(categoria.nombre);
 
   return (
     <motion.div

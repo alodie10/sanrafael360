@@ -1,37 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { LucideIcon, Bed, Utensils, Mountain, Wine, Camera, MapPin, LayoutGrid, ShoppingBasket, Hotel, Home, Users, Globe } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Categoria } from "@/types/strapi";
+import { getCategoryIcon } from "@/lib/icons";
 
 interface FilterBarProps {
   categorias: Categoria[];
   selectedCategoryId: number | null;
   onSelectCategory: (id: number | null) => void;
 }
-
-/**
- * Mapeo de iconos para las categorías principales. 
- * Incluye la normalización de "Productos Gourmet".
- */
-const iconMap: Record<string, LucideIcon> = {
-  "Alojamiento": Bed,
-  "Alojamiento Especial": Bed,
-  "Gastronomía": Utensils,
-  "Restaurantes": Utensils,
-  "Actividades": Mountain,
-  "Turismo Aventura": Mountain,
-  "Bodegas": Wine,
-  "Vinos": Wine,
-  "Productos Gourmet": ShoppingBasket,
-  "Cultura": Camera,
-  "Puntos de Interés": MapPin,
-  "Apart Hoteles": Hotel,
-  "Posadas": Home,
-  "Agencias de Viaje": Globe,
-  "Hostels": Users,
-};
 
 export default function FilterBar({ categorias, selectedCategoryId, onSelectCategory }: FilterBarProps) {
   return (
@@ -55,9 +34,7 @@ export default function FilterBar({ categorias, selectedCategoryId, onSelectCate
 
           {/* Categorías Dinámicas de Strapi */}
           {categorias.map((cat) => {
-            const Icon = Object.entries(iconMap).find(([key]) => 
-              cat.nombre.toLowerCase().includes(key.toLowerCase())
-            )?.[1] || MapPin;
+            const Icon = getCategoryIcon(cat.nombre);
 
             const isActive = selectedCategoryId === cat.id;
 
