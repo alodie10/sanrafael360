@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Repositorio centralizado para San Rafael 360 (Next.js + Strapi)",
   "scripts": {
+    "start": "cd backend && npm run start",
     "build": "npm run build:all",
     "build:all": "cd frontend && npm run build && cd ../backend && npm run build",
     "info": "echo 'Proyecto San Rafael 360. Desarrollo 100% Remoto.'"
