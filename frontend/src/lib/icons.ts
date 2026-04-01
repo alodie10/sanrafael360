@@ -47,19 +47,19 @@ export const iconMap: Record<string, LucideIcon> = {
  * Mapa centralizado de gradientes.
  */
 export const gradientMap: Record<string, string> = {
-  "hoteles": "from-blue-600/80 to-cyan-700/80",
-  "hotel": "from-blue-600/80 to-cyan-700/80",
-  "aloj": "from-indigo-600/80 to-violet-700/80",
-  "caba": "from-blue-600/80 to-indigo-700/80",
-  "gastron": "from-orange-500/80 to-red-600/80",
-  "turismo": "from-emerald-500/80 to-teal-600/80",
-  "bodeg": "from-amber-600/80 to-orange-700/80",
-  "gourmet": "from-rose-500/80 to-pink-600/80",
-  "apart": "from-blue-600/80 to-cyan-700/80",
-  "posada": "from-teal-600/80 to-emerald-700/80",
-  "viaje": "from-sky-500/80 to-indigo-600/80",
-  "host": "from-purple-600/80 to-pink-700/80",
-  "default": "from-slate-700/80 to-slate-900/80",
+  "hoteles": "from-blue-600 to-cyan-700",
+  "hotel": "from-blue-600 to-cyan-700",
+  "aloj": "from-indigo-600 to-violet-700",
+  "caba": "from-blue-600 to-indigo-700",
+  "gastron": "from-orange-500 to-red-600",
+  "turismo": "from-emerald-500 to-teal-600",
+  "bodeg": "from-amber-600 to-orange-700",
+  "gourmet": "from-rose-500 to-pink-600",
+  "apart": "from-blue-600 to-cyan-700",
+  "posada": "from-teal-600 to-emerald-700",
+  "viaje": "from-sky-500 to-indigo-600",
+  "host": "from-purple-600 to-pink-700",
+  "default": "from-slate-800 to-slate-900",
 };
 
 /**
