@@ -33,3 +33,13 @@ Comparación Constante: Antes de proponer una nueva sección (ej: "Bodegas"), an
 * **Respuesta ante Corte:** Si detectas que tu respuesta se cortó por el límite de tokens, en la siguiente interacción no repitas el código anterior; retoma exactamente desde el último carácter generado.
 * **Concisión Extrema:** Elimina introducciones y conclusiones largas. Ve directo al código y a la explicación técnica necesaria. Usa comentarios en el código en lugar de párrafos externos de explicación.
 * **Modularización:** Si un archivo es propenso a ser muy largo, propón dividirlo en sub-componentes o hooks (Clean Architecture).
+
+### 🛑 Protocolo de Control de Desborde (Atomic Coding)
+* **Regla del 70%:** Nunca intentes generar más del 70% de la capacidad estimada de salida. Si una tarea es compleja, divídela en "Micro-pasos".
+* **Planificación Mandatoria:** Antes de escribir una sola línea de código, presenta un "Índice de Ejecución". Ejemplo: 
+  1. Definir tipos.
+  2. Crear Hook.
+  3. Crear Componente UI.
+* **Stop & Sync:** Al finalizar cada Micro-paso, detente y pregunta: "¿Procedo con el siguiente paso?". NO continúes sin confirmación.
+* **Un Archivo por Turno:** Prohibido modificar o crear más de un archivo principal por respuesta. Si la tarea afecta a varios archivos, hazlo de forma secuencial en mensajes separados.
+* **Concisión de Sistemas:** Elimina saludos, explicaciones obvias y verborragia. Usa el 100% de los tokens de salida para código y lógica técnica esencial.

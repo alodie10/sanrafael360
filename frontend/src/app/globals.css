@@ -1,67 +1,71 @@
-/* San Rafael 360 - Premium Vanilla CSS System */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  /* HSL Tailored Colors */
-  --color-primary-h: 200;
-  --color-primary-s: 90%;
-  --color-primary-l: 50%;
-  --color-primary: hsl(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l));
+  /* Premium Deep Night Palette */
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 142.1 70.6% 45.3%; /* Emerald 500 */
+  --primary-foreground: 144.1 80.7% 9.7%;
+
+  --secondary: 47.9 95.8% 53.1%; /* Amber 500 (Gold) */
+  --secondary-foreground: 26 83.3% 14.1%;
+
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 142.1 70.6% 45.3%;
+
+  --radius: 1rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
   
-  --color-secondary-h: 340;
-  --color-secondary-s: 82%;
-  --color-secondary-l: 52%;
-  --color-secondary: hsl(var(--color-secondary-h), var(--color-secondary-s), var(--color-secondary-l));
+  .premium-gradient {
+    @apply bg-gradient-to-br from-emerald-500/20 via-transparent to-transparent;
+  }
 
-  /* Dark Theme forced by default for Premium Aesthetic */
-  --bg-main: #020617;
-  --bg-surface: #0f172a;
-  --bg-surface-glass: rgba(15, 23, 42, 0.6);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-color: #1e293b;
-  --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.2);
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 
-/* Base styles ensure dark mode consistency */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }
 
-body {
-  background-color: var(--bg-main) !important;
-  color: var(--text-main);
-  font-family: var(--font-inter), sans-serif;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-outfit), sans-serif;
-  font-weight: 700;
-  color: var(--text-main);
-  line-height: 1.2;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.app-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-/* Utils */
-.glass-effect {
-  background: var(--bg-surface-glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
