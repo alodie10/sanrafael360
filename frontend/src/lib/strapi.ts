@@ -1,5 +1,5 @@
-export const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
-console.log('--- DEBUG: Usando STRAPI_URL:', STRAPI_URL);
+export const STRAPI_URL = 'https://sanrafael360-production.up.railway.app';
+console.log('--- DEBUG: Usando STRAPI_URL (FORZADO):', STRAPI_URL);
 
 export async function fetchFromStrapi(path: string, options: RequestInit = {}) {
   const url = `${STRAPI_URL}/api/${path}`;
