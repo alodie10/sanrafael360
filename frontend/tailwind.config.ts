@@ -5,6 +5,20 @@ const config: Config = {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/lib/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  safelist: [
+    'from-blue-600', 'to-cyan-700',
+    'from-indigo-600', 'to-violet-700',
+    'from-blue-600', 'to-indigo-700',
+    'from-orange-500', 'to-red-600',
+    'from-emerald-500', 'to-teal-600',
+    'from-amber-600', 'to-orange-700',
+    'from-rose-500', 'to-pink-600',
+    'from-sky-500', 'to-indigo-600',
+    'from-purple-600', 'to-pink-700',
+    'from-slate-800', 'to-slate-900',
+    'from-teal-600', 'to-emerald-700',
   ],
   theme: {
     extend: {
