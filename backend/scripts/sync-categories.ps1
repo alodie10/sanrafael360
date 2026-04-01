@@ -10,22 +10,17 @@ $headers = @{
     "Content-Type" = "application/json"
 }
 
-Write-Host "[SYNC] Iniciando Sincronizacion Masiva Strapi 5 (Railway)..." -ForegroundColor Cyan
+Write-Host "[SYNC] Iniciando Deep Sync (Railway)..."
 
 # 1. Obtener Categorias
 try {
     $catResp = Invoke-RestMethod -Uri "$STRAPI_API_URL/categorias" -Method Get -Headers $headers
     $categoryIdMap = @{}
-
     foreach ($c in $catResp.data) {
-        $name = $c.nombre.Trim()
-        if ($name -eq $OLD_GOURMET_NAME) {
-            Write-Host "[INFO] Renombrando Categoria Gourmet..." -ForegroundColor Yellow
-            $payload = @{ data = @{ nombre = $NEW_GOURMET_NAME } } | ConvertTo-Json
-            Invoke-RestMethod -Uri "$STRAPI_API_URL/categorias/$($c.documentId)" -Method Put -Headers $headers -Body $payload
+        if ($c.nombre.Trim() -eq $OLD_GOURMET_NAME) {
             $categoryIdMap[$NEW_GOURMET_NAME] = $c.id
         } else {
-            $categoryIdMap[$name] = $c.id
+            $categoryIdMap[$c.nombre.Trim()] = $c.id
         }
     }
 } catch {
@@ -33,34 +28,49 @@ try {
     return
 }
 
-# 2. Obtener Negocios (MAREO DE DOCUMENT_ID PARA STRAPI 5)
+# 2. Obtener Negocios con Paginacion
+$businessDocIdMap = @{}
+$page = 1
+$pageSize = 100
 try {
-    Write-Host "[INFO] Cargando mapeo de DocumentIds de negocios..."
-    $negResp = Invoke-RestMethod -Uri "$STRAPI_API_URL/negocios?pagination[limit]=1000" -Method Get -Headers $headers
-    $businessDocIdMap = @{}
-    foreach ($n in $negResp.data) {
-        $businessDocIdMap[$n.nombre.Trim()] = $n.documentId
+    while ($true) {
+        Write-Host "[INFO] Cargando negocios (Pagina $page)..."
+        $url = "$STRAPI_API_URL/negocios?pagination[page]=$page&pagination[pageSize]=$pageSize"
+        $negResp = Invoke-RestMethod -Uri $url -Method Get -Headers $headers
+        foreach ($n in $negResp.data) {
+            $businessDocIdMap[$n.nombre.Trim()] = $n.documentId
+        }
+        if ($page -ge $negResp.meta.pagination.pageCount) { break }
+        $page++
     }
-    Write-Host "[OK] Mapeo de DocumentIds completado: $($businessDocIdMap.Keys.Count) negocios." -ForegroundColor Green
 } catch {
-    Write-Error "Fallo al obtener negocios: $_"
+    Write-Error "Error en paginacion: $_"
+    return
+}
+Write-Host "[OK] Mapeo completo: $($businessDocIdMap.Keys.Count) negocios cargados."
+
+# 3. Procesar Mapeo JSON
+if (-not (Test-Path $MAPPING_PATH)) { Write-Error "CSV no encontrado"; return }
+try {
+    $rawJson = Get-Content -Path $MAPPING_PATH -Raw -Encoding UTF8
+    $mapping = $rawJson | ConvertFrom-Json
+} catch {
+    Write-Error "Fallo al procesar JSON: $_"
     return
 }
 
-# 3. Procesar Mapeo JSON
-$rawJson = Get-Content -Path $MAPPING_PATH -Raw -Encoding UTF8
-$mapping = $rawJson | ConvertFrom-Json
+Write-Host "[INFO] Iniciando vinculacion de $($mapping.Count) entradas..."
+
 $count = 0
 $errors = 0
 
 foreach ($entry in $mapping) {
     if ($null -eq $entry.post_title -or $null -eq $entry.listing_category) { continue }
-    
     $nombre = $entry.post_title.Trim()
     $categoriaName = $entry.listing_category.Trim()
 
     # Normalizacion Gourmet
-    if ($nombre.ToLower().Contains("vinos") -or $categoriaName.ToLower().Contains("vinos") -or $categoriaName.ToLower().Contains("licores") -or $categoriaName -eq $OLD_GOURMET_NAME) {
+    if ($nombre.ToLower().Contains("vinos") -or $categoriaName.ToLower().Contains("vinos") -or $categoriaName.ToLower().Contains("licores")) {
         $categoriaName = $NEW_GOURMET_NAME
     }
 
@@ -69,7 +79,7 @@ foreach ($entry in $mapping) {
 
     if ($docId -and $catId) {
         try {
-            Write-Host "SYNC [$($count + 1)] $nombre -> $categoriaName"
+            Write-Host "[LINK] ($($count + 1)) $nombre -> $categoriaName"
             $payload = @{ data = @{ categoria = $catId } } | ConvertTo-Json
             Invoke-RestMethod -Uri "$STRAPI_API_URL/negocios/$docId" -Method Put -Headers $headers -Body $payload
             $count++
@@ -79,5 +89,5 @@ foreach ($entry in $mapping) {
     }
 }
 
-Write-Host "[FIN] Sincronizacion Finalizada." -ForegroundColor Green
-Write-Host "[RESULT] $count negocios vinculados exitosamente ($errors omisiones)." -ForegroundColor Cyan
+Write-Host "[FIN] Sincronizacion Finalizada."
+Write-Host "[RESULT] $count negocios vinculados exitosamente."
