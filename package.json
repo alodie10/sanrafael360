@@ -1,5 +1,5 @@
 {
-  "//": "Trigger build v3 - DB Fixed",
+  "//": "Trigger build v4 - Secrets Fixed",
   "name": "sanrafael360-monorepo",
   "version": "1.0.0",
   "description": "Repositorio centralizado para San Rafael 360 (Next.js + Strapi)",

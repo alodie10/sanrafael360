@@ -20,7 +20,11 @@ Para despliegues en Railway usando Postgres:
   const client = (env('DATABASE_CLIENT', 'sqlite') || 'sqlite').toString().trim().replace(/^=/, '').trim();
   ```
 
-## 4. Estética y Tailwind CSS (Purge/JIT)
+## 4. Secretos de Seguridad (JWT/Admin)
+Strapi 5 exige claves secretas (`ADMIN_JWT_SECRET`, `API_TOKEN_SALT`, etc.) para arrancar en producción.
+- **Acción:** Usar siempre valores de "fallback" en `admin.ts` y `plugins.ts` para evitar que el servidor crashee si las variables de entorno de Railway no están listas o tienen errores.
+
+## 5. Estética y Tailwind CSS (Purge/JIT)
 Para evitar que las clases dinámicas (como los gradientes de las categorías) desaparezcan en producción:
 - **Safelist:** Las clases generadas dinámicamente deben estar en el `safelist` de `frontend/tailwind.config.ts`.
 - **Opacidad:** Usar opacidad completa (o alta) en degradados para evitar que el fondo oscuro del "Dark Mode" los vuelva negros.
