@@ -1,5 +1,5 @@
 {
-  "//": "Trigger build v5 - App Keys Fixed",
+  "//": "Trigger build v6 - URL Fixed & Clean Build",
   "name": "sanrafael360-monorepo",
   "version": "1.0.0",
   "description": "Repositorio centralizado para San Rafael 360 (Next.js + Strapi)",
