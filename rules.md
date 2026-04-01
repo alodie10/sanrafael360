@@ -45,3 +45,14 @@ Comparación Constante: Antes de proponer una nueva sección (ej: "Bodegas"), an
 * **Un Archivo por Turno:** Prohibido modificar o crear más de un archivo principal por respuesta.
 * **Case Sensitive Check:** Antes de crear un archivo, verifica que su nombre coincida exactamente con las importaciones (sensible a mayúsculas).
 * **Concisión Técnica:** Elimina saludos y verborragia. El 100% de los tokens debe ser lógica y código esencial.
+
+Directiva de Control de Integridad (Anti-0,0)
+"Protocolo de Escritura Segura:
+
+Verificación Post-Edición: Después de editar o crear cualquier archivo (especialmente archivos sensibles como .env.example, package.json o configuraciones de Docker), debes verificar internamente que el contenido no esté vacío.
+
+Prohibición de Placeholder: Está terminantemente prohibido dejar archivos con comentarios tipo // ... resto del código aquí o vacíos. Si el archivo es extenso, edítalo por bloques, pero nunca lo dejes incompleto.
+
+Confirmación de Tamaño: Al finalizar la edición, informa brevemente: 'Archivo [nombre] actualizado: [X] líneas escritas'. Si detectas que la salida se cortó, debes pedir permiso para continuar en el siguiente turno antes de que yo intente ejecutar nada.
+
+Backup Volátil: Antes de una edición compleja en un archivo crítico, muestra el bloque de código completo que vas a insertar para que yo pueda dar el 'OK' final."
