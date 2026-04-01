@@ -14,6 +14,7 @@ import { Negocio, Categoria } from "@/types/strapi";
 export default function Home() {
   const [negocios, setNegocios] = useState<Negocio[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [heroData, setHeroData] = useState<{titulo: string, subtitulo: string} | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Estados de Filtrado
@@ -23,12 +24,19 @@ export default function Home() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [negRes, catRes] = await Promise.all([
-          fetchFromStrapi("negocios?populate=*&sort=nombre:asc&pagination[pageSize]=50"),
-          fetchFromStrapi("categorias?populate=*&sort=nombre:asc")
+        const [negRes, catRes, heroRes] = await Promise.all([
+          fetchFromStrapi("negocios?populate=*&sort=nombre:asc&pagination[pageSize]=100"),
+          fetchFromStrapi("categorias?populate=*&sort=nombre:asc"),
+          fetchFromStrapi("hero?populate=*")
         ]);
         setNegocios(negRes.data || []);
         setCategorias(catRes.data || []);
+        if (heroRes?.data) {
+          setHeroData({
+            titulo: heroRes.data.titulo,
+            subtitulo: heroRes.data.subtitulo
+          });
+        }
       } catch (error) {
         console.error("Error cargando datos:", error);
       } finally {
@@ -58,10 +66,14 @@ export default function Home() {
           className="max-w-4xl z-10"
         >
           <h1 className="text-5xl md:text-7xl font-heading font-extrabold text-white tracking-tight leading-tight mb-6">
-            Vive <span className="text-primary italic">San Rafael</span>
+            {heroData?.titulo ? (
+              <span dangerouslySetInnerHTML={{ __html: heroData.titulo.replace("San Rafael", "<span class='text-primary italic'>San Rafael</span>") }} />
+            ) : (
+              <>Vive <span className="text-primary italic">San Rafael</span></>
+            )}
           </h1>
           <p className="text-lg md:text-xl text-slate-200 mb-10 max-w-2xl mx-auto text-balance">
-            Encuentra las mejores experiencias, gastronomía y alojamiento en el corazón de Mendoza.
+            {heroData?.subtitulo || "Encuentra las mejores experiencias, gastronomía y alojamiento en el corazón de Mendoza."}
           </p>
 
           {/* Search Bar Premium */}
