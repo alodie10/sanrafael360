@@ -27,3 +27,9 @@ Git-Driven: Todo cambio estructural debe explicarse en el mensaje del commit par
 
 5. Benchmark de Calidad
 Comparación Constante: Antes de proponer una nueva sección (ej: "Bodegas"), analiza cómo lo hace Yelp o Culture Trip. No reinventes la rueda, mejórala para el contexto local.
+### 🛡️ Protocolo de Gestión de Tokens y Generación Larga
+* **Detección de Complejidad:** Antes de generar código, si la tarea implica más de 2 archivos o más de 50 líneas, DEBES detenerte y presentar un "Plan de Ejecución por Pasos".
+* **Generación Incremental:** No intentes escribir el proyecto completo en una sola respuesta. Genera un componente o lógica a la vez y espera mi confirmación o pide "continuar" para el siguiente paso.
+* **Respuesta ante Corte:** Si detectas que tu respuesta se cortó por el límite de tokens, en la siguiente interacción no repitas el código anterior; retoma exactamente desde el último carácter generado.
+* **Concisión Extrema:** Elimina introducciones y conclusiones largas. Ve directo al código y a la explicación técnica necesaria. Usa comentarios en el código en lugar de párrafos externos de explicación.
+* **Modularización:** Si un archivo es propenso a ser muy largo, propón dividirlo en sub-componentes o hooks (Clean Architecture).
