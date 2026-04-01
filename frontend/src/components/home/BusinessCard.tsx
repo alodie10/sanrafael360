@@ -40,21 +40,21 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
 
         {/* Glass Badge Categoría */}
         {negocio.categoria && (
-          <div className="absolute top-6 left-6 px-4 py-1.5 bg-black/30 backdrop-blur-xl rounded-full text-[10px] font-bold text-white border border-white/10 uppercase tracking-widest">
+          <div className="absolute top-6 left-6 px-4 py-1.5 bg-black/40 backdrop-blur-md rounded-full text-[10px] font-bold text-white border border-white/20 uppercase tracking-widest z-10 shadow-lg">
             {negocio.categoria.nombre}
           </div>
         )}
 
         {/* Logo Overlap Premium */}
-        <div className="absolute -bottom-10 right-8 w-24 h-24 bg-background/80 backdrop-blur-2xl p-1.5 rounded-[2rem] shadow-2xl border border-white/10 group-hover:scale-110 transition-transform duration-500">
+        <div className="absolute -bottom-8 right-8 w-20 h-20 md:w-24 md:h-24 bg-background/90 backdrop-blur-2xl p-1.5 rounded-[2rem] shadow-2xl border border-white/10 group-hover:scale-110 transition-all duration-500 z-10 group-hover:-translate-y-2">
           {logoUrl ? (
             <img
               src={getStrapiMedia(logoUrl)!}
               alt={negocio.nombre}
-              className="w-full h-full rounded-[1.7rem] object-cover"
+              className="w-full h-full rounded-[1.7rem] object-cover bg-white"
             />
           ) : (
-            <div className="w-full h-full bg-primary rounded-[1.7rem] flex items-center justify-center text-primary-foreground font-bold text-2xl">
+            <div className="w-full h-full bg-gradient-to-br from-primary to-secondary rounded-[1.7rem] flex items-center justify-center text-primary-foreground font-bold text-2xl shadow-inner">
               {negocio.nombre.charAt(0)}
             </div>
           )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { LucideIcon, Bed, Utensils, Mountain, Wine, Camera, MapPin, LayoutGrid, ShoppingBasket } from "lucide-react";
+import { LucideIcon, Bed, Utensils, Mountain, Wine, Camera, MapPin, LayoutGrid, ShoppingBasket, Hotel, Home, Users, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Categoria } from "@/types/strapi";
 
@@ -27,6 +27,10 @@ const iconMap: Record<string, LucideIcon> = {
   "Productos Gourmet": ShoppingBasket,
   "Cultura": Camera,
   "Puntos de Interés": MapPin,
+  "Apart Hoteles": Hotel,
+  "Posadas": Home,
+  "Agencias de Viaje": Globe,
+  "Hostels": Users,
 };
 
 export default function FilterBar({ categorias, selectedCategoryId, onSelectCategory }: FilterBarProps) {

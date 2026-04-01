@@ -109,6 +109,33 @@ export default function Home() {
           <CategoryGrid categorias={categorias} loading={loading} />
         </div>
 
+        {/* SEARCH STATS & RESET */}
+        {(searchQuery || selectedCategoryId) && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col md:flex-row items-center justify-between gap-4 mb-20 p-6 bg-primary/10 rounded-[2rem] border border-primary/20 backdrop-blur-md"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                <Search className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h4 className="text-white font-bold tracking-tight">Filtros Activos</h4>
+                <p className="text-slate-400 text-sm">
+                  Mostrando <span className="text-primary font-bold">{filteredNegocios.length}</span> comercios encontrados
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={() => { setSearchQuery(""); setSelectedCategoryId(null); }}
+              className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-xl border border-white/5 transition-all active:scale-95"
+            >
+              Limpiar todos los filtros
+            </button>
+          </motion.div>
+        )}
+
         {/* FEATURED PLACES */}
         <section className="mt-20">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
@@ -117,7 +144,9 @@ export default function Home() {
                 Comercios <span className="text-primary italic font-medium">Destacados</span>
               </h2>
               <p className="text-slate-400">
-                Seleccionamos las mejores opciones locales para que tu estadía en San Rafael sea inolvidable.
+                {selectedCategoryId 
+                  ? `Explorando lo mejor en ${categorias.find(c => c.id === selectedCategoryId)?.nombre || "la categoría"} de San Rafael.`
+                  : "Seleccionamos las mejores opciones locales para que tu estadía en San Rafael sea inolvidable."}
               </p>
             </div>
             <button className="text-slate-200 hover:text-primary transition-all text-sm font-bold flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 hover:border-primary/50 group">
