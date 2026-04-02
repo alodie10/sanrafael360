@@ -19,7 +19,7 @@ export default {
   async bootstrap({ strapi }: { strapi: any }) {
     try {
       // 1. Limpieza extrema de Caché de Layouts del Content Manager
-      // Esto elimina configuraciones visuales obsoletas o corruptas (como las del Hero).
+      /* 
       try {
         await strapi.db.connection('strapi_core_store')
           .where('key', 'like', 'plugin_content_manager_configuration::%')
@@ -28,6 +28,7 @@ export default {
       } catch (err) {
         console.warn('⚠️ No se pudo purgar la caché de UI:', err.message);
       }
+      */
 
       const publicRole = await strapi.query('plugin::users-permissions.role').findOne({
         where: { type: 'public' },
