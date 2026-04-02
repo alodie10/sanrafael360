@@ -94,25 +94,8 @@ async function uploadLogosAndCovers() {
         try {
             await sleep(7000); // PAUSA SEGURIDAD
             
-            // A. Descargar imagen
-            const imgResp = await fetchWithRetry(imageUrl, {});
-            const buffer = await imgResp.arrayBuffer();
             const fileName = path.basename(imageUrl.split('?')[0]);
-
-            // B. Subir a Strapi (General)
-            const form = new FormData();
-            const blob = new Blob([buffer]);
-            form.append('files', blob, fileName);
-
-            const uploadResp = await fetchWithRetry(`${STRAPI_API_URL.replace('/api', '')}/api/upload`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${API_TOKEN}` },
-                body: form
-            });
-
-            if (!uploadResp.ok) throw new Error(`Fallo subida (${uploadResp.status})`);
-            const uploadData = await uploadResp.json();
-            const fileId = uploadData[0].id;
+            const fileId = await uploadMedia(imageUrl, fileName);
 
             // C. Vincular a Logo e Imagen de Portada mediante PUT
             await sleep(3000);
