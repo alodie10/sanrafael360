@@ -32,8 +32,36 @@ async function fetchWithRetry(url, options, retries = 3, backoff = 30000) {
     throw new Error(`Fallo tras ${retries} reintentos`);
 }
 
-async function uploadLogosAndCovers() {
-  console.log('🛡️ Iniciando migración RESILIENTE (Logos + Portadas)...');
+async function uploadMedia(imageUrl, fileName) {
+    try {
+        const response = await fetch(imageUrl);
+        if (!response.ok) throw new Error(`Fallo descarga imagen: ${response.status}`);
+        const blob = await response.blob();
+        
+        const formData = new FormData();
+        formData.append('files', blob, fileName);
+
+        const uploadRes = await fetch(`${STRAPI_API_URL}/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${API_TOKEN}` },
+            body: formData
+        });
+
+        if (!uploadRes.ok) {
+            const errorText = await uploadRes.text();
+            console.error(`❌ Error Strapi Upload (${uploadRes.status}):`, errorText);
+            throw new Error(`Fallo Strapi Upload: ${uploadRes.status}`);
+        }
+        
+        const data = await uploadRes.json();
+        return data[0]?.id;
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function startMigration() {
+  console.log('🛡️ Iniciando migración ULTRA-RESILIENTE (Logos + Portadas)...');
 
   const normalize = (s) => s ? s.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -42,85 +70,82 @@ async function uploadLogosAndCovers() {
     .trim() : '';
 
   try {
-    // 1. Obtener Negocios en páginas pequeñas
-    console.log('Cargando negocios en lotes de 20...');
-    let allBusinesses = [];
+    // 1. Cargar mapeo JSON (lo necesitamos para saber qué imágenes corresponden a qué nombres)
+    const mapping = JSON.parse(fs.readFileSync(MAPPING_PATH, 'utf-8').replace(/^\uFEFF/, ''));
+    console.log(`📂 Mapeo JSON: ${mapping.length} entradas.`);
+
+    // 2. Obtener Negocios en páginas pequeñas
+    const CHUNK_SIZE = 5;
     let page = 1;
     let pageCount = 1;
+    let processedCount = 0;
+
+    // Crear un mapa para búsqueda rápida del JSON
+    const jsonMap = {};
+    mapping.forEach(entry => {
+        if (entry.post_title) jsonMap[normalize(entry.post_title)] = entry._thumbnail_id;
+    });
 
     while (page <= pageCount) {
-        console.log(`📡 Obteniendo negocios - Página ${page}...`);
-        const negResp = await fetchWithRetry(`${STRAPI_API_URL}/negocios?pagination[page]=${page}&pagination[pageSize]=20`, {
+        console.log(`📡 Obteniendo negocios - Página ${page} (Bloque de ${CHUNK_SIZE})...`);
+        const negResp = await fetchWithRetry(`${STRAPI_API_URL}/negocios?pagination[page]=${page}&pagination[pageSize]=${CHUNK_SIZE}`, {
             headers: { Authorization: `Bearer ${API_TOKEN}` }
         });
         
         const res = await negResp.json();
-        if (res.data) allBusinesses = allBusinesses.concat(res.data);
+        const businesses = res.data || [];
         pageCount = res.meta?.pagination?.pageCount || 1;
-        page++;
-        await sleep(2000); 
-    }
 
-    const businessIdMap = {};
-    const businessDocIdMap = {};
-    allBusinesses.forEach((n) => { 
-        const norm = normalize(n.nombre);
-        businessIdMap[norm] = n.id;
-        businessDocIdMap[norm] = n.documentId;
-    });
-    console.log(`📊 Total negocios: ${allBusinesses.length}`);
+        console.log(`📦 Procesando ${businesses.length} negocios de esta página...`);
 
-    // 2. Cargar mapeo JSON
-    const mapping = JSON.parse(fs.readFileSync(MAPPING_PATH, 'utf-8').replace(/^\uFEFF/, ''));
-    console.log(`📂 Mapeo JSON: ${mapping.length} entradas.`);
+        for (const biz of businesses) {
+            const bizName = biz.nombre;
+            const docId = biz.documentId;
+            const normName = normalize(bizName);
+            const imageUrl = jsonMap[normName];
 
-    let count = 0;
-    const processed = new Set();
-
-    for (const entry of mapping) {
-        const nombreRaw = entry.post_title?.trim();
-        const imageUrl = entry._thumbnail_id?.trim();
-
-        if (!nombreRaw || !imageUrl || imageUrl.includes('imagen-no-disponible')) continue;
-        
-        const nombreNorm = normalize(nombreRaw);
-        const businessDocId = businessDocIdMap[nombreNorm];
-
-        if (!businessDocId || processed.has(nombreNorm)) continue;
-        processed.add(nombreNorm);
-
-        console.log(`🚀 [${++count}] Procesando Logo + Portada: ${nombreRaw}`);
-
-        try {
-            await sleep(7000); // PAUSA SEGURIDAD
-            
-            const fileName = path.basename(imageUrl.split('?')[0]);
-            const fileId = await uploadMedia(imageUrl, fileName);
-
-            // C. Vincular a Logo e Imagen de Portada mediante PUT
-            await sleep(3000);
-            const updateResp = await fetchWithRetry(`${STRAPI_API_URL}/negocios/${businessDocId}`, {
-                method: 'PUT',
-                headers: { 
-                    'Authorization': `Bearer ${API_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    data: {
-                        logo: fileId,
-                        imagen_portada: fileId
-                    }
-                })
-            });
-
-            if (updateResp.ok) {
-                console.log(`✅ EXITO Completo: ${nombreRaw}`);
-            } else {
-                console.error(`❌ FALLO vinculación en ${nombreRaw}`);
+            if (!imageUrl || imageUrl.includes('imagen-no-disponible')) {
+                // console.log(`   ⏭️ Sin imagen para: ${bizName}`);
+                continue;
             }
-        } catch (e) {
-            console.error(`⚠️ Error en ${nombreRaw}: ${e.message}`);
+
+            console.log(`🚀 [${++processedCount}] Procesando: ${bizName}`);
+
+            try {
+                await sleep(5000); // Pausa entre operaciones
+                const fileName = `logo_${biz.id}.jpg`;
+                const fileId = await uploadMedia(imageUrl, fileName);
+
+                if (fileId) {
+                    await sleep(3000);
+                    const updateResp = await fetch(`${STRAPI_API_URL}/negocios/${docId}`, {
+                        method: 'PUT',
+                        headers: { 
+                            'Authorization': `Bearer ${API_TOKEN}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            data: {
+                                logo: fileId,
+                                imagen_portada: fileId
+                            }
+                        })
+                    });
+
+                    if (updateResp.ok) {
+                        console.log(`   ✅ EXITO: ${bizName}`);
+                    } else {
+                        console.error(`   ❌ FALLO vinculación: ${bizName}`);
+                    }
+                }
+            } catch (e) {
+                console.error(`   ⚠️ Error en ${bizName}: ${e.message}`);
+            }
         }
+
+        page++;
+        console.log('⏳ Descansando 5s para el siguiente lote...');
+        await sleep(5000); 
     }
   } catch (err) {
       console.error('❌ Error Crítico:', err.message);
@@ -129,4 +154,4 @@ async function uploadLogosAndCovers() {
   console.log('✔️ Restauración Completa finalizada.');
 }
 
-uploadLogosAndCovers();
+startMigration();
