@@ -27,11 +27,8 @@ export default {
         size: size || 0,
         url: url, // External Cloudinary URL
         previewUrl: url,
-        provider: 'cloudinary',
-        provider_metadata: {
-           public_id: hash || `file_${Date.now()}`,
-           resource_type: 'image'
-        },
+        provider: 'local', // Engañamos a Strapi para que no use el SDK de Cloudinary
+        provider_metadata: null, 
         folderPath: '/',
       };
 
