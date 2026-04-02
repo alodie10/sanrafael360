@@ -21,7 +21,7 @@ ENV NODE_ENV=${NODE_ENV}
 
 WORKDIR /opt/backend
 COPY --from=build /opt/backend/node_modules ./node_modules
-COPY --from=build /opt/backend/dist ./dist
+COPY --from=build /opt/backend/dist ./
 COPY --from=build /opt/backend/package.json ./
 COPY --from=build /opt/backend/public ./public
 
