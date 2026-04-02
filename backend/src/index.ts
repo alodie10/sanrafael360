@@ -18,6 +18,17 @@ export default {
    */
   async bootstrap({ strapi }: { strapi: any }) {
     try {
+      // 1. Limpieza extrema de Caché de Layouts del Content Manager
+      // Esto elimina configuraciones visuales corruptas que pueden hacer explotar el "Array.map" en UI.
+      try {
+        await strapi.db.connection('strapi_core_store_settings')
+          .where('key', 'like', 'plugin_content_manager_configuration_content_types::%')
+          .del();
+        console.log('🧹 Caché de vistas del Content Manager purgada exitosamente.');
+      } catch (err) {
+        console.warn('⚠️ No se pudo purgar la caché de UI, ignorando...');
+      }
+
       const publicRole = await strapi.query('plugin::users-permissions.role').findOne({
         where: { type: 'public' },
       });
