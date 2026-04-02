@@ -1,13 +1,9 @@
-import type { Core } from '@strapi/strapi';
 
-const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin => ({
-  'users-permissions': {
-    config: {
-      jwtSecret: env('JWT_SECRET', 'sr360_jwt_secret_v1_fallback'),
-    },
-  },
+export default ({ env }) => ({
   upload: {
     config: {
+      provider: 'local', // DESACTIVADO TEMPORALMENTE PARA EVITAR CRASHES EN RESTAURACIÓN
+      /* 
       provider: 'cloudinary',
       providerOptions: {
         cloud_name: env('CLOUDINARY_NAME'),
@@ -16,12 +12,12 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin =>
       },
       actionOptions: {
         upload: {},
-        uploadStream: {},
+        uploadStream: {
+           breakpoints: false // No generar tamaños extra para evitar 502
+        },
         delete: {},
       },
-      breakpoints: false, // Desactiva la creación de múltiples tamaños
+      */
     },
   },
 });
-
-export default config;
