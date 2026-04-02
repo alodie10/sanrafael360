@@ -14,7 +14,6 @@ import { Negocio, Categoria } from "@/types/strapi";
 export default function Home() {
   const [negocios, setNegocios] = useState<Negocio[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [heroData, setHeroData] = useState<{titulo: string, subtitulo: string} | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Estados de Filtrado
@@ -31,19 +30,7 @@ export default function Home() {
         setNegocios(negRes.data || []);
         setCategorias(catRes.data || []);
 
-        // Intento de carga de hero de forma aislada
-        try {
-          const heroRes = await fetchFromStrapi("hero?populate=*");
-          if (heroRes?.data) {
-            setHeroData({
-              titulo: heroRes.data.titulo,
-              subtitulo: heroRes.data.subtitulo
-            });
-          }
-        } catch (heroError) {
-          console.warn("Hero data not yet available or permission denied:", heroError);
-        }
-
+        // Carga de negocios y categorías solamente
       } catch (error) {
         console.error("Error cargando datos principales:", error);
       } finally {
@@ -73,14 +60,10 @@ export default function Home() {
           className="max-w-4xl z-10"
         >
           <h1 className="text-5xl md:text-7xl font-heading font-extrabold text-white tracking-tight leading-tight mb-6">
-            {heroData?.titulo ? (
-              <span dangerouslySetInnerHTML={{ __html: heroData.titulo.replace("San Rafael", "<span class='text-primary italic'>San Rafael</span>") }} />
-            ) : (
-              <>Vive <span className="text-primary italic">San Rafael</span></>
-            )}
+            Vive <span className="text-primary italic">San Rafael</span>
           </h1>
           <p className="text-lg md:text-xl text-slate-200 mb-10 max-w-2xl mx-auto text-balance">
-            {heroData?.subtitulo || "Encuentra las mejores experiencias, gastronomía y alojamiento en el corazón de Mendoza."}
+            Encuentra las mejores experiencias, gastronomía y alojamiento en el corazón de Mendoza.
           </p>
 
           {/* Search Bar Premium */}
