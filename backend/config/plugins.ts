@@ -19,6 +19,7 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin =>
         uploadStream: {},
         delete: {},
       },
+      breakpoints: false, // Desactiva la creación de múltiples tamaños
     },
   },
 });
