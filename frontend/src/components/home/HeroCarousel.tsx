@@ -26,19 +26,34 @@ export default function HeroCarousel() {
   useEffect(() => {
     const loadHero = async () => {
       try {
+        console.log('--- DEBUG: Cargando Hero de Strapi...');
         const res = await fetchFromStrapi('hero?populate=*');
+        
+        // Strapi 5 suele devolver la data directamente si es Single Type con populate
         if (res?.data) {
-          const data = res.data;
+          const attributes = res.data; // En Strapi 5.x.x la estructura es más plana
+          
           setHeroData({
-            titulo: data.titulo,
-            subtitulo: data.subtitulo,
-            imagenes: data.imagenes || []
+            titulo: attributes.titulo || 'San Rafael 360',
+            subtitulo: attributes.subtitulo || '',
+            imagenes: attributes.imagenes || []
           });
 
-          if (data.imagenes && data.imagenes.length > 0) {
-            const urls = data.imagenes.map((img: any) => getStrapiMedia(img.url)).filter(Boolean) as string[];
-            if (urls.length > 0) setImages(urls);
+          if (attributes.imagenes && attributes.imagenes.length > 0) {
+            console.log('--- DEBUG: Imágenes encontradas:', attributes.imagenes.length);
+            const urls = attributes.imagenes
+              .map((img: any) => getStrapiMedia(img.url))
+              .filter(Boolean) as string[];
+            
+            if (urls.length > 0) {
+              setImages(urls);
+              console.log('--- DEBUG: URLs de imágenes listas:', urls);
+            }
+          } else {
+            console.warn('--- DEBUG: La entrada Hero existe pero NO tiene imágenes.');
           }
+        } else {
+          console.warn('--- DEBUG: No se encontró la entrada Hero (404 o vacía). Usando defaults.');
         }
       } catch (error) {
         console.error('Error cargando Hero de Strapi:', error);
