@@ -97,6 +97,11 @@ async function main() {
 
                 if (!imageUrl || imageUrl.includes('imagen-no-disponible')) continue;
 
+                if (biz.logo) {
+                    console.log(`   ⏭️ Saltando (Ya tiene logo): ${bizName}`);
+                    continue;
+                }
+
                 console.log(`📦 [${++processed}] Sincronizando: ${bizName}`);
 
                 try {
