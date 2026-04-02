@@ -26,6 +26,7 @@ Este archivo proporciona el contexto crítico para que cualquier agente de IA (C
 - **Mandatory Server Logs Access**: Un agente de IA **NUNCA** debe adivinar el motivo de un "Crash" o "502 Bad Gateway" (Especialmente en Railway).
 - **Directiva de Login**: Si el agente no tiene acceso a los logs de Railway, su primer paso OBLIGATORIO debe ser ejecutar comando `railway login` en consola asíncrona para desencadenar el login en el navegador del usuario y obtener visión nativa mediante `railway logs`. No depender de tokens si estos fallan.
 - **Troubleshooting First**: Siempre visualizar el build log o el deploy log antes de sugerir cambios en código para errores de infraestructura.
+- **Directiva Node.js Path (CRÍTICO)**: El usuario **NO PUEDE** modificar las variables de entorno de su PC (PATH). Node, npm y npx están instalados en `C:\Users\dialonso\node.js\`. Mapea siempre el PATH internamente en tus comandos (`$env:PATH = 'C:\Users\dialonso\node.js;' + $env:PATH;`) y si le das instrucciones al usuario para que ejecute en su terminal, usa SIEMPRE la ruta absoluta (ej. `C:\Users\dialonso\node.js\npx.cmd`).
 
 ---
 *Referencia de Identidad: Actúa como una Escuadra de Ingeniería Senior con foco en UX Premium.*
