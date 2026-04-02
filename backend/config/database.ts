@@ -2,7 +2,13 @@ import path from 'path';
 import type { Core } from '@strapi/strapi';
 
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Database => {
-  const client = (env('DATABASE_CLIENT', 'sqlite') || 'sqlite').toString().trim().replace(/^=/, '').trim();
+  const databaseUrl = env('DATABASE_URL', '');
+  const hasPostgresUrl = databaseUrl.startsWith('postgres');
+  
+  // Si hay una URL de Postgres, forzamos el cliente a postgres
+  const client = hasPostgresUrl 
+    ? 'postgres' 
+    : (env('DATABASE_CLIENT', 'sqlite') || 'sqlite').toString().trim();
 
   const connections = {
     mysql: {
@@ -25,7 +31,7 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Database 
     },
     postgres: {
       connection: {
-        connectionString: env('DATABASE_URL'),
+        connectionString: databaseUrl,
         host: env('DATABASE_HOST', 'localhost'),
         port: env.int('DATABASE_PORT', 5432),
         database: env('DATABASE_NAME', 'strapi'),
@@ -45,7 +51,8 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Database 
     },
     sqlite: {
       connection: {
-        filename: path.join(__dirname, '..', '..', env('DATABASE_FILENAME', '.tmp/data.db')),
+        // Corregido: subimos un nivel menos para que quede en /opt/backend/.tmp en lugar de /opt/.tmp
+        filename: path.join(__dirname, '..', env('DATABASE_FILENAME', '.tmp/data.db')),
       },
       useNullAsDefault: true,
     },
