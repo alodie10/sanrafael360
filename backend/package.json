@@ -12,7 +12,9 @@
     "start": "strapi start",
     "strapi": "strapi",
     "upgrade": "npx @strapi/upgrade latest",
-    "upgrade:dry": "npx @strapi/upgrade latest --dry"
+    "upgrade:dry": "npx @strapi/upgrade latest --dry",
+    "upload-logos": "tsx scripts/upload-logos.ts",
+    "sync-covers": "powershell scripts/sync-covers-forced.ps1"
   },
   "dependencies": {
     "@strapi/plugin-cloud": "5.40.0",
