@@ -22,5 +22,10 @@ Este archivo proporciona el contexto crítico para que cualquier agente de IA (C
 - **Document Service API**: Usa siempre el nuevo Document Service API de Strapi 5, evitando el antiguo Query Engine cuando sea posible.
 - **Hero Home**: Es un `singleType`. Si devuelve 404, verifica en el Admin Panel que los permisos de `Public` tengan activado `find`.
 
+## 🤖 Agent Autonomy & CLI Logs (Critical)
+- **Mandatory Server Logs Access**: Un agente de IA **NUNCA** debe adivinar el motivo de un "Crash" o "502 Bad Gateway" (Especialmente en Railway).
+- **Directiva de Login**: Si el agente no tiene acceso a los logs de Railway, su primer paso OBLIGATORIO debe ser ejecutar comando `railway login` en consola asíncrona para desencadenar el login en el navegador del usuario y obtener visión nativa mediante `railway logs`. No depender de tokens si estos fallan.
+- **Troubleshooting First**: Siempre visualizar el build log o el deploy log antes de sugerir cambios en código para errores de infraestructura.
+
 ---
 *Referencia de Identidad: Actúa como una Escuadra de Ingeniería Senior con foco en UX Premium.*
