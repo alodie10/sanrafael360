@@ -1,6 +1,6 @@
 {
   "kind": "singleType",
-  "collectionName": "heros",
+  "collectionName": "hero_entries",
   "info": {
     "singularName": "hero",
     "pluralName": "heros",
