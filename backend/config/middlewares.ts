@@ -10,11 +10,28 @@ const config: Core.Config.Middlewares = [
         useDefaults: true,
         directives: {
           'connect-src': ["'self'", 'https:'],
-          'img-src': ["'self'", 'data:', 'blob:', 'res.cloudinary.com', 'sanrafael360-production.up.railway.app'],
-          'media-src': ["'self'", 'data:', 'blob:', 'res.cloudinary.com', 'sanrafael360-production.up.railway.app'],
+          'img-src': [
+            "'self'",
+            'data:',
+            'blob:',
+            'res.cloudinary.com',
+            'sanrafael360-production.up.railway.app',
+            'sanrafael360.vercel.app',
+            '*.vercel.app'
+          ],
+          'media-src': [
+            "'self'",
+            'data:',
+            'blob:',
+            'res.cloudinary.com',
+            'sanrafael360-production.up.railway.app',
+            'sanrafael360.vercel.app',
+            '*.vercel.app'
+          ],
           upgradeInsecureRequests: null,
         },
       },
+      crossOriginResourcePolicy: 'cross-origin',
     },
   },
   'strapi::cors',
