@@ -17,8 +17,10 @@
   "dependencies": {
     "@strapi/plugin-cloud": "5.40.0",
     "@strapi/plugin-users-permissions": "5.40.0",
+    "@strapi/provider-upload-cloudinary": "5.40.0",
     "@strapi/strapi": "5.40.0",
     "better-sqlite3": "12.6.2",
+    "cloudinary": "^2.5.1",
     "pg": "^8.11.0"
   },
   "devDependencies": {
