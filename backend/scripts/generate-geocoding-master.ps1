@@ -1,7 +1,7 @@
 $STRAPI_API_URL = "https://sanrafael360-production.up.railway.app/api"
 $API_TOKEN = "15a9b510789a322b3984bde54ee75c94dd3feb717e916779aedf8de9cc8e07a61f779167efccf3657e0d1831074e31870029e6eded789dedf987b4ead9f189e5c1d6b9e1c1439f6927edbee3d19c3a013423df3b8f2b620826fb572caaac559f84e46faa1c22c656449348922cf933f515c92cf2d698c233fa52bd88efe73635"
 $GOOGLE_MAPS_KEY = "AIzaSyCj9Y8mPBuCSxW0O2LEgj8nokX9pSAewgA"
-$csvPath = "c:\sanrafael360\backend\scripts\negocios_geocodificacion_maestra_V3.csv"
+$csvPath = "c:\sanrafael360\backend\scripts\negocios_geocodificacion_maestra_V4.csv"
 
 function Clean-Address($addr) {
     if ($null -eq $addr) { return "" }
@@ -11,6 +11,13 @@ function Clean-Address($addr) {
     $a = $a -replace [char]0x2013, "-" -replace [char]0x2014, "-"
     $a = $a -replace "(?i)-\s*Ciudad", ""
     return $a.Trim()
+}
+
+function Clean-Name($name) {
+    if ($null -eq $name) { return "" }
+    # Remover sufijos comunes tras guiones o parentesis para mejorar matching de Google Places
+    $n = $name.Split("-")[0].Split("(")[0].Trim()
+    return $n
 }
 
 $headers = @{ "Authorization" = "Bearer $API_TOKEN" }
@@ -32,7 +39,7 @@ do {
     }
 } while ($currentPage -le $pageCount)
 
-Write-Host "Procesando $($allNegocios.Count) negocios con ESTRATEGIA V3 (Prioridad Nombre Estricta)..."
+Write-Host "Procesando $($allNegocios.Count) negocios con ESTRATEGIA V4 (Nombre Limpio Prioritario)..."
 
 "Nombre,DocumentId,DireccionOriginal,LatActual,LngActual,LatNueva,LngNueva,Metodo,Status" | Out-File $csvPath -Encoding utf8
 
@@ -40,7 +47,8 @@ $successCount = 0
 $errorCount = 0
 
 foreach ($negocio in $allNegocios) {
-    $nombre = $negocio.nombre
+    $nombreFull = $negocio.nombre
+    $nombreClean = Clean-Name $nombreFull
     $rawAddr = $negocio.direccion
     $docId = $negocio.documentId
     $latActual = $negocio.latitud
@@ -53,13 +61,12 @@ foreach ($negocio in $allNegocios) {
     $status = "FAIL"
     $metodo = "NONE"
 
-    # 1. INTENTO POR NOMBRE SOLO (Prioridad Máxima para Lugares Específicos)
-    $qName = [System.Net.WebUtility]::UrlEncode("$nombre, San Rafael, Mendoza, Argentina")
+    # 1. INTENTO POR NOMBRE LIMPIO SOLO
+    $qName = [System.Net.WebUtility]::UrlEncode("$nombreClean, San Rafael, Mendoza, Argentina")
     try {
         $resp = Invoke-RestMethod -Uri "https://maps.googleapis.com/maps/api/geocode/json?address=$qName&key=$GOOGLE_MAPS_KEY"
         if ($resp.status -eq "OK") {
             $res = $resp.results[0]
-            # Solo confiar si es un establecimiento o punto de interés, para evitar matcheos genéricos a la ciudad
             $isPlace = $false
             foreach ($type in $res.types) {
                 if ($type -match "establishment|point_of_interest|lodging|restaurant|food|store|park|tourist_attraction") {
@@ -71,15 +78,15 @@ foreach ($negocio in $allNegocios) {
                 $newLat = $res.geometry.location.lat
                 $newLng = $res.geometry.location.lng
                 $status = "OK"
-                $metodo = "NOMBRE_ONLY"
+                $metodo = "NOMBRE_CLEAN_ONLY"
             }
         }
     } catch { }
 
-    # 2. INTENTO POR NOMBRE + DIRECCION (Si el anterior no fue concluyente)
+    # 2. INTENTO POR NOMBRE FULL + DIRECCION (Fallback)
     if ($status -ne "OK" -and ![string]::IsNullOrWhiteSpace($cleanAddr)) {
         $queries = @(
-            "$nombre, $cleanAddr, San Rafael, Mendoza, Argentina",
+            "$nombreFull, $cleanAddr, San Rafael, Mendoza, Argentina",
             "$cleanAddr, San Rafael, Mendoza, Argentina"
         )
         foreach ($qStr in $queries) {
@@ -90,7 +97,7 @@ foreach ($negocio in $allNegocios) {
                     $newLat = $resp.results[0].geometry.location.lat
                     $newLng = $resp.results[0].geometry.location.lng
                     $status = "OK"
-                    $metodo = if ($qStr -match $nombre) { "NOMBRE_DIRECCION" } else { "DIRECCION_ONLY" }
+                    $metodo = if ($qStr -match $nombreFull) { "NOMBRE_FULL_DIRECCION" } else { "DIRECCION_ONLY" }
                     break
                 }
             } catch { }
@@ -98,18 +105,18 @@ foreach ($negocio in $allNegocios) {
     }
 
     if ($status -eq "OK") {
-        Write-Host "OK: $nombre ($metodo) -> ($newLat, $newLng)"
+        Write-Host "OK: $nombreFull ($metodo) -> ($newLat, $newLng)"
         $successCount++
     } else {
-        Write-Host "ERR: $nombre (Metodo: $metodo)"
+        Write-Host "ERR: $nombreFull (Metodo: $metodo)"
         $errorCount++
     }
 
-    $line = """$nombre"",""$docId"",""$rawAddr"",""$latActual"",""$lngActual"",""$newLat"",""$newLng"",""$metodo"",""$status"""
+    $line = """$nombreFull"",""$docId"",""$rawAddr"",""$latActual"",""$lngActual"",""$newLat"",""$newLng"",""$metodo"",""$status"""
     $line | Out-File $csvPath -Append -Encoding utf8
 
-    Start-Sleep -Milliseconds 100
+    Start-Sleep -Milliseconds 120
 }
 
-Write-Host "Finalizado. Auditoria guardada en $csvPath"
+Write-Host "Finalizado V4. Auditoria guardada en $csvPath"
 Write-Host "Exito: $successCount, Error: $errorCount"
