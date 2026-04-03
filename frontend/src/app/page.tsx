@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { fetchFromStrapi, getStrapiMedia } from "@/lib/strapi";
