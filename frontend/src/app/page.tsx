@@ -1,6 +1,5 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { fetchFromStrapi, getStrapiMedia } from "@/lib/strapi";
 import HeroCarousel from "@/components/home/HeroCarousel";
 import BusinessGrid from "@/components/home/BusinessGrid";
@@ -11,7 +10,9 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Negocio, Categoria } from "@/types/strapi";
 
-export default function Home() {
+// Componente intermedio para manejar Suspense
+function HomeContent() {
+  const searchParams = useSearchParams();
   const [negocios, setNegocios] = useState<Negocio[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +20,22 @@ export default function Home() {
   // Estados de Filtrado
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategoryDocId, setSelectedCategoryDocId] = useState<string | null>(null);
+
+  // Sincronizar filtro desde la URL
+  useEffect(() => {
+    const catParam = searchParams.get("cat");
+    if (catParam && categorias.length > 0) {
+      const found = categorias.find(c => 
+        c.nombre.toLowerCase().includes(catParam.toLowerCase()) || 
+        c.documentId === catParam
+      );
+      if (found) {
+        setSelectedCategoryDocId(found.documentId);
+      }
+    } else if (!catParam) {
+      setSelectedCategoryDocId(null);
+    }
+  }, [searchParams, categorias]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -166,5 +183,13 @@ export default function Home() {
         </section>
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <HomeContent />
+    </Suspense>
   );
 }

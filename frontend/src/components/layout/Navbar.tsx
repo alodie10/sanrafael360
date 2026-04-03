@@ -8,9 +8,9 @@ import { Menu, X, Plus, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { name: "Alojamientos", href: "/alojamientos" },
-  { name: "Gastronomía", href: "/gastronomia" },
-  { name: "Actividades", href: "/actividades" },
+  { name: "Alojamientos", href: "/?cat=alojamientos" },
+  { name: "Gastronomía", href: "/?cat=gastronomia" },
+  { name: "Actividades", href: "/?cat=actividades" },
 ];
 
 export default function Navbar() {

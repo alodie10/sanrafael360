@@ -110,7 +110,7 @@ export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps
     if (!document.getElementById(scriptId)) {
       const script = document.createElement("script");
       script.id = scriptId;
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&language=es`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&language=es&libraries=marker&loading=async`;
       script.async = true;
       script.defer = true;
       script.onload = () => setMapLoaded(true);
@@ -125,6 +125,7 @@ export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps
         center: { lat, lng },
         zoom,
         styles: darkMapStyle,
+        mapId: "DEMO_MAP_ID", // Requerido para AdvancedMarkerElement
         disableDefaultUI: false,
         zoomControl: true,
         mapTypeControl: false,
@@ -132,11 +133,10 @@ export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps
         fullscreenControl: true,
       });
 
-      new window.google.maps.Marker({
+      new window.google.maps.marker.AdvancedMarkerElement({
         position: { lat, lng },
         map,
         title: title || "Ubicación",
-        animation: window.google.maps.Animation.DROP,
       });
     }
   }, [mapLoaded, lat, lng, zoom, title]);
