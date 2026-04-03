@@ -26,6 +26,8 @@ foreach ($row in $data) {
     $latStr = $row.LatNueva.Trim() -replace ",", "."
     $lngStr = $row.LngNueva.Trim() -replace ",", "."
     
+    $lat = 0
+    $lng = 0
     if (-not [double]::TryParse($latStr, [System.Globalization.NumberStyles]::Any, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$lat)) {
         Write-Host "Error de formato en Lat: $latStr para $nombre"
         $errors++
