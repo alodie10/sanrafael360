@@ -1,4 +1,4 @@
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { fetchFromStrapi, getStrapiMedia } from "@/lib/strapi";
 import HeroCarousel from "@/components/home/HeroCarousel";
@@ -6,7 +6,7 @@ import BusinessGrid from "@/components/home/BusinessGrid";
 import CategoryGrid from "@/components/home/CategoryGrid";
 import FilterBar from "@/components/home/FilterBar";
 import { Search, MapPin, Star, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Negocio, Categoria } from "@/types/strapi";
 
@@ -16,6 +16,7 @@ function HomeContent() {
   const [negocios, setNegocios] = useState<Negocio[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   // Estados de Filtrado
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,13 +42,12 @@ function HomeContent() {
     const loadData = async () => {
       try {
         const [negRes, catRes] = await Promise.all([
-          fetchFromStrapi("negocios?populate=*&sort=nombre:asc&pagination[pageSize]=100"),
+          // Cargamos suficientes negocios para búsqueda client-side robusta
+          fetchFromStrapi("negocios?populate=*&sort=nombre:asc&pagination[pageSize]=500"),
           fetchFromStrapi("categorias?populate=*&sort=nombre:asc"),
         ]);
         setNegocios(negRes.data || []);
         setCategorias(catRes.data || []);
-
-        // Carga de negocios y categorías solamente
       } catch (error) {
         console.error("Error cargando datos principales:", error);
       } finally {
@@ -57,15 +57,36 @@ function HomeContent() {
     loadData();
   }, []);
 
-  // Lógica de Filtrado Dinámico
+  const scrollToResults = () => {
+    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Scroll automático cuando se cambia de categoría o búsqueda (si hay texto)
+  useEffect(() => {
+    if (selectedCategoryDocId || (searchQuery.trim().length > 2)) {
+      scrollToResults();
+    }
+  }, [selectedCategoryDocId, searchQuery]);
+
+  // Lógica de Filtrado Dinámico (Búsqueda Parcial Inteligente)
   const filteredNegocios = negocios.filter((negocio) => {
-    const matchesSearch = negocio.nombre.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         negocio.descripcion?.toLowerCase().includes(searchQuery.toLowerCase());
+    // Dividir búsqueda en términos para permitir búsqueda parcial flexible (ej: "Cabañas Sur")
+    const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
+    const bizName = negocio.nombre.toLowerCase();
+    const bizDesc = (negocio.descripcion || "").toLowerCase();
+
+    const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => 
+      bizName.includes(term) || bizDesc.includes(term)
+    );
+
     const matchesCategory = selectedCategoryDocId 
       ? negocio.categoria?.documentId === selectedCategoryDocId 
       : true;
+
     return matchesSearch && matchesCategory;
   });
+
+  const isFiltering = !!(searchQuery || selectedCategoryDocId);
 
   return (
     <main className="min-h-screen">
@@ -97,9 +118,13 @@ function HomeContent() {
                   className="bg-transparent border-none outline-none w-full text-white placeholder:text-slate-400 text-sm md:text-base"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && scrollToResults()}
                 />
               </div>
-              <button className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold text-sm md:text-base transition-all hover:scale-105 active:scale-95 shadow-lg">
+              <button 
+                onClick={scrollToResults}
+                className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold text-sm md:text-base transition-all hover:scale-105 active:scale-95 shadow-lg"
+              >
                 Explorar
               </button>
             </div>
@@ -115,27 +140,38 @@ function HomeContent() {
       />
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 bg-background">
-        {/* CATEGORIES */}
-        <div className="mb-20">
-          <div className="flex items-center justify-between mb-10">
-            <div className="max-w-xl">
-              <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-2">Explorar por Categoría</h2>
-              <p className="text-slate-400 text-sm">Descubre San Rafael según tus intereses y necesidades.</p>
-            </div>
-            <button className="text-primary font-bold flex items-center gap-2 hover:underline group text-sm md:text-base">
-              Ver todas <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-          
-          <CategoryGrid 
-            categorias={categorias} 
-            loading={loading} 
-            onSelectCategory={setSelectedCategoryDocId} 
-          />
-        </div>
+        
+        <AnimatePresence mode="wait">
+          {/* CATEGORIES (Propuesta A: Se ocultan si hay filtros activos para priorizar resultados) */}
+          {!isFiltering && (
+            <motion.div 
+              key="categories"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-20 overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-10">
+                <div className="max-w-xl">
+                  <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-2">Explorar por Categoría</h2>
+                  <p className="text-slate-400 text-sm">Descubre San Rafael según tus intereses y necesidades.</p>
+                </div>
+                <button className="text-primary font-bold flex items-center gap-2 hover:underline group text-sm md:text-base">
+                  Ver todas <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+              
+              <CategoryGrid 
+                categorias={categorias} 
+                loading={loading} 
+                onSelectCategory={setSelectedCategoryDocId} 
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* SEARCH STATS & RESET */}
-        {(searchQuery || selectedCategoryDocId) && (
+        {isFiltering && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -146,7 +182,7 @@ function HomeContent() {
                 <Search className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h4 className="text-white font-bold tracking-tight">Filtros Activos</h4>
+                <h4 className="text-white font-bold tracking-tight">Resultados de Búsqueda</h4>
                 <p className="text-slate-400 text-sm">
                   Mostrando <span className="text-primary font-bold">{filteredNegocios.length}</span> comercios encontrados
                 </p>
@@ -161,12 +197,12 @@ function HomeContent() {
           </motion.div>
         )}
 
-        {/* FEATURED PLACES */}
-        <section className="mt-20">
+        {/* FEATURED PLACES / SEARCH RESULTS */}
+        <section className="mt-20 scroll-mt-32" ref={resultsRef}>
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
             <div className="max-w-xl">
               <h2 className="text-4xl md:text-5xl font-heading font-extrabold text-white mb-4">
-                Comercios <span className="text-primary italic font-medium">Destacados</span>
+                {isFiltering ? "Resultados de" : "Comercios"} <span className="text-primary italic font-medium">{isFiltering ? "tu búsqueda" : "Destacados"}</span>
               </h2>
               <p className="text-slate-400">
                 {selectedCategoryDocId 
@@ -174,12 +210,18 @@ function HomeContent() {
                   : "Seleccionamos las mejores opciones locales para que tu estadía en San Rafael sea inolvidable."}
               </p>
             </div>
-            <button className="text-slate-200 hover:text-primary transition-all text-sm font-bold flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 hover:border-primary/50 group">
-              Explorar Guía Completa <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+            {!isFiltering && (
+              <button className="text-slate-200 hover:text-primary transition-all text-sm font-bold flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 hover:border-primary/50 group">
+                Explorar Guía Completa <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            )}
           </div>
 
-          <BusinessGrid negocios={filteredNegocios} loading={loading} />
+          <BusinessGrid 
+            negocios={filteredNegocios} 
+            loading={loading} 
+            onClearFilters={() => { setSearchQuery(""); setSelectedCategoryDocId(null); }}
+          />
         </section>
       </div>
     </main>

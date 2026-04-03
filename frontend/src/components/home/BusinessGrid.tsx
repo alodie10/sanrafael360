@@ -8,6 +8,7 @@ import { Negocio } from "@/types/strapi";
 interface BusinessGridProps {
   negocios: Negocio[];
   loading?: boolean;
+  onClearFilters?: () => void;
 }
 
 const container = {
@@ -25,7 +26,7 @@ const item = {
   show: { opacity: 1, y: 0 }
 };
 
-export default function BusinessGrid({ negocios, loading = false }: BusinessGridProps) {
+export default function BusinessGrid({ negocios, loading = false, onClearFilters }: BusinessGridProps) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
@@ -41,7 +42,16 @@ export default function BusinessGrid({ negocios, loading = false }: BusinessGrid
       <div className="text-center py-24 px-6 bg-slate-900/20 rounded-[3rem] border border-white/5 backdrop-blur-sm">
         <div className="text-5xl mb-6 opacity-30">🏔️</div>
         <h3 className="text-xl font-bold text-white mb-2">No se encontraron resultados</h3>
-        <p className="text-slate-400 max-w-sm mx-auto">Prueba ajustando tus filtros o vuelve a intentarlo más tarde.</p>
+        <p className="text-slate-400 max-w-sm mx-auto mb-8">Prueba ajustando tus filtros o vuelve a intentarlo con otros términos.</p>
+        
+        {onClearFilters && (
+          <button 
+            onClick={onClearFilters}
+            className="px-8 py-4 bg-primary text-primary-foreground font-bold rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary/20"
+          >
+            Limpiar búsqueda y filtros
+          </button>
+        )}
       </div>
     );
   }
