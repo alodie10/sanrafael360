@@ -86,12 +86,12 @@ function HomeContent() {
     resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Scroll automático cuando se cambia de categoría o búsqueda (si hay texto sustancial)
+  // Scroll automático cuando se cambia de categoría
   useEffect(() => {
-    if (selectedCategoryDocId || (searchQuery.trim().length > 2)) {
+    if (selectedCategoryDocId) {
       scrollToResults();
     }
-  }, [selectedCategoryDocId, searchQuery]);
+  }, [selectedCategoryDocId]);
 
   // Lógica de Filtrado Dinámico (Búsqueda Parcial Inteligente y Robusta)
   const filteredNegocios = negocios.filter((negocio) => {
