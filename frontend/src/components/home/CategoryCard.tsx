@@ -9,9 +9,10 @@ import { getCategoryIcon, getCategoryGradient } from "@/lib/icons";
 interface CategoryCardProps {
   categoria: Categoria;
   index: number;
+  onSelect?: (docId: string | null) => void;
 }
 
-export default function CategoryCard({ categoria, index }: CategoryCardProps) {
+export default function CategoryCard({ categoria, index, onSelect }: CategoryCardProps) {
   const Icon = getCategoryIcon(categoria.nombre);
   const gradient = getCategoryGradient(categoria.nombre);
 
@@ -21,6 +22,7 @@ export default function CategoryCard({ categoria, index }: CategoryCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
       whileHover={{ scale: 1.03, y: -5 }}
+      onClick={() => onSelect?.(categoria.documentId)}
       className="group cursor-pointer"
     >
       <div className={cn(

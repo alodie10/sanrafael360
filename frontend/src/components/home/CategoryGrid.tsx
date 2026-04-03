@@ -7,9 +7,10 @@ import CategoryCard from "./CategoryCard";
 interface CategoryGridProps {
   categorias: Categoria[];
   loading: boolean;
+  onSelectCategory?: (docId: string | null) => void;
 }
 
-export default function CategoryGrid({ categorias, loading }: CategoryGridProps) {
+export default function CategoryGrid({ categorias, loading, onSelectCategory }: CategoryGridProps) {
   if (loading) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -45,6 +46,7 @@ export default function CategoryGrid({ categorias, loading }: CategoryGridProps)
           key={categoria.id} 
           categoria={categoria} 
           index={index} 
+          onSelect={onSelectCategory}
         />
       ))}
     </motion.div>

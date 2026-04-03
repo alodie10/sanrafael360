@@ -18,7 +18,7 @@ export default function Home() {
 
   // Estados de Filtrado
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedCategoryDocId, setSelectedCategoryDocId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -44,7 +44,9 @@ export default function Home() {
   const filteredNegocios = negocios.filter((negocio) => {
     const matchesSearch = negocio.nombre.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          negocio.descripcion?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategoryId ? negocio.categoria?.id === selectedCategoryId : true;
+    const matchesCategory = selectedCategoryDocId 
+      ? negocio.categoria?.documentId === selectedCategoryDocId 
+      : true;
     return matchesSearch && matchesCategory;
   });
 
@@ -91,8 +93,8 @@ export default function Home() {
       {/* FILTER BAR STICKY */}
       <FilterBar 
         categorias={categorias} 
-        selectedCategoryId={selectedCategoryId} 
-        onSelectCategory={setSelectedCategoryId} 
+        selectedCategoryDocId={selectedCategoryDocId} 
+        onSelectCategory={setSelectedCategoryDocId} 
       />
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 bg-background">
@@ -108,11 +110,15 @@ export default function Home() {
             </button>
           </div>
           
-          <CategoryGrid categorias={categorias} loading={loading} />
+          <CategoryGrid 
+            categorias={categorias} 
+            loading={loading} 
+            onSelectCategory={setSelectedCategoryDocId} 
+          />
         </div>
 
         {/* SEARCH STATS & RESET */}
-        {(searchQuery || selectedCategoryId) && (
+        {(searchQuery || selectedCategoryDocId) && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -130,7 +136,7 @@ export default function Home() {
               </div>
             </div>
             <button 
-              onClick={() => { setSearchQuery(""); setSelectedCategoryId(null); }}
+              onClick={() => { setSearchQuery(""); setSelectedCategoryDocId(null); }}
               className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-xl border border-white/5 transition-all active:scale-95"
             >
               Limpiar todos los filtros
@@ -146,8 +152,8 @@ export default function Home() {
                 Comercios <span className="text-primary italic font-medium">Destacados</span>
               </h2>
               <p className="text-slate-400">
-                {selectedCategoryId 
-                  ? `Explorando lo mejor en ${categorias.find(c => c.id === selectedCategoryId)?.nombre || "la categoría"} de San Rafael.`
+                {selectedCategoryDocId 
+                  ? `Explorando lo mejor en ${categorias.find(c => c.documentId === selectedCategoryDocId)?.nombre || "la categoría"} de San Rafael.`
                   : "Seleccionamos las mejores opciones locales para que tu estadía en San Rafael sea inolvidable."}
               </p>
             </div>

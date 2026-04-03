@@ -8,11 +8,11 @@ import { getCategoryIcon } from "@/lib/icons";
 
 interface FilterBarProps {
   categorias: Categoria[];
-  selectedCategoryId: number | null;
-  onSelectCategory: (id: number | null) => void;
+  selectedCategoryDocId: string | null;
+  onSelectCategory: (docId: string | null) => void;
 }
 
-export default function FilterBar({ categorias, selectedCategoryId, onSelectCategory }: FilterBarProps) {
+export default function FilterBar({ categorias, selectedCategoryDocId, onSelectCategory }: FilterBarProps) {
   return (
     <div className="sticky top-20 z-40 bg-background/80 backdrop-blur-xl border-b border-white/5 py-4 mb-8 -mx-4 px-4 md:mx-0 md:px-0 transition-all">
       <div className="max-w-7xl mx-auto overflow-x-auto scrollbar-hide">
@@ -23,7 +23,7 @@ export default function FilterBar({ categorias, selectedCategoryId, onSelectCate
             onClick={() => onSelectCategory(null)}
             className={cn(
               "flex flex-col items-center gap-2 min-w-[80px] p-2 transition-all group",
-              selectedCategoryId === null 
+              selectedCategoryDocId === null 
                 ? "text-primary border-b-2 border-primary" 
                 : "text-slate-500 border-b-2 border-transparent hover:text-slate-200"
             )}
@@ -36,12 +36,12 @@ export default function FilterBar({ categorias, selectedCategoryId, onSelectCate
           {categorias.map((cat) => {
             const Icon = getCategoryIcon(cat.nombre);
 
-            const isActive = selectedCategoryId === cat.id;
+            const isActive = selectedCategoryDocId === cat.documentId;
 
             return (
               <button
                 key={cat.id}
-                onClick={() => onSelectCategory(cat.id)}
+                onClick={() => onSelectCategory(cat.documentId)}
                 className={cn(
                   "flex flex-col items-center gap-2 min-w-[100px] p-2 transition-all group",
                   isActive 
