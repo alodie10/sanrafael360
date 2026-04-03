@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const defaultImages = [
-  '/images/hero/paisaje-1.jpg',
-  '/images/hero/paisaje-2.jpg',
-  '/images/hero/paisaje-3.jpg',
-  '/images/hero/paisaje-4.jpg',
-  '/images/hero/paisaje-5.jpg',
+  '/images/hero/lago-y-montana.jpg',
+  '/images/hero/laguna-encantada.jpg',
+  '/images/hero/rafting.jpg',
+  '/images/hero/rio-atuel-sosneado.jpg',
+  '/images/hero/sosneado.jpg',
 ];
 
 export default function HeroCarousel() {
