@@ -45,10 +45,10 @@
       "type": "string"
     },
     "latitud": {
-      "type": "decimal"
+      "type": "float"
     },
     "longitud": {
-      "type": "decimal"
+      "type": "float"
     },
     "logo": {
       "type": "media",
