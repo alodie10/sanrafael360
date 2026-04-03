@@ -93,7 +93,9 @@ export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    // Intentar obtenerla del .env o usar el fallback directo
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyCj9Y8mPBuCSxW0O2LEgj8nokX9pSAewgA";
+    
     if (!apiKey) {
       setError("Falta la API Key de Google Maps");
       return;
