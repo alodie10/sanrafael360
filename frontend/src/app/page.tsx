@@ -10,6 +10,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Negocio, Categoria } from "@/types/strapi";
 
+// Helper para normalizar texto (quitar acentos, etc.)
+const normalizeText = (str: string) => {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+};
+
 // Componente intermedio para manejar Suspense
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -27,7 +36,7 @@ function HomeContent() {
     const catParam = searchParams.get("cat");
     if (catParam && categorias.length > 0) {
       const found = categorias.find(c => 
-        c.nombre.toLowerCase().includes(catParam.toLowerCase()) || 
+        normalizeText(c.nombre).includes(normalizeText(catParam)) || 
         c.documentId === catParam
       );
       if (found) {
@@ -41,13 +50,27 @@ function HomeContent() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [negRes, catRes] = await Promise.all([
-          // Cargamos suficientes negocios para búsqueda client-side robusta
-          fetchFromStrapi("negocios?populate=*&sort=nombre:asc&pagination[pageSize]=500"),
-          fetchFromStrapi("categorias?populate=*&sort=nombre:asc"),
-        ]);
-        setNegocios(negRes.data || []);
+        setLoading(true);
+        
+        // 1. Cargar Categorías
+        const catRes = await fetchFromStrapi("categorias?populate=*&sort=nombre:asc");
         setCategorias(catRes.data || []);
+
+        // 2. Cargar Negocios con Paginación (Strapi limita a 100 por defecto)
+        let allNegocios: Negocio[] = [];
+        let page = 1;
+        let pageCount = 1;
+
+        do {
+          const negRes = await fetchFromStrapi(`negocios?populate=*&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=100`);
+          if (negRes.data) {
+            allNegocios = [...allNegocios, ...negRes.data];
+          }
+          pageCount = negRes.meta?.pagination?.pageCount || 1;
+          page++;
+        } while (page <= pageCount);
+
+        setNegocios(allNegocios);
       } catch (error) {
         console.error("Error cargando datos principales:", error);
       } finally {
@@ -61,19 +84,20 @@ function HomeContent() {
     resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Scroll automático cuando se cambia de categoría o búsqueda (si hay texto)
+  // Scroll automático cuando se cambia de categoría o búsqueda (si hay texto sustancial)
   useEffect(() => {
     if (selectedCategoryDocId || (searchQuery.trim().length > 2)) {
       scrollToResults();
     }
   }, [selectedCategoryDocId, searchQuery]);
 
-  // Lógica de Filtrado Dinámico (Búsqueda Parcial Inteligente)
+  // Lógica de Filtrado Dinámico (Búsqueda Parcial Inteligente y Robusta)
   const filteredNegocios = negocios.filter((negocio) => {
-    // Dividir búsqueda en términos para permitir búsqueda parcial flexible (ej: "Cabañas Sur")
-    const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
-    const bizName = negocio.nombre.toLowerCase();
-    const bizDesc = (negocio.descripcion || "").toLowerCase();
+    const normalizedQuery = normalizeText(searchQuery);
+    const searchTerms = normalizedQuery.split(/\s+/).filter(t => t.length > 0);
+    
+    const bizName = normalizeText(negocio.nombre);
+    const bizDesc = normalizeText(negocio.descripcion || "");
 
     const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => 
       bizName.includes(term) || bizDesc.includes(term)
@@ -86,7 +110,7 @@ function HomeContent() {
     return matchesSearch && matchesCategory;
   });
 
-  const isFiltering = !!(searchQuery || selectedCategoryDocId);
+  const isFiltering = searchQuery.trim().length > 0 || !!selectedCategoryDocId;
 
   return (
     <main className="min-h-screen">
@@ -142,14 +166,15 @@ function HomeContent() {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 bg-background">
         
         <AnimatePresence mode="wait">
-          {/* CATEGORIES (Propuesta A: Se ocultan si hay filtros activos para priorizar resultados) */}
-          {!isFiltering && (
+          {/* CATEGORIES (Propuesta A corregida: Se ocultan al instante si hay filtros) */}
+          {!isFiltering ? (
             <motion.div 
-              key="categories"
+              key="categories-grid"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className="mb-20 overflow-hidden"
+              layout
             >
               <div className="flex items-center justify-between mb-10">
                 <div className="max-w-xl">
@@ -167,35 +192,35 @@ function HomeContent() {
                 onSelectCategory={setSelectedCategoryDocId} 
               />
             </motion.div>
+          ) : (
+            <motion.div 
+              key="search-stats"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="flex flex-col md:flex-row items-center justify-between gap-4 mb-20 p-6 bg-primary/10 rounded-[2rem] border border-primary/20 backdrop-blur-md"
+              layout
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                  <Search className="w-6 h-6 text-primary-foreground" />
+                </div>
+                <div>
+                  <h4 className="text-white font-bold tracking-tight">Resultados de Búsqueda</h4>
+                  <p className="text-slate-400 text-sm">
+                    Mostrando <span className="text-primary font-bold">{filteredNegocios.length}</span> comercios encontrados
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => { setSearchQuery(""); setSelectedCategoryDocId(null); }}
+                className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-xl border border-white/5 transition-all active:scale-95"
+              >
+                Limpiar todos los filtros
+              </button>
+            </motion.div>
           )}
         </AnimatePresence>
-
-        {/* SEARCH STATS & RESET */}
-        {isFiltering && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col md:flex-row items-center justify-between gap-4 mb-20 p-6 bg-primary/10 rounded-[2rem] border border-primary/20 backdrop-blur-md"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                <Search className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h4 className="text-white font-bold tracking-tight">Resultados de Búsqueda</h4>
-                <p className="text-slate-400 text-sm">
-                  Mostrando <span className="text-primary font-bold">{filteredNegocios.length}</span> comercios encontrados
-                </p>
-              </div>
-            </div>
-            <button 
-              onClick={() => { setSearchQuery(""); setSelectedCategoryDocId(null); }}
-              className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-xl border border-white/5 transition-all active:scale-95"
-            >
-              Limpiar todos los filtros
-            </button>
-          </motion.div>
-        )}
 
         {/* FEATURED PLACES / SEARCH RESULTS */}
         <section className="mt-20 scroll-mt-32" ref={resultsRef}>
