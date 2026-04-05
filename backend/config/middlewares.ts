@@ -32,6 +32,7 @@ const config: Core.Config.Middlewares = [
         },
       },
       crossOriginResourcePolicy: 'cross-origin',
+      crossOriginEmbedderPolicy: false,
     },
   },
   'strapi::cors',

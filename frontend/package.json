@@ -15,7 +15,9 @@
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.446.0",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^2.5.2"
+    "tailwind-merge": "^2.5.2",
+    "@googlemaps/js-api-loader": "^1.16.6",
+    "@vercel/speed-insights": "^1.0.10"
   },
   "devDependencies": {
     "@types/node": "^20",
