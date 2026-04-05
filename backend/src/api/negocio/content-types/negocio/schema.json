@@ -86,6 +86,19 @@
     "horario_apertura": {
       "type": "json",
       "description": "Objeto JSON con horarios por día de la semana"
+    },
+    "reserva_url": {
+      "type": "string"
+    },
+    "google_maps_url": {
+      "type": "string"
+    },
+    "discovery_pending": {
+      "type": "boolean",
+      "default": true
+    },
+    "discovery_verified": {      "type": "boolean",
+      "default": false
     }
   }
 }
