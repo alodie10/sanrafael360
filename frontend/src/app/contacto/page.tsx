@@ -17,7 +17,7 @@ export default function ContactoPage() {
           <div className="space-y-4">
             <h2 className="text-primary font-bold tracking-widest uppercase text-sm">Súmate a la plataforma</h2>
             <h1 className="text-5xl md:text-7xl font-heading font-extrabold tracking-tight leading-tight">
-              Haz crecer tu <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400 italic">Negocio</span>
+              Haz crecer tu <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400 italic px-1 pb-1">Negocio</span>
             </h1>
             <p className="text-slate-400 text-lg max-w-md leading-relaxed">
               Únete al directorio más completo de San Rafael. Aumenta tu visibilidad y llega a miles de turistas y residentes.
