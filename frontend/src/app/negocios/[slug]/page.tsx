@@ -31,15 +31,19 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   const [error, setError] = useState(false);
 
   /**
-   * Fixes UTF-8 text that was stored as Latin-1 double-encoding.
-   * e.g. "SÃ¡bado" → "Sábado", "MiÃ©rcoles" → "Miércoles"
-   * This is a client-side safety net for data already persisted in the DB.
+   * Fixes UTF-8 text stored with Latin-1 double-encoding (e.g. "SÃ¡bado" → "Sábado").
+   * SOLO se aplica cuando se detectan los marcadores de corrupción 'Ã' o 'Â',
+   * que son las representaciones Latin-1 de los bytes UTF-8 0xC3 y 0xC2.
+   * Si el texto ya está bien codificado (escrito manualmente en Strapi), se devuelve intacto.
    */
   const sanitizeText = (text: string): string => {
+    // Guard: si no hay marcadores de corrupción, el texto está limpio → no tocar
+    if (!text.includes('Ã') && !text.includes('Â')) {
+      return text;
+    }
     try {
-      // Decode Latin-1 bytes that were mistakenly interpreted as UTF-8 characters
       const bytes = Uint8Array.from(text, (c) => c.charCodeAt(0));
-      return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+      return new TextDecoder('utf-8', { fatal: false }).decode(bytes);
     } catch {
       return text;
     }
