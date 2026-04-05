@@ -44,6 +44,9 @@ export interface Negocio {
   categoria?: Categoria;
   destacado?: boolean;
   horarios?: string;
+  reserva_url?: string;
+  google_maps_url?: string;
+  discovery_verified?: boolean;
 }
 
 export interface StrapiResponse<T> {
