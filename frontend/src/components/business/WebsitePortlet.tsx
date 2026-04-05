@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Globe, ExternalLink, ShieldCheck } from "lucide-react";
 
 interface WebsitePortletProps {
@@ -9,6 +10,9 @@ interface WebsitePortletProps {
 
 export default function WebsitePortlet({ url, businessName }: WebsitePortletProps) {
   const finalUrl = url.startsWith("http") ? url : `https://${url}`;
+  // React state para el fallback del favicon — evita manipulación directa del DOM
+  // que rompe la hidratación de Next.js
+  const [faviconFailed, setFaviconFailed] = useState(false);
 
   let domain = "";
   try {
@@ -17,7 +21,6 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
     domain = finalUrl;
   }
 
-  // Google's favicon CDN — works for virtually every domain, no proxy needed
   const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
 
   return (
@@ -33,19 +36,18 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
         rel="noopener noreferrer"
         className="group flex items-center gap-5 bg-slate-900/60 border border-white/8 rounded-3xl p-6 hover:border-primary/40 hover:bg-slate-900/80 transition-all duration-300 shadow-xl"
       >
-        {/* Favicon con fallback al ícono Globe */}
+        {/* Favicon con fallback React (sin manipulación del DOM) */}
         <div className="w-16 h-16 shrink-0 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-          <img
-            src={faviconUrl}
-            alt={domain}
-            className="w-10 h-10 object-contain"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-              const sibling = (e.target as HTMLImageElement).nextElementSibling;
-              if (sibling) sibling.classList.remove("hidden");
-            }}
-          />
-          <Globe className="w-8 h-8 text-primary hidden" />
+          {faviconFailed ? (
+            <Globe className="w-8 h-8 text-primary" />
+          ) : (
+            <img
+              src={faviconUrl}
+              alt={domain}
+              className="w-10 h-10 object-contain"
+              onError={() => setFaviconFailed(true)}
+            />
+          )}
         </div>
 
         {/* Info del dominio */}

@@ -9,10 +9,28 @@ interface BookingWidgetProps {
   businessName: string;
 }
 
+/**
+ * Valida si una URL es sintácticamente correcta y tiene un protocolo web.
+ * Binario estricto: cualquier URL malformada o vacía retorna false.
+ */
+function isValidUrl(url?: string): boolean {
+  if (!url || url.trim() === "") return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export default function BookingWidget({ reservaUrl, whatsapp, businessName }: BookingWidgetProps) {
-  // Si no hay reservaUrl ni whatsapp, no mostramos nada 
-  // (aunque en un futuro podríamos mostrar un mensaje de "Solicitar Cita")
-  if (!reservaUrl && !whatsapp) return null;
+  const validReservaUrl = isValidUrl(reservaUrl) ? reservaUrl : undefined;
+  const validWhatsapp = whatsapp && whatsapp.replace(/\D/g, "").length >= 10
+    ? whatsapp
+    : undefined;
+
+  // Silencio visual: si no hay ningún destino válido, no renderizar nada
+  if (!validReservaUrl && !validWhatsapp) return null;
 
   return (
     <div className="relative w-full rounded-3xl p-8 bg-gradient-to-br from-primary/20 via-slate-900 to-slate-900 border border-primary/20 shadow-2xl overflow-hidden group mb-12">
@@ -44,9 +62,9 @@ export default function BookingWidget({ reservaUrl, whatsapp, businessName }: Bo
 
         {/* Action Button */}
         <div className="w-full shrink-0">
-          {reservaUrl ? (
+          {validReservaUrl ? (
             <motion.a 
-               href={reservaUrl}
+               href={validReservaUrl}
                target="_blank"
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}
@@ -57,7 +75,7 @@ export default function BookingWidget({ reservaUrl, whatsapp, businessName }: Bo
             </motion.a>
           ) : (
             <motion.a 
-               href={`https://wa.me/${whatsapp?.replace(/\D/g,'')}`}
+               href={`https://wa.me/${validWhatsapp?.replace(/\D/g,'')}`}
                target="_blank"
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}

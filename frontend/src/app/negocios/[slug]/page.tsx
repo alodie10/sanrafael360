@@ -183,7 +183,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
 
       {/* CONTENT GRID */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16 items-start">
           
           {/* Main Info */}
           <div className="lg:col-span-2 space-y-12">
@@ -192,10 +192,23 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                 Descripción
                 <div className="h-px flex-1 bg-white/5" />
               </h2>
-              <div 
-                className="text-slate-400 leading-relaxed text-lg whitespace-pre-wrap mb-12"
-                dangerouslySetInnerHTML={{ __html: negocio.descripcion || "Sin descripción disponible." }}
-              />
+              {negocio.descripcion ? (
+                <div 
+                  className="text-slate-400 leading-relaxed text-lg whitespace-pre-wrap mb-12"
+                  dangerouslySetInnerHTML={{ __html: negocio.descripcion }}
+                />
+              ) : (
+                /* Placeholder glassmorphic — se muestra si el negocio no tiene descripción */
+                <div className="mb-12 p-8 rounded-3xl bg-white/3 border border-white/8 backdrop-blur-sm flex items-center gap-5">
+                  <div className="w-12 h-12 shrink-0 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <span className="text-2xl">🏔️</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-bold mb-1">Descripción próximamente</p>
+                    <p className="text-slate-500 text-sm">Estamos recopilando la información de este comercio. Volvé pronto.</p>
+                  </div>
+                </div>
+              )}
 
               {/* Website Portlet - Enriquecimiento Premium */}
               {negocio.website && (
@@ -274,19 +287,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                   </a>
                 )}
 
-                {negocio.website && (
-                  <a href={negocio.website} target="_blank" className="flex items-center justify-between p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5 group">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        <Globe className="w-5 h-5" />
-                      </div>
-                      <div>
-                         <p className="text-[10px] uppercase font-bold text-slate-500">Sitio Web</p>
-                         <p className="text-white font-medium text-sm truncate max-w-[150px]">Visitar sitio oficial</p>
-                      </div>
-                    </div>
-                  </a>
-                )}
+                {/* Sitio Web removido del sidebar — cubierto por WebsitePortlet en columna principal */}
                 
                 <div className="pt-4 flex gap-4">
                   {negocio.instagram && (
