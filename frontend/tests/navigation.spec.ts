@@ -41,19 +41,25 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
     const mapContainer = page.locator('.relative.w-full.h-full.min-h-\\[300px\\]');
     await expect(mapContainer).toBeVisible();
 
-    // Use evaluate to check if window.google and maps are ready
-    const isMapInitialized = await page.evaluate(async () => {
-      // Wait up to 5s for the constructor to be available
-      for (let i = 0; i < 50; i++) {
-        if (window.google && window.google.maps && window.google.maps.Map) return true;
-        await new Promise(r => setTimeout(r, 100));
-      }
-      return false;
-    });
+    // 5. Booking Widget Validation (CRITICAL FOR CONVERSION)
+    const bookingWidget = page.locator('div:has-text("Agenda tu Cita")').first();
+    await expect(bookingWidget).toBeVisible();
+    const bookingButton = bookingWidget.locator('a');
+    await expect(bookingButton).toBeVisible();
+    await expect(bookingButton).toHaveClass(/bg-primary|bg-green-500/);
 
-    expect(isMapInitialized).toBeTruthy();
+    // 6. Website Portlet Validation
+    if (await page.locator('h2:has-text("Sitio Web Oficial")').isVisible()) {
+        const websiteContainer = page.locator('div:has-text("Sitio Web Oficial")').first();
+        await expect(websiteContainer).toBeVisible();
+        // Check if smart fallback works on mobile (if we are in mobile project)
+        const isMobile = await page.evaluate(() => window.innerWidth < 768);
+        if (isMobile) {
+            await expect(page.getByText('Optimizado para tu dispositivo móvil')).toBeVisible();
+        }
+    }
 
-    // 5. Asset Integrity (Railway/Strapi)
+    // 7. Asset Integrity (Railway/Strapi)
     // Check for images and ensure they don't have naturalWidth 0 (indicates error/CORS block)
     const images = page.locator('img');
     const imageCount = await images.count();

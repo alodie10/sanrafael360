@@ -15,11 +15,14 @@ import {
   ArrowLeft,
   Star,
   Clock,
-  MessageCircle
+  MessageCircle,
+  ExternalLink
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import WebsitePortlet from "@/components/business/WebsitePortlet";
+import BookingWidget from "@/components/business/BookingWidget";
 
 export default function BusinessDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -143,7 +146,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                 ))}
                 <span className="text-white/60 text-sm ml-2 font-medium">(4.8 / 5.0)</span>
               </div>
-              <h1 className="text-4xl md:text-6xl font-heading font-extrabold text-white mb-4 tracking-tight">
+              <h1 className="text-4xl md:text-6xl font-heading font-extrabold text-white mb-4 tracking-tight text-balance">
                 {negocio.nombre}
               </h1>
               <div className="flex flex-wrap items-center gap-6 text-slate-300">
@@ -174,9 +177,17 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                 <div className="h-px flex-1 bg-white/5" />
               </h2>
               <div 
-                className="text-slate-400 leading-relaxed text-lg whitespace-pre-wrap"
+                className="text-slate-400 leading-relaxed text-lg whitespace-pre-wrap mb-12"
                 dangerouslySetInnerHTML={{ __html: negocio.descripcion || "Sin descripción disponible." }}
               />
+
+              {/* Website Portlet - Enriquecimiento Premium */}
+              {negocio.sitio_web && (
+                <WebsitePortlet 
+                  url={negocio.sitio_web} 
+                  businessName={negocio.nombre} 
+                />
+              )}
             </div>
 
             {/* Gallery placeholder or actual images */}
@@ -207,9 +218,16 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
 
           {/* Sidebar Info */}
           <div className="space-y-8">
+            {/* Booking Widget Principal */}
+            <BookingWidget 
+              reservaUrl={negocio.reserva_url} 
+              whatsapp={negocio.whatsapp}
+              businessName={negocio.nombre}
+            />
+
             {/* Action Buttons */}
             <div className="bg-slate-900/40 rounded-[2rem] p-8 border border-white/5 backdrop-blur-md shadow-xl sticky top-32">
-              <h3 className="text-xl font-bold text-white mb-6">Contacto y Reservas</h3>
+              <h3 className="text-xl font-bold text-white mb-6">Información Detallada</h3>
               
               <div className="space-y-4">
                 {negocio.telefono && (
@@ -248,7 +266,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                       </div>
                       <div>
                          <p className="text-[10px] uppercase font-bold text-slate-500">Sitio Web</p>
-                         <p className="text-white font-medium text-sm truncate max-w-[150px]">Visitar sitio</p>
+                         <p className="text-white font-medium text-sm truncate max-w-[150px]">Visitar sitio oficial</p>
                       </div>
                     </div>
                   </a>
@@ -275,11 +293,11 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-white font-bold">Ubicación</h4>
                   <a 
-                    href={`https://www.google.com/maps/search/?api=1&query=${negocio.latitud},${negocio.longitud}`} 
+                    href={negocio.google_maps_url || `https://www.google.com/maps/search/?api=1&query=${negocio.latitud},${negocio.longitud}`} 
                     target="_blank"
-                    className="text-primary text-xs font-bold hover:underline"
+                    className="text-primary text-xs font-bold hover:underline flex items-center gap-1"
                   >
-                    Ver en Google Maps
+                    Ver en Maps <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
                 <div className="h-64">
@@ -291,7 +309,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                       />
                    ) : (
                      <div className="w-full h-full bg-slate-800 rounded-3xl flex items-center justify-center p-6 text-center">
-                        <p className="text-slate-500 text-sm italic">Ubicación no disponible en el mapa para este comercio.</p>
+                        <p className="text-slate-500 text-sm italic">Ubicación no disponible en el mapa.</p>
                      </div>
                    )}
                 </div>
@@ -302,9 +320,9 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                 <div className="mt-10 p-6 bg-primary/5 rounded-2xl border border-primary/10">
                   <div className="flex items-center gap-3 mb-4 text-primary">
                     <Clock className="w-5 h-5" />
-                    <span className="font-bold">Horarios</span>
+                    <span className="font-bold">Horarios Actualizados</span>
                   </div>
-                  <p className="text-slate-400 text-sm whitespace-pre-wrap">
+                  <p className="text-slate-400 text-sm whitespace-pre-wrap leading-relaxed">
                     {negocio.horarios}
                   </p>
                 </div>
