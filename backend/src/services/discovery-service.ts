@@ -23,6 +23,24 @@ export class DiscoveryService {
     hours: 'div[aria-label*="Cerrado"], div[aria-label*="Abierto"], .t39Tv',
   };
 
+  /**
+   * Cleans and normalizes decoded text to fix typical UTF-8 corruption
+   */
+  private sanitizeText(text: string): string {
+    let clean = text;
+    try {
+      // Intentar decodificar corrupción común de UTF-8 a Latin1
+      clean = Buffer.from(clean, 'latin1').toString('utf8');
+    } catch(e) {}
+    
+    return clean
+      .replace(/SÃ¡bado|SÃ;bado|Sã¡bado/gi, 'Sábado')
+      .replace(/MiÃ©rcoles|Miã©rcoles/gi, 'Miércoles')
+      .replace(/Ocultar horarios.*/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   async discover(businessName: string): Promise<DiscoveryResult> {
     const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({
@@ -73,10 +91,9 @@ export class DiscoveryService {
       // 4. Extraer Horarios
       const hoursEl = page.locator(this.selectors.hours).first();
       if (await hoursEl.isVisible()) {
-        result.horarios_texto = await hoursEl.getAttribute('aria-label') || await hoursEl.innerText() || undefined;
-        // Limpiar el texto si contiene "Ocultar horarios de la semana" u otros ruidos
-        if (result.horarios_texto) {
-           result.horarios_texto = result.horarios_texto.replace(/Ocultar horarios.*/gi, '').trim();
+        const rawHours = await hoursEl.getAttribute('aria-label') || await hoursEl.innerText() || '';
+        if (rawHours) {
+           result.horarios_texto = this.sanitizeText(rawHours);
         }
       }
 

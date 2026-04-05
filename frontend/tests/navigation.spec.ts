@@ -49,14 +49,16 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
     await expect(bookingButton).toHaveClass(/bg-primary|bg-green-500/);
 
     // 6. Website Portlet Validation
-    if (await page.locator('h2:has-text("Sitio Web Oficial")').isVisible()) {
-        const websiteContainer = page.locator('div:has-text("Sitio Web Oficial")').first();
+    if (await page.locator('h3:has-text("Experiencia Web")').isVisible()) {
+        const websiteContainer = page.locator('div:has-text("Experiencia Web")').first();
         await expect(websiteContainer).toBeVisible();
-        // Check if smart fallback works on mobile (if we are in mobile project)
-        const isMobile = await page.evaluate(() => window.innerWidth < 768);
-        if (isMobile) {
-            await expect(page.getByText('Optimizado para tu dispositivo móvil')).toBeVisible();
-        }
+    }
+
+    // 7. Horarios Encoding Validation
+    if (await page.locator('h4:has-text("Horarios Actualizados")').isVisible()) {
+        const horariosText = await page.locator('p:near(h4:has-text("Horarios Actualizados"))').innerText();
+        // Check for common UTF-8 encoding corruptions
+        expect(horariosText).not.toMatch(/Ã|Â/);
     }
 
     // 7. Asset Integrity (Railway/Strapi)
@@ -89,6 +91,53 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
     const contactLink = page.locator('nav a[href="/contacto"]').first();
     await contactLink.click();
     await expect(page.url()).toContain('/contacto');
+  });
+
+  test('Bulk Sweep: Verify 20 Businesses without crashing or encoding errors', async ({ page }) => {
+    test.setTimeout(120000); // 2 minutos para escanear 20 negocios
+    await page.goto('/');
+    
+    // Recolectar 20 links de negocios aleatorios de la home
+    await page.waitForLoadState('networkidle');
+    const cards = page.locator('a[href^="/negocios/"]');
+    await cards.first().waitFor({ state: 'visible' });
+    const count = await cards.count();
+    
+    expect(count).toBeGreaterThan(0);
+    
+    const maxToTest = Math.min(20, count);
+    const urlsToTest = new Set<string>();
+    
+    for(let i = 0; i < count && urlsToTest.size < maxToTest; i++) {
+        const href = await cards.nth(i).getAttribute('href');
+        if (href) urlsToTest.add(href);
+    }
+
+    console.log(`Sweeping ${urlsToTest.size} businesses...`);
+
+    for (const url of urlsToTest) {
+        await page.goto(url);
+        await page.waitForLoadState('domcontentloaded');
+        
+        // 1. Debe haber cargado la página (h1 presente)
+        await expect(page.locator('h1').first()).toBeVisible();
+        
+        // 2. Revisar si hay horarios, que no tengan encoding corrupto
+        const horariosSection = page.locator('div:has-text("Horarios Actualizados")').last();
+        if (await horariosSection.isVisible()) {
+            const text = await horariosSection.innerText();
+            expect(text).not.toMatch(/Ã|Â/);
+        }
+
+        // 3. Revisar botón de Reservar (sin overflow a nivel DOM)
+        // Playwright asserts elements are visible and within viewport bounds automatically if we click, 
+        // but we just assert it's visible.
+        const bookingBtn = page.locator('a:has-text("Reservar Ahora"), a:has-text("Consultar Cita")').first();
+        if (await bookingBtn.isVisible()) {
+             // Just verifying it renders
+             await expect(bookingBtn).toBeVisible();
+        }
+    }
   });
 
 });

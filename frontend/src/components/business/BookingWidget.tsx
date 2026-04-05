@@ -18,11 +18,11 @@ export default function BookingWidget({ reservaUrl, whatsapp, businessName }: Bo
     <div className="relative w-full rounded-3xl p-8 bg-gradient-to-br from-primary/20 via-slate-900 to-slate-900 border border-primary/20 shadow-2xl overflow-hidden group mb-12">
       <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 blur-[120px] -z-10 group-hover:bg-primary/30 transition-all duration-1000" />
       
-      <div className="flex flex-col md:flex-row items-center gap-8">
+      <div className="flex flex-col gap-8">
         {/* Icon & Message */}
-        <div className="flex-1 space-y-4">
+        <div className="space-y-4">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
+             <div className="w-10 h-10 shrink-0 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
                 <CalendarCheck className="w-6 h-6" />
              </div>
              <h3 className="text-2xl font-heading font-extrabold text-white tracking-tight">Agenda tu Cita</h3>
@@ -32,7 +32,7 @@ export default function BookingWidget({ reservaUrl, whatsapp, businessName }: Bo
             Reserva ahora de forma directa y asegura tu experiencia en San Rafael.
           </p>
           
-          <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-primary">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] font-bold uppercase tracking-widest text-primary">
              <div className="flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
                 <span>Confirmación Inmediata</span>
@@ -43,28 +43,28 @@ export default function BookingWidget({ reservaUrl, whatsapp, businessName }: Bo
         </div>
 
         {/* Action Button */}
-        <div className="w-full md:w-auto shrink-0">
+        <div className="w-full shrink-0">
           {reservaUrl ? (
             <motion.a 
                href={reservaUrl}
                target="_blank"
-               whileHover={{ scale: 1.05 }}
-               whileTap={{ scale: 0.95 }}
-               className="w-full md:w-auto bg-primary text-primary-foreground px-10 py-5 rounded-[1.5rem] font-extrabold text-lg flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 hover:bg-primary/90 transition-all"
+               whileHover={{ scale: 1.02 }}
+               whileTap={{ scale: 0.98 }}
+               className="w-full bg-primary text-primary-foreground px-6 py-4 rounded-2xl font-extrabold text-base flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 hover:bg-primary/90 transition-all"
             >
                Reservar Ahora
-               <ArrowRight className="w-6 h-6" />
+               <ArrowRight className="w-5 h-5" />
             </motion.a>
           ) : (
             <motion.a 
                href={`https://wa.me/${whatsapp?.replace(/\D/g,'')}`}
                target="_blank"
-               whileHover={{ scale: 1.05 }}
-               whileTap={{ scale: 0.95 }}
-               className="w-full md:w-auto bg-green-500 text-white px-10 py-5 rounded-[1.5rem] font-extrabold text-lg flex items-center justify-center gap-3 shadow-2xl shadow-green-500/30 hover:bg-green-600 transition-all"
+               whileHover={{ scale: 1.02 }}
+               whileTap={{ scale: 0.98 }}
+               className="w-full bg-green-500 text-white px-6 py-4 rounded-2xl font-extrabold text-base flex items-center justify-center gap-3 shadow-2xl shadow-green-500/30 hover:bg-green-600 transition-all"
             >
                Consultar Cita
-               <MessageCircle className="w-6 h-6" />
+               <MessageCircle className="w-5 h-5" />
             </motion.a>
           )}
         </div>
