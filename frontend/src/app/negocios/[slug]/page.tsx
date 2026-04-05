@@ -30,6 +30,22 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  /**
+   * Fixes UTF-8 text that was stored as Latin-1 double-encoding.
+   * e.g. "SÃ¡bado" → "Sábado", "MiÃ©rcoles" → "Miércoles"
+   * This is a client-side safety net for data already persisted in the DB.
+   */
+  const sanitizeText = (text: string): string => {
+    try {
+      // Decode Latin-1 bytes that were mistakenly interpreted as UTF-8 characters
+      const bytes = Uint8Array.from(text, (c) => c.charCodeAt(0));
+      return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+    } catch {
+      return text;
+    }
+  };
+
+
   useEffect(() => {
     const loadBusiness = async () => {
       try {
@@ -323,7 +339,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                     <span className="font-bold">Horarios Actualizados</span>
                   </div>
                   <p className="text-slate-400 text-sm whitespace-pre-wrap leading-relaxed">
-                    {negocio.horarios_texto}
+                    {sanitizeText(negocio.horarios_texto)}
                   </p>
                 </div>
               )}
