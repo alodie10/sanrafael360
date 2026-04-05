@@ -51,8 +51,8 @@ La plataforma está **estable en producción** (`sanrafael360.vercel.app`). Esta
 ### 1. Push pendiente
 El fix del sanitizador (`sanitizeText` condicional) **no fue pusheado todavía**. Asegurarse de hacer push antes de hacer cualquier otra cosa.
 
-### 2. Limpiar `reserva_url` de La Delicia Bulevard
-El usuario lo hace manualmente desde Strapi Admin. El dominio `reservas.ladeliciabulevard.com.ar` no resuelve (ERR_NAME_NOT_RESOLVED). Una vez eliminado, el BookingWidget mostrará WhatsApp o se ocultará.
+### 2. ~~Limpiar `reserva_url` de La Delicia Bulevard~~ ✅
+Hecho manualmente desde Strapi Admin. El BookingWidget ahora mostrará WhatsApp o se ocultará.
 
 ### 3. Categoría "Productos Gourmet" — 0 lugares
 Aparece en el grid de la home con 0 negocios. Decisión pendiente: ¿poblar o esconder?
