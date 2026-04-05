@@ -39,6 +39,7 @@
     "scripts/",
     // Do not include test files
     "**/*.test.*",
+    "**/*.spec.*",
     // Do not include plugins in the server compilation
     "src/plugins/**"
   ]

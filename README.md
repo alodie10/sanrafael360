@@ -1,38 +1,59 @@
-# San Rafael 360 - Entorno de Desarrollo Remoto y Portable
+# San Rafael 360 - Plataforma Premium de Directorio
 
-Este repositorio contiene el código fuente de **San Rafael 360** (Next.js + Strapi). Está diseñado para ser **100% portable y remoto**, eliminando la necesidad de infraestructura local pesada.
+Este repositorio contiene la arquitectura completa de **San Rafael 360**, un ecosistema compuesto por un frontend en **Next.js** y un backend headless en **Strapi 5**. El proyecto está optimizado para despliegues modernos en **Vercel** y **Railway**.
 
-## Flujo de Trabajo (Portable)
+---
 
-Como el desarrollo se realiza contra un **host remoto (Hostinger)**, no necesitas instalar Node.js ni bases de datos en tu computadora local. El proceso para trabajar desde cualquier PC es:
+## 🏔️ Soberanía del Proyecto
+Toda la inteligencia de negocio, protocolos de decisión y arquitecturas están documentados en la carpeta [`/docs`](./docs):
+- [Master Plan: Discovery & UX](./docs/master_plan.md)
+- [Protocolo de Autonomía y DoD](./docs/protocolo_autonomia.md)
+- [Arquitectura del Discovery engine](./docs/discovery_engine_arch.md)
 
-1. **Clonar**: Baja el código de GitHub.
-2. **Modificar**: Realiza cambios visuales o de lógica en el código.
-3. **Commit \u0026 Push**: Sube los cambios a GitHub.
-4. **Desplegar**: Tus cambios se reflejarán en el dominio remoto configurado (ej: `v2.sanrafael360.com`).
+---
 
-## Estructura del Proyecto
+## 🛠️ Tecnologías Principales
+- **Frontend**: Next.js 15 (App Router), Tailwind CSS, Framer Motion.
+- **Backend**: Strapi 5 (Headless CMS), PostgreSQL (Railway).
+- **Automation**: Playwright (E2E Testing & Discovery Scraper).
+- **Media**: Cloudinary (Asset Persistence).
 
-- `/frontend`: Aplicación Next.js (Visual).
-- `/backend`: API de Strapi (Datos y Administración).
-- `/scripts/legacy`: Carpeta con los scripts antiguos de migración, CSVs, ZIPs e imágenes para referencia histórica y seguridad.
+---
 
-## Configuración de Entorno (Remoto)
+## 🧪 Testing y Calidad (Zero Regression)
+Para asegurar que el sitio funcione perfectamente en condiciones de red móvil (4G), utilizamos **Playwright**.
 
-Para que tu editor (VS Code, etc.) reconozca las conexiones, asegúrate de configurar los archivos `.env`:
+### Ejecutar Tests Localmente
+1. Instalar dependencias: `npm install`
+2. Ejecutar suite de navegación: `npx playwright test`
+3. Ejecutar test de descubrimiento (scraper): `npx playwright test backend/tests/discovery.spec.ts`
 
-- `/frontend/.env.local`: Apunta a la URL de Strapi en el servidor remoto.
-- `/backend/.env`: Configura las credenciales de la base de datos PostgreSQL de Hostinger.
+*Nota: Los tests están configurados para validar navegación, instanciación de mapas y visualización de portlets en dispositivos móviles.*
 
-*Usa los archivos `.env.example` de cada carpeta como guía.*
+---
 
-## Despliegue en Hostinger
+## 🚀 Despliegue desde Cero
 
-El servidor remoto está configurado para ejecutar Next.js y Strapi. 
-- **Backend Admin**: [https://v2.sanrafael360.com/admin](https://v2.sanrafael360.com/admin)
-- **Frontend Live**: [https://v2.sanrafael360.com](https://v2.sanrafael360.com)
+### 1. Backend (Railway)
+1. Crea un nuevo proyecto en Railway y conecta este repositorio.
+2. Configura las variables de entorno (ver `.env.example`).
+3. Railway detectará el `Dockerfile` o el `package.json` en `/backend` y realizará el despliegue automático.
+4. Ejecuta `npm run build` para compilar los tipos de Strapi.
 
-## Notas Importantes
+### 2. Frontend (Vercel)
+1. Importa el repositorio en Vercel.
+2. Selecciona el directorio raíz o `/frontend` como base.
+3. Agrega las variables de entorno:
+   - `NEXT_PUBLIC_STRAPI_API_URL`: URL de tu backend en Railway.
+   - `STRAPI_API_TOKEN`: Token de API generado en el panel de Strapi.
 
-- **Sin ejecución local**: Para evitar problemas de rendimiento y discrepancias de datos, **no ejecutes `npm install` ni `npm run dev` localmente**.
-- **Base de Datos**: Siempre utiliza la base de datos en la nube (Hostinger) para que los cambios de contenido sean visibles desde todas tus notebooks.
+---
+
+## 🔐 Configuración de Entorno
+Consulta el archivo [`.env.example`](./.env.example) en la raíz para conocer todas las llaves necesarias para levantar el proyecto en 5 minutos.
+
+---
+
+## ✉️ Contacto y Soporte
+Desarrollado con el estándar de **Alta Autonomía** por el equipo de Antigravity.
+Finalizado bajo el protocolo de **Cero Regresiones**.
