@@ -48,5 +48,11 @@ Para evitar archivos en 0,0 y pérdidas de contexto al cambiar de máquina, el A
 - Si una operación de escritura falla o se corta (archivo en 0 bytes), el Agente tiene prohibido seguir con el siguiente Micro-paso.
 - **Acción:** Debe informar el fallo, proponer borrar el archivo corrupto y reintentar la escritura completa en el siguiente turno.
 
+### Regla de Entorno: Sin Ejecución Local (CRÍTICO)
+- **El usuario NO corre ningún servidor local.** El agente tiene **prohibido** proponer comandos como `npm run dev`, `npm start`, `npx playwright test` contra localhost, o cualquier comando que presuponga un servidor local en ejecución.
+- **Toda verificación se realiza contra producción:** Frontend en `https://sanrafael360.vercel.app`, Backend en Railway.
+- **Para tests E2E de Playwright**, siempre usar `PLAYWRIGHT_TEST_BASE_URL=https://sanrafael360.vercel.app` y confirmar que el `webServer` de la config no esté activo.
+- **Para validación visual**, usar el `browser_subagent` apuntando a la URL de producción directamente.
+
 ---
-*Ultima actualización: 2026-04-01*
+*Ultima actualización: 2026-04-05*
