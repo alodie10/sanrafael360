@@ -19,8 +19,9 @@ export default {
             website: discovery.website || result.website,
             reserva_url: discovery.reserva_url || result.reserva_url,
             google_maps_url: discovery.google_maps_url,
+            horarios_texto: discovery.horarios_texto,
             discovery_pending: false,
-            // discovery_verified queda en false por defecto para validación humana
+            discovery_verified: false // Requiere validación humana
           },
         });
         console.log(`Auto-discovery completed for: ${result.nombre}`);
@@ -33,11 +34,10 @@ export default {
   async afterUpdate(event: any) {
     const { result, params } = event;
     
-    // Si el usuario marcara manualmente que quiere un re-escaneo (ej: vaciando campos y guardando)
-    // o si el nombre cambió significativamente.
-    // Para simplificar, solo disparamos si discovery_pending se vuelve true manualmente.
-    if (params.data.discovery_pending === true) {
-       console.log(`Manual discovery request for: ${result.nombre}`);
+    // Si el usuario activa manualmente el DISCOVERY via el toggle trigger_discovery
+    if (params.data.trigger_discovery === true) {
+       console.log(`Manual discovery request (Re-scan) for: ${result.nombre}`);
+       
        const discovery = await discoveryService.discover(result.nombre);
        
        if (discovery.success) {
@@ -47,9 +47,19 @@ export default {
               website: discovery.website || result.website,
               reserva_url: discovery.reserva_url || result.reserva_url,
               google_maps_url: discovery.google_maps_url,
-              discovery_pending: false
+              horarios_texto: discovery.horarios_texto,
+              discovery_pending: false,
+              trigger_discovery: false // Resetear el botón
             }
           });
+          console.log(`Manual discovery successful for: ${result.nombre}`);
+       } else {
+          // Resetear el botón incluso si falla para permitir re-intento manual
+          await strapi.query('api::negocio.negocio').update({
+            where: { id: result.id },
+            data: { trigger_discovery: false }
+          });
+          console.warn(`Manual discovery failed for ${result.nombre}: ${discovery.error}`);
        }
     }
   }

@@ -35,7 +35,8 @@ export interface Negocio {
   telefono?: string;
   whatsapp?: string;
   email?: string;
-  sitio_web?: string;
+  website?: string;
+  horarios_texto?: string;
   instagram?: string;
   facebook?: string;
   logo?: StrapiMedia;

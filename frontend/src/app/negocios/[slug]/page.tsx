@@ -182,9 +182,9 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
               />
 
               {/* Website Portlet - Enriquecimiento Premium */}
-              {negocio.sitio_web && (
+              {negocio.website && (
                 <WebsitePortlet 
-                  url={negocio.sitio_web} 
+                  url={negocio.website} 
                   businessName={negocio.nombre} 
                 />
               )}
@@ -258,8 +258,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                   </a>
                 )}
 
-                {negocio.sitio_web && (
-                  <a href={negocio.sitio_web} target="_blank" className="flex items-center justify-between p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5 group">
+                {negocio.website && (
+                  <a href={negocio.website} target="_blank" className="flex items-center justify-between p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5 group">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                         <Globe className="w-5 h-5" />
@@ -316,14 +316,14 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
               </div>
 
               {/* Horarios Card */}
-              {negocio.horarios && (
+              {negocio.horarios_texto && (
                 <div className="mt-10 p-6 bg-primary/5 rounded-2xl border border-primary/10">
                   <div className="flex items-center gap-3 mb-4 text-primary">
                     <Clock className="w-5 h-5" />
                     <span className="font-bold">Horarios Actualizados</span>
                   </div>
                   <p className="text-slate-400 text-sm whitespace-pre-wrap leading-relaxed">
-                    {negocio.horarios}
+                    {negocio.horarios_texto}
                   </p>
                 </div>
               )}

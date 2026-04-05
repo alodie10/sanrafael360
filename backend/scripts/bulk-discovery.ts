@@ -47,6 +47,7 @@ async function bulkDiscovery() {
               website: negocio.website || result.website,
               reserva_url: negocio.reserva_url || result.reserva_url,
               google_maps_url: result.google_maps_url,
+              horarios_texto: result.horarios_texto,
               discovery_pending: false,
               discovery_verified: false // Requiere verificación humana posterior
             }

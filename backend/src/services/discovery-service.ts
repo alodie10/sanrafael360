@@ -1,9 +1,10 @@
-import { chromium, Page } from 'playwright';
+import { chromium } from 'playwright';
 
 export interface DiscoveryResult {
   website?: string;
   reserva_url?: string;
   google_maps_url?: string;
+  horarios_texto?: string;
   success: boolean;
   error?: string;
 }
@@ -19,6 +20,7 @@ export class DiscoveryService {
     website: 'a[data-item-id="authority"]',
     booking: 'a[data-item-id="action:3"], a[aria-label*="Cita"], a[aria-label*="Reserva"]',
     resultTitle: 'h1.DUwDvf',
+    hours: 'div[aria-label*="Cerrado"], div[aria-label*="Abierto"], .t39Tv',
   };
 
   async discover(businessName: string): Promise<DiscoveryResult> {
@@ -66,6 +68,16 @@ export class DiscoveryService {
       const bookingLink = page.locator(this.selectors.booking).first();
       if (await bookingLink.isVisible()) {
         result.reserva_url = await bookingLink.getAttribute('href') || undefined;
+      }
+
+      // 4. Extraer Horarios
+      const hoursEl = page.locator(this.selectors.hours).first();
+      if (await hoursEl.isVisible()) {
+        result.horarios_texto = await hoursEl.getAttribute('aria-label') || await hoursEl.innerText() || undefined;
+        // Limpiar el texto si contiene "Ocultar horarios de la semana" u otros ruidos
+        if (result.horarios_texto) {
+           result.horarios_texto = result.horarios_texto.replace(/Ocultar horarios.*/gi, '').trim();
+        }
       }
 
       return result;

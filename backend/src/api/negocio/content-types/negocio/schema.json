@@ -97,8 +97,17 @@
       "type": "boolean",
       "default": true
     },
-    "discovery_verified": {      "type": "boolean",
+    "discovery_verified": {
+      "type": "boolean",
       "default": false
+    },
+    "horarios_texto": {
+      "type": "string"
+    },
+    "trigger_discovery": {
+      "type": "boolean",
+      "default": false,
+      "description": "Activa manualmente el escaneo de Google Maps"
     }
   }
 }
