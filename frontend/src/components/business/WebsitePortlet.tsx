@@ -33,27 +33,40 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
 
   const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
 
-  // Validar con Microlink JSON antes de mostrar screenshot
   useEffect(() => {
     let cancelled = false;
 
-    const fetchScreenshot = async () => {
+    const run = async () => {
       try {
-        const apiUrl =
-          `https://api.microlink.io/?url=${encodeURIComponent(finalUrl)}` +
-          `&screenshot=true&meta=false` +
-          `&viewport.width=1280&viewport.height=800`;
-
-        const res = await fetch(apiUrl);
-        const json = await res.json();
+        // ── 1. Verificar si el sitio está activo (server-side, sin CORS) ──
+        const checkRes = await fetch(
+          `/api/check-url?url=${encodeURIComponent(finalUrl)}`
+        );
+        const checkJson = await checkRes.json();
 
         if (cancelled) return;
 
-        if (json.status === "success" && json.data?.screenshot?.url) {
-          setScreenshotUrl(json.data.screenshot.url);
+        if (!checkJson.reachable) {
+          setState("site-down");
+          return;
+        }
+
+        // ── 2. Pedir screenshot solo si el sitio respondió OK ──
+        const apiUrl =
+          `https://api.microlink.io/?url=${encodeURIComponent(finalUrl)}` +
+          `&screenshot=true&meta=false` +
+          `&viewport.width=1280&viewport.height=800` +
+          `&waitUntil=networkidle2`;  // espera que JS termine de renderizar
+
+        const mlRes = await fetch(apiUrl);
+        const mlJson = await mlRes.json();
+
+        if (cancelled) return;
+
+        if (mlJson.status === "success" && mlJson.data?.screenshot?.url) {
+          setScreenshotUrl(mlJson.data.screenshot.url);
           setState("ready");
         } else {
-          // Microlink no pudo cargar el sitio (DNS error, timeout, etc.)
           setState("site-down");
         }
       } catch {
@@ -61,7 +74,7 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
       }
     };
 
-    fetchScreenshot();
+    run();
     return () => { cancelled = true; };
   }, [finalUrl]);
 
@@ -79,14 +92,12 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
 
         {/* ── Browser Chrome Bar ── */}
         <div className="flex items-center gap-3 px-5 py-3.5 bg-slate-950/80 border-b border-white/6">
-          {/* Traffic lights */}
           <div className="flex items-center gap-1.5 shrink-0">
             <Circle className="w-3 h-3 fill-red-500/70 text-red-500/70" />
             <Circle className="w-3 h-3 fill-amber-500/70 text-amber-500/70" />
             <Circle className="w-3 h-3 fill-emerald-500/70 text-emerald-500/70" />
           </div>
 
-          {/* Address bar */}
           <div className="flex-1 flex items-center gap-2 bg-slate-800/60 border border-white/6 rounded-lg px-3 py-1.5 min-w-0">
             {faviconFailed ? (
               <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
@@ -101,9 +112,8 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
             <span className="text-slate-400 text-xs font-mono truncate">{finalUrl}</span>
           </div>
 
-          {/* Refresh icon animado mientras carga */}
           <RefreshCw
-            className={`w-3.5 h-3.5 shrink-0 ${
+            className={`w-3.5 h-3.5 shrink-0 transition-colors ${
               state === "loading" ? "text-primary animate-spin" : "text-slate-600"
             }`}
           />
@@ -112,20 +122,20 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
         {/* ── Viewport ── */}
         <div className="relative w-full aspect-[16/9] bg-slate-950 overflow-hidden">
 
-          {/* Estado: cargando */}
+          {/* Cargando */}
           {state === "loading" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div className="w-full h-full animate-pulse bg-slate-800/40" />
               <div className="absolute flex flex-col items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-slate-700/80 flex items-center justify-center">
                   <Globe className="w-5 h-5 text-slate-500 animate-pulse" />
                 </div>
-                <p className="text-slate-500 text-xs font-mono">Generando preview…</p>
+                <p className="text-slate-500 text-xs font-mono">Verificando sitio…</p>
               </div>
             </div>
           )}
 
-          {/* Estado: screenshot OK */}
+          {/* Screenshot real */}
           {state === "ready" && screenshotUrl && (
             <>
               <img
@@ -133,23 +143,19 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
                 alt={`Preview de ${businessName}`}
                 className="w-full h-full object-cover object-top"
               />
-              {/* Gradiente inferior sobre la imagen */}
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
             </>
           )}
 
-          {/* Estado: sitio caído — fallback premium */}
+          {/* Sitio no disponible */}
           {(state === "site-down" || state === "error") && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-slate-900/80 backdrop-blur-sm px-8 text-center">
-              {/* Icono con glow */}
               <div className="relative">
                 <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-xl scale-150" />
                 <div className="relative w-16 h-16 rounded-3xl bg-slate-800 border border-amber-500/20 flex items-center justify-center">
                   <AlertTriangle className="w-7 h-7 text-amber-400" />
                 </div>
               </div>
-
-              {/* Texto */}
               <div>
                 <p className="text-white font-bold text-lg mb-1">{businessName}</p>
                 <p className="text-slate-400 text-sm font-mono mb-3">{domain}</p>
@@ -158,8 +164,6 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
                   Sitio temporalmente no disponible
                 </span>
               </div>
-
-              {/* CTA de todas formas */}
               <a
                 href={finalUrl}
                 target="_blank"
@@ -173,10 +177,9 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
           )}
         </div>
 
-        {/* ── Footer con CTA ── */}
+        {/* ── Footer ── */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-white/6 bg-slate-950/60">
           <div className="flex items-center gap-3 min-w-0">
-            {/* Favicon */}
             <div className="w-9 h-9 shrink-0 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
               {faviconFailed ? (
                 <Globe className="w-4 h-4 text-primary" />
@@ -200,7 +203,6 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
             </div>
           </div>
 
-          {/* Botón visitar */}
           <a
             href={finalUrl}
             target="_blank"
