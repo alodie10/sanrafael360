@@ -95,7 +95,7 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
           <div className="flex items-center gap-1.5 shrink-0">
             <Circle className="w-3 h-3 fill-red-500/70 text-red-500/70" />
             <Circle className="w-3 h-3 fill-amber-500/70 text-amber-500/70" />
-            <Circle className="w-3 h-3 fill-emerald-500/70 text-emerald-500/70" />
+            <Circle className="w-3 h-3 fill-primary/70 text-primary/70" />
           </div>
 
           <div className="flex-1 flex items-center gap-2 bg-slate-800/60 border border-white/6 rounded-lg px-3 py-1.5 min-w-0">

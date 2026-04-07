@@ -3,26 +3,26 @@
 @tailwind utilities;
 
 :root {
-  /* Premium Deep Night Palette */
-  --background: 222.2 84% 4.9%;
+  /* Premium Obsidian & Gold Palette */
+  --background: 240 10% 4%; /* True Obsidian Black */
   --foreground: 210 40% 98%;
 
-  --card: 222.2 84% 4.9%;
+  --card: 240 10% 6%;
   --card-foreground: 210 40% 98%;
 
-  --popover: 222.2 84% 4.9%;
+  --popover: 240 10% 4%;
   --popover-foreground: 210 40% 98%;
 
-  --primary: 142.1 70.6% 45.3%; /* Emerald 500 */
-  --primary-foreground: 144.1 80.7% 9.7%;
+  --primary: 45 93% 47%; /* Premium Gold (Amber 500) */
+  --primary-foreground: 26 83.3% 14.1%;
 
-  --secondary: 47.9 95.8% 53.1%; /* Amber 500 (Gold) */
-  --secondary-foreground: 26 83.3% 14.1%;
+  --secondary: 215 20% 65%; /* Graphite / Slate 500 */
+  --secondary-foreground: 210 40% 98%;
 
-  --muted: 217.2 32.6% 17.5%;
+  --muted: 217.2 32.6% 12%;
   --muted-foreground: 215 20.2% 65.1%;
 
-  --accent: 217.2 32.6% 17.5%;
+  --accent: 45 93% 30%; /* Deep Gold */
   --accent-foreground: 210 40% 98%;
 
   --destructive: 0 62.8% 30.6%;
@@ -30,7 +30,7 @@
 
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
-  --ring: 142.1 70.6% 45.3%;
+  --ring: 45 93% 47%;
 
   --radius: 1rem;
 }
@@ -47,11 +47,11 @@
 
 @layer components {
   .glass-card {
-    @apply bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl;
+    @apply bg-zinc-950/60 backdrop-blur-xl border border-white/5 shadow-2xl;
   }
   
   .premium-gradient {
-    @apply bg-gradient-to-br from-emerald-500/20 via-transparent to-transparent;
+    @apply bg-gradient-to-br from-primary/15 via-transparent to-transparent;
   }
 
   .text-balance {
