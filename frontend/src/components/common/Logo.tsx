@@ -9,18 +9,18 @@ interface LogoProps {
 
 export default function Logo({ className, showText = true }: LogoProps) {
   return (
-    <Link href="/" className={cn("flex items-center gap-3 transition-transform hover:scale-105 active:scale-95", className)}>
-      <div className="relative w-16 h-16 md:w-24 md:h-24 -ml-4 p-2">
+    <Link href="/" className={cn("flex items-center gap-4 transition-all hover:opacity-90 active:scale-95 group", className)}>
+      <div className="relative w-14 h-14 md:w-16 md:h-16 overflow-hidden rounded-xl border border-primary/20 shadow-2xl shadow-black/40 group-hover:border-primary/50 transition-colors">
         <Image
           src="/logo-gold.png"
-          alt="San Rafael 360 Logo"
+          alt="San Rafael 360"
           fill
-          className="object-contain"
+          className="object-cover scale-110"
           priority
         />
       </div>
       {showText && (
-        <span className="text-xl md:text-2xl font-heading font-extrabold tracking-tighter text-white uppercase italic">
+        <span className="text-xl md:text-2xl font-serif font-bold tracking-[0.15em] text-white uppercase ml-1">
           San Rafael <span className="text-primary">360</span>
         </span>
       )}
