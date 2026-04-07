@@ -10,7 +10,7 @@ interface LogoProps {
 export default function Logo({ className, showText = true }: LogoProps) {
   return (
     <Link href="/" className={cn("flex items-center gap-3 transition-transform hover:scale-105 active:scale-95", className)}>
-      <div className="relative w-10 h-10 md:w-12 md:h-12">
+      <div className="relative w-16 h-16 md:w-24 md:h-24 -ml-4 p-2">
         <Image
           src="/logo-gold.png"
           alt="San Rafael 360 Logo"

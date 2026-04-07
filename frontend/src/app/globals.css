@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 :root {
-  /* Premium Obsidian & Gold Palette */
-  --background: 240 10% 4%; /* True Obsidian Black */
+  /* Premium Obsidian & Gold Palette (Sync with Logo) */
+  --background: 0 0% 0%; /* Absolute Black */
   --foreground: 210 40% 98%;
 
-  --card: 240 10% 6%;
+  --card: 240 10% 4%;
   --card-foreground: 210 40% 98%;
 
-  --popover: 240 10% 4%;
+  --popover: 0 0% 0%;
   --popover-foreground: 210 40% 98%;
 
   --primary: 45 93% 47%; /* Premium Gold (Amber 500) */

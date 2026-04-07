@@ -125,8 +125,8 @@ function HomeContent() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl z-10"
         >
-          <h1 className="text-5xl md:text-8xl font-serif text-white tracking-tight leading-tight mb-8">
-            Vive <span className="italic block md:inline text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#FFD700] to-primary-foreground animate-pulse">San Rafael</span>
+          <h1 className="text-5xl md:text-8xl font-serif text-white tracking-tight leading-tight mb-8 px-4">
+            Vive <span className="italic block md:inline text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#FFD700] to-primary-foreground animate-pulse pb-2">San Rafael</span>
           </h1>
           <p className="text-lg md:text-xl text-slate-200 mb-10 max-w-2xl mx-auto text-balance">
             Encuentra las mejores experiencias, gastronomía y alojamiento en el corazón de Mendoza.
@@ -180,7 +180,7 @@ function HomeContent() {
             >
               <div className="flex items-center justify-between mb-10">
                 <div className="max-w-xl">
-                  <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-2">Explorar por Categoría</h2>
+                  <h2 className="text-3xl md:text-4xl font-serif font-bold text-white mb-2">Explorar por Categoría</h2>
                   <p className="text-slate-400 text-sm">Descubre San Rafael según tus intereses y necesidades.</p>
                 </div>
                 <button className="text-primary font-bold flex items-center gap-2 hover:underline group text-sm md:text-base">
@@ -228,7 +228,7 @@ function HomeContent() {
         <section className="mt-20 scroll-mt-32" ref={resultsRef}>
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
             <div className="max-w-xl">
-              <h2 className="text-4xl md:text-5xl font-heading font-extrabold text-white mb-4">
+              <h2 className="text-4xl md:text-5xl font-serif font-extrabold text-white mb-4">
                 {isFiltering ? "Resultados de" : "Comercios"} <span className="text-primary italic font-medium">{isFiltering ? "tu búsqueda" : "Destacados"}</span>
               </h2>
               <p className="text-slate-400">
