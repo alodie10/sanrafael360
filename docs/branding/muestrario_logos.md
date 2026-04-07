@@ -14,6 +14,7 @@ A continuación las versiones más detalladas, entre las cuales destacan termina
 
 | Versión | Vista Previa |
 |---------|--------------|
+| Silver Wide Glass (Refinado Metálico) | <img src="./logos/logo_silver_wide_glass_refined_1775590319888.png" width="300" /> |
 | Ultra Bold Glass (App Icon Size) | <img src="./logos/logo_ultra_bold_favicon_style_1775590198619.png" width="300" /> |
 | Silver Wide Glass Minimalist | <img src="./logos/logo_silver_wide_glass_minimal_1775589825474.png" width="300" /> |
 | Silver Monumental (Rafting) | <img src="./logos/logo_silver_monumental_raft_grapes_1775589715466.png" width="300" /> |
