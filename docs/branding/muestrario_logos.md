@@ -14,6 +14,9 @@ A continuación las versiones más detalladas, entre las cuales destacan termina
 
 | Versión | Vista Previa |
 |---------|--------------|
+| Silver Wide Glass Minimalist (Escalable) | <img src="./logos/logo_silver_wide_glass_minimal_1775589825474.png" width="300" /> |
+| Silver Monumental (Rafting & Grapes) | <img src="./logos/logo_silver_monumental_raft_grapes_1775589715466.png" width="300" /> |
+| Silver Monumental (No Text) | <img src="./logos/logo_silver_monumental_notext_1775589531167.png" width="300" /> |
 | Gold Wine Envelope v2 (Glowy) | <img src="./logos/logo_final_gold_wine_envelope_v2_glowy_1775571354815.png" width="300" /> |
 | Bicolor Dynamic Bold v1 | <img src="./logos/logo_final_bicolor_dynamic_bold_v1_1775571862330.png" width="300" /> |
 | Gold Trinity Monumental (v3) | <img src="./logos/logo_final_bold_gold_trinity_v2_monumental_v3_final_1775571660438.png" width="300" /> |
