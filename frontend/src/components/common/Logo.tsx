@@ -12,7 +12,7 @@ export default function Logo({ className, showText = true }: LogoProps) {
     <Link href="/" className={cn("flex items-center gap-4 transition-all hover:opacity-90 active:scale-95 group", className)}>
       <div className="relative w-14 h-14 md:w-16 md:h-16 overflow-hidden rounded-xl border border-primary/20 shadow-2xl shadow-black/40 group-hover:border-primary/50 transition-colors">
         <Image
-          src="/logo-gold.png"
+          src="/logo-sine-route.png"
           alt="San Rafael 360"
           fill
           className="object-cover scale-110"
