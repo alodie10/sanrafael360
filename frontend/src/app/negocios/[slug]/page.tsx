@@ -58,9 +58,13 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
     
     setIsClaiming(true);
     setClaimErrorMessage(null);
+    console.log("🚀 Iniciando solicitud de reclamo...");
+
     try {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
-      const res = await fetch(`${strapiUrl}/api/negocios/${negocio.documentId || negocio.id}/claim`, {
+      const targetUrl = `${strapiUrl}/api/negocios/${negocio.documentId || negocio.id}/claim`;
+      
+      const res = await fetch(targetUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,19 +73,29 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         body: JSON.stringify({ message: claimMessage })
       });
       
-      const data = await res.json();
+      console.log(`📡 Respuesta recibida. Status: ${res.status}`);
+
+      // Intentar parsear el JSON solo si el status no es un error crudo del servidor
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        console.error("❌ Fallo al parsear JSON de respuesta:", parseErr);
+      }
+
       if (res.ok) {
         alert("¡Tu solicitud de reclamo ha sido enviada exitosamente! Se revisará a la brevedad.");
         setShowClaimModal(false);
-        // Optimistic UI update
         setNegocio((prev: any) => prev ? { ...prev, estado_reclamo: 'pendiente' } : prev);
       } else {
-        setClaimErrorMessage(data.error?.message || "Error al procesar el reclamo. Intenta nuevamente.");
+        const errorMsg = data.error?.message || `Error del servidor (${res.status})`;
+        setClaimErrorMessage(errorMsg);
       }
-    } catch (e) {
-      console.error(e);
-      setClaimErrorMessage("Fallo de conexión con el servidor. Por favor verifica tu internet.");
+    } catch (e: any) {
+      console.error("💥 Error de red o en la solicitud:", e);
+      setClaimErrorMessage("No se pudo conectar con el servidor. Por favor verifica tu internet o intenta más tarde.");
     } finally {
+      console.log("🏁 Finalizando estado de carga.");
       setIsClaiming(false);
     }
   };

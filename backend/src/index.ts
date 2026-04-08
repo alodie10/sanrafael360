@@ -34,9 +34,10 @@ export default {
             'api::categoria.categoria.findOne',
           ];
 
-          // El rol autenticado necesita específicamente el permiso de reclamar
+          // El rol autenticado necesita específicamente el permiso de reclamar y actualizar
           if (roleType === 'authenticated') {
             actions.push('api::negocio.negocio.claim');
+            actions.push('api::negocio.negocio.update');
           }
 
           for (const action of actions) {

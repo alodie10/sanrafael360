@@ -3,24 +3,25 @@ import { factories } from '@strapi/strapi';
 export default factories.createCoreController('api::negocio.negocio', ({ strapi }) => ({
   async claim(ctx) {
     try {
-      const { id } = ctx.params;
+      const { id } = ctx.params; // documentId en Strapi 5
       const { message } = ctx.request.body;
       const user = ctx.state.user;
 
-      console.log(`🚀 Iniciando proceso de reclamo para negocio ID: ${id} por usuario: ${user?.email}`);
+      console.log(`🚀 [CLAIM] Iniciando proceso para negocio: ${id} | Usuario: ${user?.email}`);
 
       if (!user) {
         return ctx.unauthorized('Debes estar autenticado para reclamar un negocio');
       }
 
-      // 1. Buscar el negocio (usando Document API para Strapi 5)
-      const negocio = await (strapi as any).documents('api::negocio.negocio').findFirst({
-        documentId: id,
-        populate: ['owner']
+      // 1. Buscar el negocio
+      // Usamos strapi.query por ser el motor más probado y estable para relaciones
+      const negocio = await strapi.query('api::negocio.negocio').findOne({
+        where: { documentId: id },
+        populate: { owner: true }
       });
 
       if (!negocio) {
-        console.error(`❌ Negocio no encontrado: ${id}`);
+        console.error(`❌ [CLAIM] Negocio no encontrado: ${id}`);
         return ctx.notFound('Negocio no encontrado');
       }
 
@@ -28,38 +29,42 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
         return ctx.badRequest('El negocio ya tiene un reclamo en proceso o asignado a un propietario');
       }
 
-      // 2. Actualizar el estado del negocio
-      // Usamos db.query como fallback ultra-robusto si Documents API da problemas con relaciones de usuarios
-      console.log(`📝 Actualizando estado de reclamo para: ${negocio.nombre}`);
+      // 2. Actualización de Base de Datos (PRIORIDAD ABSOLUTA)
+      console.log(`📝 [CLAIM] Actualizando base de datos para: ${negocio.nombre}`);
       
-      const updatedNegocio = await (strapi as any).documents('api::negocio.negocio').update({
-        documentId: id,
+      const updatedNegocio = await strapi.query('api::negocio.negocio').update({
+        where: { documentId: id },
         data: {
           estado_reclamo: 'pendiente',
-          owner: user.id // Relación con el ID numérico del usuario
+          owner: user.id
         }
       });
       
-      console.log(`✅ Negocio actualizado exitosamente. Estado: pendiente`);
+      console.log(`✅ [CLAIM] Base de datos actualizada exitosamente.`);
 
-      // 3. Notificar al Admin (TOTALMENTE ASÍNCRONO - FIRE & FORGET)
-      // No usamos 'await' para que la respuesta al usuario sea instantánea
+      // 3. Notificación por Email (TOTALMENTE AISLADA - FIRE & FORGET)
+      // Envolvemos en try/catch independiente para que NUNCA afecte la respuesta al cliente
       try {
         const emailService = strapi.plugin('email')?.service('email');
         if (emailService) {
+          console.log('📬 [CLAIM] Lanzando proceso de email en background...');
           emailService.send({
             to: 'diegocristianalonso@gmail.com',
             from: 'admin@sanrafael360.com',
             subject: `Nuevo reclamo de negocio: ${negocio.nombre}`,
             text: `El usuario ${user.email} ha solicitado reclamar el negocio "${negocio.nombre}".\n\nMensaje: ${message || 'Sin mensaje'}\n\nPor favor aprueba o rechaza el reclamo desde el panel de Strapi.`,
-          }).catch((err: any) => console.error('❌ Error asíncrono enviando email:', err.message));
-          
-          console.log('✉️ Proceso de envío de email iniciado (background).');
+          }).then(() => {
+            console.log('✉️ [CLAIM] Email enviado con éxito.');
+          }).catch((err: any) => {
+            console.error('❌ [CLAIM] Error asíncrono en servidor SMTP:', err.message);
+          });
         }
-      } catch (err: any) {
-        console.warn('⚠️ No se pudo iniciar el servicio de email:', err.message);
+      } catch (emailErr: any) {
+        // Error al intentar inicializar el envío, no bloqueamos la respuesta
+        console.warn('⚠️ [CLAIM] No se pudo inicializar el servicio de email:', emailErr.message);
       }
 
+      // 4. Respuesta de Éxito Inmediata
       return ctx.send({ 
         message: 'Reclamo enviado correctamente', 
         data: {
@@ -70,7 +75,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       });
 
     } catch (err: any) {
-      console.error('💥 ERROR CRÍTICO en /claim:', err.message);
+      console.error('💥 [CLAIM] ERROR CRÍTICO:', err.message);
       console.error(err.stack);
       return ctx.internalServerError(`Error interno al procesar el reclamo: ${err.message}`);
     }
