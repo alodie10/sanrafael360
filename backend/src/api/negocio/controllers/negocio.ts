@@ -42,20 +42,22 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       
       console.log(`✅ Negocio actualizado exitosamente. Estado: pendiente`);
 
-      // 3. Notificar al Admin (TOTALMENTE OPCIONAL Y PROTEGIDO)
+      // 3. Notificar al Admin (TOTALMENTE ASÍNCRONO - FIRE & FORGET)
+      // No usamos 'await' para que la respuesta al usuario sea instantánea
       try {
         const emailService = strapi.plugin('email')?.service('email');
         if (emailService) {
-          await emailService.send({
+          emailService.send({
             to: 'diegocristianalonso@gmail.com',
             from: 'admin@sanrafael360.com',
             subject: `Nuevo reclamo de negocio: ${negocio.nombre}`,
             text: `El usuario ${user.email} ha solicitado reclamar el negocio "${negocio.nombre}".\n\nMensaje: ${message || 'Sin mensaje'}\n\nPor favor aprueba o rechaza el reclamo desde el panel de Strapi.`,
-          });
-          console.log('✉️ Email de notificación enviado.');
+          }).catch((err: any) => console.error('❌ Error asíncrono enviando email:', err.message));
+          
+          console.log('✉️ Proceso de envío de email iniciado (background).');
         }
-      } catch (err) {
-        console.warn('⚠️ Fallo el envío de email, pero el reclamo fue guardado:', err.message);
+      } catch (err: any) {
+        console.warn('⚠️ No se pudo iniciar el servicio de email:', err.message);
       }
 
       return ctx.send({ 
