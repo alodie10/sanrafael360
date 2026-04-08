@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit, Playfair_Display } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import SessionProvider from "@/components/providers/SessionProvider";
 import Navbar from "@/components/layout/Navbar";
 import "./globals.css";
 
@@ -32,11 +33,13 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${inter.variable} ${outfit.variable} ${playfair.variable}`}>
       <body>
-        <div className="app-container font-sans">
-          <Navbar />
-          {children}
-          <SpeedInsights />
-        </div>
+        <SessionProvider>
+          <div className="app-container font-sans">
+            <Navbar />
+            {children}
+            <SpeedInsights />
+          </div>
+        </SessionProvider>
       </body>
     </html>
   );

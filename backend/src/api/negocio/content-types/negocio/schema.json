@@ -108,6 +108,23 @@
       "type": "boolean",
       "default": false,
       "description": "Activa manualmente el escaneo de Google Maps"
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "negocios"
+    },
+    "estado_reclamo": {
+      "type": "enumeration",
+      "enum": [
+        "ninguno",
+        "pendiente",
+        "aprobado",
+        "rechazado"
+      ],
+      "default": "ninguno",
+      "description": "Estado actual del proceso de reclamo del negocio"
     }
   }
 }

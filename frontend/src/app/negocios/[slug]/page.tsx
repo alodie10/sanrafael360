@@ -23,12 +23,66 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import WebsitePortlet from "@/components/business/WebsitePortlet";
 import BookingWidget from "@/components/business/BookingWidget";
+import { useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function BusinessDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const [negocio, setNegocio] = useState<Negocio | null>(null);
+  const [negocio, setNegocio] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // Claim Flow State
+  const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [claimMessage, setClaimMessage] = useState("");
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const autoClaim = searchParams.get("auto_claim");
+
+  useEffect(() => {
+    if (autoClaim === "1" && session?.user && negocio) {
+      setShowClaimModal(true);
+      // Clean query params
+      router.replace(`/negocios/${slug}`, { scroll: false });
+    }
+  }, [autoClaim, session, negocio, slug, router]);
+
+  const handleClaimSubmit = async () => {
+    if (!session) {
+      router.push(`/registro?claim=${slug}`);
+      return;
+    }
+    
+    setIsClaiming(true);
+    try {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
+      const res = await fetch(`${strapiUrl}/api/negocios/${negocio.documentId || negocio.id}/claim`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.jwt}`
+        },
+        body: JSON.stringify({ message: claimMessage })
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        alert("¡Tu solicitud de reclamo ha sido enviada exitosamente! Se revisará a la brevedad.");
+        setShowClaimModal(false);
+        // Optimistic UI update
+        setNegocio((prev: any) => prev ? { ...prev, estado_reclamo: 'pendiente' } : prev);
+      } else {
+        alert("Error al reclamar: " + (data.error?.message || "Desconocido"));
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error en el servidor al reclamar el negocio.");
+    } finally {
+      setIsClaiming(false);
+    }
+  };
 
   /**
    * Fixes UTF-8 text stored with Latin-1 double-encoding (e.g. "SÃ¡bado" → "Sábado").
@@ -231,7 +285,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                   <div className="h-px flex-1 bg-white/5" />
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {negocio.galeria.map((img, i) => (
+                  {negocio.galeria.map((img: any, i: number) => (
                     <motion.div 
                       key={img.id}
                       whileHover={{ scale: 1.02 }}
@@ -260,6 +314,29 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
 
             {/* Action Buttons */}
             <div className="bg-slate-900/40 rounded-[2rem] p-8 border border-white/5 backdrop-blur-md shadow-xl sticky top-32">
+              {/* Claim Business Section */}
+              {negocio.reclamar_habilitado && (!negocio.owner || negocio.estado_reclamo === 'ninguno') && (
+                <div className="mb-8 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center">
+                  <h4 className="text-white font-bold mb-2">¿Eres el dueño de este negocio?</h4>
+                  <p className="text-sm text-blue-200/70 mb-4 text-balance">Reclama este perfil para administrar la información, responder comentarios y más.</p>
+                  <button 
+                    onClick={() => {
+                      if (!session) router.push(`/registro?claim=${slug}`);
+                      else setShowClaimModal(true);
+                    }}
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-500/20"
+                  >
+                    Reclamar Perfil
+                  </button>
+                </div>
+              )}
+              
+              {negocio.estado_reclamo === 'pendiente' && (
+                <div className="mb-8 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center">
+                  <p className="text-amber-400 font-bold text-sm">Tu solicitud de reclamo está pendiente de aprobación.</p>
+                </div>
+              )}
+
               <h3 className="text-xl font-bold text-white mb-6">Información Detallada</h3>
               
               <div className="space-y-4">
@@ -352,6 +429,47 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
           </div>
         </div>
       </section>
+
+      {/* Claim Modal */}
+      {showClaimModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-white/10 p-6 rounded-3xl max-w-lg w-full shadow-2xl relative">
+            <button 
+              onClick={() => setShowClaimModal(false)}
+              className="absolute top-4 right-4 text-white/50 hover:text-white"
+            >
+               ✕
+            </button>
+            <h3 className="text-2xl font-bold text-white mb-2">Reclamar Negocio</h3>
+            <p className="text-sm text-slate-400 mb-6">
+              Estás a un paso de tomar control de <strong>{negocio.nombre}</strong>. 
+              Déjanos un mensaje con tu número de teléfono o una forma de validar que eres el dueño o representante legal.
+            </p>
+            <textarea 
+              value={claimMessage}
+              onChange={(e) => setClaimMessage(e.target.value)}
+              placeholder="Ej: Hola, soy el dueño de este local. Mi teléfono es 2604-XXXXXX."
+              className="w-full h-32 px-4 py-3 bg-slate-800 border border-white/10 rounded-xl text-white placeholder-slate-500 mb-4 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+            />
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setShowClaimModal(false)}
+                className="flex-1 py-3 text-white font-bold bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+                disabled={isClaiming}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleClaimSubmit}
+                disabled={isClaiming}
+                className="flex-1 py-3 text-white font-bold bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50"
+              >
+                {isClaiming ? "Enviando..." : "Enviar Solicitud"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
