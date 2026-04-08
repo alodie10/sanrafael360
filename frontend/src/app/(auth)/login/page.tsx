@@ -68,7 +68,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-12">
+    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 pt-32 pb-12">
       <Suspense fallback={<div className="w-full max-w-md p-8 text-center text-gray-500">Cargando...</div>}>
         <LoginForm />
       </Suspense>
