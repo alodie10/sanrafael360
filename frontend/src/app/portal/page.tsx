@@ -24,17 +24,29 @@ export default function PortalPage() {
       const loadUserBusinesses = async () => {
         try {
           const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
-          const res = await fetch(`${strapiUrl}/api/negocios?filters[owner][id][$eq]=${session.user.id}&populate=logo`, {
+          // Strapi 5: Filtramos por el ID del owner y pedimos tanto publicados como borradores
+          const query = new URLSearchParams({
+            "filters[owner][id][$eq]": session.user.id,
+            "status": "draft", // Para ver los que están en revisión
+            "populate": "logo,categoria"
+          }).toString();
+
+          console.log(`🔍 Buscando negocios para Usuario ID: ${session.user.id}`);
+          
+          const res = await fetch(`${strapiUrl}/api/negocios?${query}`, {
             headers: {
               "Authorization": `Bearer ${session.jwt}`
             }
           });
+          
           const data = await res.json();
+          console.log("📦 Respuesta del Portal:", data);
+
           if (data.data) {
             setNegocios(data.data);
           }
         } catch (e) {
-          console.error("Error loading businesses", e);
+          console.error("❌ Fallo cargando negocios en el portal:", e);
         } finally {
           setLoading(false);
         }
