@@ -112,8 +112,7 @@
     "owner": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "plugin::users-permissions.user",
-      "inversedBy": "negocios"
+      "target": "plugin::users-permissions.user"
     },
     "estado_reclamo": {
       "type": "enumeration",
