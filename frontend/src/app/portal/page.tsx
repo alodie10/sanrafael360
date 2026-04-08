@@ -11,6 +11,7 @@ export default function PortalPage() {
   const router = useRouter();
   const [negocios, setNegocios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [portalError, setPortalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -23,6 +24,7 @@ export default function PortalPage() {
       // We fetch all businesses where owner === session.user.id
       const loadUserBusinesses = async () => {
         try {
+          setPortalError(null);
           const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
           
           console.log(`🔍 Llamando a endpoint de propiedad /me para el portal...`);
@@ -33,6 +35,15 @@ export default function PortalPage() {
             }
           });
           
+          if (!res.ok) {
+            if (res.status === 403) {
+              setPortalError("Acceso denegado: No tienes permisos para ver esta sección. Contacta al soporte.");
+            } else {
+              setPortalError(`Error del servidor (${res.status}). Intenta nuevamente más tarde.`);
+            }
+            return;
+          }
+
           const data = await res.json();
           console.log("📦 Respuesta del Portal (/me):", data);
 
@@ -41,6 +52,7 @@ export default function PortalPage() {
           }
         } catch (e) {
           console.error("❌ Fallo cargando negocios en el portal:", e);
+          setPortalError("Error de conexión. Verifica tu internet.");
         } finally {
           setLoading(false);
         }
@@ -81,7 +93,21 @@ export default function PortalPage() {
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-white mb-4">Mis Negocios</h2>
         
-        {negocios.length === 0 ? (
+        {portalError ? (
+          <div className="bg-red-500/10 border border-red-500/20 p-8 rounded-2xl text-center">
+            <div className="text-4xl mb-4">⚠️</div>
+            <h3 className="text-red-500 font-bold mb-2">Hubo un problema</h3>
+            <p className="text-slate-300 text-sm mb-6 max-w-md mx-auto">
+              {portalError}
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-red-600/20 text-red-500 font-bold rounded-xl hover:bg-red-600/30 transition-all"
+            >
+              Reintentar
+            </button>
+          </div>
+        ) : negocios.length === 0 ? (
           <div className="bg-slate-900/50 border border-white/5 p-8 rounded-2xl text-center">
              <div className="text-4xl mb-4">🏪</div>
              <h3 className="text-white font-bold mb-2">Aún no tienes negocios</h3>
