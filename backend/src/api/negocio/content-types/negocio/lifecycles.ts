@@ -10,23 +10,30 @@ export default {
     if (!result.website && !result.reserva_url) {
       console.log(`Auto-discovery triggered for new business: ${result.nombre}`);
       
-      const discovery = await discoveryService.discover(result.nombre);
-      
-      if (discovery.success) {
-        await strapi.query('api::negocio.negocio').update({
-          where: { id: result.id },
-          data: {
-            website: discovery.website || result.website,
-            reserva_url: discovery.reserva_url || result.reserva_url,
-            google_maps_url: discovery.google_maps_url,
-            horarios_texto: discovery.horarios_texto,
-            discovery_pending: false,
-            discovery_verified: false // Requiere validación humana
-          },
-        });
-        console.log(`Auto-discovery completed for: ${result.nombre}`);
-      } else {
-        console.warn(`Auto-discovery failed for ${result.nombre}: ${discovery.error}`);
+      try {
+        // Fire & Forget: Se ejecuta asíncronamente sin bloquear la respuesta del servidor
+        discoveryService.discover(result.nombre)
+          .then(async (discovery) => {
+            if (discovery.success) {
+              await strapi.query('api::negocio.negocio').update({
+                where: { id: result.id },
+                data: {
+                  website: discovery.website || result.website,
+                  reserva_url: discovery.reserva_url || result.reserva_url,
+                  google_maps_url: discovery.google_maps_url,
+                  horarios_texto: discovery.horarios_texto,
+                  discovery_pending: false,
+                  discovery_verified: false // Requiere validación humana
+                },
+              });
+              console.log(`Auto-discovery completed for: ${result.nombre}`);
+            } else {
+              console.warn(`Auto-discovery failed for ${result.nombre}: ${discovery.error}`);
+            }
+          })
+          .catch(err => console.error(`Unhandled error in auto-discovery for ${result.nombre}:`, err));
+      } catch (err) {
+        console.error(`Crash prevented in afterCreate for ${result.nombre}:`, err);
       }
     }
   },
@@ -38,28 +45,42 @@ export default {
     if (params.data.trigger_discovery === true) {
        console.log(`Manual discovery request (Re-scan) for: ${result.nombre}`);
        
-       const discovery = await discoveryService.discover(result.nombre);
-       
-       if (discovery.success) {
-          await strapi.query('api::negocio.negocio').update({
-            where: { id: result.id },
-            data: {
-              website: discovery.website || result.website,
-              reserva_url: discovery.reserva_url || result.reserva_url,
-              google_maps_url: discovery.google_maps_url,
-              horarios_texto: discovery.horarios_texto,
-              discovery_pending: false,
-              trigger_discovery: false // Resetear el botón
-            }
-          });
-          console.log(`Manual discovery successful for: ${result.nombre}`);
-       } else {
-          // Resetear el botón incluso si falla para permitir re-intento manual
-          await strapi.query('api::negocio.negocio').update({
-            where: { id: result.id },
-            data: { trigger_discovery: false }
-          });
-          console.warn(`Manual discovery failed for ${result.nombre}: ${discovery.error}`);
+       try {
+         // Fire & Forget: Se ejecuta asíncronamente sin bloquear la respuesta de Strapi
+         discoveryService.discover(result.nombre)
+           .then(async (discovery) => {
+             if (discovery.success) {
+                await strapi.query('api::negocio.negocio').update({
+                  where: { id: result.id },
+                  data: {
+                    website: discovery.website || result.website,
+                    reserva_url: discovery.reserva_url || result.reserva_url,
+                    google_maps_url: discovery.google_maps_url,
+                    horarios_texto: discovery.horarios_texto,
+                    discovery_pending: false,
+                    trigger_discovery: false // Resetear el botón
+                  }
+                });
+                console.log(`Manual discovery successful for: ${result.nombre}`);
+             } else {
+                // Resetear el botón incluso si falla para permitir re-intento manual
+                await strapi.query('api::negocio.negocio').update({
+                  where: { id: result.id },
+                  data: { trigger_discovery: false }
+                });
+                console.warn(`Manual discovery failed for ${result.nombre}: ${discovery.error}`);
+             }
+           })
+           .catch(err => {
+             console.error(`Unhandled error in manual discovery for ${result.nombre}:`, err);
+             // Ensure we reset trigged_discovery even in hard catch
+             strapi.query('api::negocio.negocio').update({
+               where: { id: result.id },
+               data: { trigger_discovery: false }
+             }).catch(e => console.error("Failed to reset trigger_discovery:", e));
+           });
+       } catch (err) {
+         console.error(`Crash prevented in afterUpdate for ${result.nombre}:`, err);
        }
     }
   }
