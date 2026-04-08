@@ -1,0 +1,10 @@
+{
+  "attributes": {
+    "negocios": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::negocio.negocio",
+      "mappedBy": "owner"
+    }
+  }
+}
