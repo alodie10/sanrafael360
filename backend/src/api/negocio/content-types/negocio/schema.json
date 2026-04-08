@@ -115,13 +115,7 @@
       "target": "plugin::users-permissions.user"
     },
     "estado_reclamo": {
-      "type": "enumeration",
-      "enum": [
-        "ninguno",
-        "pendiente",
-        "aprobado",
-        "rechazado"
-      ],
+      "type": "string",
       "default": "ninguno",
       "description": "Estado actual del proceso de reclamo del negocio"
     }
