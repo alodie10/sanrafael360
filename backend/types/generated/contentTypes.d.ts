@@ -514,6 +514,12 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     verificado: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     website: Schema.Attribute.String;
     whatsapp: Schema.Attribute.String;
+    horarios_texto: Schema.Attribute.String;
+    trigger_discovery: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    discovery_pending: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    discovery_verified: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    owner: Schema.Attribute.Relation<'manyToOne', 'plugin::users-permissions.user'>;
+    estado_reclamo: Schema.Attribute.Enumeration<['ninguno', 'pendiente', 'aprobado', 'rechazado']> & Schema.Attribute.DefaultTo<'ninguno'>;
   };
 }
 
