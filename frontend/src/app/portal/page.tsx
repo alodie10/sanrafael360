@@ -24,23 +24,17 @@ export default function PortalPage() {
       const loadUserBusinesses = async () => {
         try {
           const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
-          // Strapi 5: Filtramos por el ID del owner y pedimos tanto publicados como borradores
-          const query = new URLSearchParams({
-            "filters[owner][id][$eq]": session.user.id,
-            "status": "draft", // Para ver los que están en revisión
-            "populate": "logo,categoria"
-          }).toString();
-
-          console.log(`🔍 Buscando negocios para Usuario ID: ${session.user.id}`);
           
-          const res = await fetch(`${strapiUrl}/api/negocios?${query}`, {
+          console.log(`🔍 Llamando a endpoint de propiedad /me para el portal...`);
+          
+          const res = await fetch(`${strapiUrl}/api/negocios/me`, {
             headers: {
               "Authorization": `Bearer ${session.jwt}`
             }
           });
           
           const data = await res.json();
-          console.log("📦 Respuesta del Portal:", data);
+          console.log("📦 Respuesta del Portal (/me):", data);
 
           if (data.data) {
             setNegocios(data.data);

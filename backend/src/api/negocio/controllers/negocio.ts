@@ -79,5 +79,35 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       console.error(err.stack);
       return ctx.internalServerError(`Error interno al procesar el reclamo: ${err.message}`);
     }
+  },
+
+  async me(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('Debes estar autenticado para ver tus negocios');
+    }
+
+    try {
+      console.log(`🔍 [PORTAL] Buscando negocios propios para: ${user.email} (ID: ${user.id})`);
+      
+      // Usamos strapi.query para saltarnos las restricciones de publicación del motor REST
+      // de forma que el dueño vea sus negocios incluso si están en draft (borrador).
+      const negocios = await strapi.query('api::negocio.negocio').findMany({
+        where: {
+          owner: user.id
+        },
+        populate: {
+          logo: true,
+          categoria: true
+        }
+      });
+
+      console.log(`📦 [PORTAL] Encontrados ${negocios.length} negocios.`);
+      return ctx.send({ data: negocios });
+
+    } catch (err: any) {
+      console.error('💥 [PORTAL] Error en endpoint /me:', err.message);
+      return ctx.internalServerError('Error al recuperar tus negocios.');
+    }
   }
 }));

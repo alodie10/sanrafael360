@@ -38,6 +38,7 @@ export default {
           if (roleType === 'authenticated') {
             actions.push('api::negocio.negocio.claim');
             actions.push('api::negocio.negocio.update');
+            actions.push('api::negocio.negocio.me');
           }
 
           for (const action of actions) {
