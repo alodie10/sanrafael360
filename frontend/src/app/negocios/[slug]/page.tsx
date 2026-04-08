@@ -38,6 +38,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   const router = useRouter();
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimMessage, setClaimMessage] = useState("");
+  const [claimErrorMessage, setClaimErrorMessage] = useState<string | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const autoClaim = searchParams.get("auto_claim");
 
@@ -56,6 +57,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
     }
     
     setIsClaiming(true);
+    setClaimErrorMessage(null);
     try {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
       const res = await fetch(`${strapiUrl}/api/negocios/${negocio.documentId || negocio.id}/claim`, {
@@ -74,11 +76,11 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         // Optimistic UI update
         setNegocio((prev: any) => prev ? { ...prev, estado_reclamo: 'pendiente' } : prev);
       } else {
-        alert("Error al reclamar: " + (data.error?.message || "Desconocido"));
+        setClaimErrorMessage(data.error?.message || "Error al procesar el reclamo. Intenta nuevamente.");
       }
     } catch (e) {
       console.error(e);
-      alert("Error en el servidor al reclamar el negocio.");
+      setClaimErrorMessage("Fallo de conexión con el servidor. Por favor verifica tu internet.");
     } finally {
       setIsClaiming(false);
     }
@@ -451,6 +453,11 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
               placeholder="Ej: Hola, soy el dueño de este local. Mi teléfono es 2604-XXXXXX."
               className="w-full h-32 px-4 py-3 bg-slate-800 border border-white/10 rounded-xl text-white placeholder-slate-500 mb-4 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
             />
+            {claimErrorMessage && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-sm rounded-xl text-center">
+                {claimErrorMessage}
+              </div>
+            )}
             <div className="flex gap-4">
               <button 
                 onClick={() => setShowClaimModal(false)}
