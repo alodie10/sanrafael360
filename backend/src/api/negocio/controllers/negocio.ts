@@ -20,7 +20,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
         return ctx.notFound('Negocio no encontrado');
       }
 
-      if (negocio.owner && negocio.estado_reclamo !== 'ninguno') {
+      if ((negocio as any).owner && negocio.estado_reclamo !== 'ninguno') {
         return ctx.badRequest('El negocio ya tiene un reclamo en proceso o asignado a un propietario');
       }
 
