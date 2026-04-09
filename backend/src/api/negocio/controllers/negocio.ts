@@ -109,16 +109,14 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     try {
       console.log(`🔍 [PORTAL] Buscando negocios propios para: ${user.email} (ID: ${user.id})`);
       
-      const negocios = await strapi.query('api::negocio.negocio').findMany({
-        where: {
+      // En Strapi 5, el Document Service maneja automáticamente la deduplicación de Draft/Published
+      // y devuelve la versión correcta según el contexto.
+      const { data: negocios } = await strapi.documents('api::negocio.negocio').findMany({
+        filters: {
           owner: user.id
         },
-        populate: {
-          logo: true,
-          categoria: true,
-          imagen_portada: true,
-          galeria: true
-        }
+        populate: ['logo', 'categoria', 'imagen_portada', 'galeria'],
+        status: 'published' // Omitir para ver borradores también, pero para el listado preferimos la lógica por defecto de Strapi 5
       });
 
       console.log(`📦 [PORTAL] Encontrados ${negocios.length} negocios.`);
@@ -146,7 +144,11 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       });
 
       if (!negocio) return ctx.notFound('Negocio no encontrado');
-      if (negocio.owner?.id !== user.id) {
+      
+      // Comprobación de seguridad robusta de dueño
+      const ownerId = negocio.owner?.id;
+      if (Number(ownerId) !== Number(user.id)) {
+        console.error(`🚫 [PORTAL-UPDATE] Intento de acceso no autorizado. User ${user.id} != Owner ${ownerId}`);
         return ctx.forbidden('No eres el dueño de este negocio');
       }
 

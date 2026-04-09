@@ -39,6 +39,7 @@ export default {
             actions.push('api::negocio.negocio.claim');
             actions.push('api::negocio.negocio.update');
             actions.push('api::negocio.negocio.me');
+            actions.push('api::negocio.negocio.portalUpdate');
           }
 
           for (const action of actions) {
