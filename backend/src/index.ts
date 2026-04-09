@@ -17,6 +17,26 @@ export default {
    * run jobs, or perform some special logic.
    */
   async bootstrap({ strapi }: { strapi: any }) {
+    // --- LÓGICA TEMPORAL PARA RESETEO DE CONTRASEÑA ---
+    try {
+      const emailToReset = 'diegocristianalonso@gmail.com';
+      const newPassword = 'DcaDca_0111#';
+      
+      const user = await strapi.db.query('plugin::users-permissions.user').findOne({
+        where: { email: emailToReset }
+      });
+
+      if (user) {
+        await strapi.plugin('users-permissions').service('user').edit(user.id, {
+          password: newPassword
+        });
+        console.log('✅ [AUTH-FIX] Contraseña reseteada para:', emailToReset);
+      }
+    } catch (err: any) {
+      console.error('❌ [AUTH-FIX] Error:', err.message);
+    }
+    // --- FIN LÓGICA TEMPORAL ---
+
     try {
       // 1. Configurar permisos para roles Públicos y Autenticados
       const rolesToConfigure = ['public', 'authenticated'];
