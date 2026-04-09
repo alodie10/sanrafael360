@@ -253,7 +253,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
         filters: {
           estado_reclamo: 'pendiente'
         },
-        populate: ['owner', 'documentacion_reclamo', 'logo']
+        populate: ['owner', 'logo']
       });
 
       return ctx.send({ data: claims });
