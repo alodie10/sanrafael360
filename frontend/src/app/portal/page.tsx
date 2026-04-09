@@ -162,15 +162,12 @@ export default function PortalPage() {
                   >
                     Ver público
                   </Link>
-                  {negocio.estado_reclamo !== 'pendiente' && (
-                    <button 
-                      className="flex-1 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-not-allowed opacity-50"
-                      title="Próximamente: Edición directa del perfil"
-                      disabled
-                    >
-                      Editar Perfil
-                    </button>
-                  )}
+                  <Link 
+                    href={`/portal/negocios/${negocio.slug}/editar`}
+                    className="flex-1 py-2 bg-blue-600 text-white text-sm font-bold text-center rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/10"
+                  >
+                    Editar Perfil
+                  </Link>
                 </div>
               </div>
             ))}

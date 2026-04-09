@@ -115,7 +115,9 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
         },
         populate: {
           logo: true,
-          categoria: true
+          categoria: true,
+          imagen_portada: true,
+          galeria: true
         }
       });
 
@@ -125,6 +127,92 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     } catch (err: any) {
       console.error('💥 [PORTAL] Error en endpoint /me:', err.message);
       return ctx.internalServerError('Error al recuperar tus negocios.');
+    }
+  },
+
+  async portalUpdate(ctx) {
+    try {
+      const { id } = ctx.params;
+      const user = ctx.state.user;
+
+      if (!user) {
+        return ctx.unauthorized('Debes estar autenticado');
+      }
+
+      // 1. Verificar propiedad y campos permitidos
+      const negocio = await strapi.documents('api::negocio.negocio').findOne({
+        documentId: id,
+        populate: ['owner']
+      });
+
+      if (!negocio) return ctx.notFound('Negocio no encontrado');
+      if (negocio.owner?.id !== user.id) {
+        return ctx.forbidden('No eres el dueño de este negocio');
+      }
+
+      // 2. Extraer y filtrar data
+      let bodyData = ctx.request.body;
+      if (typeof bodyData.data === 'string') {
+        bodyData = JSON.parse(bodyData.data);
+      } else if (bodyData.data) {
+        bodyData = bodyData.data;
+      }
+
+      // Whitelist de campos permitidos para el dueño
+      const allowedFields = [
+        'descripcion', 
+        'facebook', 
+        'website', 
+        'reserva_habilitada'
+      ];
+      
+      const updateData: any = {};
+      allowedFields.forEach(field => {
+        if (bodyData[field] !== undefined) {
+          updateData[field] = bodyData[field];
+        }
+      });
+
+      console.log(`📝 [PORTAL-UPDATE] Actualizando negocio ${id}:`, Object.keys(updateData));
+
+      // 3. Ejecutar actualización de campos de texto
+      const updatedDocument = await strapi.documents('api::negocio.negocio').update({
+        documentId: id,
+        data: updateData
+      });
+
+      // 4. Procesar archivos (Logo, Portada, Galería)
+      const { files } = ctx.request as any;
+      if (files) {
+        const uploadService = strapi.plugin('upload').service('upload');
+        
+        // Función auxiliar para subir y vincular
+        const uploadToField = async (file: any, fieldName: string) => {
+          if (!file) return;
+          console.log(`📎 [PORTAL-UPDATE] Subiendo archivo para campo: ${fieldName}`);
+          await uploadService.upload({
+            data: {
+              refId: updatedDocument.id,
+              ref: 'api::negocio.negocio',
+              field: fieldName,
+            },
+            files: file,
+          });
+        };
+
+        if (files.logo) await uploadToField(files.logo, 'logo');
+        if (files.imagen_portada) await uploadToField(files.imagen_portada, 'imagen_portada');
+        if (files.galeria) await uploadToField(files.galeria, 'galeria');
+      }
+
+      return ctx.send({ 
+        message: 'Negocio actualizado correctamente',
+        data: updatedDocument 
+      });
+
+    } catch (err: any) {
+      console.error('💥 [PORTAL-UPDATE] ERROR:', err.message);
+      return ctx.internalServerError(`Error al actualizar: ${err.message}`);
     }
   }
 }));

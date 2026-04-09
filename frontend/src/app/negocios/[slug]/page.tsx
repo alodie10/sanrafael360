@@ -290,19 +290,19 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                   </div>
                 </div>
               )}
-
-              {/* Website Portlet - Enriquecimiento Premium */}
-              {negocio.website && (
-                <WebsitePortlet 
-                  url={negocio.website} 
-                  businessName={negocio.nombre} 
-                />
-              )}
             </div>
+
+            {/* Website Portlet - Prioridad sobre galería */}
+            {negocio.website && (
+              <WebsitePortlet 
+                url={negocio.website} 
+                businessName={negocio.nombre} 
+              />
+            )}
 
             {/* Gallery placeholder or actual images */}
             {negocio.galeria && negocio.galeria.length > 0 && (
-              <div>
+              <div className="pt-8">
                 <h2 className="text-2xl font-heading font-bold text-white mb-8 flex items-center gap-3">
                   Galería de Fotos
                   <div className="h-px flex-1 bg-white/5" />
@@ -312,7 +312,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                     <motion.div 
                       key={img.id}
                       whileHover={{ scale: 1.02 }}
-                      className="aspect-square rounded-2xl overflow-hidden cursor-pointer"
+                      className="aspect-square rounded-2xl overflow-hidden cursor-pointer shadow-xl border border-white/5"
                     >
                       <img 
                         src={getStrapiMedia(img.url)!} 
