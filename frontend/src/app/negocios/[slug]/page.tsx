@@ -328,12 +328,14 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
 
           {/* Sidebar Info */}
           <div className="space-y-8">
-            {/* Booking Widget Principal */}
-            <BookingWidget 
-              reservaUrl={negocio.reserva_url} 
-              whatsapp={negocio.whatsapp}
-              businessName={negocio.nombre}
-            />
+            {/* Booking Widget Principal: Solo si está habilitado */}
+            {negocio.reserva_habilitada && (
+              <BookingWidget 
+                reservaUrl={negocio.reserva_url} 
+                whatsapp={negocio.whatsapp}
+                businessName={negocio.nombre}
+              />
+            )}
 
             {/* Action Buttons */}
             <div className="bg-slate-900/40 rounded-[2rem] p-8 border border-white/5 backdrop-blur-md shadow-xl sticky top-32">
