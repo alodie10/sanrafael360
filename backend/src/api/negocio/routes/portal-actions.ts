@@ -8,6 +8,7 @@ export default {
         policies: [],
         middlewares: [],
       },
+    },
     {
       method: 'GET',
       path: '/negocios/admin/pending-claims',
