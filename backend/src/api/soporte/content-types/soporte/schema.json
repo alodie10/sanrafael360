@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "soportes",
+  "info": {
+    "singularName": "soporte",
+    "pluralName": "soportes",
+    "displayName": "Soporte",
+    "description": "Consultas y tickets de dueños de negocios"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "asunto": {
+      "type": "string",
+      "required": true
+    },
+    "mensaje": {
+      "type": "text",
+      "required": true
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": [
+        "abierto",
+        "cerrado"
+      ],
+      "default": "abierto"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "negocio": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::negocio.negocio"
+    }
+  }
+}

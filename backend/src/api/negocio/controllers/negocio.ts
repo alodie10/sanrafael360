@@ -234,7 +234,136 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
 
     } catch (err: any) {
       console.error('💥 [PORTAL-UPDATE] ERROR:', err.message);
-      return ctx.internalServerError(`Error al actualizar: ${err.message}`);
+      return ctx.send({ error: `Error al actualizar: ${err.message}` });
+    }
+  },
+
+  // --- MÉTODOS ADMINISTRATIVOS ---
+
+  async adminPendingClaims(ctx) {
+    const user = ctx.state.user;
+    const ADMIN_EMAILS = ['diegocristianalonso@gmail.com', 'placeholder@admin.com'];
+
+    if (!user || !ADMIN_EMAILS.includes(user.email)) {
+      return ctx.forbidden('No tienes permisos de administrador.');
+    }
+
+    try {
+      const claims = await strapi.documents('api::negocio.negocio').findMany({
+        filters: {
+          estado_reclamo: 'pendiente'
+        },
+        populate: ['owner', 'documentacion_reclamo', 'logo']
+      });
+
+      return ctx.send({ data: claims });
+    } catch (err: any) {
+      console.error('💥 [ADMIN-CLAIMS] Error:', err.message);
+      return ctx.internalServerError('Error al recuperar reclamos.');
+    }
+  },
+
+  async adminResolveClaim(ctx) {
+    const user = ctx.state.user;
+    const ADMIN_EMAILS = ['diegocristianalonso@gmail.com', 'placeholder@admin.com'];
+
+    if (!user || !ADMIN_EMAILS.includes(user.email)) {
+      return ctx.forbidden('No tienes permisos de administrador.');
+    }
+
+    try {
+      const { id } = ctx.params;
+      const { decision, motivo } = ctx.request.body; // 'approved' o 'rejected'
+
+      const negocio = await strapi.documents('api::negocio.negocio').findOne({
+        documentId: id,
+        populate: ['owner']
+      });
+
+      if (!negocio) return ctx.notFound('Negocio no encontrado');
+
+      const ownerEmail = negocio.owner?.email;
+      const ownerName = negocio.owner?.username || 'Emprendedor';
+
+      if (decision === 'approved') {
+        // 1. Aprobar
+        await strapi.documents('api::negocio.negocio').update({
+          documentId: id,
+          data: {
+            estado_reclamo: 'aprobado'
+          }
+        });
+        await strapi.documents('api::negocio.negocio').publish({ documentId: id });
+
+        // 2. Notificar por Email (Aprobado)
+        try {
+          await strapi.plugin('email').service('email').send({
+            to: ownerEmail,
+            from: 'San Rafael 360 <no-reply@sanrafael360.com>',
+            subject: `🚀 ¡Bienvenido a San Rafael 360! Perfil de ${negocio.nombre} Aprobado`,
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px;">
+                <h2 style="color: #2563eb;">¡Felicidades, ${ownerName}!</h2>
+                <p>Tu solicitud de propiedad para <strong>${negocio.nombre}</strong> ha sido aprobada con éxito.</p>
+                <p>Ya puedes acceder a tu portal para gestionar las fotos, redes sociales y el sitio web de tu negocio.</p>
+                <div style="margin: 30px 0;">
+                  <a href="https://sanrafael360.vercel.app/portal" style="background: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Entrar a mi Portal</a>
+                </div>
+                <hr style="border: none; border-top: 1px solid #eee;" />
+                <p style="font-size: 12px; color: #666;">Si tienes dudas, puedes responder a este email o contactarnos por WhatsApp.</p>
+              </div>
+            `
+          });
+          console.log(`📧 Email de aprobación enviado a: ${ownerEmail}`);
+        } catch (e: any) {
+          console.error('❌ Error enviando email de aprobación:', e.message);
+        }
+
+      } else {
+        // 1. Rechazar Cordialmente
+        // Ponemos el estado en 'ninguno' para que el usuario pueda re-postular con info corregida
+        await strapi.documents('api::negocio.negocio').update({
+          documentId: id,
+          data: {
+            estado_reclamo: 'ninguno',
+            owner: null // Desvinculamos para permitir re-reclamo si fuera necesario
+          }
+        });
+        await strapi.documents('api::negocio.negocio').publish({ documentId: id });
+
+        // 2. Notificar por Email (Rechazo Cordial)
+        try {
+          await strapi.plugin('email').service('email').send({
+            to: ownerEmail,
+            from: 'San Rafael 360 <no-reply@sanrafael360.com>',
+            subject: `Información sobre tu solicitud en San Rafael 360`,
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px;">
+                <h2 style="color: #4b5563;">Hola ${ownerName},</h2>
+                <p>Lamentablemente no hemos podido aprobarte como dueño de <strong>${negocio.nombre}</strong> porque:</p>
+                <blockquote style="background: #f3f4f6; padding: 15px; border-left: 4px solid #2563eb; font-style: italic;">
+                  ${motivo || 'Necesitamos documentación más clara de la propiedad.'}
+                </blockquote>
+                <p>No te preocupes, puedes volver a enviar el formulario con la información corregida para terminar el trámite cuando gustes.</p>
+                <div style="margin: 30px 0;">
+                   <a href="https://wa.me/5492604000000" style="background: #22c55e; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Consultar por WhatsApp</a>
+                </div>
+                <hr style="border: none; border-top: 1px solid #eee;" />
+                <p style="font-size: 12px; color: #666;">Atentamente, el equipo de San Rafael 360.</p>
+              </div>
+            `
+          });
+          console.log(`📧 Email de rechazo enviado a: ${ownerEmail}`);
+        } catch (e: any) {
+          console.error('❌ Error enviando email de rechazo:', e.message);
+        }
+      }
+
+      return ctx.send({ message: 'Resolución procesada y notificada.' });
+
+    } catch (err: any) {
+      console.error('💥 [ADMIN-RESOLVE] Error:', err.message);
+      return ctx.internalServerError(`Error al procesar: ${err.message}`);
     }
   }
 }));

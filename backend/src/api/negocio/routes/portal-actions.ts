@@ -8,6 +8,23 @@ export default {
         policies: [],
         middlewares: [],
       },
+    {
+      method: 'GET',
+      path: '/negocios/admin/pending-claims',
+      handler: 'negocio.adminPendingClaims',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/negocios/admin/resolve-claim/:id',
+      handler: 'negocio.adminResolveClaim',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
     },
   ],
 };

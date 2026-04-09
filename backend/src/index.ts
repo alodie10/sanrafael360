@@ -40,6 +40,9 @@ export default {
             actions.push('api::negocio.negocio.update');
             actions.push('api::negocio.negocio.me');
             actions.push('api::negocio.negocio.portalUpdate');
+            actions.push('api::negocio.negocio.adminPendingClaims');
+            actions.push('api::negocio.negocio.adminResolveClaim');
+            actions.push('api::soporte.soporte.create');
           }
 
           for (const action of actions) {
