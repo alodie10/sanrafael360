@@ -176,6 +176,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       const allowedFields = [
         'descripcion', 
         'facebook', 
+        'instagram',
         'website', 
         'reserva_habilitada'
       ];

@@ -31,6 +31,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   // Form State
   const [descripcion, setDescripcion] = useState(negocio.descripcion || "");
   const [facebook, setFacebook] = useState(negocio.facebook || "");
+  const [instagram, setInstagram] = useState(negocio.instagram || "");
   const [website, setWebsite] = useState(negocio.website || "");
   const [reservaHabilitada, setReservaHabilitada] = useState(negocio.reserva_habilitada ?? true);
   
@@ -74,6 +75,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       formData.append("data", JSON.stringify({
         descripcion,
         facebook,
+        instagram,
         website,
         reserva_habilitada: reservaHabilitada
       }));
@@ -205,6 +207,21 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                   value={facebook}
                   onChange={(e) => setFacebook(e.target.value)}
                   placeholder="https://facebook.com/tunegocio"
+                  className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-2 font-heading">
+                   <div className="w-4 h-4 rounded bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center">
+                     <div className="w-2.5 h-2.5 border border-white rounded-full" />
+                   </div> 
+                   Instagram
+                </label>
+                <input 
+                  type="text"
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
+                  placeholder="https://instagram.com/tunegocio"
                   className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 />
               </div>
