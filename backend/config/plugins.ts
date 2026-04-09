@@ -26,11 +26,11 @@ export default ({ env }) => ({
     config: {
       provider: 'strapi-provider-email-resend',
       providerOptions: {
-        apiKey: env('RESEND_API_KEY'),
+        apiKey: env('RESEND_API_KEY', 're_placeholder'),
       },
       settings: {
-        defaultFrom: env('RESEND_DEFAULT_FROM', 'admin@sanrafael360.com'),
-        defaultReplyTo: env('RESEND_DEFAULT_REPLY_TO', 'admin@sanrafael360.com'),
+        defaultFrom: env('RESEND_DEFAULT_FROM', 'no-reply@sanrafael360.com.ar'),
+        defaultReplyTo: env('RESEND_DEFAULT_REPLY_TO', 'admin@sanrafael360.com.ar'),
       },
     },
   },
