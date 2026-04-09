@@ -107,25 +107,36 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     }
 
     try {
+      if (!user.id) return ctx.unauthorized('Usuario sin ID válido');
+
       console.log(`🔍 [PORTAL] Buscando negocios propios para: ${user.email} (ID: ${user.id})`);
       
-      const { data: negocios } = await strapi.documents('api::negocio.negocio').findMany({
+      // Sintaxis robusta para Strapi 5 Document Service
+      const result = await strapi.documents('api::negocio.negocio').findMany({
         filters: {
-          owner: user.id
+          owner: {
+            id: {
+              $eq: user.id
+            }
+          }
         },
         populate: ['logo', 'categoria', 'imagen_portada', 'galeria'],
         status: 'published'
-      }) as any;
+      });
+
+      // Aseguramos que negocios sea siempre un array para evitar Error 500 en el map
+      const negocios = result?.data || [];
 
       // Deduplicación explícita por ID para evitar duplicados por joins de relaciones
       const uniqueNegocios = Array.from(new Map(negocios.map((item: any) => [item.id, item])).values());
 
-      console.log(`📦 [PORTAL] Encontrados ${uniqueNegocios.length} negocios únicos (de ${negocios.length} registros).`);
+      console.log(`📦 [PORTAL] Encontrados ${uniqueNegocios.length} negocios únicos.`);
       return ctx.send({ data: uniqueNegocios });
 
     } catch (err: any) {
-      console.error('💥 [PORTAL] Error en endpoint /me:', err.message);
-      return ctx.internalServerError('Error al recuperar tus negocios.');
+      console.error('💥 [PORTAL] Error crítico en endpoint /me:', err.message);
+      // Cumplimos el estándar: Devolver 200 con array vacío en caso de error de consulta para no romper la UI
+      return ctx.send({ data: [], error: 'Error interno recuperando negocios' });
     }
   },
 
