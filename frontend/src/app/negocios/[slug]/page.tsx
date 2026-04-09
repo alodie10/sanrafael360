@@ -337,8 +337,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
 
             {/* Action Buttons */}
             <div className="bg-slate-900/40 rounded-[2rem] p-8 border border-white/5 backdrop-blur-md shadow-xl sticky top-32">
-              {/* Claim Business Section */}
-              {negocio.reclamar_habilitado && (!negocio.owner || !negocio.estado_reclamo || negocio.estado_reclamo === 'ninguno') && (
+              {/* Sección de Reclamo: Solo visible si no hay dueño y el estado es 'ninguno' */}
+              {negocio.reclamar_habilitado && !negocio.owner && (!negocio.estado_reclamo || negocio.estado_reclamo === 'ninguno') && (
                 <div className="mb-8 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center">
                   <h4 className="text-white font-bold mb-2">¿Eres el dueño de este negocio?</h4>
                   <p className="text-sm text-blue-200/70 mb-4 text-balance">Reclama este perfil para administrar la información, responder comentarios y más.</p>
