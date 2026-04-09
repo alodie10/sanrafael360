@@ -40,7 +40,30 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
         }
       });
       
-      console.log(`✅ [CLAIM] Base de datos actualizada exitosamente.`);
+      // 2b. Manejo de Documentación (PDF/Files)
+      const { files } = ctx.request as any;
+      if (files && (files.files || files.file)) {
+        console.log(`📎 [CLAIM] Procesando archivo de documentación adjunto...`);
+        const fileToUpload = files.files || files.file;
+        
+        try {
+          await strapi.plugin('upload').service('upload').upload({
+            data: {
+              refId: updatedNegocio.id,
+              ref: 'api::negocio.negocio',
+              field: 'documentacion_reclamo',
+            },
+            files: fileToUpload,
+          });
+          console.log(`✅ [CLAIM] Documentación vinculada correctamente.`);
+        } catch (uploadErr: any) {
+          console.error(`❌ [CLAIM] Error subiendo documentación:`, uploadErr.message);
+          // Nota: No fallamos la petición completa, el reclamo ya se guardó. 
+          // El admin verá que falta el archivo y podrá solicitarlo de nuevo.
+        }
+      }
+
+      console.log(`✅ [CLAIM] Proceso de base de datos finalizado.`);
 
       // 3. Notificación por Email (TOTALMENTE AISLADA - FIRE & FORGET)
       // Envolvemos en try/catch independiente para que NUNCA afecte la respuesta al cliente

@@ -38,6 +38,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   const router = useRouter();
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimMessage, setClaimMessage] = useState("");
+  const [claimFile, setClaimFile] = useState<File | null>(null);
   const [claimErrorMessage, setClaimErrorMessage] = useState<string | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const autoClaim = searchParams.get("auto_claim");
@@ -64,13 +65,19 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
       const targetUrl = `${strapiUrl}/api/negocios/${negocio.documentId || negocio.id}/claim`;
       
+      const formData = new FormData();
+      formData.append("data", JSON.stringify({ message: claimMessage }));
+      if (claimFile) {
+        formData.append("files", claimFile);
+      }
+      
       const res = await fetch(targetUrl, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Authorization": `Bearer ${session.jwt}`
+          // Note: Browser sets Content-Type to multipart/form-data with boundary
         },
-        body: JSON.stringify({ message: claimMessage })
+        body: formData
       });
       
       console.log(`📡 Respuesta recibida. Status: ${res.status}`);
@@ -465,8 +472,45 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
               value={claimMessage}
               onChange={(e) => setClaimMessage(e.target.value)}
               placeholder="Ej: Hola, soy el dueño de este local. Mi teléfono es 2604-XXXXXX."
-              className="w-full h-32 px-4 py-3 bg-slate-800 border border-white/10 rounded-xl text-white placeholder-slate-500 mb-4 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+              className="w-full h-24 px-4 py-3 bg-slate-800 border border-white/10 rounded-xl text-white placeholder-slate-500 mb-4 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
             />
+
+            <div className="mb-6">
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
+                Documentación de propiedad (Opcional - PDF/ID)
+              </label>
+              <div className="relative group">
+                <input 
+                  type="file" 
+                  accept=".pdf,image/*"
+                  onChange={(e) => setClaimFile(e.target.files?.[0] || null)}
+                  className="hidden" 
+                  id="claim-file-upload"
+                />
+                <label 
+                  htmlFor="claim-file-upload"
+                  className="flex items-center justify-between px-4 py-3 bg-slate-800 border border-white/10 rounded-xl cursor-pointer hover:border-blue-500/50 transition-colors"
+                >
+                  <span className="text-sm text-slate-400 truncate max-w-[200px]">
+                    {claimFile ? claimFile.name : "Seleccionar archivo..."}
+                  </span>
+                  <div className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-lg text-[10px] font-bold uppercase">
+                    Subir
+                  </div>
+                </label>
+                {claimFile && (
+                  <button 
+                    onClick={() => setClaimFile(null)}
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center hover:bg-red-600 shadow-lg"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <p className="text-[10px] text-slate-500 mt-2 ml-1 leading-tight">
+                Adjunta una copia de tu inscripción fiscal, DNI o cualquier documento que acredite la propiedad.
+              </p>
+            </div>
             {claimErrorMessage && (
               <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-sm rounded-xl text-center">
                 {claimErrorMessage}
