@@ -3,21 +3,32 @@ import { factories } from '@strapi/strapi';
 export default factories.createCoreController('api::negocio.negocio', ({ strapi }) => ({
   async claim(ctx) {
     try {
-      const { id } = ctx.params; // documentId en Strapi 5
-      const { message } = ctx.request.body;
+      const { id } = ctx.params;
       const user = ctx.state.user;
-
-      console.log(`🚀 [CLAIM] Iniciando proceso para negocio: ${id} | Usuario: ${user?.email}`);
 
       if (!user) {
         return ctx.unauthorized('Debes estar autenticado para reclamar un negocio');
       }
 
-      // 1. Buscar el negocio
-      // Usamos strapi.query por ser el motor más probado y estable para relaciones
-      const negocio = await strapi.query('api::negocio.negocio').findOne({
-        where: { documentId: id },
-        populate: { owner: true }
+      // 0. Parsing de Payload (Soporte Multipart/Form-Data para Strapi 5)
+      let bodyData = ctx.request.body;
+      if (typeof bodyData.data === 'string') {
+        try {
+          bodyData = JSON.parse(bodyData.data);
+        } catch (e) {
+          console.error('❌ [CLAIM] Error parseando bodyData.data string:', e.message);
+        }
+      } else if (bodyData.data) {
+        bodyData = bodyData.data;
+      }
+      
+      const { message } = bodyData;
+      console.log(`🚀 [CLAIM] Iniciando proceso para: ${id} | Usuario: ${user.email} | Msg: ${message || 'N/A'}`);
+
+      // 1. Buscar el negocio (Document Service de Strapi 5)
+      const negocio = await strapi.documents('api::negocio.negocio').findOne({
+        documentId: id,
+        populate: ['owner']
       });
 
       if (!negocio) {
@@ -25,22 +36,22 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
         return ctx.notFound('Negocio no encontrado');
       }
 
-      if (negocio.owner && negocio.estado_reclamo !== 'ninguno') {
+      if (negocio.owner && (negocio as any).estado_reclamo !== 'ninguno') {
         return ctx.badRequest('El negocio ya tiene un reclamo en proceso o asignado a un propietario');
       }
 
-      // 2. Actualización de Base de Datos (PRIORIDAD ABSOLUTA)
-      console.log(`📝 [CLAIM] Actualizando base de datos para: ${negocio.nombre}`);
+      // 2. Actualización de Base de Datos (Document Service - MÁS ROBUSTO)
+      console.log(`📝 [CLAIM] Actualizando estado de reclamo...`);
       
-      const updatedNegocio = await strapi.query('api::negocio.negocio').update({
-        where: { documentId: id },
+      const updatedNegocio = await strapi.documents('api::negocio.negocio').update({
+        documentId: id,
         data: {
           estado_reclamo: 'pendiente',
           owner: user.id
         }
       });
       
-      // 2b. Manejo de Documentación (PDF/Files)
+      // 2b. Manejo de Documentación (Files)
       const { files } = ctx.request as any;
       if (files && (files.files || files.file)) {
         console.log(`📎 [CLAIM] Procesando archivo de documentación adjunto...`);
@@ -55,52 +66,37 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
             },
             files: fileToUpload,
           });
-          console.log(`✅ [CLAIM] Documentación vinculada correctamente.`);
+          console.log(`✅ [CLAIM] Documentación vinculada.`);
         } catch (uploadErr: any) {
-          console.error(`❌ [CLAIM] Error subiendo documentación:`, uploadErr.message);
-          // Nota: No fallamos la petición completa, el reclamo ya se guardó. 
-          // El admin verá que falta el archivo y podrá solicitarlo de nuevo.
+          console.error(`❌ [CLAIM] Error subiendo archivo:`, uploadErr.message);
         }
       }
 
-      console.log(`✅ [CLAIM] Proceso de base de datos finalizado.`);
+      console.log(`✅ [CLAIM] Proceso finalizado exitosamente.`);
 
-      // 3. Notificación por Email (TOTALMENTE AISLADA - FIRE & FORGET)
-      // Envolvemos en try/catch independiente para que NUNCA afecte la respuesta al cliente
+      // 3. Notificación por Email (Fire & Forget)
       try {
         const emailService = strapi.plugin('email')?.service('email');
         if (emailService) {
-          console.log('📬 [CLAIM] Lanzando proceso de email en background...');
           emailService.send({
             to: 'diegocristianalonso@gmail.com',
-            from: 'admin@sanrafael360.com',
+            from: 'no-reply@sanrafael360.com.ar',
             subject: `Nuevo reclamo de negocio: ${negocio.nombre}`,
-            text: `El usuario ${user.email} ha solicitado reclamar el negocio "${negocio.nombre}".\n\nMensaje: ${message || 'Sin mensaje'}\n\nPor favor aprueba o rechaza el reclamo desde el panel de Strapi.`,
-          }).then(() => {
-            console.log('✉️ [CLAIM] Email enviado con éxito.');
-          }).catch((err: any) => {
-            console.error('❌ [CLAIM] Error asíncrono en servidor SMTP:', err.message);
-          });
+            text: `El usuario ${user.email} ha reclamado "${negocio.nombre}".\n\nMensaje: ${message || 'Sin mensaje'}\n\nRevisa la documentación en el panel de Strapi.`,
+          }).catch((err: any) => console.error('✉️ [CLAIM] Error email asíncrono:', err.message));
         }
-      } catch (emailErr: any) {
-        // Error al intentar inicializar el envío, no bloqueamos la respuesta
-        console.warn('⚠️ [CLAIM] No se pudo inicializar el servicio de email:', emailErr.message);
+      } catch (e: any) {
+        console.warn('⚠️ [CLAIM] Fallo inicialización email:', e.message);
       }
 
-      // 4. Respuesta de Éxito Inmediata
       return ctx.send({ 
         message: 'Reclamo enviado correctamente', 
-        data: {
-          id: updatedNegocio.id,
-          documentId: updatedNegocio.documentId,
-          estado_reclamo: 'pendiente'
-        } 
+        data: { documentId: id, estado_reclamo: 'pendiente' } 
       });
 
     } catch (err: any) {
       console.error('💥 [CLAIM] ERROR CRÍTICO:', err.message);
-      console.error(err.stack);
-      return ctx.internalServerError(`Error interno al procesar el reclamo: ${err.message}`);
+      return ctx.internalServerError(`Error interno: ${err.message}`);
     }
   },
 
@@ -113,8 +109,6 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     try {
       console.log(`🔍 [PORTAL] Buscando negocios propios para: ${user.email} (ID: ${user.id})`);
       
-      // Usamos strapi.query para saltarnos las restricciones de publicación del motor REST
-      // de forma que el dueño vea sus negocios incluso si están en draft (borrador).
       const negocios = await strapi.query('api::negocio.negocio').findMany({
         where: {
           owner: user.id
