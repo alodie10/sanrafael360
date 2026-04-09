@@ -124,8 +124,8 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
         status: 'published'
       });
 
-      // Aseguramos que negocios sea siempre un array para evitar Error 500 en el map
-      const negocios = result?.data || [];
+      // En Strapi 5, 'findMany' del Document Service devuelve directamente el array de documentos
+      const negocios = (result as any[]) || [];
 
       // Deduplicación explícita por ID para evitar duplicados por joins de relaciones
       const uniqueNegocios = Array.from(new Map(negocios.map((item: any) => [item.id, item])).values());
