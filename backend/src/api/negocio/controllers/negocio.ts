@@ -109,18 +109,19 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     try {
       console.log(`🔍 [PORTAL] Buscando negocios propios para: ${user.email} (ID: ${user.id})`);
       
-      // En Strapi 5, el Document Service maneja automáticamente la deduplicación de Draft/Published
-      // y devuelve la versión correcta según el contexto.
       const { data: negocios } = await strapi.documents('api::negocio.negocio').findMany({
         filters: {
           owner: user.id
         },
         populate: ['logo', 'categoria', 'imagen_portada', 'galeria'],
-        status: 'published' // Omitir para ver borradores también, pero para el listado preferimos la lógica por defecto de Strapi 5
-      });
+        status: 'published'
+      }) as any;
 
-      console.log(`📦 [PORTAL] Encontrados ${negocios.length} negocios.`);
-      return ctx.send({ data: negocios });
+      // Deduplicación explícita por ID para evitar duplicados por joins de relaciones
+      const uniqueNegocios = Array.from(new Map(negocios.map((item: any) => [item.id, item])).values());
+
+      console.log(`📦 [PORTAL] Encontrados ${uniqueNegocios.length} negocios únicos (de ${negocios.length} registros).`);
+      return ctx.send({ data: uniqueNegocios });
 
     } catch (err: any) {
       console.error('💥 [PORTAL] Error en endpoint /me:', err.message);
