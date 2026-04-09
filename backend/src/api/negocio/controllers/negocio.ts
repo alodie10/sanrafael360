@@ -219,8 +219,15 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
         if (files.galeria) await uploadToField(files.galeria, 'galeria');
       }
 
+      // 5. PUBLICACIÓN INSTANTÁNEA (Crucial para Strapi 5)
+      // Esto asegura que los cambios sean visibles en el sitio público y en el perfil (/me)
+      console.log(`🚀 [PORTAL-UPDATE] Publicando cambios para el negocio: ${id}`);
+      await strapi.documents('api::negocio.negocio').publish({
+        documentId: id
+      });
+
       return ctx.send({ 
-        message: 'Negocio actualizado correctamente',
+        message: 'Negocio actualizado y publicado correctamente',
         data: updatedDocument 
       });
 
