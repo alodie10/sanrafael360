@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "consultas-soporte",
+  "info": {
+    "singularName": "consulta-soporte",
+    "pluralName": "consultas-soporte",
+    "displayName": "Consulta de Soporte",
+    "description": "Mensajes de soporte de los dueños de negocios"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "asunto": {
+      "type": "string",
+      "required": true
+    },
+    "mensaje": {
+      "type": "text",
+      "required": true
+    },
+    "respuesta": {
+      "type": "text"
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": [
+        "pendiente",
+        "respondido"
+      ],
+      "default": "pendiente"
+    },
+    "negocio": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::negocio.negocio"
+    },
+    "usuario": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}

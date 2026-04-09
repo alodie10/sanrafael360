@@ -22,4 +22,16 @@ export default ({ env }) => ({
       jwtSecret: env('JWT_SECRET', 'a_very_secure_random_secret_fallback_123'),
     },
   },
+  email: {
+    config: {
+      provider: 'strapi-provider-email-resend',
+      providerOptions: {
+        apiKey: env('RESEND_API_KEY'),
+      },
+      settings: {
+        defaultFrom: env('RESEND_DEFAULT_FROM', 'admin@sanrafael360.com'),
+        defaultReplyTo: env('RESEND_DEFAULT_REPLY_TO', 'admin@sanrafael360.com'),
+      },
+    },
+  },
 });

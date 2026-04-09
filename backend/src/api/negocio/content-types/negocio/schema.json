@@ -93,6 +93,11 @@
     "google_maps_url": {
       "type": "string"
     },
+    "reserva_habilitada": {
+      "type": "boolean",
+      "default": true,
+      "description": "Indica si el bot\u00f3n de reserva debe mostrarse"
+    },
     "discovery_pending": {
       "type": "boolean",
       "default": true
@@ -118,6 +123,15 @@
       "type": "string",
       "default": "ninguno",
       "description": "Estado actual del proceso de reclamo del negocio"
+    },
+    "documentacion_reclamo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "files"
+      ],
+      "description": "Archivo PDF o imagen para verificar la propiedad del negocio"
     }
   }
 }
