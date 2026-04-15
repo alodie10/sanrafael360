@@ -41,12 +41,12 @@ ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
 WORKDIR /opt/backend
-COPY --from=build /opt/backend/node_modules ./node_modules
+COPY --from=build /opt/node_modules ../node_modules
 COPY --from=build /opt/backend/dist ./
 COPY --from=build /opt/backend/package.json ./
 COPY --from=build /opt/backend/public ./public
 
-ENV PATH /opt/backend/node_modules/.bin:$PATH
+ENV PATH /opt/node_modules/.bin:/opt/backend/node_modules/.bin:$PATH
 
 RUN chown -R node:node /opt/backend
 USER node
