@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import { getStrapiMedia } from "@/lib/strapi";
 import SupportForm from "@/components/portal/SupportForm";
+import BusinessPortalCard from "@/components/portal/BusinessPortalCard";
 import Logo from "@/components/common/Logo";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +46,7 @@ export default async function PortalPage() {
   }
 
   const negocios = await getNegocios(session.jwt as string);
-  const isAdmin = ['diegocristianalonso@gmail.com', 'placeholder@admin.com'].includes(session.user?.email || '');
+  const isAdmin = (session as any).user?.role === 'Admin';
 
   return (
     <div className="min-h-screen bg-black font-sans selection:bg-primary/30 pt-24">
@@ -106,62 +107,7 @@ export default async function PortalPage() {
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {negocios.length > 0 ? (
               negocios.map((negocio: any) => (
-                <div key={negocio.id} className="group bg-zinc-950/40 border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-primary/40 transition-all hover:shadow-2xl hover:shadow-primary/5 backdrop-blur-sm">
-                  <div className="relative h-48 bg-slate-800">
-                    {negocio.imagen_portada ? (
-                      <img 
-                        src={getStrapiMedia(negocio.imagen_portada.url)} 
-                        alt={negocio.nombre}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-700">
-                        <Building2 className="w-16 h-16" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
-                    
-                    {/* Status Badge */}
-                    <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-slate-950/80 backdrop-blur-md rounded-full border border-white/10">
-                      {negocio.estado_reclamo === 'aprobado' ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                          <span className="text-[10px] font-black uppercase tracking-widest text-green-500">Aprobado</span>
-                        </>
-                      ) : (
-                        <>
-                          <Clock className="w-3.5 h-3.5 text-amber-500" />
-                          <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">Pendiente</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="p-8">
-                    <h3 className="text-xl font-serif font-bold text-white mb-2 truncate uppercase tracking-tight">
-                      {negocio.nombre}
-                    </h3>
-                    <div className="flex items-center gap-2 text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-6 border-b border-white/5 pb-4">
-                      <MapPin className="w-3 h-3 text-primary shrink-0" />
-                      <span className="truncate">{negocio.categoria?.nombre || "Directorio San Rafael"}</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <Link 
-                        href={`/negocios/${negocio.slug}`}
-                        className="flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" /> Perfil
-                      </Link>
-                      <Link 
-                        href={`/portal/negocios/${negocio.documentId}/editar`}
-                        className="flex items-center justify-center gap-2 px-4 py-3 bg-primary hover:bg-primary/90 text-black text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-primary/10"
-                      >
-                        Editar Info
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+                <BusinessPortalCard key={negocio.id} negocio={negocio} />
               ))
             ) : (
               <div className="col-span-full bg-slate-900/50 border border-white/5 rounded-[3rem] p-16 md:p-24 text-center">

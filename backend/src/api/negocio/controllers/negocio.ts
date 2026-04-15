@@ -51,42 +51,49 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
         }
       });
       
-      // 2b. Manejo de Documentación (Files)
+      // 2b. Manejo de Documentación (Files) - MANDATORIO
       const { files } = ctx.request as any;
-      if (files && (files.files || files.file)) {
-        console.log(`📎 [CLAIM] Procesando archivo de documentación adjunto...`);
-        const fileToUpload = files.files || files.file;
-        
-        try {
-          await strapi.plugin('upload').service('upload').upload({
-            data: {
-              refId: updatedNegocio.id,
-              ref: 'api::negocio.negocio',
-              field: 'documentacion_reclamo',
-            },
-            files: fileToUpload,
-          });
-          console.log(`✅ [CLAIM] Documentación vinculada.`);
-        } catch (uploadErr: any) {
-          console.error(`❌ [CLAIM] Error subiendo archivo:`, uploadErr.message);
-        }
+      const fileToUpload = files?.files || files?.file;
+
+      if (!fileToUpload) {
+        return ctx.badRequest('La documentación probatoria (DNI o Habilitación) es obligatoria para reclamar un negocio.');
+      }
+
+      console.log(`📎 [CLAIM] Procesando archivo de documentación adjunto...`);
+      
+      try {
+        await strapi.plugin('upload').service('upload').upload({
+          data: {
+            refId: updatedNegocio.id,
+            ref: 'api::negocio.negocio',
+            field: 'documentacion_reclamo',
+          },
+          files: fileToUpload,
+        });
+        console.log(`✅ [CLAIM] Documentación vinculada.`);
+      } catch (uploadErr: any) {
+        console.error(`❌ [CLAIM] Error subiendo archivo:`, uploadErr.message);
       }
 
       console.log(`✅ [CLAIM] Proceso finalizado exitosamente.`);
 
-      // 3. Notificación por Email (Fire & Forget)
+      // 4. Notificación por WhatsApp (vía Webhook)
       try {
-        const emailService = strapi.plugin('email')?.service('email');
-        if (emailService) {
-          emailService.send({
-            to: 'diegocristianalonso@gmail.com',
-            from: 'no-reply@sanrafael360.com.ar',
-            subject: `Nuevo reclamo de negocio: ${negocio.nombre}`,
-            text: `El usuario ${user.email} ha reclamado "${negocio.nombre}".\n\nMensaje: ${message || 'Sin mensaje'}\n\nRevisa la documentación en el panel de Strapi.`,
-          }).catch((err: any) => console.error('✉️ [CLAIM] Error email asíncrono:', err.message));
+        const whatsappUrl = process.env.WHATSAPP_WEBHOOK_URL;
+        if (whatsappUrl && whatsappUrl !== 'https://api.ultramsg.com/instanceXXXX/messages/chat') {
+          console.log('📱 [CLAIM] Enviando notificación WhatsApp...');
+          await fetch(whatsappUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token: process.env.WHATSAPP_TOKEN,
+              to: process.env.WHATSAPP_ADMIN_NUMBER || '5492604000000',
+              body: `🔔 *San Rafael 360*\n\nNuevo reclamo de negocio:\n*${negocio.nombre}*\n\nUsuario: ${user.email}\n\nRevisa el panel para aprobar.`
+            })
+          });
         }
-      } catch (e: any) {
-        console.warn('⚠️ [CLAIM] Fallo inicialización email:', e.message);
+      } catch (waErr: any) {
+        console.error('❌ [CLAIM] Error notificación WhatsApp:', waErr.message);
       }
 
       return ctx.send({ 
@@ -242,10 +249,10 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
 
   async adminPendingClaims(ctx) {
     const user = ctx.state.user;
-    const ADMIN_EMAILS = ['diegocristianalonso@gmail.com', 'placeholder@admin.com'];
+    const adminRole = process.env.ADMIN_ROLE_NAME || 'Admin';
 
-    if (!user || !ADMIN_EMAILS.includes(user.email)) {
-      return ctx.forbidden('No tienes permisos de administrador.');
+    if (!user || user.role?.name !== adminRole) {
+      return ctx.forbidden(`No tienes permisos de administrador (Rol requerido: ${adminRole}).`);
     }
 
     try {
@@ -265,10 +272,10 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
 
   async adminResolveClaim(ctx) {
     const user = ctx.state.user;
-    const ADMIN_EMAILS = ['diegocristianalonso@gmail.com', 'placeholder@admin.com'];
+    const adminRole = process.env.ADMIN_ROLE_NAME || 'Admin';
 
-    if (!user || !ADMIN_EMAILS.includes(user.email)) {
-      return ctx.forbidden('No tienes permisos de administrador.');
+    if (!user || user.role?.name !== adminRole) {
+      return ctx.forbidden(`No tienes permisos de administrador (Rol requerido: ${adminRole}).`);
     }
 
     try {

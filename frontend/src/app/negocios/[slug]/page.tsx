@@ -57,8 +57,12 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       return;
     }
     
-    setIsClaiming(true);
-    setClaimErrorMessage(null);
+    if (!claimFile) {
+      setClaimErrorMessage("La documentación probatoria (DNI o Habilitación) es obligatoria.");
+      setIsClaiming(false);
+      return;
+    }
+
     console.log("🚀 Iniciando solicitud de reclamo...");
 
     try {
@@ -479,7 +483,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
 
             <div className="mb-6">
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
-                Documentación de propiedad (Opcional - PDF/ID)
+                Documentación de propiedad (Obligatorio - PDF/ID)
               </label>
               <div className="relative group">
                 <input 

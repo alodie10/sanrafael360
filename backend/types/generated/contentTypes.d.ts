@@ -466,6 +466,45 @@ export interface ApiCategoriaCategoria extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiConsultaSoporteConsultaSoporte
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'consultas-soporte';
+  info: {
+    description: 'Mensajes de soporte de los due\u00F1os de negocios';
+    displayName: 'Consulta de Soporte';
+    pluralName: 'consultas-soporte';
+    singularName: 'consulta-soporte';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    asunto: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<['pendiente', 'respondido']> &
+      Schema.Attribute.DefaultTo<'pendiente'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::consulta-soporte.consulta-soporte'
+    > &
+      Schema.Attribute.Private;
+    mensaje: Schema.Attribute.Text & Schema.Attribute.Required;
+    negocio: Schema.Attribute.Relation<'manyToOne', 'api::negocio.negocio'>;
+    publishedAt: Schema.Attribute.DateTime;
+    respuesta: Schema.Attribute.Text;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    usuario: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+  };
+}
+
 export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
   collectionName: 'negocios';
   info: {
@@ -487,13 +526,22 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     descripcion: Schema.Attribute.RichText;
     direccion: Schema.Attribute.String;
+    discovery_pending: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    discovery_verified: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    documentacion_reclamo: Schema.Attribute.Media<'files'>;
     email: Schema.Attribute.Email;
+    estado_reclamo: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'ninguno'>;
     facebook: Schema.Attribute.String;
     galeria: Schema.Attribute.Media<'images', true>;
+    google_maps_url: Schema.Attribute.String;
     horario_apertura: Schema.Attribute.JSON;
+    horarios_texto: Schema.Attribute.String;
     imagen_portada: Schema.Attribute.Media<'images'>;
     instagram: Schema.Attribute.String;
-    latitud: Schema.Attribute.Decimal;
+    latitud: Schema.Attribute.Float;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -501,25 +549,28 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     logo: Schema.Attribute.Media<'images'>;
-    longitud: Schema.Attribute.Decimal;
+    longitud: Schema.Attribute.Float;
     nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    owner: Schema.Attribute.Relation<
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
     publishedAt: Schema.Attribute.DateTime;
     reclamar_habilitado: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
+    reserva_habilitada: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    reserva_url: Schema.Attribute.String;
     slug: Schema.Attribute.UID<'nombre'> & Schema.Attribute.Required;
     telefono: Schema.Attribute.String;
+    trigger_discovery: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     verificado: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     website: Schema.Attribute.String;
     whatsapp: Schema.Attribute.String;
-    horarios_texto: Schema.Attribute.String;
-    trigger_discovery: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    discovery_pending: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
-    discovery_verified: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    owner: Schema.Attribute.Relation<'manyToOne', 'plugin::users-permissions.user'>;
-    estado_reclamo: Schema.Attribute.Enumeration<['ninguno', 'pendiente', 'aprobado', 'rechazado']> & Schema.Attribute.DefaultTo<'ninguno'>;
   };
 }
 
@@ -1035,6 +1086,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::categoria.categoria': ApiCategoriaCategoria;
+      'api::consulta-soporte.consulta-soporte': ApiConsultaSoporteConsultaSoporte;
       'api::negocio.negocio': ApiNegocioNegocio;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

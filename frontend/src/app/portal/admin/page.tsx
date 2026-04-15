@@ -33,9 +33,9 @@ export default async function AdminDashboardPage() {
     redirect("/api/auth/signin");
   }
 
-  // Whitelist de Admins
-  const ADMIN_EMAILS = ['diegocristianalonso@gmail.com', 'placeholder@admin.com'];
-  if (!ADMIN_EMAILS.includes(session.user?.email || '')) {
+  // Whitelist de Admins (Vía Roles Nativos)
+  const isAdmin = (session as any).user?.role === 'Admin';
+  if (!isAdmin) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-zinc-950 border border-red-500/20 p-8 rounded-[2.5rem] text-center shadow-2xl shadow-red-950/10">

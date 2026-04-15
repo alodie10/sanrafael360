@@ -26,18 +26,26 @@ export const authOptions: NextAuthOptions = {
           });
           
           const data = await res.json();
-
           if (res.ok && data.user) {
+            // Fetch extra user data including role
+            const userRes = await fetch(`${strapiUrl}/api/users/me?populate=role`, {
+              headers: {
+                "Authorization": `Bearer ${data.jwt}`
+              }
+            });
+            const userData = await userRes.json();
+            
             return {
               id: data.user.id.toString(),
               name: data.user.username,
               email: data.user.email,
+              role: userData.role?.name || 'Authenticated',
               jwt: data.jwt // Store Strapi JWT
             };
           }
           return null;
         } catch (e) {
-          console.error(e);
+          console.error("Auth Error:", e);
           return null;
         }
       }
@@ -48,12 +56,14 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.jwt = (user as any).jwt;
         token.id = user.id;
+        token.role = (user as any).role;
       }
       return token;
     },
     async session({ session, token }) {
       (session as any).jwt = token.jwt as string;
       (session as any).user.id = token.id as string;
+      (session as any).user.role = token.role as string;
       return session;
     }
   },
