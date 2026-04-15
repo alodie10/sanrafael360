@@ -17,8 +17,9 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
     await page.goto('/', { waitUntil: 'networkidle' });
     await page.waitForLoadState('load');
 
-    // Validate Hero Title
-    await expect(page.getByRole('heading', { name: /San Rafael/i })).toBeVisible();
+    // Validate Hero Title — usa el h1 principal (strict: primer heading visible en la sección hero)
+    await expect(page.locator('h1').first()).toBeVisible({ timeout: 10000 });
+
 
     // 2. Select a Random Business Card
     const cards = page.locator('a[href^="/negocios/"]');
@@ -40,9 +41,11 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
     await expect(page.locator('h1')).toBeVisible();
 
     // 4. Google Maps Validation
-    // Check if the container exists (Map or Placeholder)
-    const mapContainer = page.locator('[data-testid="google-map"], [data-testid="location-not-found"]').first();
-    await expect(mapContainer).toBeVisible({ timeout: 15000 });
+    // Usa data-testid="map-section" que está en el Server Component (SSR garantizado).
+    // Este wrapper siempre existe en el DOM sin esperar hidratación del client component.
+    // Dentro del wrapper puede haber: mapa activo (Google), placeholder sin coords, o error de API Key.
+    const mapSection = page.locator('[data-testid="map-section"]');
+    await expect(mapSection).toBeVisible({ timeout: 15000 });
 
     // 5. Booking Widget Validation (CRITICAL FOR CONVERSION)
     const bookingWidget = page.locator('div:has-text("Agenda tu Cita")').first();

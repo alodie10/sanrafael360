@@ -427,7 +427,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                     Ver en Maps <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
-                <div className="h-64">
+                <div data-testid="map-section" className="h-64">
                    {negocio.latitud && negocio.longitud ? (
                      <GoogleMap 
                         lat={negocio.latitud} 
@@ -435,7 +435,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                         title={negocio.nombre}
                       />
                    ) : (
-                     <div className="w-full h-full bg-slate-800 rounded-3xl flex items-center justify-center p-6 text-center">
+                     <div data-testid="location-not-found" className="w-full h-full bg-slate-800 rounded-3xl flex items-center justify-center p-6 text-center">
                         <p className="text-slate-500 text-sm italic">Ubicación no disponible en el mapa.</p>
                      </div>
                    )}
