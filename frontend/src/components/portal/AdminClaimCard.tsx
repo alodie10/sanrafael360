@@ -13,6 +13,8 @@ import {
   Loader2
 } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface AdminClaimCardProps {
   claim: any;

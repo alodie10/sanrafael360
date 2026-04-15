@@ -37,15 +37,15 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
     // 4. Wait for the business name to be visible (client-side rendering)
     await page.locator('h1').first().waitFor({ state: 'visible', timeout: 30000 });
 
-    // Verify status 200 by checking the page content (Next.js 404 would show error state)
-    await expect(page.locator('h1')).toBeVisible();
+    // 4. Wait for full client-side hydration (page.tsx es "use client" completo)
+    await page.waitForLoadState('networkidle');
 
-    // 4. Google Maps Validation
-    // Usa data-testid="map-section" que está en el Server Component (SSR garantizado).
-    // Este wrapper siempre existe en el DOM sin esperar hidratación del client component.
-    // Dentro del wrapper puede haber: mapa activo (Google), placeholder sin coords, o error de API Key.
+    // 5. Google Maps Validation
+    // data-testid="map-section" está en el Client Component — aparece post-hidratación.
+    // La sección de Ubicación siempre existe para cualquier negocio en el directorio.
     const mapSection = page.locator('[data-testid="map-section"]');
-    await expect(mapSection).toBeVisible({ timeout: 15000 });
+    await expect(mapSection).toBeVisible({ timeout: 20000 });
+
 
     // 5. Booking Widget Validation (CRITICAL FOR CONVERSION)
     const bookingWidget = page.locator('div:has-text("Agenda tu Cita")').first();

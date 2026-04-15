@@ -1,10 +1,23 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
 
 /**
- * See https://playwright.dev/docs/test-configuration.
+ * Playwright Configuration — San Rafael 360
+ * 
+ * Arquitectura de autenticación:
+ * - Un proyecto "setup" hace login UNA vez y guarda el storageState.
+ * - Todos los browsers (Chromium, Mobile Safari) inyectan ese state directamente.
+ * - Esto elimina los falsos negativos de cookies virtualizadas en WebKit.
+ * 
+ * Ver: https://playwright.dev/docs/auth#basic-shared-account-in-all-tests
  */
+
+const authFile = path.join(__dirname, 'tests', '.auth', 'user.json');
+
 export default defineConfig({
   testDir: './tests',
+  globalSetup: './tests/global-setup.ts',
+
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -13,17 +26,15 @@ export default defineConfig({
   timeout: 60000,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1,
-  /* Opt out of parallel tests on CI. */
+  /* Parallel workers */
   workers: 2,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
+  /* Reporter */
   reporter: 'list',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 
-             (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'),
 
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+  /* Shared settings for all projects */
+  use: {
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL ||
+             (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'),
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'off',
@@ -31,19 +42,32 @@ export default defineConfig({
     navigationTimeout: 30000,
   },
 
-  /* Configure projects for major browsers */
   projects: [
+    // ------------------------------------------------------------------
+    // Chromium (Desktop): usa el storageState del global setup
+    // ------------------------------------------------------------------
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: authFile,
+      },
     },
+
+    // ------------------------------------------------------------------
+    // Mobile Safari (WebKit): inyecta el mismo storageState
+    // Esto resuelve el problema de cookies virtualizadas en WebKit
+    // ------------------------------------------------------------------
     {
       name: 'Mobile Safari',
-      use: { ...devices['iPhone 13'] },
+      use: {
+        ...devices['iPhone 13'],
+        storageState: authFile,
+      },
     },
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* Dev server (solo en CI) */
   webServer: process.env.CI ? {
     command: 'npm run dev',
     url: 'http://localhost:3000',
