@@ -1,9 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Send, Plus, CheckCircle2 } from "lucide-react";
+import { Mail, Phone, MapPin, CheckCircle2, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function ContactoPage() {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   return (
     <main className="min-h-screen pt-32 pb-20 px-4 md:px-8 bg-slate-950 text-white selection:bg-primary/30">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">

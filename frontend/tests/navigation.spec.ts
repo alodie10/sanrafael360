@@ -31,7 +31,9 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
 
     // 3. Click and Navigate
     await randomCard.click();
-    await page.waitForLoadState('networkidle');
+    
+    // 4. Wait for the business name to be visible (client-side rendering)
+    await page.locator('h1').first().waitFor({ state: 'visible', timeout: 30000 });
 
     // Verify status 200 by checking the page content (Next.js 404 would show error state)
     await expect(page.locator('h1')).toBeVisible();

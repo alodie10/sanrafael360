@@ -27,25 +27,40 @@ export const authOptions: NextAuthOptions = {
           
           const data = await res.json();
           if (res.ok && data.user) {
-            // Fetch extra user data including role
-            const userRes = await fetch(`${strapiUrl}/api/users/me?populate=role`, {
-              headers: {
-                "Authorization": `Bearer ${data.jwt}`
+            // Fetch extra user data including role with a timeout fallback
+            let userRole = 'Authenticated';
+            try {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+
+              const userRes = await fetch(`${strapiUrl}/api/users/me?populate=role`, {
+                headers: {
+                  "Authorization": `Bearer ${data.jwt}`
+                },
+                signal: controller.signal
+              });
+              
+              clearTimeout(timeoutId);
+
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                userRole = userData.role?.name || 'Authenticated';
               }
-            });
-            const userData = await userRes.json();
+            } catch (roleErr) {
+              console.warn("⚠️ [AUTH] Failed to fetch role, defaulting to Authenticated:", roleErr);
+            }
             
             return {
               id: data.user.id.toString(),
               name: data.user.username,
               email: data.user.email,
-              role: userData.role?.name || 'Authenticated',
+              role: userRole,
               jwt: data.jwt // Store Strapi JWT
             };
           }
           return null;
-        } catch (e) {
-          console.error("Auth Error:", e);
+        } catch (e: any) {
+          console.error("Auth Error:", e.name === 'AbortError' ? 'Timeout' : e.message);
           return null;
         }
       }

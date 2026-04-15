@@ -1,0 +1,213 @@
+
+Running 3 tests using 2 workers
+
+  ✘  2 [chromium] › tests/empty-state.spec.ts:52:7 › Business Detail — Empty State Regression › Negocio sin reservaUrl válida: BookingWidget NO debe renderizarse (5.9s)
+  ✘  1 [chromium] › tests/empty-state.spec.ts:13:7 › Business Detail — Empty State Regression › La Delicia Bulevar: no black columns, horarios clean, no duplicate website (6.0s)
+  ✘  3 [chromium] › tests/empty-state.spec.ts:52:7 › Business Detail — Empty State Regression › Negocio sin reservaUrl válida: BookingWidget NO debe renderizarse (retry #1) (6.1s)
+  ✘  4 [chromium] › tests/empty-state.spec.ts:13:7 › Business Detail — Empty State Regression › La Delicia Bulevar: no black columns, horarios clean, no duplicate website (retry #1) (6.1s)
+  ✘  5 [chromium] › tests/empty-state.spec.ts:83:7 › Business Detail — Empty State Regression › WebsitePortlet: favicon fallback no rompe la página (5.9s)
+  ✘  6 [chromium] › tests/empty-state.spec.ts:83:7 › Business Detail — Empty State Regression › WebsitePortlet: favicon fallback no rompe la página (retry #1) (6.1s)
+
+
+  1) [chromium] › tests/empty-state.spec.ts:13:7 › Business Detail — Empty State Regression › La Delicia Bulevar: no black columns, horarios clean, no duplicate website 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('h1').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('h1').first()[22m
+
+
+      18 |
+      19 |     // 1. Página cargó correctamente
+    > 20 |     await expect(page.locator('h1').first()).toBeVisible();
+         |                                              ^
+      21 |
+      22 |     // 2. La columna principal no está vacía — debe haber al menos UNO de estos elementos:
+      23 |     //    - Descripción (texto)
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/empty-state.spec.ts:20:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/empty-state-Business-Detai-1cbd6--clean-no-duplicate-website-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/empty-state-Business-Detai-1cbd6--clean-no-duplicate-website-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('h1').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('h1').first()[22m
+
+
+      18 |
+      19 |     // 1. Página cargó correctamente
+    > 20 |     await expect(page.locator('h1').first()).toBeVisible();
+         |                                              ^
+      21 |
+      22 |     // 2. La columna principal no está vacía — debe haber al menos UNO de estos elementos:
+      23 |     //    - Descripción (texto)
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/empty-state.spec.ts:20:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/empty-state-Business-Detai-1cbd6--clean-no-duplicate-website-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/empty-state-Business-Detai-1cbd6--clean-no-duplicate-website-chromium-retry1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/empty-state-Business-Detai-1cbd6--clean-no-duplicate-website-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/empty-state-Business-Detai-1cbd6--clean-no-duplicate-website-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › tests/empty-state.spec.ts:52:7 › Business Detail — Empty State Regression › Negocio sin reservaUrl válida: BookingWidget NO debe renderizarse 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('h1').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('h1').first()[22m
+
+
+      58 |     await page.waitForLoadState('networkidle');
+      59 |
+    > 60 |     await expect(page.locator('h1').first()).toBeVisible();
+         |                                              ^
+      61 |
+      62 |     // El BookingWidget con "Reservar Ahora" no debe aparecer si no hay reservaUrl válida
+      63 |     const reservarAhoraBtn = page.locator('text=Reservar Ahora');
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/empty-state.spec.ts:60:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/empty-state-Business-Detai-0cbfd-Widget-NO-debe-renderizarse-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/empty-state-Business-Detai-0cbfd-Widget-NO-debe-renderizarse-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('h1').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('h1').first()[22m
+
+
+      58 |     await page.waitForLoadState('networkidle');
+      59 |
+    > 60 |     await expect(page.locator('h1').first()).toBeVisible();
+         |                                              ^
+      61 |
+      62 |     // El BookingWidget con "Reservar Ahora" no debe aparecer si no hay reservaUrl válida
+      63 |     const reservarAhoraBtn = page.locator('text=Reservar Ahora');
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/empty-state.spec.ts:60:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/empty-state-Business-Detai-0cbfd-Widget-NO-debe-renderizarse-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/empty-state-Business-Detai-0cbfd-Widget-NO-debe-renderizarse-chromium-retry1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/empty-state-Business-Detai-0cbfd-Widget-NO-debe-renderizarse-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/empty-state-Business-Detai-0cbfd-Widget-NO-debe-renderizarse-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [chromium] › tests/empty-state.spec.ts:83:7 › Business Detail — Empty State Regression › WebsitePortlet: favicon fallback no rompe la página 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=Experiencia Web')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('text=Experiencia Web')[22m
+
+
+      89 |     // El portlet debe estar visible
+      90 |     const portlet = page.locator('text=Experiencia Web');
+    > 91 |     await expect(portlet).toBeVisible();
+         |                           ^
+      92 |
+      93 |     // El botón "Visitar" debe ser clickeable (tiene href válido)
+      94 |     const visitarBtn = page.locator('a:has-text("Visitar")').first();
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/empty-state.spec.ts:91:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/empty-state-Business-Detai-96168-fallback-no-rompe-la-página-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/empty-state-Business-Detai-96168-fallback-no-rompe-la-página-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=Experiencia Web')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('text=Experiencia Web')[22m
+
+
+      89 |     // El portlet debe estar visible
+      90 |     const portlet = page.locator('text=Experiencia Web');
+    > 91 |     await expect(portlet).toBeVisible();
+         |                           ^
+      92 |
+      93 |     // El botón "Visitar" debe ser clickeable (tiene href válido)
+      94 |     const visitarBtn = page.locator('a:has-text("Visitar")').first();
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/empty-state.spec.ts:91:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/empty-state-Business-Detai-96168-fallback-no-rompe-la-página-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/empty-state-Business-Detai-96168-fallback-no-rompe-la-página-chromium-retry1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/empty-state-Business-Detai-96168-fallback-no-rompe-la-página-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/empty-state-Business-Detai-96168-fallback-no-rompe-la-página-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3 failed
+    [chromium] › tests/empty-state.spec.ts:13:7 › Business Detail — Empty State Regression › La Delicia Bulevar: no black columns, horarios clean, no duplicate website 
+    [chromium] › tests/empty-state.spec.ts:52:7 › Business Detail — Empty State Regression › Negocio sin reservaUrl válida: BookingWidget NO debe renderizarse 
+    [chromium] › tests/empty-state.spec.ts:83:7 › Business Detail — Empty State Regression › WebsitePortlet: favicon fallback no rompe la página 

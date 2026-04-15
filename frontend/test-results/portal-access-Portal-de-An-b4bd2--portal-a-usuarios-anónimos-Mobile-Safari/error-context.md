@@ -12,11 +12,7 @@
 # Error details
 
 ```
-Test timeout of 30000ms exceeded.
-```
-
-```
-Error: page.waitForURL: Test timeout of 30000ms exceeded.
+TimeoutError: page.waitForURL: Timeout 30000ms exceeded.
 =========================== logs ===========================
 waiting for navigation to "/login?callbackUrl=%2Fportal" until "load"
   navigated to "http://localhost:3000/login?callbackUrl=http%3A%2F%2Flocalhost%3A3000"
@@ -116,7 +112,7 @@ waiting for navigation to "/login?callbackUrl=%2Fportal" until "load"
   53 |     await page.goto('/portal');
   54 |     // Debe redirigir al login
 > 55 |     await page.waitForURL('/login?callbackUrl=%2Fportal');
-     |                ^ Error: page.waitForURL: Test timeout of 30000ms exceeded.
+     |                ^ TimeoutError: page.waitForURL: Timeout 30000ms exceeded.
   56 |     await expect(page.locator('h1:has-text("Iniciar Sesión")')).toBeVisible();
   57 |   });
   58 | });

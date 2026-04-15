@@ -19,10 +19,15 @@ interface WebsitePortletProps {
 type ScreenshotState = "loading" | "ready" | "site-down" | "error";
 
 export default function WebsitePortlet({ url, businessName }: WebsitePortletProps) {
+  const [hasMounted, setHasMounted] = useState(false);
   const finalUrl = url.startsWith("http") ? url : `https://${url}`;
   const [faviconFailed, setFaviconFailed] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [state, setState] = useState<ScreenshotState>("loading");
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   let domain = "";
   try {
@@ -34,6 +39,7 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
   const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
 
   useEffect(() => {
+    if (!hasMounted) return;
     let cancelled = false;
 
     const run = async () => {
@@ -76,14 +82,14 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
 
     run();
     return () => { cancelled = true; };
-  }, [finalUrl]);
+  }, [finalUrl, hasMounted]);
 
   return (
-    <div className="w-full mb-12">
+    <div className="w-full mb-12" id="website-portlet">
       {/* Título de sección */}
       <h2 className="text-2xl font-heading font-bold text-white mb-6 flex items-center gap-3">
         <Monitor className="w-6 h-6 text-primary" />
-        Sitio Web Oficial
+        Experiencia Web
         <div className="h-px flex-1 bg-white/5" />
       </h2>
 
@@ -99,16 +105,7 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
           </div>
 
           <div className="flex-1 flex items-center gap-2 bg-slate-800/60 border border-white/6 rounded-lg px-3 py-1.5 min-w-0">
-            {faviconFailed ? (
-              <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
-            ) : (
-              <img
-                src={faviconUrl}
-                alt={domain}
-                className="w-3.5 h-3.5 object-contain shrink-0"
-                onError={() => setFaviconFailed(true)}
-              />
-            )}
+            <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
             <span className="text-slate-400 text-xs font-mono truncate">{finalUrl}</span>
           </div>
 
@@ -122,15 +119,15 @@ export default function WebsitePortlet({ url, businessName }: WebsitePortletProp
         {/* ── Viewport ── */}
         <div className="relative w-full aspect-[16/9] bg-slate-950 overflow-hidden">
 
-          {/* Cargando */}
-          {state === "loading" && (
+          {/* Cargando o Estado Inicial (SSR Safe) */}
+          {(!hasMounted || state === "loading") && (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div className="w-full h-full animate-pulse bg-slate-800/40" />
               <div className="absolute flex flex-col items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-slate-700/80 flex items-center justify-center">
                   <Globe className="w-5 h-5 text-slate-500 animate-pulse" />
                 </div>
-                <p className="text-slate-500 text-xs font-mono">Verificando sitio…</p>
+                <p className="text-slate-500 text-xs font-mono">Cargando experiencia…</p>
               </div>
             </div>
           )}

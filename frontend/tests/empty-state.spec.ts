@@ -14,35 +14,32 @@ test.describe('Business Detail — Empty State Regression', () => {
     test.setTimeout(60000);
 
     await page.goto('/negocios/la-delicia-bulevard-ciudad');
-    await page.waitForLoadState('networkidle');
+    
+    // 1. Página cargó correctamente (esperar a que desaparezca el loading y aparezca el h1)
+    await page.locator('h1').first().waitFor({ state: 'visible', timeout: 30000 });
 
-    // 1. Página cargó correctamente
-    await expect(page.locator('h1').first()).toBeVisible();
 
     // 2. La columna principal no está vacía — debe haber al menos UNO de estos elementos:
     //    - Descripción (texto)
     //    - Placeholder glassmorphic ("próximamente")
-    //    - WebsitePortlet ("Sitio Web Oficial")
+    //    - WebsitePortlet ("Experiencia Web")
     const mainColumn = page.locator('.lg\\:col-span-2');
     await expect(mainColumn).toBeVisible();
 
-    const hasContent = await page.evaluate(() => {
-      const main = document.querySelector('[class*="col-span-2"]');
-      if (!main) return false;
-      const text = main.textContent || '';
-      // Debe tener alguna de estas cadenas
-      return (
-        text.includes('Sitio Web Oficial') ||
-        text.includes('próximamente') ||
-        text.length > 50
-      );
-    });
-    expect(hasContent, 'La columna principal no debe estar vacía').toBe(true);
+    // Esperar a que alguno de los contenidos esperados aparezca
+    const contentPromise = Promise.any([
+        page.getByText('Experiencia Web').waitFor({ state: 'visible', timeout: 10000 }),
+        page.getByText('próximamente').waitFor({ state: 'visible', timeout: 10000 }),
+        page.locator('.lg\\:col-span-2 >> text=/La Delicia/i').waitFor({ state: 'visible', timeout: 10000 })
+    ]);
+    
+    await expect(contentPromise).resolves.not.toThrow();
 
     // 3. Horarios sin encoding corrupto
     const horariosSection = page.locator('text=Horarios Actualizados');
     if (await horariosSection.isVisible()) {
-      const text = await horariosSection.locator('..').innerText();
+      const parent = await horariosSection.locator('xpath=..');
+      const text = await parent.innerText();
       expect(text).not.toMatch(/Ã|Â/);
       expect(text).toMatch(/Sábado|Lunes|Martes|Miércoles|Jueves|Viernes|Domingo/i);
     }
@@ -58,9 +55,10 @@ test.describe('Business Detail — Empty State Regression', () => {
     // Buscamos un negocio que típicamente no tenga reservaUrl (cabañas pequeñas, etc.)
     // Usamos un negocio conocido sin sistema de reservas online
     await page.goto('/negocios/cabanas-del-sur-rama-caida');
-    await page.waitForLoadState('networkidle');
+    
+    // Esperar a que el contenido cargue
+    await page.locator('h1').first().waitFor({ state: 'visible', timeout: 30000 });
 
-    await expect(page.locator('h1').first()).toBeVisible();
 
     // El BookingWidget con "Reservar Ahora" no debe aparecer si no hay reservaUrl válida
     const reservarAhoraBtn = page.locator('text=Reservar Ahora');
@@ -90,7 +88,7 @@ test.describe('Business Detail — Empty State Regression', () => {
     await page.waitForLoadState('networkidle');
 
     // El portlet debe estar visible
-    const portlet = page.locator('text=Sitio Web Oficial');
+    const portlet = page.locator('text=Experiencia Web');
     await expect(portlet).toBeVisible();
 
     // El botón "Visitar" debe ser clickeable (tiene href válido)

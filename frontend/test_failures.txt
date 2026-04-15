@@ -1,0 +1,499 @@
+
+Running 24 tests using 6 workers
+
+  ✓   3 [chromium] › tests/empty-state.spec.ts:55:7 › Business Detail — Empty State Regression › Negocio sin reservaUrl válida: BookingWidget NO debe renderizarse (3.2s)
+  ✓   1 [chromium] › tests/claim-flow.spec.ts:55:7 › Flujo de Reclamo de Negocio › un usuario no admin no debe poder entrar al panel /portal/admin (3.2s)
+  ✓   2 [chromium] › tests/claim-flow.spec.ts:21:7 › Flujo de Reclamo de Negocio › debe exigir documentación mandatoria para reclamar un negocio (3.3s)
+  ✘   6 [chromium] › tests/empty-state.spec.ts:13:7 › Business Detail — Empty State Regression › La Delicia Bulevar: no black columns, horarios clean, no duplicate website (3.3s)
+Diving into: BODEGAS
+Bodega ÚLTIMA FRONTERA -
+
+Bodega ÚLTIMA FRONTERA - en San Rafael.
+
+Ubicación Sardini y Las Vírgenes – Las Paredes
+  ✘   7 [chromium] › tests/navigation.spec.ts:82:7 › San Rafael 360 - Critical Flow Validation › Verify Contact Route is Active (No 404) (2.1s)
+  ✓   5 [chromium] › tests/empty-state.spec.ts:86:7 › Business Detail — Empty State Regression › WebsitePortlet: favicon fallback no rompe la página (5.3s)
+Sweeping 20 businesses...
+  ✘  11 [chromium] › tests/portal-permissions.spec.ts:39:7 › Seguridad del Portal › debe mostrar mensaje de error amigable si el servidor responde 403 (Simulado) (5.7s)
+  ✘   4 [chromium] › tests/navigation.spec.ts:15:7 › San Rafael 360 - Critical Flow Validation › Navigate Home to Random Business and Verify Maps/Assets (15.7s)
+  ✘   9 [chromium] › tests/portal-access.spec.ts:11:7 › Portal de Anunciante › un usuario autenticado debe ver sus negocios (incluyendo borradores) (16.6s)
+  ✘  12 [chromium] › tests/portal-permissions.spec.ts:11:7 › Seguridad del Portal › debe cargar la lista de negocios con status 200 para un usuario válido (16.2s)
+  ✘  15 [Mobile Safari] › tests/empty-state.spec.ts:13:7 › Business Detail — Empty State Regression › La Delicia Bulevar: no black columns, horarios clean, no duplicate website (2.5s)
+  ✓  16 [Mobile Safari] › tests/empty-state.spec.ts:55:7 › Business Detail — Empty State Regression › Negocio sin reservaUrl válida: BookingWidget NO debe renderizarse (2.4s)
+  ✓  17 [Mobile Safari] › tests/empty-state.spec.ts:86:7 › Business Detail — Empty State Regression › WebsitePortlet: favicon fallback no rompe la página (5.0s)
+Diving into: BODEGAS
+BODEGA BOUTIQUE IBARRA (Bodega / Restaurante) - Rama Caída
+
+BODEGA BOUTIQUE IBARRA (Bodega / Restaurante) - Rama Caída en San Rafael.
+
+Cubillos 3550 – Rama Caída
+
+  ✘  10 [chromium] › tests/portal-access.spec.ts:52:7 › Portal de Anunciante › no debe permitir acceso al portal a usuarios anónimos (30.1s)
+  ✓   8 [chromium] › tests/navigation.spec.ts:96:7 › San Rafael 360 - Critical Flow Validation › Bulk Sweep: Verify 20 Businesses without crashing or encoding errors (35.6s)
+  ✘  13 [Mobile Safari] › tests/claim-flow.spec.ts:21:7 › Flujo de Reclamo de Negocio › debe exigir documentación mandatoria para reclamar un negocio (30.1s)
+Sweeping 20 businesses...
+  ✘  18 [Mobile Safari] › tests/navigation.spec.ts:15:7 › San Rafael 360 - Critical Flow Validation › Navigate Home to Random Business and Verify Maps/Assets (20.5s)
+  ✘  14 [Mobile Safari] › tests/claim-flow.spec.ts:55:7 › Flujo de Reclamo de Negocio › un usuario no admin no debe poder entrar al panel /portal/admin (30.2s)
+  ✘  19 [Mobile Safari] › tests/navigation.spec.ts:82:7 › San Rafael 360 - Critical Flow Validation › Verify Contact Route is Active (No 404) (19.9s)
+  ✘  24 [Mobile Safari] › tests/portal-permissions.spec.ts:39:7 › Seguridad del Portal › debe mostrar mensaje de error amigable si el servidor responde 403 (Simulado) (6.9s)
+  ✓  20 [Mobile Safari] › tests/navigation.spec.ts:96:7 › San Rafael 360 - Critical Flow Validation › Bulk Sweep: Verify 20 Businesses without crashing or encoding errors (32.9s)
+  ✘  21 [Mobile Safari] › tests/portal-access.spec.ts:11:7 › Portal de Anunciante › un usuario autenticado debe ver sus negocios (incluyendo borradores) (30.1s)
+  ✘  22 [Mobile Safari] › tests/portal-access.spec.ts:52:7 › Portal de Anunciante › no debe permitir acceso al portal a usuarios anónimos (30.1s)
+  ✘  23 [Mobile Safari] › tests/portal-permissions.spec.ts:11:7 › Seguridad del Portal › debe cargar la lista de negocios con status 200 para un usuario válido (30.1s)
+
+
+  1) [chromium] › tests/empty-state.spec.ts:13:7 › Business Detail — Empty State Regression › La Delicia Bulevar: no black columns, horarios clean, no duplicate website 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoMatch[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected pattern: [32m/Sábado|Lunes|Martes|Miércoles|Jueves|Viernes|Domingo/i[39m
+    Received string:  [31m"Horarios Actualizados"[39m
+
+      45 |       const text = await horariosSection.locator('..').innerText();
+      46 |       expect(text).not.toMatch(/Ã|Â/);
+    > 47 |       expect(text).toMatch(/Sábado|Lunes|Martes|Miércoles|Jueves|Viernes|Domingo/i);
+         |                    ^
+      48 |     }
+      49 |
+      50 |     // 4. NO debe haber el link duplicado "Visitar sitio oficial" en el sidebar
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/empty-state.spec.ts:47:20
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/empty-state-Business-Detai-1cbd6--clean-no-duplicate-website-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/empty-state-Business-Detai-1cbd6--clean-no-duplicate-website-chromium/error-context.md
+
+  2) [chromium] › tests/navigation.spec.ts:15:7 › San Rafael 360 - Critical Flow Validation › Navigate Home to Random Business and Verify Maps/Assets 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('div:has-text("Agenda tu Cita")').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('div:has-text("Agenda tu Cita")').first()[22m
+
+
+      44 |     // 5. Booking Widget Validation (CRITICAL FOR CONVERSION)
+      45 |     const bookingWidget = page.locator('div:has-text("Agenda tu Cita")').first();
+    > 46 |     await expect(bookingWidget).toBeVisible();
+         |                                 ^
+      47 |     const bookingButton = bookingWidget.locator('a');
+      48 |     await expect(bookingButton).toBeVisible();
+      49 |     await expect(bookingButton).toHaveClass(/bg-primary|bg-green-500/);
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/navigation.spec.ts:46:33
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-San-Rafael-360--74a3a-ness-and-Verify-Maps-Assets-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-San-Rafael-360--74a3a-ness-and-Verify-Maps-Assets-chromium/error-context.md
+
+  3) [chromium] › tests/navigation.spec.ts:82:7 › San Rafael 360 - Critical Flow Validation › Verify Contact Route is Active (No 404) 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"/contacto"[39m
+    Received string:    [31m"http://localhost:3000/"[39m
+
+      91 |     const contactLink = page.locator('nav a[href="/contacto"]').first();
+      92 |     await contactLink.click();
+    > 93 |     await expect(page.url()).toContain('/contacto');
+         |                              ^
+      94 |   });
+      95 |
+      96 |   test('Bulk Sweep: Verify 20 Businesses without crashing or encoding errors', async ({ page }) => {
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/navigation.spec.ts:93:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-San-Rafael-360--6c646-act-Route-is-Active-No-404--chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-San-Rafael-360--6c646-act-Route-is-Active-No-404--chromium/error-context.md
+
+  4) [chromium] › tests/portal-access.spec.ts:11:7 › Portal de Anunciante › un usuario autenticado debe ver sus negocios (incluyendo borradores) 
+
+    TimeoutError: page.waitForResponse: Timeout 15000ms exceeded while waiting for event "response"
+
+      26 |
+      27 |     // 4. Interceptar la llamada a la API /me para verificar el Status
+    > 28 |     const responsePromise = page.waitForResponse(response => 
+         |                                  ^
+      29 |       response.url().includes('/api/negocios/me') && response.status() === 200
+      30 |     );
+      31 |
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/portal-access.spec.ts:28:34
+
+    TimeoutError: page.waitForSelector: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('h1:has-text("Portal de Anunciante")') to be visible[22m
+
+
+      31 |
+      32 |     // 5. Verificar que el portal cargue la lista
+    > 33 |     await page.waitForSelector('h1:has-text("Portal de Anunciante")');
+         |                ^
+      34 |     
+      35 |     // Esperamos a que la petición de la API termine con éxito
+      36 |     const response = await responsePromise;
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/portal-access.spec.ts:33:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/portal-access-Portal-de-An-bcc1c-cios-incluyendo-borradores--chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/portal-access-Portal-de-An-bcc1c-cios-incluyendo-borradores--chromium/error-context.md
+
+  5) [chromium] › tests/portal-access.spec.ts:52:7 › Portal de Anunciante › no debe permitir acceso al portal a usuarios anónimos 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "/login?callbackUrl=%2Fportal" until "load"
+      navigated to "http://localhost:3000/login?callbackUrl=http%3A%2F%2Flocalhost%3A3000"
+    ============================================================
+
+      53 |     await page.goto('/portal');
+      54 |     // Debe redirigir al login
+    > 55 |     await page.waitForURL('/login?callbackUrl=%2Fportal');
+         |                ^
+      56 |     await expect(page.locator('h1:has-text("Iniciar Sesión")')).toBeVisible();
+      57 |   });
+      58 | });
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/portal-access.spec.ts:55:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/portal-access-Portal-de-An-b4bd2--portal-a-usuarios-anónimos-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/portal-access-Portal-de-An-b4bd2--portal-a-usuarios-anónimos-chromium/error-context.md
+
+  6) [chromium] › tests/portal-permissions.spec.ts:11:7 › Seguridad del Portal › debe cargar la lista de negocios con status 200 para un usuario válido 
+
+    TimeoutError: page.waitForResponse: Timeout 15000ms exceeded while waiting for event "response"
+
+      24 |     // 3. Capturar la respuesta de /me
+      25 |     const [response] = await Promise.all([
+    > 26 |       page.waitForResponse(res => res.url().includes('/api/negocios/me')),
+         |            ^
+      27 |       page.reload(), // Recargamos para ver la petición limpia
+      28 |     ]);
+      29 |
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/portal-permissions.spec.ts:26:12
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/portal-permissions-Segurid-9aab3--200-para-un-usuario-válido-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/portal-permissions-Segurid-9aab3--200-para-un-usuario-válido-chromium/error-context.md
+
+  7) [chromium] › tests/portal-permissions.spec.ts:39:7 › Seguridad del Portal › debe mostrar mensaje de error amigable si el servidor responde 403 (Simulado) 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=Acceso denegado')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('text=Acceso denegado')[22m
+
+
+      48 |
+      49 |     // Verificar que aparezca el UI de error que implementamos
+    > 50 |     await expect(page.locator('text=Acceso denegado')).toBeVisible();
+         |                                                        ^
+      51 |     await expect(page.locator('text=Hubo un problema')).toBeVisible();
+      52 |   });
+      53 | });
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/portal-permissions.spec.ts:50:56
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/portal-permissions-Segurid-f04b9-idor-responde-403-Simulado--chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/portal-permissions-Segurid-f04b9-idor-responde-403-Simulado--chromium/error-context.md
+
+  8) [Mobile Safari] › tests/claim-flow.spec.ts:21:7 › Flujo de Reclamo de Negocio › debe exigir documentación mandatoria para reclamar un negocio 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      3 | test.describe('Flujo de Reclamo de Negocio', () => {
+      4 |   
+    > 5 |   test.beforeEach(async ({ page }) => {
+        |        ^
+      6 |     // 1. Iniciar sesión con usuario de prueba
+      7 |     await page.goto('/login');
+      8 |     // Nota: El sistema usa NextAuth. Playwright requiere manejar el estado de autenticación.
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/claim-flow.spec.ts:5:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "/portal" until "load"
+    ============================================================
+
+      16 |     
+      17 |     // Esperar a estar en el portal
+    > 18 |     await page.waitForURL('/portal');
+         |                ^
+      19 |   });
+      20 |
+      21 |   test('debe exigir documentación mandatoria para reclamar un negocio', async ({ page }) => {
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/claim-flow.spec.ts:18:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/claim-flow-Flujo-de-Reclam-fd130-ia-para-reclamar-un-negocio-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/claim-flow-Flujo-de-Reclam-fd130-ia-para-reclamar-un-negocio-Mobile-Safari/error-context.md
+
+  9) [Mobile Safari] › tests/claim-flow.spec.ts:55:7 › Flujo de Reclamo de Negocio › un usuario no admin no debe poder entrar al panel /portal/admin 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      3 | test.describe('Flujo de Reclamo de Negocio', () => {
+      4 |   
+    > 5 |   test.beforeEach(async ({ page }) => {
+        |        ^
+      6 |     // 1. Iniciar sesión con usuario de prueba
+      7 |     await page.goto('/login');
+      8 |     // Nota: El sistema usa NextAuth. Playwright requiere manejar el estado de autenticación.
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/claim-flow.spec.ts:5:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "/portal" until "load"
+    ============================================================
+
+      16 |     
+      17 |     // Esperar a estar en el portal
+    > 18 |     await page.waitForURL('/portal');
+         |                ^
+      19 |   });
+      20 |
+      21 |   test('debe exigir documentación mandatoria para reclamar un negocio', async ({ page }) => {
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/claim-flow.spec.ts:18:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/claim-flow-Flujo-de-Reclam-71f4e-ntrar-al-panel-portal-admin-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/claim-flow-Flujo-de-Reclam-71f4e-ntrar-al-panel-portal-admin-Mobile-Safari/error-context.md
+
+  10) [Mobile Safari] › tests/empty-state.spec.ts:13:7 › Business Detail — Empty State Regression › La Delicia Bulevar: no black columns, horarios clean, no duplicate website 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoMatch[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected pattern: [32m/Sábado|Lunes|Martes|Miércoles|Jueves|Viernes|Domingo/i[39m
+    Received string:  [31m"Horarios Actualizados[39m
+    [31m"[39m
+
+      45 |       const text = await horariosSection.locator('..').innerText();
+      46 |       expect(text).not.toMatch(/Ã|Â/);
+    > 47 |       expect(text).toMatch(/Sábado|Lunes|Martes|Miércoles|Jueves|Viernes|Domingo/i);
+         |                    ^
+      48 |     }
+      49 |
+      50 |     // 4. NO debe haber el link duplicado "Visitar sitio oficial" en el sidebar
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/empty-state.spec.ts:47:20
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/empty-state-Business-Detai-1cbd6--clean-no-duplicate-website-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/empty-state-Business-Detai-1cbd6--clean-no-duplicate-website-Mobile-Safari/error-context.md
+
+  11) [Mobile Safari] › tests/navigation.spec.ts:15:7 › San Rafael 360 - Critical Flow Validation › Navigate Home to Random Business and Verify Maps/Assets 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('div:has-text("Agenda tu Cita")').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('div:has-text("Agenda tu Cita")').first()[22m
+
+
+      44 |     // 5. Booking Widget Validation (CRITICAL FOR CONVERSION)
+      45 |     const bookingWidget = page.locator('div:has-text("Agenda tu Cita")').first();
+    > 46 |     await expect(bookingWidget).toBeVisible();
+         |                                 ^
+      47 |     const bookingButton = bookingWidget.locator('a');
+      48 |     await expect(bookingButton).toBeVisible();
+      49 |     await expect(bookingButton).toHaveClass(/bg-primary|bg-green-500/);
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/navigation.spec.ts:46:33
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-San-Rafael-360--74a3a-ness-and-Verify-Maps-Assets-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-San-Rafael-360--74a3a-ness-and-Verify-Maps-Assets-Mobile-Safari/error-context.md
+
+  12) [Mobile Safari] › tests/navigation.spec.ts:82:7 › San Rafael 360 - Critical Flow Validation › Verify Contact Route is Active (No 404) 
+
+    TimeoutError: locator.click: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('nav a[href="/contacto"]').first()[22m
+    [2m    - locator resolved to <a href="/contacto" class="flex items-center gap-2 bg-primary text-black px-5 py-2.5 rounded-full font-bold text-sm active:scale-95 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)] hover:shadow-[0_0_30px_rgba(255,191,0,0.4)]">…</a>[22m
+    [2m  - attempting click action[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not visible[22m
+    [2m    - retrying click action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not visible[22m
+    [2m    - retrying click action[22m
+    [2m      - waiting 100ms[22m
+    [2m    26 × waiting for element to be visible, enabled and stable[22m
+    [2m       - element is not visible[22m
+    [2m     - retrying click action[22m
+    [2m       - waiting 500ms[22m
+
+
+      90 |     await page.goto('/');
+      91 |     const contactLink = page.locator('nav a[href="/contacto"]').first();
+    > 92 |     await contactLink.click();
+         |                       ^
+      93 |     await expect(page.url()).toContain('/contacto');
+      94 |   });
+      95 |
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/navigation.spec.ts:92:23
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-San-Rafael-360--6c646-act-Route-is-Active-No-404--Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-San-Rafael-360--6c646-act-Route-is-Active-No-404--Mobile-Safari/error-context.md
+
+  13) [Mobile Safari] › tests/portal-access.spec.ts:11:7 › Portal de Anunciante › un usuario autenticado debe ver sus negocios (incluyendo borradores) 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "/portal" until "load"
+    ============================================================
+
+      23 |
+      24 |     // 3. Esperar redirección al portal o ir manualmente
+    > 25 |     await page.waitForURL('/portal');
+         |                ^
+      26 |
+      27 |     // 4. Interceptar la llamada a la API /me para verificar el Status
+      28 |     const responsePromise = page.waitForResponse(response => 
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/portal-access.spec.ts:25:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/portal-access-Portal-de-An-bcc1c-cios-incluyendo-borradores--Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/portal-access-Portal-de-An-bcc1c-cios-incluyendo-borradores--Mobile-Safari/error-context.md
+
+  14) [Mobile Safari] › tests/portal-access.spec.ts:52:7 › Portal de Anunciante › no debe permitir acceso al portal a usuarios anónimos 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "/login?callbackUrl=%2Fportal" until "load"
+      navigated to "http://localhost:3000/login?callbackUrl=http%3A%2F%2Flocalhost%3A3000"
+    ============================================================
+
+      53 |     await page.goto('/portal');
+      54 |     // Debe redirigir al login
+    > 55 |     await page.waitForURL('/login?callbackUrl=%2Fportal');
+         |                ^
+      56 |     await expect(page.locator('h1:has-text("Iniciar Sesión")')).toBeVisible();
+      57 |   });
+      58 | });
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/portal-access.spec.ts:55:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/portal-access-Portal-de-An-b4bd2--portal-a-usuarios-anónimos-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/portal-access-Portal-de-An-b4bd2--portal-a-usuarios-anónimos-Mobile-Safari/error-context.md
+
+  15) [Mobile Safari] › tests/portal-permissions.spec.ts:11:7 › Seguridad del Portal › debe cargar la lista de negocios con status 200 para un usuario válido 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "/portal" until "load"
+      navigated to "http://localhost:3000/login?"
+      navigated to "http://localhost:3000/login"
+    ============================================================
+
+      20 |
+      21 |     // 2. Ir al Portal
+    > 22 |     await page.waitForURL('/portal');
+         |                ^
+      23 |
+      24 |     // 3. Capturar la respuesta de /me
+      25 |     const [response] = await Promise.all([
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/portal-permissions.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/portal-permissions-Segurid-9aab3--200-para-un-usuario-válido-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/portal-permissions-Segurid-9aab3--200-para-un-usuario-válido-Mobile-Safari/error-context.md
+
+  16) [Mobile Safari] › tests/portal-permissions.spec.ts:39:7 › Seguridad del Portal › debe mostrar mensaje de error amigable si el servidor responde 403 (Simulado) 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=Acceso denegado')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('text=Acceso denegado')[22m
+
+
+      48 |
+      49 |     // Verificar que aparezca el UI de error que implementamos
+    > 50 |     await expect(page.locator('text=Acceso denegado')).toBeVisible();
+         |                                                        ^
+      51 |     await expect(page.locator('text=Hubo un problema')).toBeVisible();
+      52 |   });
+      53 | });
+        at /Users/diego/Documents/GitHub/sanrafael360/frontend/tests/portal-permissions.spec.ts:50:56
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/portal-permissions-Segurid-f04b9-idor-responde-403-Simulado--Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/portal-permissions-Segurid-f04b9-idor-responde-403-Simulado--Mobile-Safari/error-context.md
+
+  16 failed
+    [chromium] › tests/empty-state.spec.ts:13:7 › Business Detail — Empty State Regression › La Delicia Bulevar: no black columns, horarios clean, no duplicate website 
+    [chromium] › tests/navigation.spec.ts:15:7 › San Rafael 360 - Critical Flow Validation › Navigate Home to Random Business and Verify Maps/Assets 
+    [chromium] › tests/navigation.spec.ts:82:7 › San Rafael 360 - Critical Flow Validation › Verify Contact Route is Active (No 404) 
+    [chromium] › tests/portal-access.spec.ts:11:7 › Portal de Anunciante › un usuario autenticado debe ver sus negocios (incluyendo borradores) 
+    [chromium] › tests/portal-access.spec.ts:52:7 › Portal de Anunciante › no debe permitir acceso al portal a usuarios anónimos 
+    [chromium] › tests/portal-permissions.spec.ts:11:7 › Seguridad del Portal › debe cargar la lista de negocios con status 200 para un usuario válido 
+    [chromium] › tests/portal-permissions.spec.ts:39:7 › Seguridad del Portal › debe mostrar mensaje de error amigable si el servidor responde 403 (Simulado) 
+    [Mobile Safari] › tests/claim-flow.spec.ts:21:7 › Flujo de Reclamo de Negocio › debe exigir documentación mandatoria para reclamar un negocio 
+    [Mobile Safari] › tests/claim-flow.spec.ts:55:7 › Flujo de Reclamo de Negocio › un usuario no admin no debe poder entrar al panel /portal/admin 
+    [Mobile Safari] › tests/empty-state.spec.ts:13:7 › Business Detail — Empty State Regression › La Delicia Bulevar: no black columns, horarios clean, no duplicate website 
+    [Mobile Safari] › tests/navigation.spec.ts:15:7 › San Rafael 360 - Critical Flow Validation › Navigate Home to Random Business and Verify Maps/Assets 
+    [Mobile Safari] › tests/navigation.spec.ts:82:7 › San Rafael 360 - Critical Flow Validation › Verify Contact Route is Active (No 404) 
+    [Mobile Safari] › tests/portal-access.spec.ts:11:7 › Portal de Anunciante › un usuario autenticado debe ver sus negocios (incluyendo borradores) 
+    [Mobile Safari] › tests/portal-access.spec.ts:52:7 › Portal de Anunciante › no debe permitir acceso al portal a usuarios anónimos 
+    [Mobile Safari] › tests/portal-permissions.spec.ts:11:7 › Seguridad del Portal › debe cargar la lista de negocios con status 200 para un usuario válido 
+    [Mobile Safari] › tests/portal-permissions.spec.ts:39:7 › Seguridad del Portal › debe mostrar mensaje de error amigable si el servidor responde 403 (Simulado) 
+  8 passed (1.3m)

@@ -12,11 +12,7 @@
 # Error details
 
 ```
-Test timeout of 30000ms exceeded.
-```
-
-```
-Error: page.waitForURL: Test timeout of 30000ms exceeded.
+TimeoutError: page.waitForURL: Timeout 30000ms exceeded.
 =========================== logs ===========================
 waiting for navigation to "/portal" until "load"
 ============================================================
@@ -85,7 +81,7 @@ waiting for navigation to "/portal" until "load"
   23 | 
   24 |     // 3. Esperar redirección al portal o ir manualmente
 > 25 |     await page.waitForURL('/portal');
-     |                ^ Error: page.waitForURL: Test timeout of 30000ms exceeded.
+     |                ^ TimeoutError: page.waitForURL: Timeout 30000ms exceeded.
   26 | 
   27 |     // 4. Interceptar la llamada a la API /me para verificar el Status
   28 |     const responsePromise = page.waitForResponse(response => 
