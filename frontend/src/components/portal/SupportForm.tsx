@@ -43,7 +43,7 @@ export default function SupportForm({ negocioId, jwt }: SupportFormProps) {
       setSent(true);
     } catch (e: any) {
       setError(e.message);
-      setIsSubmitting(null);
+      setIsSubmitting(false);
     }
   };
 

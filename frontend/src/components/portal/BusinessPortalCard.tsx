@@ -24,7 +24,7 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
       <div className="relative h-56 bg-zinc-800 overflow-hidden">
         {negocio.imagen_portada ? (
           <img 
-            src={getStrapiMedia(negocio.imagen_portada.url)} 
+            src={getStrapiMedia(negocio.imagen_portada.url) ?? undefined} 
             alt={negocio.nombre}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-60"
           />
@@ -61,7 +61,7 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
         <div className="absolute -bottom-6 left-8 w-16 h-16 bg-zinc-900 border border-white/10 rounded-2xl p-1 shadow-2xl group-hover:-translate-y-2 transition-transform duration-500">
           {negocio.logo ? (
             <img 
-              src={getStrapiMedia(negocio.logo.url)} 
+              src={getStrapiMedia(negocio.logo.url) ?? undefined} 
               alt={negocio.nombre}
               className="w-full h-full object-cover rounded-xl bg-white"
             />
