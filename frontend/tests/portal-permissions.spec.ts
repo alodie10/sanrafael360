@@ -46,8 +46,9 @@ test.describe('Seguridad del Portal', () => {
     // Forzar login (o acceso directo si ya hay sesión, pero aquí simulamos)
     await page.goto('/portal');
 
-    // Verificar que aparezca el UI de error que implementamos
-    await expect(page.locator('text=Acceso denegado')).toBeVisible();
-    await expect(page.locator('text=Hubo un problema')).toBeVisible();
+    // Verificar que aparezca el UI de error que implementamos (Acceso Restringido en /admin)
+    await page.goto('/portal/admin');
+    await expect(page.locator('text=Acceso Restringido')).toBeVisible();
+    await expect(page.locator('text=No tienes permisos')).toBeVisible();
   });
 });

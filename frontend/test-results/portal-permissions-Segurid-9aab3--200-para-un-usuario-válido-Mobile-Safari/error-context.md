@@ -12,11 +12,7 @@
 # Error details
 
 ```
-Error: Channel closed
-```
-
-```
-Error: page.waitForURL: Test ended.
+TimeoutError: page.waitForURL: Timeout 30000ms exceeded.
 =========================== logs ===========================
 waiting for navigation to "/portal" until "load"
 ============================================================
@@ -82,7 +78,7 @@ waiting for navigation to "/portal" until "load"
   20 | 
   21 |     // 2. Ir al Portal
 > 22 |     await page.waitForURL('/portal');
-     |                ^ Error: page.waitForURL: Test ended.
+     |                ^ TimeoutError: page.waitForURL: Timeout 30000ms exceeded.
   23 | 
   24 |     // 3. Capturar la respuesta de /me
   25 |     const [response] = await Promise.all([
@@ -109,10 +105,11 @@ waiting for navigation to "/portal" until "load"
   46 |     // Forzar login (o acceso directo si ya hay sesión, pero aquí simulamos)
   47 |     await page.goto('/portal');
   48 | 
-  49 |     // Verificar que aparezca el UI de error que implementamos
-  50 |     await expect(page.locator('text=Acceso denegado')).toBeVisible();
-  51 |     await expect(page.locator('text=Hubo un problema')).toBeVisible();
-  52 |   });
-  53 | });
-  54 | 
+  49 |     // Verificar que aparezca el UI de error que implementamos (Acceso Restringido en /admin)
+  50 |     await page.goto('/portal/admin');
+  51 |     await expect(page.locator('text=Acceso Restringido')).toBeVisible();
+  52 |     await expect(page.locator('text=No tienes permisos')).toBeVisible();
+  53 |   });
+  54 | });
+  55 | 
 ```

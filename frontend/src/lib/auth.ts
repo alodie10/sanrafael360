@@ -10,10 +10,12 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        console.log(`🔑 [AUTH] Secret configured: ${process.env.NEXTAUTH_SECRET ? 'YES' : 'NO'}`);
         if (!credentials?.identifier || !credentials?.password) return null;
 
         try {
           const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
+          console.log(`📡 [AUTH] Attempting login for: ${credentials.identifier} at ${strapiUrl}`);
           const res = await fetch(`${strapiUrl}/api/auth/local`, {
             method: "POST",
             headers: {
@@ -27,6 +29,7 @@ export const authOptions: NextAuthOptions = {
           
           const data = await res.json();
           if (res.ok && data.user) {
+            console.log(`✅ [AUTH] Login successful for: ${data.user.email}`);
             // Fetch extra user data including role with a timeout fallback
             let userRole = 'Authenticated';
             try {
@@ -45,6 +48,9 @@ export const authOptions: NextAuthOptions = {
               if (userRes.ok) {
                 const userData = await userRes.json();
                 userRole = userData.role?.name || 'Authenticated';
+                console.log(`🎭 [AUTH] User role: ${userRole}`);
+              } else {
+                console.warn(`⚠️ [AUTH] Failed to fetch role (Status ${userRes.status}), using default Authenticated`);
               }
             } catch (roleErr) {
               console.warn("⚠️ [AUTH] Failed to fetch role, defaulting to Authenticated:", roleErr);
@@ -58,6 +64,7 @@ export const authOptions: NextAuthOptions = {
               jwt: data.jwt // Store Strapi JWT
             };
           }
+          console.error(`❌ [AUTH] Login failed for ${credentials.identifier}:`, data.error?.message || "Invalid credentials");
           return null;
         } catch (e: any) {
           console.error("Auth Error:", e.name === 'AbortError' ? 'Timeout' : e.message);
@@ -88,6 +95,8 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET || "default_development_secret_only",
+  trustHost: true,
 };

@@ -14,14 +14,14 @@
 ```
 Error: expect(locator).toBeVisible() failed
 
-Locator: locator('div:has-text("Agenda tu Cita")').first()
+Locator: locator('.relative.w-full.h-full.min-h-\\[300px\\]')
 Expected: visible
 Timeout: 5000ms
 Error: element(s) not found
 
 Call log:
   - Expect "toBeVisible" with timeout 5000ms
-  - waiting for locator('div:has-text("Agenda tu Cita")').first()
+  - waiting for locator('.relative.w-full.h-full.min-h-\\[300px\\]')
 
 ```
 
@@ -54,13 +54,13 @@ Call log:
             - button [ref=e22] [cursor=pointer]:
               - img [ref=e23]
       - generic [ref=e24]:
-        - img "CHECHO A LA LLAMA ( Parrilla) - Cuadro Nacional" [ref=e25]
+        - img "LA MANSA WINE ESTATES - Cuadro Nacional" [ref=e25]
         - link "Volver" [ref=e28]:
           - /url: /
           - img [ref=e29]
           - generic [ref=e31]: Volver
         - generic [ref=e33]:
-          - img "CHECHO A LA LLAMA ( Parrilla) - Cuadro Nacional" [ref=e35]
+          - img "LA MANSA WINE ESTATES - Cuadro Nacional" [ref=e35]
           - generic [ref=e36]:
             - generic [ref=e37]:
               - img [ref=e38]
@@ -69,65 +69,48 @@ Call log:
               - img [ref=e44]
               - img [ref=e46]
               - generic [ref=e48]: (4.8 / 5.0)
-            - heading "CHECHO A LA LLAMA ( Parrilla) - Cuadro Nacional" [level=1] [ref=e49]
+            - heading "LA MANSA WINE ESTATES - Cuadro Nacional" [level=1] [ref=e49]
             - generic [ref=e50]:
               - generic [ref=e51]:
                 - img [ref=e52]
-                - generic [ref=e55]: Domicilio Ignacio Sueta 830 – Cuadro Nacional
-              - generic [ref=e56]: Gastronomía
+                - generic [ref=e55]: "\"Ruta 146 km 383"
+              - generic [ref=e56]: Bodegas
       - generic [ref=e58]:
         - generic [ref=e60]:
           - heading "Descripción" [level=2] [ref=e61]: Descripción
-          - generic [ref=e63]: CHECHO A LA LLAMA ( Parrilla) - Cuadro Nacional en San Rafael.
+          - generic [ref=e63]: LA MANSA WINE ESTATES - Cuadro Nacional en San Rafael.
         - generic [ref=e65]:
           - generic [ref=e66]:
             - heading "¿Eres el dueño de este negocio?" [level=4] [ref=e67]
             - paragraph [ref=e68]: Reclama este perfil para administrar la información, responder comentarios y más.
             - button "Reclamar Perfil" [ref=e69] [cursor=pointer]
           - heading "Información Detallada" [level=3] [ref=e70]
-          - link [ref=e73]:
-            - /url: https://www.instagram.com/chechoalallama/
-            - img [ref=e75]
-          - generic [ref=e78]:
-            - generic [ref=e79]:
-              - heading "Ubicación" [level=4] [ref=e80]
-              - link "Ver en Maps" [ref=e81]:
-                - /url: https://www.google.com/maps/search/?api=1&query=-34.6373481,-68.2941432
+          - generic [ref=e71]:
+            - link "Teléfono 5 – Cuadro Nacional\"" [ref=e72]:
+              - /url: tel:5 – Cuadro Nacional"
+              - generic [ref=e73]:
+                - img [ref=e75]
+                - generic [ref=e77]:
+                  - paragraph [ref=e78]: Teléfono
+                  - paragraph [ref=e79]: 5 – Cuadro Nacional"
+            - generic [ref=e80]:
+              - link [ref=e81]:
+                - /url: http://www.lamansa.com.ar
+                - img [ref=e83]
+              - link [ref=e86]:
+                - /url: https://www.instagram.com/lamansawines/?hl=es-la
+                - img [ref=e87]
+          - generic [ref=e89]:
+            - generic [ref=e90]:
+              - heading "Ubicación" [level=4] [ref=e91]
+              - link "Ver en Maps" [ref=e92]:
+                - /url: https://www.google.com/maps/search/?api=1&query=-34.6315638,-68.2179958
                 - text: Ver en Maps
-                - img [ref=e82]
-            - generic [ref=e89]:
-              - generic:
-                - button "Combinaciones de teclas"
-              - region "Mapa" [ref=e90]
-              - generic [ref=e91]:
-                - generic [ref=e117]:
-                  - generic:
-                    - generic:
-                      - generic:
-                        - img "CHECHO A LA LLAMA ( Parrilla) - Cuadro Nacional"
-                - iframe [ref=e119]:
-                  
-                - generic:
-                  - generic:
-                    - button "Controles de visualización del mapa" [ref=e121] [cursor=pointer]
-                    - button "Arrastra al hombrecito al mapa para abrir Street View" [ref=e122] [cursor=pointer]:
-                      - generic:
-                        - img "Control del hombrecito de Street View"
-                    - generic [ref=e124] [cursor=pointer]:
-                      - button "Ampliar" [ref=e125]
-                      - button "Reducir" [ref=e127]
-                - link "Abre esta zona en Google Maps (se abre en una nueva ventana)" [ref=e129]:
-                  - /url: https://maps.google.com/maps?ll=-34.637348,-68.294143&z=15&t=m&hl=es&gl=US&mapclient=apiv3
-                  - img "Google" [ref=e131]
-                - generic [ref=e132]:
-                  - button "Combinaciones de teclas" [ref=e138] [cursor=pointer]
-                  - generic [ref=e143]: Datos del mapa ©2026
-                  - link "Términos (se abre en una nueva pestaña)" [ref=e148] [cursor=pointer]:
-                    - /url: https://www.google.com/intl/es_US/help/terms_maps.html
-                    - text: Términos
-  - button "Open Next.js Dev Tools" [ref=e154] [cursor=pointer]:
-    - img [ref=e155]
-  - alert [ref=e160]
+                - img [ref=e93]
+            - paragraph [ref=e99]: Falta la API Key de Google Maps
+  - button "Open Next.js Dev Tools" [ref=e105] [cursor=pointer]:
+    - img [ref=e106]
+  - alert [ref=e111]
 ```
 
 # Test source
@@ -176,108 +159,106 @@ Call log:
   41  |     // 4. Google Maps Validation
   42  |     // Check if the container exists
   43  |     const mapContainer = page.locator('.relative.w-full.h-full.min-h-\\[300px\\]');
-  44  |     await expect(mapContainer).toBeVisible();
+> 44  |     await expect(mapContainer).toBeVisible();
+      |                                ^ Error: expect(locator).toBeVisible() failed
   45  | 
   46  |     // 5. Booking Widget Validation (CRITICAL FOR CONVERSION)
-  47  |     const bookingWidget = page.locator('div:has-text("Agenda tu Cita")').first();
-> 48  |     await expect(bookingWidget).toBeVisible();
-      |                                 ^ Error: expect(locator).toBeVisible() failed
-  49  |     const bookingButton = bookingWidget.locator('a');
-  50  |     await expect(bookingButton).toBeVisible();
-  51  |     await expect(bookingButton).toHaveClass(/bg-primary|bg-green-500/);
-  52  | 
-  53  |     // 6. Website Portlet Validation
-  54  |     if (await page.locator('h3:has-text("Experiencia Web")').isVisible()) {
-  55  |         const websiteContainer = page.locator('div:has-text("Experiencia Web")').first();
-  56  |         await expect(websiteContainer).toBeVisible();
+  47  |     // Some businesses don't have a booking URL, so we make this check conditional 
+  48  |     // but ensure that IF it's visible, it has the right structure.
+  49  |     const bookingWidget = page.locator('div:has-text("Agenda tu Cita")').first();
+  50  |     if (await bookingWidget.isVisible()) {
+  51  |         await expect(bookingWidget).toBeVisible();
+  52  |         const bookingButton = bookingWidget.locator('a');
+  53  |         await expect(bookingButton).toBeVisible();
+  54  |         await expect(bookingButton).toHaveClass(/bg-primary|bg-green-500/);
+  55  |     } else {
+  56  |         console.log("ℹ️ This business has no booking widget (expected for some types).");
   57  |     }
   58  | 
-  59  |     // 7. Horarios Encoding Validation
-  60  |     if (await page.locator('h4:has-text("Horarios Actualizados")').isVisible()) {
-  61  |         const horariosText = await page.locator('p:near(h4:has-text("Horarios Actualizados"))').innerText();
-  62  |         // Check for common UTF-8 encoding corruptions
-  63  |         expect(horariosText).not.toMatch(/Ã|Â/);
-  64  |     }
-  65  | 
-  66  |     // 7. Asset Integrity (Railway/Strapi)
-  67  |     // Check for images and ensure they don't have naturalWidth 0 (indicates error/CORS block)
-  68  |     const images = page.locator('img');
-  69  |     const imageCount = await images.count();
-  70  |     
-  71  |     for (let i = 0; i < imageCount; i++) {
-  72  |       const isLoaded = await images.nth(i).evaluate((img: HTMLImageElement) => {
-  73  |         return img.complete && img.naturalWidth > 0;
-  74  |       });
-  75  |       // We log but don't strictly fail for placeholders if some business lacks images,
-  76  |       // but if ALL fail, we should be concerned.
-  77  |       if (!isLoaded) {
-  78  |           const src = await images.nth(i).getAttribute('src');
-  79  |           console.warn(`Potential asset error: ${src}`);
-  80  |       }
-  81  |     }
-  82  |   });
-  83  | 
-  84  |   test('Verify Contact Route is Active (No 404)', async ({ page }) => {
-  85  |     // Navigate to /contacto directly
-  86  |     await page.goto('/contacto');
-  87  |     
-  88  |     // Check for the "Vende aquí" or similar heading
-  89  |     await expect(page.getByRole('heading', { name: /Haz crecer tu Negocio/i })).toBeVisible();
-  90  |     
-  91  |     // Verify prefetching works by going home and clicking the link
-  92  |     await page.goto('/');
-  93  |     const contactLink = page.locator('nav a[href="/contacto"]').first();
-  94  |     await contactLink.click();
-  95  |     await expect(page.url()).toContain('/contacto');
-  96  |   });
-  97  | 
-  98  |   test('Bulk Sweep: Verify 20 Businesses without crashing or encoding errors', async ({ page }) => {
-  99  |     test.setTimeout(120000); // 2 minutos para escanear 20 negocios
-  100 |     await page.goto('/');
-  101 |     
-  102 |     // Recolectar 20 links de negocios aleatorios de la home
-  103 |     await page.waitForLoadState('networkidle');
-  104 |     const cards = page.locator('a[href^="/negocios/"]');
-  105 |     await cards.first().waitFor({ state: 'visible' });
-  106 |     const count = await cards.count();
+  59  |     // 6. Website Portlet Validation
+  60  |     if (await page.locator('h3:has-text("Experiencia Web")').isVisible()) {
+  61  |         const websiteContainer = page.locator('div:has-text("Experiencia Web")').first();
+  62  |         await expect(websiteContainer).toBeVisible();
+  63  |     }
+  64  | 
+  65  |     // 7. Horarios Encoding Validation
+  66  |     if (await page.locator('h4:has-text("Horarios Actualizados")').isVisible()) {
+  67  |         const horariosText = await page.locator('p:near(h4:has-text("Horarios Actualizados"))').innerText();
+  68  |         // Check for common UTF-8 encoding corruptions
+  69  |         expect(horariosText).not.toMatch(/Ã|Â/);
+  70  |     }
+  71  | 
+  72  |     // 7. Asset Integrity (Railway/Strapi)
+  73  |     // Check for images and ensure they don't have naturalWidth 0 (indicates error/CORS block)
+  74  |     const images = page.locator('img');
+  75  |     const imageCount = await images.count();
+  76  |     
+  77  |     for (let i = 0; i < imageCount; i++) {
+  78  |       const isLoaded = await images.nth(i).evaluate((img: HTMLImageElement) => {
+  79  |         return img.complete && img.naturalWidth > 0;
+  80  |       });
+  81  |       // We log but don't strictly fail for placeholders if some business lacks images,
+  82  |       // but if ALL fail, we should be concerned.
+  83  |       if (!isLoaded) {
+  84  |           const src = await images.nth(i).getAttribute('src');
+  85  |           console.warn(`Potential asset error: ${src}`);
+  86  |       }
+  87  |     }
+  88  |   });
+  89  | 
+  90  |   test('Verify Contact Route is Active (No 404)', async ({ page, isMobile }) => {
+  91  |     // Navigate to /contacto directly first
+  92  |     await page.goto('/contacto');
+  93  |     await expect(page.getByRole('heading', { name: /Haz crecer tu Negocio/i })).toBeVisible();
+  94  |     
+  95  |     // Verify navigation works from Home
+  96  |     await page.goto('/');
+  97  |     
+  98  |     if (isMobile) {
+  99  |         // Mobile Menu flow
+  100 |         await page.click('button:has(svg.lucide-menu), button:has(svg.lucide-menu-line)');
+  101 |         await page.waitForTimeout(1000); // More time for mobile menu
+  102 |         await page.getByRole('link', { name: "Vende con nosotros" }).click({ force: true });
+  103 |     } else {
+  104 |         // Desktop Link
+  105 |         await page.getByRole('link', { name: "Vende aquí" }).click({ force: true });
+  106 |     }
   107 |     
-  108 |     expect(count).toBeGreaterThan(0);
-  109 |     
-  110 |     const maxToTest = Math.min(20, count);
-  111 |     const urlsToTest = new Set<string>();
-  112 |     
-  113 |     for(let i = 0; i < count && urlsToTest.size < maxToTest; i++) {
-  114 |         const href = await cards.nth(i).getAttribute('href');
-  115 |         if (href) urlsToTest.add(href);
-  116 |     }
-  117 | 
-  118 |     console.log(`Sweeping ${urlsToTest.size} businesses...`);
-  119 | 
-  120 |     for (const url of urlsToTest) {
-  121 |         await page.goto(url);
-  122 |         await page.waitForLoadState('domcontentloaded');
-  123 |         
-  124 |         // 1. Debe haber cargado la página (h1 presente)
-  125 |         await expect(page.locator('h1').first()).toBeVisible();
-  126 |         
-  127 |         // 2. Revisar si hay horarios, que no tengan encoding corrupto
-  128 |         const horariosSection = page.locator('div:has-text("Horarios Actualizados")').last();
-  129 |         if (await horariosSection.isVisible()) {
-  130 |             const text = await horariosSection.innerText();
-  131 |             expect(text).not.toMatch(/Ã|Â/);
-  132 |         }
+  108 |     await page.waitForURL('**/contacto', { timeout: 15000 });
+  109 |     await expect(page.url()).toContain('/contacto');
+  110 |   });
+  111 | 
+  112 |   test('Bulk Sweep: Verify 20 Businesses without crashing or encoding errors', async ({ page }) => {
+  113 |     test.setTimeout(120000); // 2 minutos para escanear 20 negocios
+  114 |     await page.goto('/');
+  115 |     
+  116 |     // Recolectar 20 links de negocios aleatorios de la home
+  117 |     await page.waitForLoadState('networkidle');
+  118 |     const cards = page.locator('a[href^="/negocios/"]');
+  119 |     await cards.first().waitFor({ state: 'visible' });
+  120 |     const count = await cards.count();
+  121 |     
+  122 |     expect(count).toBeGreaterThan(0);
+  123 |     
+  124 |     const maxToTest = Math.min(20, count);
+  125 |     const urlsToTest = new Set<string>();
+  126 |     
+  127 |     for(let i = 0; i < count && urlsToTest.size < maxToTest; i++) {
+  128 |         const href = await cards.nth(i).getAttribute('href');
+  129 |         if (href) urlsToTest.add(href);
+  130 |     }
+  131 | 
+  132 |     console.log(`Sweeping ${urlsToTest.size} businesses...`);
   133 | 
-  134 |         // 3. Revisar botón de Reservar (sin overflow a nivel DOM)
-  135 |         // Playwright asserts elements are visible and within viewport bounds automatically if we click, 
-  136 |         // but we just assert it's visible.
-  137 |         const bookingBtn = page.locator('a:has-text("Reservar Ahora"), a:has-text("Consultar Cita")').first();
-  138 |         if (await bookingBtn.isVisible()) {
-  139 |              // Just verifying it renders
-  140 |              await expect(bookingBtn).toBeVisible();
-  141 |         }
-  142 |     }
-  143 |   });
-  144 | 
-  145 | });
-  146 | 
+  134 |     for (const url of urlsToTest) {
+  135 |         await page.goto(url);
+  136 |         await page.waitForLoadState('domcontentloaded');
+  137 |         
+  138 |         // 1. Debe haber cargado la página (h1 presente)
+  139 |         await expect(page.locator('h1').first()).toBeVisible();
+  140 |         
+  141 |         // 2. Revisar si hay horarios, que no tengan encoding corrupto
+  142 |         const horariosSection = page.locator('div:has-text("Horarios Actualizados")').last();
+  143 |         if (await horariosSection.isVisible()) {
+  144 |             const text = await horariosSection.innerText();
 ```

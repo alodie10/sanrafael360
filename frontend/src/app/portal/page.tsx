@@ -40,9 +40,10 @@ async function getNegocios(jwt: string) {
 
 export default async function PortalPage() {
   const session = await getServerSession(authOptions);
+  console.log(`[PORTAL] Server session:`, session ? `✅ ${session.user?.email}` : "❌ NO SESSION");
 
   if (!session) {
-    redirect("/api/auth/signin");
+    redirect("/login");
   }
 
   const negocios = await getNegocios(session.jwt as string);

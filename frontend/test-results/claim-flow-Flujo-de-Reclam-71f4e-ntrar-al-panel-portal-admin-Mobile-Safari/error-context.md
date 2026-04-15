@@ -7,21 +7,28 @@
 # Test info
 
 - Name: claim-flow.spec.ts >> Flujo de Reclamo de Negocio >> un usuario no admin no debe poder entrar al panel /portal/admin
-- Location: tests/claim-flow.spec.ts:55:7
+- Location: tests/claim-flow.spec.ts:63:7
 
 # Error details
 
 ```
-TimeoutError: page.waitForURL: Timeout 30000ms exceeded.
-=========================== logs ===========================
-waiting for navigation to "/portal" until "load"
-============================================================
+Error: expect(locator).toBeVisible() failed
+
+Locator: getByRole('heading', { name: 'Acceso Restringido' })
+Expected: visible
+Timeout: 15000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 15000ms
+  - waiting for getByRole('heading', { name: 'Acceso Restringido' })
+
 ```
 
 # Page snapshot
 
 ```yaml
-- generic [ref=e1]:
+- generic [active] [ref=e1]:
   - generic [ref=e2]:
     - navigation [ref=e3]:
       - generic [ref=e4]:
@@ -39,10 +46,10 @@ waiting for navigation to "/portal" until "load"
       - generic [ref=e16]:
         - generic [ref=e17]:
           - generic [ref=e18]: Email
-          - textbox [active] [ref=e19]
+          - textbox [ref=e19]
         - generic [ref=e20]:
           - generic [ref=e21]: Contraseña
-          - textbox [ref=e22]: sanrafael360_test
+          - textbox [ref=e22]
         - button "Entrar" [ref=e23] [cursor=pointer]
       - paragraph [ref=e24]:
         - text: ¿No tienes cuenta?
@@ -72,50 +79,58 @@ waiting for navigation to "/portal" until "load"
   14 |     await page.fill('input[type="password"]', testPassword);
   15 |     await page.click('button[type="submit"]');
   16 |     
-  17 |     // Esperar a estar en el portal
-> 18 |     await page.waitForURL('/portal');
-     |                ^ TimeoutError: page.waitForURL: Timeout 30000ms exceeded.
-  19 |   });
-  20 | 
-  21 |   test('debe exigir documentación mandatoria para reclamar un negocio', async ({ page }) => {
-  22 |     // 2. Ir a un negocio que sepamos que existe
-  23 |     await page.goto('/negocios/apart-hotel-ayum-elun-aldea-de-rio-valle-grande');
-  24 |     
-  25 |     // 3. Abrir Modal de Reclamo si está disponible
-  26 |     const claimButton = page.getByRole('button', { name: 'Reclamar Perfil' });
-  27 |     
-  28 |     if (await claimButton.isVisible()) {
-  29 |       await claimButton.click();
-  30 |       
-  31 |       // 4. Intentar enviar sin archivo (con mensaje)
-  32 |       await page.fill('textarea[placeholder*="Hola, soy el dueño"]', 'Prueba de reclamo mandatorio');
-  33 |       await page.click('button:has-text("Enviar Solicitud")');
-  34 |       
-  35 |       // 5. Verificar mensaje de error de frontend (AHORA ES MANDATORIO)
-  36 |       await expect(page.getByText('La documentación probatoria (DNI o Habilitación) es obligatoria.')).toBeVisible();
-  37 |       
-  38 |       // 6. Adjuntar un archivo de prueba
-  39 |       await page.setInputFiles('input[id="claim-file-upload"]', {
-  40 |         name: 'doc-prueba.txt',
-  41 |         mimeType: 'text/plain',
-  42 |         buffer: Buffer.from('Documento de validación de propiedad.'),
-  43 |       });
-  44 |       
-  45 |       // 7. Enviar de nuevo
-  46 |       // Manejamos el alert nativo que lanza el frontend
-  47 |       page.once('dialog', dialog => dialog.accept());
-  48 |       await page.click('button:has-text("Enviar Solicitud")');
-  49 |       
-  50 |       // 8. Verificar que el estado cambie a "Pendiente"
-  51 |       await expect(page.getByText('Tu solicitud de reclamo está pendiente de aprobación.')).toBeVisible();
-  52 |     }
-  53 |   });
-  54 | 
-  55 |   test('un usuario no admin no debe poder entrar al panel /portal/admin', async ({ page }) => {
-  56 |     await page.goto('/portal/admin');
-  57 |     // Verificamos el componente de Acceso Restringido que implementamos
-  58 |     await expect(page.getByText('Acceso Restringido')).toBeVisible();
-  59 |   });
-  60 | });
-  61 | 
+  17 |     // Esperar a que la URL cambie (ya sea al portal, al home o se quede en login)
+  18 |     try {
+  19 |       await page.waitForURL(url => url.pathname === '/portal' || url.pathname === '/' || url.pathname.includes('/login'), { timeout: 10000 });
+  20 |     } catch (e) {
+  21 |       console.log("⚠️ Timeout waiting for redirect, attempting to go to /portal manually");
+  22 |     }
+  23 |     
+  24 |     if (!page.url().includes('/portal')) {
+  25 |       await page.goto('/portal');
+  26 |     }
+  27 |   });
+  28 | 
+  29 |   test('debe exigir documentación mandatoria para reclamar un negocio', async ({ page }) => {
+  30 |     // 2. Ir a un negocio que sepamos que existe
+  31 |     await page.goto('/negocios/apart-hotel-ayum-elun-aldea-de-rio-valle-grande');
+  32 |     
+  33 |     // 3. Abrir Modal de Reclamo si está disponible
+  34 |     const claimButton = page.getByRole('button', { name: 'Reclamar Perfil' });
+  35 |     
+  36 |     if (await claimButton.isVisible()) {
+  37 |       await claimButton.click();
+  38 |       
+  39 |       // 4. Intentar enviar sin archivo (con mensaje)
+  40 |       await page.fill('textarea[placeholder*="Hola, soy el dueño"]', 'Prueba de reclamo mandatorio');
+  41 |       await page.click('button:has-text("Enviar Solicitud")');
+  42 |       
+  43 |       // 5. Verificar mensaje de error de frontend (AHORA ES MANDATORIO)
+  44 |       await expect(page.getByText('La documentación probatoria (DNI o Habilitación) es obligatoria.')).toBeVisible();
+  45 |       
+  46 |       // 6. Adjuntar un archivo de prueba
+  47 |       await page.setInputFiles('input[id="claim-file-upload"]', {
+  48 |         name: 'doc-prueba.txt',
+  49 |         mimeType: 'text/plain',
+  50 |         buffer: Buffer.from('Documento de validación de propiedad.'),
+  51 |       });
+  52 |       
+  53 |       // 7. Enviar de nuevo
+  54 |       // Manejamos el alert nativo que lanza el frontend
+  55 |       page.once('dialog', dialog => dialog.accept());
+  56 |       await page.click('button:has-text("Enviar Solicitud")');
+  57 |       
+  58 |       // 8. Verificar que el estado cambie a "Pendiente"
+  59 |       await expect(page.getByText('Tu solicitud de reclamo está pendiente de aprobación.')).toBeVisible();
+  60 |     }
+  61 |   });
+  62 | 
+  63 |   test('un usuario no admin no debe poder entrar al panel /portal/admin', async ({ page }) => {
+  64 |     await page.goto('/portal/admin');
+  65 |     // Verificamos el componente de Acceso Restringido
+> 66 |     await expect(page.getByRole('heading', { name: 'Acceso Restringido' })).toBeVisible({ timeout: 15000 });
+     |                                                                             ^ Error: expect(locator).toBeVisible() failed
+  67 |   });
+  68 | });
+  69 | 
 ```

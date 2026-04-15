@@ -14,14 +14,14 @@
 ```
 Error: expect(locator).toBeVisible() failed
 
-Locator: locator('text=Acceso denegado')
+Locator: locator('text=Acceso Restringido')
 Expected: visible
 Timeout: 5000ms
 Error: element(s) not found
 
 Call log:
   - Expect "toBeVisible" with timeout 5000ms
-  - waiting for locator('text=Acceso denegado')
+  - waiting for locator('text=Acceso Restringido')
 
 ```
 
@@ -111,11 +111,12 @@ Call log:
   46 |     // Forzar login (o acceso directo si ya hay sesión, pero aquí simulamos)
   47 |     await page.goto('/portal');
   48 | 
-  49 |     // Verificar que aparezca el UI de error que implementamos
-> 50 |     await expect(page.locator('text=Acceso denegado')).toBeVisible();
-     |                                                        ^ Error: expect(locator).toBeVisible() failed
-  51 |     await expect(page.locator('text=Hubo un problema')).toBeVisible();
-  52 |   });
-  53 | });
-  54 | 
+  49 |     // Verificar que aparezca el UI de error que implementamos (Acceso Restringido en /admin)
+  50 |     await page.goto('/portal/admin');
+> 51 |     await expect(page.locator('text=Acceso Restringido')).toBeVisible();
+     |                                                           ^ Error: expect(locator).toBeVisible() failed
+  52 |     await expect(page.locator('text=No tienes permisos')).toBeVisible();
+  53 |   });
+  54 | });
+  55 | 
 ```
