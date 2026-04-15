@@ -66,7 +66,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
           data: {
             refId: updatedNegocio.id,
             ref: 'api::negocio.negocio',
-            field: 'documentacion_reclamo',
+            field: 'documentacion_reclamo' as any,
           },
           files: fileToUpload,
         });
