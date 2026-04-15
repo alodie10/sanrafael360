@@ -1,7 +1,19 @@
 # Multi-stage build for Strapi 5 (Railway Root Context)
-FROM node:22-alpine AS build
+FROM node:20-bookworm-slim AS build
+
 # Installing build tools for native modules (sharp, swc, etc)
-RUN apk update && apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev vips-dev > /dev/null 2>&1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    autoconf \
+    automake \
+    zlib1g-dev \
+    libpng-dev \
+    libvips-dev \
+    python3 \
+    pkg-config \
+    > /dev/null 2>&1
+
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
@@ -14,8 +26,13 @@ COPY backend/ ./
 RUN npm run build
 
 # Final Production Image
-FROM node:22-alpine
-RUN apk add --no-cache vips-dev
+FROM node:20-bookworm-slim
+
+# Install runtime dependencies for sharp/vips
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libvips-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
