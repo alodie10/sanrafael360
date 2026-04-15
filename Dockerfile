@@ -17,12 +17,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
-WORKDIR /opt/backend
-# Copy the entire backend folder into the build context
-COPY backend/package.json backend/package-lock.json ./
-RUN npm install --include=dev && npm cache clean --force
+WORKDIR /opt
+# Copy root package files for monorepo support
+COPY package.json package-lock.json ./
+# Copy backend package setup
+COPY backend/package.json ./backend/
+RUN npm install -w backend --include=dev && npm cache clean --force
 
-COPY backend/ ./
+# Copy backend source and build
+COPY backend/ ./backend/
+WORKDIR /opt/backend
 RUN npm run build
 
 # Final Production Image
