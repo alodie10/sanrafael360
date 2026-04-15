@@ -14,7 +14,7 @@ import AdminClaimCard from "@/components/portal/AdminClaimCard";
 import Link from "next/link";
 
 async function getPendingClaims(jwt: string) {
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
+  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
   const res = await fetch(`${strapiUrl}/api/negocios/admin/pending-claims`, {
     headers: {
       Authorization: `Bearer ${jwt}`,

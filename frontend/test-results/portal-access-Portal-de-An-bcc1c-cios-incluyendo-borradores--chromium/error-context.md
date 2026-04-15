@@ -143,53 +143,46 @@ TimeoutError: page.waitForResponse: Timeout 30000ms exceeded while waiting for e
   22 |     await page.click('button[type="submit"]');
   23 | 
   24 |     // 3. Esperar redirección al portal o ir manualmente
-  25 |     try {
-  26 |       await page.waitForURL(url => url.pathname === '/portal' || url.pathname === '/' || url.pathname.includes('/login'), { timeout: 10000 });
-  27 |     } catch (e) {
-  28 |       console.log("⚠️ Timeout waiting for redirect, attempting to go to /portal manually");
-  29 |     }
-  30 |     
-  31 |     await page.click('button:has-text("Entrar")');
-  32 |     
-  33 |     // Esperamos un momento a que la cookie de sesión se asiente
-  34 |     await page.waitForTimeout(2000);
-  35 |     
-  36 |     // Navegación forzada al portal para asegurar que estemos ahí
-  37 |     await page.goto('/portal', { waitUntil: 'networkidle' });
-  38 | 
-  39 |     // 4. Interceptar la llamada a la API /me para verificar el Status
-> 40 |     const responsePromise = page.waitForResponse(response => 
+  25 |     await page.waitForURL(url => url.pathname === '/portal' || url.pathname === '/', { timeout: 15000 });
+  26 |     
+  27 |     // Si no estamos en el portal, vamos manualmente
+  28 |     if (!page.url().includes('/portal')) {
+  29 |         await page.goto('/portal', { waitUntil: 'networkidle' });
+  30 |     }
+  31 | 
+  32 |     // 4. Interceptar la llamada a la API /me para verificar el Status
+> 33 |     const responsePromise = page.waitForResponse(response => 
      |                                  ^ TimeoutError: page.waitForResponse: Timeout 30000ms exceeded while waiting for event "response"
-  41 |       response.url().includes('/api/negocios/me')
-  42 |     , { timeout: 30000 });
+  34 |       response.url().includes('/api/negocios/me')
+  35 |     , { timeout: 30000 });
+  36 | 
+  37 |     // 5. Verificar que el portal cargue la lista (Título actualizado en la UI)
+  38 |     await page.waitForSelector('h1:has-text("Mi Propiedad")');
+  39 |     
+  40 |     // Esperamos a que la petición de la API termine con éxito
+  41 |     const response = await responsePromise;
+  42 |     expect(response.status()).toBe(200);
   43 | 
-  44 |     // 5. Verificar que el portal cargue la lista (Título actualizado en la UI)
-  45 |     await page.waitForSelector('h1:has-text("Mi Propiedad")');
-  46 |     
-  47 |     // Esperamos a que la petición de la API termine con éxito
-  48 |     const response = await responsePromise;
-  49 |     expect(response.status()).toBe(200);
-  50 | 
-  51 |     // 6. Verificar que aparezca un negocio en la lista
-  52 |     // Buscamos cualquier elemento que represente un negocio (ej: el nombre o el badge de estado)
-  53 |     const emptyState = await page.getByText('Aún no tienes negocios').isVisible();
-  54 |     
-  55 |     if (!emptyState) {
-  56 |       console.log('✅ Negocios encontrados en el portal.');
-  57 |       // Si hay negocios, verificamos que el layout de la tarjeta esté presente
-  58 |       // Usamos un selector más flexible que coincida con el nuevo diseño
-  59 |       await expect(page.locator('.rounded-\\[2\\.5rem\\]').first()).toBeVisible();
-  60 |     } else {
-  61 |       console.log('⚠️ El usuario no tiene negocios vinculados todavía.');
-  62 |     }
+  44 |     // 6. Verificar que aparezca un negocio en la lista
+  45 |     // Buscamos cualquier elemento que represente un negocio (ej: el nombre o el badge de estado)
+  46 |     const emptyState = await page.getByText('Aún no tienes negocios').isVisible();
+  47 |     
+  48 |     if (!emptyState) {
+  49 |       console.log('✅ Negocios encontrados en el portal.');
+  50 |       // Si hay negocios, verificamos que el layout de la tarjeta esté presente
+  51 |       // Usamos un selector más flexible que coincida con el nuevo diseño
+  52 |       await expect(page.locator('.rounded-\\[2\\.5rem\\]').first()).toBeVisible();
+  53 |     } else {
+  54 |       console.log('⚠️ El usuario no tiene negocios vinculados todavía.');
+  55 |     }
+  56 |   });
+  57 | 
+  58 |   test('no debe permitir acceso al portal a usuarios anónimos', async ({ page }) => {
+  59 |     await page.goto('/portal');
+  60 |     // Debe redirigir al login
+  61 |     await page.waitForURL(url => url.pathname === '/login', { timeout: 15000 });
+  62 |     await expect(page.locator('h1:has-text("Iniciar Sesión")')).toBeVisible();
   63 |   });
-  64 | 
-  65 |   test('no debe permitir acceso al portal a usuarios anónimos', async ({ page }) => {
-  66 |     await page.goto('/portal');
-  67 |     // Debe redirigir al login (usamos regex flexible)
-  68 |     await page.waitForURL(/\/login\?callbackUrl=.*/);
-  69 |     await expect(page.locator('h1:has-text("Iniciar Sesión")')).toBeVisible();
-  70 |   });
-  71 | });
-  72 | 
+  64 | });
+  65 | 
 ```

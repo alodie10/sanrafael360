@@ -21,7 +21,7 @@ import Logo from "@/components/common/Logo";
 import { cn } from "@/lib/utils";
 
 async function getNegocios(jwt: string) {
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
+  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
   try {
     const res = await fetch(`${strapiUrl}/api/negocios/me`, {
       headers: {

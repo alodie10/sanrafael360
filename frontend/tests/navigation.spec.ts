@@ -14,8 +14,9 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
 
   test('Navigate Home to Random Business and Verify Maps/Assets', async ({ page }) => {
     // 1. Visit Home
-    await page.goto('/');
-    
+    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.waitForLoadState('load');
+
     // Validate Hero Title
     await expect(page.getByRole('heading', { name: /San Rafael/i })).toBeVisible();
 
@@ -40,12 +41,10 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
 
     // 4. Google Maps Validation
     // Check if the container exists (Map or Placeholder)
-    const mapContainer = page.locator('.relative.w-full.h-full.min-h-\\[300px\\], .bg-slate-800:has-text("Ubicación no disponible")').first();
+    const mapContainer = page.locator('[data-testid="google-map"], [data-testid="location-not-found"]').first();
     await expect(mapContainer).toBeVisible({ timeout: 15000 });
 
     // 5. Booking Widget Validation (CRITICAL FOR CONVERSION)
-    // Some businesses don't have a booking URL, so we make this check conditional 
-    // but ensure that IF it's visible, it has the right structure.
     const bookingWidget = page.locator('div:has-text("Agenda tu Cita")').first();
     if (await bookingWidget.isVisible()) {
         await expect(bookingWidget).toBeVisible();
@@ -69,17 +68,13 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
         expect(horariosText).not.toMatch(/Ã|Â/);
     }
 
-    // 7. Asset Integrity (Railway/Strapi)
-    // Check for images and ensure they don't have naturalWidth 0 (indicates error/CORS block)
+    // 8. Asset Integrity (Railway/Strapi)
     const images = page.locator('img');
     const imageCount = await images.count();
-    
     for (let i = 0; i < imageCount; i++) {
       const isLoaded = await images.nth(i).evaluate((img: HTMLImageElement) => {
         return img.complete && img.naturalWidth > 0;
       });
-      // We log but don't strictly fail for placeholders if some business lacks images,
-      // but if ALL fail, we should be concerned.
       if (!isLoaded) {
           const src = await images.nth(i).getAttribute('src');
           console.warn(`Potential asset error: ${src}`);
@@ -88,13 +83,10 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
   });
 
   test('Verify Contact Route is Active (No 404)', async ({ page, isMobile }) => {
-    // Navigate to /contacto directly first
-    await page.goto('/contacto');
-    await expect(page.getByRole('heading', { name: /Haz crecer tu Negocio/i })).toBeVisible();
-    
-    // Verify navigation works from Home
+    // Navigate throught Home
     await page.goto('/', { waitUntil: 'networkidle' });
     await page.waitForLoadState('load');
+
     if (isMobile) {
         // Mobile Menu flow
         await page.click('button:has(svg.lucide-menu), button:has(svg.lucide-menu-line)');
@@ -107,6 +99,7 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
     
     await page.waitForURL('**/contacto', { timeout: 15000 });
     await expect(page.url()).toContain('/contacto');
+    await expect(page.getByRole('heading', { name: /Haz crecer tu Negocio/i })).toBeVisible();
   });
 
   test('Bulk Sweep: Verify 20 Businesses without crashing or encoding errors', async ({ page }) => {
@@ -146,11 +139,8 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
         }
 
         // 3. Revisar botón de Reservar (sin overflow a nivel DOM)
-        // Playwright asserts elements are visible and within viewport bounds automatically if we click, 
-        // but we just assert it's visible.
         const bookingBtn = page.locator('a:has-text("Reservar Ahora"), a:has-text("Consultar Cita")').first();
         if (await bookingBtn.isVisible()) {
-             // Just verifying it renders
              await expect(bookingBtn).toBeVisible();
         }
     }

@@ -14,16 +14,13 @@ test.describe('Flujo de Reclamo de Negocio', () => {
     await page.fill('input[type="password"]', testPassword);
     await page.click('button[type="submit"]');
     
-    // Esperar a que la URL cambie (ya sea al portal, al home o se quede en login)
-    try {
-      await page.waitForURL(url => url.pathname === '/portal' || url.pathname === '/' || url.pathname.includes('/login'), { timeout: 10000 });
-    } catch (e) {
-      console.log("⚠️ Timeout waiting for redirect, attempting to go to /portal manually");
-    }
+    // Esperar a que la URL cambie (ya sea al portal o al home)
+    await page.waitForURL(url => url.pathname === '/portal' || url.pathname === '/', { timeout: 15000 });
     
     if (!page.url().includes('/portal')) {
-      await page.goto('/portal');
+      await page.goto('/portal', { waitUntil: 'networkidle' });
     }
+    await page.waitForLoadState('load');
   });
 
   test('debe exigir documentación mandatoria para reclamar un negocio', async ({ page }) => {

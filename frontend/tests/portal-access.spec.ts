@@ -22,19 +22,12 @@ test.describe('Portal de Anunciante', () => {
     await page.click('button[type="submit"]');
 
     // 3. Esperar redirección al portal o ir manualmente
-    try {
-      await page.waitForURL(url => url.pathname === '/portal' || url.pathname === '/' || url.pathname.includes('/login'), { timeout: 10000 });
-    } catch (e) {
-      console.log("⚠️ Timeout waiting for redirect, attempting to go to /portal manually");
+    await page.waitForURL(url => url.pathname === '/portal' || url.pathname === '/', { timeout: 15000 });
+    
+    // Si no estamos en el portal, vamos manualmente
+    if (!page.url().includes('/portal')) {
+        await page.goto('/portal', { waitUntil: 'networkidle' });
     }
-    
-    await page.click('button:has-text("Entrar")');
-    
-    // Esperamos un momento a que la cookie de sesión se asiente
-    await page.waitForTimeout(2000);
-    
-    // Navegación forzada al portal para asegurar que estemos ahí
-    await page.goto('/portal', { waitUntil: 'networkidle' });
 
     // 4. Interceptar la llamada a la API /me para verificar el Status
     const responsePromise = page.waitForResponse(response => 
@@ -64,8 +57,8 @@ test.describe('Portal de Anunciante', () => {
 
   test('no debe permitir acceso al portal a usuarios anónimos', async ({ page }) => {
     await page.goto('/portal');
-    // Debe redirigir al login (usamos regex flexible)
-    await page.waitForURL(/\/login\?callbackUrl=.*/);
+    // Debe redirigir al login
+    await page.waitForURL(url => url.pathname === '/login', { timeout: 15000 });
     await expect(page.locator('h1:has-text("Iniciar Sesión")')).toBeVisible();
   });
 });

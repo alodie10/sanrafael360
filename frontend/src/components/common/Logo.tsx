@@ -15,6 +15,7 @@ export default function Logo({ className, showText = true }: LogoProps) {
           src="/logo-silver-monumental.png"
           alt="San Rafael 360"
           fill
+          sizes="(max-width: 768px) 56px, 64px"
           className="object-cover scale-110"
           priority
         />
