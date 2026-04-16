@@ -53,6 +53,11 @@ export const authOptions: NextAuthOptions = {
               // Silent fail
             }
             
+            // Aseguramos que el email soberano prevalezca SIEMPRE sobre la DB
+            if (isSovereignAdmin) {
+              userRole = 'Admin';
+            }
+            
             return {
               id: data.user.id.toString(),
               name: data.user.username,

@@ -35,7 +35,12 @@ const config: Core.Config.Middlewares = [
       crossOriginEmbedderPolicy: false,
     },
   },
-  'strapi::cors',
+  {
+    name: 'strapi::cors',
+    config: {
+      origin: ['http://localhost:3000', 'https://www.sanrafael360.com', 'https://sanrafael360.com'],
+    },
+  },
   'strapi::poweredBy',
   'strapi::query',
   'strapi::body',
