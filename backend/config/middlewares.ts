@@ -9,14 +9,13 @@ const config: Core.Config.Middlewares = [
       contentSecurityPolicy: {
         useDefaults: true,
         directives: {
-          'connect-src': ["'self'", 'https:', 'https://sanrafael360-production.up.railway.app', 'https://www.sanrafael360.com'],
+          'connect-src': ["'self'", 'https:'],
           'img-src': [
             "'self'",
             'data:',
             'blob:',
             'res.cloudinary.com',
             'sanrafael360-production.up.railway.app',
-            'www.sanrafael360.com',
             'sanrafael360.vercel.app',
             '*.vercel.app'
           ],
@@ -26,7 +25,6 @@ const config: Core.Config.Middlewares = [
             'blob:',
             'res.cloudinary.com',
             'sanrafael360-production.up.railway.app',
-            'www.sanrafael360.com',
             'sanrafael360.vercel.app',
             '*.vercel.app'
           ],
@@ -37,15 +35,7 @@ const config: Core.Config.Middlewares = [
       crossOriginEmbedderPolicy: false,
     },
   },
-  {
-    name: 'strapi::cors',
-    config: {
-      origin: ['*'],
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
-      headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
-      keepHeaderOnError: true,
-    },
-  },
+  'strapi::cors',
   'strapi::poweredBy',
   'strapi::query',
   'strapi::body',

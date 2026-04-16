@@ -4,7 +4,7 @@
   "private": true,
   "description": "A Strapi application",
   "scripts": {
-    "build": "rm -rf .cache .strapi dist && strapi build",
+    "build": "rm -rf .cache dist && strapi build",
     "console": "strapi console",
     "deploy": "strapi deploy",
     "dev": "strapi develop",
@@ -14,25 +14,23 @@
     "upgrade": "npx @strapi/upgrade latest",
     "upgrade:dry": "npx @strapi/upgrade latest --dry",
     "upload-logos": "tsx scripts/upload-logos.ts",
-    "sync-covers": "powershell scripts/sync-covers-forced.ps1",
-    "sync:pull": "set -a && source .env && set +a && strapi transfer --from https://sanrafael360-production.up.railway.app/admin --from-token $STRAPI_TRANSFER_TOKEN --force --exclude files",
-    "sync:push": "set -a && source .env && set +a && strapi transfer --to https://sanrafael360-production.up.railway.app/admin --to-token $STRAPI_TRANSFER_TOKEN --force"
+    "sync-covers": "powershell scripts/sync-covers-forced.ps1"
   },
   "dependencies": {
     "@strapi/plugin-cloud": "5.40.0",
     "@strapi/plugin-users-permissions": "5.40.0",
     "@strapi/provider-upload-cloudinary": "5.40.0",
     "@strapi/strapi": "5.40.0",
+    "strapi-provider-email-resend": "latest",
     "better-sqlite3": "12.6.2",
     "cloudinary": "^2.5.1",
     "esbuild": "^0.20.0",
     "pg": "^8.11.0",
-    "playwright": "^1.48.0",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0",
-    "strapi-provider-email-resend": "latest",
-    "styled-components": "^6.0.0"
+    "styled-components": "^6.0.0",
+    "playwright": "^1.48.0"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -57,34 +57,6 @@ export default {
           }
         }
       }
-      // 2. Asegurar que existe el usuario de prueba
-      const testEmail = 'argendeli01@gmail.com';
-      const testPassword = 'sanrafael360_test';
-      
-      const authRole = await strapi.query('plugin::users-permissions.role').findOne({
-        where: { type: 'authenticated' },
-      });
-
-      if (authRole) {
-        const userExists = await strapi.query('plugin::users-permissions.user').findOne({
-          where: { email: testEmail },
-        });
-
-        if (!userExists) {
-          await strapi.query('plugin::users-permissions.user').create({
-            data: {
-              username: 'TestUser',
-              email: testEmail,
-              password: testPassword, // Strapi 5 hashes this automatically if created via API or query
-              confirmed: true,
-              blocked: false,
-              role: authRole.id,
-            },
-          });
-          console.log(`👤 Usuario de prueba ${testEmail} creado correctamente.`);
-        }
-      }
-
       console.log('✅ Permisos de Strapi (Public & Authenticated) configurados correctamente.');
     } catch (error) {
       console.error('❌ Error configurando permisos en bootstrap:', error);
