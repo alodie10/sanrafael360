@@ -33,8 +33,10 @@ export default async function AdminDashboardPage() {
     redirect("/api/auth/signin");
   }
 
-  // Whitelist de Admins (Vía Roles Nativos)
-  const isAdmin = (session as any).user?.role === 'Admin';
+  // Whitelist de Admins (Vía Roles Nativos en Users-Permissions)
+  const userRole = (session as any).user?.role?.toLowerCase();
+  const isAdmin = userRole === 'admin' || userRole === 'super admin';
+
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6">
