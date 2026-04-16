@@ -9,13 +9,14 @@ const config: Core.Config.Middlewares = [
       contentSecurityPolicy: {
         useDefaults: true,
         directives: {
-          'connect-src': ["'self'", 'https:'],
+          'connect-src': ["'self'", 'https:', 'https://sanrafael360-production.up.railway.app', 'https://www.sanrafael360.com'],
           'img-src': [
             "'self'",
             'data:',
             'blob:',
             'res.cloudinary.com',
             'sanrafael360-production.up.railway.app',
+            'www.sanrafael360.com',
             'sanrafael360.vercel.app',
             '*.vercel.app'
           ],
@@ -25,6 +26,7 @@ const config: Core.Config.Middlewares = [
             'blob:',
             'res.cloudinary.com',
             'sanrafael360-production.up.railway.app',
+            'www.sanrafael360.com',
             'sanrafael360.vercel.app',
             '*.vercel.app'
           ],
