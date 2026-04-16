@@ -4,7 +4,7 @@
   "private": true,
   "description": "A Strapi application",
   "scripts": {
-    "build": "rm -rf .cache dist && strapi build",
+    "build": "rm -rf .cache .strapi dist && strapi build",
     "console": "strapi console",
     "deploy": "strapi deploy",
     "dev": "strapi develop",
@@ -28,8 +28,8 @@
     "esbuild": "^0.20.0",
     "pg": "^8.11.0",
     "playwright": "^1.48.0",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "react-router-dom": "^6.0.0",
     "strapi-provider-email-resend": "latest",
     "styled-components": "^6.0.0"
