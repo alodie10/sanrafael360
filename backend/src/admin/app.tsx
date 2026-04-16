@@ -3,6 +3,11 @@ export default {
     locales: ['es'],
   },
   bootstrap(app: any) {
-    console.log('Admin UI Reset to Standard - Version 1.1');
+    // Parche de Emergencia: Evita el crash 'reading tours' en el Content Manager
+    app.registerPlugin({
+      id: 'guided-tours',
+      initializer: () => ({ tours: {} }),
+    });
+    console.log('Admin UI Reset to Standard - tours fixed');
   },
 };
