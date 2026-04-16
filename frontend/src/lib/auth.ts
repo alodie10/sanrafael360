@@ -27,8 +27,11 @@ export const authOptions: NextAuthOptions = {
           
           const data = await res.json();
           if (res.ok && data.user) {
+            // Regla de Oro: Si el email es el del dueño, forzamos rol de Admin
+            const isSovereignAdmin = data.user.email === 'diegocristianalonso@gmail.com';
+            
             // Fetch extra user data including role with a timeout fallback
-            let userRole = 'Authenticated';
+            let userRole = isSovereignAdmin ? 'Admin' : 'Authenticated';
             try {
               const controller = new AbortController();
               const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
