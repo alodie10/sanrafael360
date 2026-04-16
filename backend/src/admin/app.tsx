@@ -1,13 +1,37 @@
+import type { StrapiApp } from '@strapi/strapi/admin';
+
 export default {
   config: {
-    locales: ['es'],
+    locales: [
+      // 'ar',
+      // 'fr',
+      // 'cs',
+      // 'de',
+      // 'dk',
+      // 'es',
+      // 'he',
+      // 'id',
+      // 'it',
+      // 'ja',
+      // 'ko',
+      // 'ms',
+      // 'nl',
+      // 'no',
+      // 'pl',
+      // 'pt-BR',
+      // 'pt',
+      // 'ru',
+      // 'sk',
+      // 'sv',
+      // 'th',
+      // 'tr',
+      // 'uk',
+      // 'vi',
+      // 'zh-Hans',
+      // 'zh',
+    ],
   },
-  bootstrap(app: any) {
-    // Parche de Emergencia: Evita el crash 'reading tours' en el Content Manager
-    app.registerPlugin({
-      id: 'guided-tours',
-      initializer: () => ({ tours: {} }),
-    });
-    console.log('Admin UI Reset to Standard - tours fixed');
+  bootstrap(app: StrapiApp) {
+    console.log(app);
   },
 };
