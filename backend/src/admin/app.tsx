@@ -3,6 +3,6 @@ export default {
     locales: ['es'],
   },
   bootstrap(app: any) {
-    console.log('Admin UI Reset to Standard');
+    console.log('Admin UI Reset to Standard - Version 1.1');
   },
 };
