@@ -27,5 +27,14 @@ export default {
         middlewares: [],
       },
     },
+    {
+      method: 'POST',
+      path: '/negocios/:slug/test-reset',
+      handler: 'negocio.resetClaimForTest',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };

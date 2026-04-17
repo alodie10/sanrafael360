@@ -55,5 +55,36 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     if (!decision) throw new ValidationError('Decisión requerida');
     const result = await strapi.service('api::negocio.negocio').resolveClaim(id, decision, motivo);
     return ctx.send({ success: true, data: result });
+  }),
+
+  resetClaimForTest: asyncHandler(async (ctx) => {
+    const { slug } = ctx.params;
+    // Solo permitido en desarrollo o local
+    if (process.env.NODE_ENV === 'production' && ctx.state.user?.email !== 'diegocristianalonso@gmail.com') {
+       return ctx.forbidden('Solo el admin puede resetear en produccion');
+    }
+
+    const data = await strapi.documents('api::negocio.negocio').findMany({
+      filters: { slug },
+      status: 'published'
+    });
+    
+    const negocio = data[0];
+    if (!negocio) throw new ValidationError('Negocio no encontrado');
+
+    await strapi.documents('api::negocio.negocio').update({
+      documentId: negocio.documentId,
+      data: {
+        estado_reclamo: 'ninguno',
+        owner: null,
+        documentacion_reclamo: null
+      }
+    });
+
+    await strapi.documents('api::negocio.negocio').publish({
+      documentId: negocio.documentId
+    });
+
+    return ctx.send({ success: true, message: `Reset exitoso para ${slug}` });
   })
 }));

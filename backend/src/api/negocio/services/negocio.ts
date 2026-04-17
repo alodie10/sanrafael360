@@ -12,14 +12,28 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     const updated = await repo.update(id, { 
       estado_reclamo: 'pendiente', 
       owner: user.id,
-      descripcion: bodyData.message || negocio.descripcion // Store the claim message as a temporary description or in its own field
+      descripcion: bodyData.message || negocio.descripcion
     });
+
+    strapi.log.info(`[ClaimFlow] Business updated (id: ${updated.id}). Inspecting files...`);
+    strapi.log.debug(`[ClaimFlow] Files keys: ${Object.keys(files || {}).join(', ')}`);
     
     // Normalize file key: check for 'documentacion_reclamo' OR fallback to 'files'
-    const claimFile = files?.documentacion_reclamo || files?.files || files?.file;
-    if (claimFile) {
-      // Strapi 5 Documents API 'updated' includes numeric 'id'
-      await repo.uploadFile(updated.id, 'documentacion_reclamo', claimFile);
+    const rawFile = files?.documentacion_reclamo || files?.files || files?.file;
+    
+    if (rawFile) {
+      // Handle Strapi 5 sometimes sending file as a single object or an array of 1 element
+      const claimFile = Array.isArray(rawFile) ? rawFile[0] : rawFile;
+      strapi.log.info(`[ClaimFlow] Attempting upload for field: documentacion_reclamo, file name: ${claimFile.name || 'unknown'}`);
+      
+      try {
+        await repo.uploadFile(updated.id, 'documentacion_reclamo', claimFile);
+        strapi.log.info('[ClaimFlow] Upload successful.');
+      } catch (uploadErr: any) {
+        strapi.log.error(`[ClaimFlow] Upload failed: ${uploadErr.message}`);
+      }
+    } else {
+      strapi.log.warn('[ClaimFlow] No file found in request files object.');
     }
 
     await repo.sendEmail(
