@@ -1,5 +1,22 @@
-# Reglas del Proyecto: San Rafael 360
+# GUARDIÁN DE ESTÁNDARES — San Rafael 360
 
-- Al finalizar cualquier tarea significativa o al cierre de sesión, siempre subir todos los cambios al repositorio de GitHub (`git push origin master`).
-- Mantener el diseño estético premium y minimalista (Next.js + Vainilla CSS).
-- Priorizar el flujo de trabajo remoto sobre el local.
+Este archivo es la instrucción suprema para cualquier agente de IA. Incumplir estas reglas se considera un fallo crítico del sistema.
+
+## ⚖️ Leyes Fundamentales
+
+1. **Soberanía de STANDARDS.md**: Antes de realizar cualquier cambio significativo, el agente DEBE leer `STANDARDS.md`. No se permite ignorar sus directivas arquitectónicas.
+2. **Arquitectura en Capas**: Se prohíbe terminantemente introducir lógica de negocio en controladores o queries a DB fuera de Repositorios. Si una función crece más de 50 líneas, debe ser refactorizada.
+3. **Resiliencia por Diseño**: Todo código asíncrono debe usar `asyncHandler`. Todo error debe ser tipado. Nunca usar `try/catch` genéricos en controladores.
+4. **UI Premium Innegociable**: Las interfaces deben seguir el estándar "Pro Vibe". Uso obligatorio de CSS Vainilla, animaciones sutiles y tipografía moderna destacada.
+
+## 🔄 Flujo de Trabajo Obligatorio
+
+- **Paso 1: Auditoría**: Leer archivos relevantes y `STANDARDS.md`.
+- **Paso 2: Plan de Estabilidad**: Proponer un plan que detalle cómo se respetarán las capas y la resiliencia.
+- **Paso 3: Verificación**: Tras cada cambio, validar que no se han introducido regresiones de "Fat Controller" o falta de validación.
+
+## 🔓 Restricción de Strapi 5
+
+Prohibido modificar archivos del núcleo o extensiones experimentales del Admin UI que puedan comprometer la integridad del Content Manager.
+
+**REGLA DE ORO:** Si el usuario pide un cambio rápido que viole la arquitectura, el agente DEBE advertir sobre el riesgo técnico y proponer la vía profesional primero.
