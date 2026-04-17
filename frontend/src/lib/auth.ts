@@ -14,6 +14,10 @@ export const authOptions: NextAuthOptions = {
 
         try {
           const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+          if (strapiUrl.includes('localhost') && process.env.NODE_ENV === 'production') {
+            console.warn("⚠️ WARNING: Connectando a LOCALHOST en entorno de PRODUCCIÓN.");
+          }
+
           const res = await fetch(`${strapiUrl}/api/auth/local`, {
             method: "POST",
             headers: {
@@ -25,6 +29,11 @@ export const authOptions: NextAuthOptions = {
             }),
           });
           
+          if (!res.ok) {
+            console.error(`❌ Strapi Auth Error: ${res.status} ${res.statusText}`);
+            return null;
+          }
+
           const data = await res.json();
           if (res.ok && data.user) {
             // Regla de Oro: Si el email es el del dueño, forzamos rol de Admin

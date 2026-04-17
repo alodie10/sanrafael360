@@ -23,7 +23,12 @@ function LoginForm() {
     });
 
     if (res?.error) {
-      setError("Credenciales incorrectas. Por favor, intenta de nuevo.");
+      if (res.error === "CredentialsSignin") {
+        setError("Credenciales incorrectas. Por favor, intenta de nuevo.");
+      } else {
+        setError("Error de conexión con el servidor. Por favor, contacta a soporte o intenta más tarde.");
+      }
+      console.error("Login Error:", res.error);
     } else {
       router.push(callbackUrl);
       router.refresh();

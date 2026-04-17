@@ -49,9 +49,15 @@ Se deben usar siempre clases de error tipadas de `src/utils/errors.ts`:
 
 ---
 
-## 5. Restricciones de Strapi 5
-- Prohibido modificar el core del Admin UI sin previa auditoría de estabilidad.
-- No usar propiedades obsoletas de Strapi 4.
-- Mantener compatible con React 18.2.
+## 6. Despliegue y Entorno (Soberanía)
 
-**REGLA DE ORO:** Antes de implementar, el agente debe generar un "Plan de Estabilidad" validando contra este documento.
+### 6.1 Variables de Entorno Obligatorias
+Para que la comunicación Frontend-Backend sea exitosa, los siguientes valores son leyes innegociables en el panel de Vercel/Railway:
+
+| Variable | Ubicación | Función |
+|---|---|---|
+| `NEXT_PUBLIC_STRAPI_URL` | Vercel | Apunta a la URL de Railway (sin `/api`) |
+| `NEXTAUTH_URL` | Vercel | URL base del frontend (ej: `https://...`) |
+| `JWT_SECRET` | Vercel & Railway | Secreto para encriptar sesiones (deben coincidir) |
+
+**REGLA:** Nunca usar `localhost` en variables de producción.
