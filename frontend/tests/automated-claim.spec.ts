@@ -56,8 +56,8 @@ test.describe('Workflow de Reclamo', () => {
     await page.goto('/portal/admin');
 
     // 5. Verificar Doc
-    // Use more flexible regex to match 'after-house' or 'After House'
-    await expect(page.getByText(new RegExp(SLUG.replace(/-/g, '[\\\\s-]'), 'i'))).toBeVisible();
+    // Use heading role for more robust matching in the admin list
+    await expect(page.getByRole('heading', { name: /after house/i })).toBeVisible();
     const link = page.getByRole('link', { name: /validar archivo/i });
     await expect(link).toBeVisible({ timeout: 10000 });
     console.log('Success: Attachment link "Validar Archivo" found in admin!');

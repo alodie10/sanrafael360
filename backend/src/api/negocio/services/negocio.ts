@@ -27,7 +27,8 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       strapi.log.info(`[ClaimFlow] Attempting upload for field: documentacion_reclamo, file name: ${claimFile.name || 'unknown'}`);
       
       try {
-        await repo.uploadFile(updated.id, 'documentacion_reclamo', claimFile);
+        // Use documentId in Strapi 5 to insure we link to the document draft/published correctly
+        await repo.uploadFile(updated.documentId, 'documentacion_reclamo', claimFile);
         strapi.log.info('[ClaimFlow] Upload successful.');
       } catch (uploadErr: any) {
         strapi.log.error(`[ClaimFlow] Upload failed: ${uploadErr.message}`);
