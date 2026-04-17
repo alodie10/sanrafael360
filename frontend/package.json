@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test:e2e": "playwright test",
     "test:claim": "playwright test tests/automated-claim.spec.ts",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed --workers=1"
   },
   "dependencies": {
     "next": "16.2.1",

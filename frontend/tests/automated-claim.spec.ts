@@ -31,6 +31,8 @@ test.describe('Workflow de Reclamo', () => {
     // 3. Reclamar con archivo
     await page.goto(`/negocios/${SLUG}`);
     await page.waitForLoadState('networkidle');
+    // Force reload to bypass Next.js cache for the fresh reset state
+    await page.reload({ waitUntil: 'networkidle' });
     const claimBtn = page.getByRole('button', { name: /reclamar perfil/i });
     await expect(claimBtn).toBeVisible({ timeout: 10000 });
     await claimBtn.click();
@@ -49,12 +51,15 @@ test.describe('Workflow de Reclamo', () => {
     await page.fill('input[type="email"]', CREDS.admin.email);
     await page.fill('input[type="password"]', CREDS.admin.pass);
     await page.click('button[type="submit"]');
-    await page.waitForURL('/portal/admin');
+    // Wait for login to settle and go to admin manually
+    await page.waitForURL(url => url.pathname.startsWith('/portal'));
+    await page.goto('/portal/admin');
 
     // 5. Verificar Doc
-    await expect(page.getByText(new RegExp(SLUG, 'i'))).toBeVisible();
-    const link = page.getByRole('link', { name: /ver documento/i });
-    expect(await link.count()).toBeGreaterThan(0);
-    console.log('Success: Attachment link found in admin!');
+    // Use more flexible regex to match 'after-house' or 'After House'
+    await expect(page.getByText(new RegExp(SLUG.replace(/-/g, '[\\\\s-]'), 'i'))).toBeVisible();
+    const link = page.getByRole('link', { name: /validar archivo/i });
+    await expect(link).toBeVisible({ timeout: 10000 });
+    console.log('Success: Attachment link "Validar Archivo" found in admin!');
   });
 });

@@ -49,14 +49,22 @@ export class NegocioRepository {
   }
 
   async uploadFile(refId: number, field: string, files: any) {
-    return await this.strapi.plugin('upload').service('upload').upload({
-      data: {
-        refId,
-        ref: 'api::negocio.negocio',
-        field,
-      },
-      files,
-    });
+    this.strapi.log.info(`[Repo] Uploading file for ${field} on refId ${refId}`);
+    try {
+      const result = await this.strapi.plugin('upload').service('upload').upload({
+        data: {
+          refId,
+          ref: 'api::negocio.negocio',
+          field,
+        },
+        files,
+      });
+      this.strapi.log.info(`[Repo] Upload successful: ${JSON.stringify(result?.[0]?.name || 'no name')}`);
+      return result;
+    } catch (err: any) {
+      this.strapi.log.error(`[Repo] Upload error: ${err.message}`);
+      throw err;
+    }
   }
 
   async sendEmail(to: string, subject: string, html: string, text?: string) {

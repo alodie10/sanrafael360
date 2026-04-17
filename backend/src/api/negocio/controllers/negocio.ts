@@ -96,7 +96,9 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       data: {
         estado_reclamo: 'ninguno',
         owner: null,
-        documentacion_reclamo: null
+        documentacion_reclamo: null,
+        reclamar_habilitado: true,
+        descripcion: null
       }
     });
 

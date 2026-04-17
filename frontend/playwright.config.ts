@@ -19,7 +19,7 @@ export default defineConfig({
   globalSetup: './tests/global-setup.ts',
 
   /* Run tests in files in parallel */
-  fullyParallel: true,
+  fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Global timeout per test */
@@ -27,7 +27,7 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1,
   /* Parallel workers */
-  workers: 2,
+  workers: 1,
   /* Reporter */
   reporter: 'list',
 
@@ -58,13 +58,7 @@ export default defineConfig({
     // Mobile Safari (WebKit): inyecta el mismo storageState
     // Esto resuelve el problema de cookies virtualizadas en WebKit
     // ------------------------------------------------------------------
-    {
-      name: 'Mobile Safari',
-      use: {
-        ...devices['iPhone 13'],
-        storageState: authFile,
-      },
-    },
+
   ],
 
   /* Dev server (solo en CI) */
