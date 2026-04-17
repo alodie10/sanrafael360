@@ -10,8 +10,9 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
 
     let body = ctx.request.body;
     const data = typeof body.data === 'string' ? JSON.parse(body.data) : (body.data || body);
+    const files = (ctx.request as any).files;
 
-    const result = await strapi.service('api::negocio.negocio').claimNegocio(id, user, data, (ctx.request as any).files);
+    const result = await strapi.service('api::negocio.negocio').claimNegocio(id, user, data, files);
     return ctx.send({ success: true, data: result });
   }),
 
@@ -52,13 +53,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       }
     });
     
-    strapi.log.info(`[AdminActions] Found ${data.length} pending claims`);
-    if (data.length > 0) {
-      // Sanity check of the raw record
-      const first = data[0];
-      strapi.log.info(`[AdminActions] Claim: ${first.nombre} (ID: ${first.id})`);
-      strapi.log.info(`[AdminActions] Doc Rel: ${JSON.stringify(first.documentacion_reclamo || 'NULL')}`);
-    }
+
     
     return ctx.send({ success: true, data });
   }),
@@ -107,37 +102,5 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     });
 
     return ctx.send({ success: true, message: `Reset exitoso para ${slug}` });
-  })
-  testUploadDiag: asyncHandler(async (ctx) => {
-    const { slug } = ctx.params;
-    const data = await strapi.documents('api::negocio.negocio').findMany({
-      filters: { slug },
-      status: 'draft'
-    });
-    const negocio = data[0];
-    if (!negocio) return ctx.notFound();
-
-    const { createNegocioRepository } = require('../repositories/negocio-repository');
-    const repo = createNegocioRepository(strapi);
-    
-    // Diagnostic: Try to upload a dummy file
-    const fs = require('fs');
-    const path = require('path');
-    const dummyPath = path.join(__dirname, 'diag.txt');
-    fs.writeFileSync(dummyPath, 'Diagnostic upload ' + new Date().toISOString());
-    
-    const dummyFile = {
-      path: dummyPath,
-      name: 'diag.txt',
-      type: 'text/plain',
-      size: fs.statSync(dummyPath).size
-    };
-
-    try {
-      const result = await repo.uploadFile(negocio.documentId, 'documentacion_reclamo', dummyFile);
-      return ctx.send({ success: true, result });
-    } catch (err: any) {
-      return ctx.send({ success: false, error: err.message });
-    }
   })
 }));

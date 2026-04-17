@@ -15,8 +15,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       descripcion: bodyData.message || negocio.descripcion
     });
 
-    strapi.log.info(`[ClaimFlow] Business updated (id: ${updated.id}). Inspecting files...`);
-    strapi.log.debug(`[ClaimFlow] Files keys: ${Object.keys(files || {}).join(', ')}`);
+
     
     // Normalize file key: check for 'documentacion_reclamo' OR fallback to 'files'
     const rawFile = files?.documentacion_reclamo || files?.files || files?.file;
@@ -24,17 +23,17 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     if (rawFile) {
       // Handle Strapi 5 sometimes sending file as a single object or an array of 1 element
       const claimFile = Array.isArray(rawFile) ? rawFile[0] : rawFile;
-      strapi.log.info(`[ClaimFlow] Attempting upload for field: documentacion_reclamo, file name: ${claimFile.name || 'unknown'}`);
+
       
       try {
         // Use documentId in Strapi 5 to insure we link to the document draft/published correctly
         await repo.uploadFile(updated.documentId, 'documentacion_reclamo', claimFile);
-        strapi.log.info('[ClaimFlow] Upload successful.');
+
       } catch (uploadErr: any) {
         strapi.log.error(`[ClaimFlow] Upload failed: ${uploadErr.message}`);
       }
     } else {
-      strapi.log.warn('[ClaimFlow] No file found in request files object.');
+
     }
 
     await repo.sendEmail(
