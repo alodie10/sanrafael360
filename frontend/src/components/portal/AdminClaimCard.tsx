@@ -58,7 +58,18 @@ export default function AdminClaimCard({ claim, jwt, onResolve }: AdminClaimCard
     }
   };
 
-  const docUrl = claim.documentacion_reclamo?.url ? getStrapiMedia(claim.documentacion_reclamo.url) : null;
+  // EXHAUSTIVE DEBUG LOGGING (Client Side)
+  if (!claim.documentacion_reclamo) {
+    console.warn(`[AdminClaimCard] Missing doc for ${claim.nombre}. Keys in claim:`, Object.keys(claim));
+  } else {
+    console.info(`[AdminClaimCard] Doc structure for ${claim.nombre}:`, claim.documentacion_reclamo);
+  }
+
+  // Robust resolution
+  const docRaw = claim.documentacion_reclamo;
+  const docObj = Array.isArray(docRaw) ? docRaw[0] : (docRaw?.data || docRaw);
+  const docUrl = docObj?.url || docObj?.attributes?.url ? getStrapiMedia(docObj.url || docObj.attributes.url) : null;
+  
   const logoUrl = claim.logo?.url ? getStrapiMedia(claim.logo.url) : null;
 
   return (

@@ -40,7 +40,26 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     const isAdmin = userRole === 'admin' || userRole === 'super admin' || user?.email === 'diegocristianalonso@gmail.com';
     
     if (!user || !isAdmin) return ctx.forbidden();
-    const data = await strapi.documents('api::negocio.negocio').findMany({ filters: { estado_reclamo: 'pendiente' }, populate: ['owner', 'logo'] });
+    const data = await strapi.documents('api::negocio.negocio').findMany({
+      filters: { estado_reclamo: 'pendiente' },
+      status: 'draft',
+      populate: {
+        owner: true,
+        logo: true,
+        documentacion_reclamo: { 
+          fields: ['url', 'name', 'mime', 'size'] 
+        }
+      }
+    });
+    
+    strapi.log.info(`[AdminActions] Found ${data.length} pending claims`);
+    if (data.length > 0) {
+      // Sanity check of the raw record
+      const first = data[0];
+      strapi.log.info(`[AdminActions] Claim: ${first.nombre} (ID: ${first.id})`);
+      strapi.log.info(`[AdminActions] Doc Rel: ${JSON.stringify(first.documentacion_reclamo || 'NULL')}`);
+    }
+    
     return ctx.send({ success: true, data });
   }),
 

@@ -86,16 +86,21 @@ export default {
         for (const u of testUsers) {
           const existing = await strapi.query('plugin::users-permissions.user').findOne({ where: { email: u.email } });
           if (existing) {
-            await strapi.query('plugin::users-permissions.user').delete({ where: { id: existing.id } });
+            // Use the service to ensure password hashing
+            await strapi.plugin('users-permissions').service('user').edit(existing.id, {
+              password: pass,
+              confirmed: true,
+              role: authRole.id
+            });
+          } else {
+            await strapi.plugin('users-permissions').service('user').add({
+              ...u,
+              password: pass,
+              confirmed: true,
+              role: authRole.id,
+              provider: 'local'
+            });
           }
-          
-          await strapi.plugin('users-permissions').service('user').add({
-            ...u,
-            password: pass,
-            confirmed: true,
-            role: authRole.id,
-            provider: 'local'
-          });
           console.log(`👤 Test user refreshed: ${u.email}`);
         }
 
