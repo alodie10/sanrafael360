@@ -36,14 +36,20 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
 
   adminPendingClaims: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
-    if (!user || user.email !== 'diegocristianalonso@gmail.com') return ctx.forbidden();
+    const userRole = user?.role?.name?.toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'super admin' || user?.email === 'diegocristianalonso@gmail.com';
+    
+    if (!user || !isAdmin) return ctx.forbidden();
     const data = await strapi.documents('api::negocio.negocio').findMany({ filters: { estado_reclamo: 'pendiente' }, populate: ['owner', 'logo'] });
     return ctx.send({ success: true, data });
   }),
 
   adminResolveClaim: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
-    if (!user || user.email !== 'diegocristianalonso@gmail.com') return ctx.forbidden();
+    const userRole = user?.role?.name?.toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'super admin' || user?.email === 'diegocristianalonso@gmail.com';
+    
+    if (!user || !isAdmin) return ctx.forbidden();
     const { id } = ctx.params;
     const { decision, motivo } = ctx.request.body;
     if (!decision) throw new ValidationError('Decisión requerida');

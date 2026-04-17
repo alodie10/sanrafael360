@@ -135,7 +135,6 @@ export default async function AdminDashboardPage() {
                     key={claim.id} 
                     claim={claim} 
                     jwt={session.jwt as string}
-                    onResolve={() => redirect("/portal/admin")} 
                   />
                 ))}
               </div>

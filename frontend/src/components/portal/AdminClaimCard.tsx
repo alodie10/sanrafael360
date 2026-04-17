@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { 
   CheckCircle2, 
   XCircle, 
@@ -19,10 +20,11 @@ import { motion } from "framer-motion";
 interface AdminClaimCardProps {
   claim: any;
   jwt: string;
-  onResolve: () => void;
+  onResolve?: () => void;
 }
 
 export default function AdminClaimCard({ claim, jwt, onResolve }: AdminClaimCardProps) {
+  const router = useRouter();
   const [isResolving, setIsResolving] = useState<'approved' | 'rejected' | null>(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [motivo, setMotivo] = useState("");
@@ -48,7 +50,8 @@ export default function AdminClaimCard({ claim, jwt, onResolve }: AdminClaimCard
 
       if (!res.ok) throw new Error("Error al procesar la resolución");
 
-      onResolve(); // Refresh list
+      router.refresh();
+      if (onResolve) onResolve(); // Refresh list if provided
     } catch (e: any) {
       setError(e.message);
       setIsResolving(null);
@@ -74,7 +77,7 @@ export default function AdminClaimCard({ claim, jwt, onResolve }: AdminClaimCard
                   <img src={logoUrl} className="w-full h-full object-cover rounded-2xl bg-white" alt="" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-primary font-serif font-bold text-2xl">
-                    {claim.nombre.charAt(0)}
+                    {claim.nombre?.charAt(0) || "?"}
                   </div>
                 )}
               </div>
