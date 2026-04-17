@@ -108,4 +108,36 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
 
     return ctx.send({ success: true, message: `Reset exitoso para ${slug}` });
   })
+  testUploadDiag: asyncHandler(async (ctx) => {
+    const { slug } = ctx.params;
+    const data = await strapi.documents('api::negocio.negocio').findMany({
+      filters: { slug },
+      status: 'draft'
+    });
+    const negocio = data[0];
+    if (!negocio) return ctx.notFound();
+
+    const { createNegocioRepository } = require('../repositories/negocio-repository');
+    const repo = createNegocioRepository(strapi);
+    
+    // Diagnostic: Try to upload a dummy file
+    const fs = require('fs');
+    const path = require('path');
+    const dummyPath = path.join(__dirname, 'diag.txt');
+    fs.writeFileSync(dummyPath, 'Diagnostic upload ' + new Date().toISOString());
+    
+    const dummyFile = {
+      path: dummyPath,
+      name: 'diag.txt',
+      type: 'text/plain',
+      size: fs.statSync(dummyPath).size
+    };
+
+    try {
+      const result = await repo.uploadFile(negocio.documentId, 'documentacion_reclamo', dummyFile);
+      return ctx.send({ success: true, result });
+    } catch (err: any) {
+      return ctx.send({ success: false, error: err.message });
+    }
+  })
 }));

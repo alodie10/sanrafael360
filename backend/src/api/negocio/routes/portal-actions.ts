@@ -30,7 +30,16 @@ export default {
     {
       method: 'POST',
       path: '/negocios/:slug/test-reset',
-      handler: 'negocio.resetClaimForTest',
+      handler: 'api::negocio.negocio.resetClaimForTest',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/negocios/:slug/test-upload-diag',
+      handler: 'api::negocio.negocio.testUploadDiag',
       config: {
         policies: [],
         middlewares: [],
