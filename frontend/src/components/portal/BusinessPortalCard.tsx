@@ -90,7 +90,7 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
             <ExternalLink className="w-4 h-4" /> Perfil
           </Link>
           <Link 
-            href={`/portal/negocios/${negocio.documentId}/editar`}
+            href={`/portal/negocios/${negocio.slug}/editar`}
             className="flex items-center justify-center gap-2 px-4 py-4 bg-primary hover:bg-primary/90 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/10"
           >
             Gestionar
