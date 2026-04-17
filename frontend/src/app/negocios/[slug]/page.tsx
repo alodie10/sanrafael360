@@ -72,7 +72,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       const formData = new FormData();
       formData.append("data", JSON.stringify({ message: claimMessage }));
       if (claimFile) {
-        formData.append("files", claimFile);
+        formData.append("documentacion_reclamo", claimFile);
       }
       
       const res = await fetch(targetUrl, {

@@ -9,14 +9,25 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     if (!negocio) throw new NotFoundError('Negocio');
     if (negocio.owner && negocio.estado_reclamo !== 'ninguno') throw new ValidationError('El negocio ya tiene un reclamo activo');
 
-    const updated = await repo.update(id, { estado_reclamo: 'pendiente', owner: user.id });
-    if (files && (files.files || files.file)) await repo.uploadFile(updated.id, 'documentacion_reclamo', files.files || files.file);
+    const updated = await repo.update(id, { 
+      estado_reclamo: 'pendiente', 
+      owner: user.id,
+      descripcion: bodyData.message || negocio.descripcion // Store the claim message as a temporary description or in its own field
+    });
+    
+    // Normalize file key: check for 'documentacion_reclamo' OR fallback to 'files'
+    const claimFile = files?.documentacion_reclamo || files?.files || files?.file;
+    if (claimFile) {
+      // Strapi 5 Documents API 'updated' includes numeric 'id'
+      await repo.uploadFile(updated.id, 'documentacion_reclamo', claimFile);
+    }
 
-    repo.sendEmail(
+    await repo.sendEmail(
       'diegocristianalonso@gmail.com',
       `Nuevo reclamo: ${negocio.nombre}`,
-      `<p>Usuario ${user.email} reclamó ${negocio.nombre}.</p>`
-    ).catch(e => strapi.log.error('Email error:', e.message));
+      `<p>El usuario <b>${user.email}</b> ha iniciado un reclamo para el negocio <b>${negocio.nombre}</b>.</p><p>Mensaje: ${bodyData.message || 'Sin mensaje'}</p>`
+    ).catch(e => strapi.log.error('Email error (Admin Notify):', e.message));
+    
     return { id, status: 'pendiente' };
   },
 
@@ -53,6 +64,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
 
   async resolveClaim(id: string, decision: string, motivo: string) {
     const repo = createNegocioRepository(strapi);
+    // Deep populate owner to ensure email is available
     const negocio = await repo.findById(id, ['owner']);
     if (!negocio) throw new NotFoundError('Negocio');
 
@@ -61,7 +73,18 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     await repo.publish(id);
 
     const subject = decision === 'approved' ? '¡Perfil Aprobado!' : 'Información sobre tu solicitud';
-    repo.sendEmail(negocio.owner.email, subject, `<p>Tu trámite ha sido: ${decision}.</p>`);
+    const ownerEmail = negocio.owner?.email;
+    
+    if (ownerEmail) {
+      await repo.sendEmail(ownerEmail, subject, `
+        <p>Tu solicitud de reclamo para <b>${negocio.nombre}</b> ha sido: <b>${decision}</b>.</p>
+        <p><b>Mensaje de la administración:</b> ${motivo}</p>
+        ${decision === 'approved' ? '<p>Ya puedes acceder a tu portal para gestionar el negocio.</p>' : ''}
+      `).catch(e => strapi.log.error('Email error (User Notify):', e.message));
+    } else {
+      strapi.log.warn(`Cannot send notification for claim ${id}: Owner email not found.`);
+    }
+
     return { id, decision };
   }
 }));
