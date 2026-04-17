@@ -6,7 +6,7 @@ export default {
       handler: 'negocio.portalUpdate',
       config: {
         policies: [],
-        middlewares: [],
+        middlewares: ['api::negocio.negocio-validator'],
       },
     },
     {

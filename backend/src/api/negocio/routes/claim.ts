@@ -6,7 +6,7 @@ export default {
       handler: 'negocio.claim',
       config: {
         policies: [],
-        middlewares: [],
+        middlewares: ['api::negocio.negocio-validator'],
       },
     },
   ],

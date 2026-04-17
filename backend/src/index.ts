@@ -7,7 +7,18 @@ export default {
    *
    * This gives you an opportunity to extend code.
    */
-  register(/* { strapi }: { strapi: Core.Strapi } */) {},
+  register(/* { strapi }: { strapi: Core.Strapi } */) {
+    // Handlers de proceso globales para resiliencia (GEMINI.md)
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+      // En producción podrías querer un shutdown graceful aquí
+    });
+
+    process.on('uncaughtException', (err) => {
+      console.error('❌ Uncaught Exception:', err);
+      process.exit(1);
+    });
+  },
 
   /**
    * An asynchronous bootstrap function that runs before
