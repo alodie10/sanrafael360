@@ -23,15 +23,23 @@ async function globalSetup(config: FullConfig) {
   console.log(`\n🔐 [Global Setup] Authenticating as ${testEmail}...`);
 
   await page.goto(`${baseURL}/login`);
-  await page.fill('input[type="email"]', testEmail);
-  await page.fill('input[type="password"]', testPassword);
-  await page.click('button[type="submit"]');
+  
+  let loginSuccess = false;
+  for(let i=0; i<3; i++) {
+    await page.fill('input[type="email"]', testEmail);
+    await page.fill('input[type="password"]', testPassword);
+    await page.click('button[type="submit"]');
 
-  // Esperar redirección al portal (indica login exitoso)
-  await page.waitForURL(
-    (url) => url.pathname === '/portal' || url.pathname === '/',
-    { timeout: 20000 }
-  );
+    try {
+      await page.waitForURL((url) => url.pathname === '/portal' || url.pathname === '/', { timeout: 10000 });
+      loginSuccess = true;
+      break;
+    } catch (e) {
+      console.log(`⚠️ Login attempt ${i+1} failed. Retrying...`);
+      await page.reload();
+    }
+  }
+  if (!loginSuccess) throw new Error(`Could not login as ${testEmail}`);
 
   // Guardar el estado de autenticación (cookies + localStorage)
   await page.context().storageState({ path: STORAGE_STATE_PATH });
