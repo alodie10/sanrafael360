@@ -32,9 +32,14 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     if (!negocio) throw new NotFoundError('Negocio');
     if (Number(negocio.owner?.id) !== Number(userId)) throw new ForbiddenError();
 
-    const allowed = ['descripcion', 'facebook', 'instagram', 'website', 'reserva_habilitada'];
+    const allowed = ['descripcion', 'facebook', 'instagram', 'website', 'reserva_habilitada', 'galeria'];
     const updateData: any = {};
-    allowed.forEach(f => { if (bodyData[f] !== undefined) updateData[f] = bodyData[f]; });
+    allowed.forEach(f => { 
+      if (bodyData[f] !== undefined) {
+        // Strapi 5 expects an array of IDs for media relations to sync/keep
+        updateData[f] = bodyData[f];
+      }
+    });
 
     const updated = await repo.update(id, updateData);
     if (files) {

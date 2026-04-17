@@ -38,7 +38,9 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   // Files State
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  // Gallery handled as a mix of existing (IDs) and new (Files)
+  const [existingGallery, setExistingGallery] = useState(negocio.galeria || []);
+  const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
   
   // Previews
   const [logoPreview, setLogoPreview] = useState(negocio.logo?.url ? getStrapiMedia(negocio.logo.url) : null);
@@ -57,9 +59,19 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       setCoverFile(file);
       setCoverPreview(URL.createObjectURL(file));
     } else if (type === 'gallery') {
-      const newFiles = Array.from(files).slice(0, 4); // Limit to 4
-      setGalleryFiles(newFiles);
+      const availableSlots = 4 - existingGallery.length - newGalleryFiles.length;
+      if (availableSlots <= 0) return;
+      const selection = Array.from(files).slice(0, availableSlots);
+      setNewGalleryFiles(prev => [...prev, ...selection]);
     }
+  };
+
+  const removeExistingPhoto = (id: number) => {
+    setExistingGallery((prev: any[]) => prev.filter(f => f.id !== id));
+  };
+
+  const removeNewPhoto = (index: number) => {
+    setNewGalleryFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
@@ -77,12 +89,13 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         facebook,
         instagram,
         website,
-        reserva_habilitada: reservaHabilitada
+        reserva_habilitada: reservaHabilitada,
+        galeria: existingGallery.map((f: any) => f.id) // Send existing IDs to keep
       }));
 
       if (logoFile) formData.append("logo", logoFile);
       if (coverFile) formData.append("imagen_portada", coverFile);
-      galleryFiles.forEach(file => {
+      newGalleryFiles.forEach(file => {
         formData.append("galeria", file);
       });
 
@@ -237,13 +250,36 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
             <p className="text-sm text-slate-400 mb-6">Sube hasta 4 fotos para mostrar en la galería principal (reemplazará las actuales).</p>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              {[0, 1, 2, 3].map(i => (
-                <div key={i} className="aspect-square rounded-2xl bg-white/5 border-2 border-dashed border-white/10 flex items-center justify-center overflow-hidden">
-                  {galleryFiles[i] ? (
-                    <img src={URL.createObjectURL(galleryFiles[i])} className="w-full h-full object-cover" alt="" />
-                  ) : (
-                    <ImageIcon className="w-6 h-6 text-white/10" />
-                  )}
+              {/* Existing Photos */}
+              {existingGallery.map((photo: any) => (
+                <div key={`existing-${photo.id}`} className="relative group aspect-square rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+                  <img src={getStrapiMedia(photo.url)} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="" />
+                  <button 
+                    onClick={() => removeExistingPhoto(photo.id)}
+                    className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+
+              {/* New Photos */}
+              {newGalleryFiles.map((file, i) => (
+                <div key={`new-${i}`} className="relative group aspect-square rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+                  <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="" />
+                  <button 
+                    onClick={() => removeNewPhoto(i)}
+                    className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+
+              {/* Empty Slots */}
+              {Array.from({ length: 4 - existingGallery.length - newGalleryFiles.length }).map((_, i) => (
+                <div key={`empty-${i}`} className="aspect-square rounded-2xl bg-white/5 border-2 border-dashed border-white/10 flex items-center justify-center overflow-hidden">
+                  <ImageIcon className="w-6 h-6 text-white/10" />
                 </div>
               ))}
             </div>
@@ -262,7 +298,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                 className="flex items-center justify-center gap-2 w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-white font-bold cursor-pointer transition-all border-dashed"
               >
                 <Upload className="w-5 h-5 text-blue-400" />
-                {galleryFiles.length > 0 ? "Reemplazar Selección" : "Seleccionar hasta 4 fotos"}
+                {(existingGallery.length + newGalleryFiles.length) > 0 ? "Añadir más fotos" : "Seleccionar hasta 4 fotos"}
               </label>
             </div>
             <p className="text-[10px] text-slate-500 mt-3 text-center uppercase tracking-widest font-bold">Máximo 10MB en total</p>
