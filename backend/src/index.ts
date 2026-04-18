@@ -7,17 +7,39 @@ export default {
    *
    * This gives you an opportunity to extend code.
    */
-  register(/* { strapi }: { strapi: Core.Strapi } */) {
+  register({ strapi }: { strapi: any }) {
     // Handlers de proceso globales para resiliencia (GEMINI.md)
     process.on('unhandledRejection', (reason, promise) => {
       console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-      // En producción podrías querer un shutdown graceful aquí
     });
 
     process.on('uncaughtException', (err) => {
       console.error('❌ Uncaught Exception:', err);
       process.exit(1);
     });
+
+    // 🏆 Sobrescritura de Controlador de Registro (Hito 1)
+    const authController = strapi.plugin('users-permissions').controller('auth');
+    const originalRegister = authController.register;
+
+    authController.register = async (ctx: any) => {
+      const { tipo_registro } = ctx.request.body;
+      
+      // Limpiamos el campo para que el validador estricto de Strapi 5 no lo rechace
+      delete ctx.request.body.tipo_registro;
+
+      await originalRegister(ctx);
+
+      if (ctx.status === 200 && tipo_registro === 'propietario') {
+        const user = ctx.body.user;
+        await strapi.query('plugin::users-permissions.user').update({
+          where: { id: user.id },
+          data: { role: 8, tipo_registro: 'propietario' },
+        });
+        ctx.body.user.role = { id: 8, name: 'Propietario' };
+        strapi.log.info(`👤 Usuario [${user.email}] registrado como Propietario.`);
+      }
+    };
   },
 
   /**
@@ -29,9 +51,9 @@ export default {
    */
   async bootstrap({ strapi }: { strapi: any }) {
     try {
-      // 1. Configurar permisos para roles Públicos y Autenticados
-      const rolesToConfigure = ['public', 'authenticated'];
-      
+      // 1. Configurar permisos para roles Públicos, Autenticados, Residente y Propietario
+      const rolesToConfigure = ['public', 'authenticated', 'residente', 'propietario'];
+
       for (const roleType of rolesToConfigure) {
         const role = await strapi.query('plugin::users-permissions.role').findOne({
           where: { type: roleType },
@@ -46,8 +68,8 @@ export default {
             'api::negocio.negocio.resetClaimForTest',
           ];
 
-          // El rol autenticado necesita específicamente el permiso de reclamar y actualizar
-          if (roleType === 'authenticated') {
+          // El rol autenticado (y los nuevos residentes/propietarios) necesitan permisos de gestion
+          if (['authenticated', 'residente', 'propietario'].includes(roleType)) {
             actions.push('api::negocio.negocio.claim');
             actions.push('api::negocio.negocio.update');
             actions.push('api::negocio.negocio.me');
@@ -113,6 +135,28 @@ export default {
           console.log('🏨 Test business created: after-house');
         }
       }
+
+      // 3. Lifecycle Hook para asignar roles dinámicos (Hito 1)
+      strapi.db.lifecycles.subscribe({
+        models: ['plugin::users-permissions.user'],
+        async afterCreate(event: any) {
+          const { result, params } = event;
+          
+          // Si el usuario se registró como propietario
+          if (params.data.tipo_registro === 'propietario') {
+            try {
+              await strapi.query('plugin::users-permissions.user').update({
+                where: { id: result.id },
+                data: { role: 8 }, // ID del rol Propietario
+              });
+              strapi.log.info(`✅ Rol Propietario asignado a: ${result.email}`);
+            } catch (err) {
+              strapi.log.error(`❌ Error asignando rol Propietario:`, err);
+            }
+          }
+        },
+      });
+
     } catch (error) {
       console.error('❌ Error configurando bootstrap:', error);
     }

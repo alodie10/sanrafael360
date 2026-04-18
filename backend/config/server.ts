@@ -1,7 +1,7 @@
 import type { Core } from '@strapi/strapi';
 
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Server => ({
-  url: 'https://sanrafael360-production.up.railway.app',
+  url: env('PUBLIC_URL', 'http://localhost:1337'),
   host: env('HOST', '0.0.0.0'),
   port: env.int('PORT', 1337),
   app: {
