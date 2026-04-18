@@ -555,12 +555,16 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
       'oneToOne',
       'plugin::users-permissions.user'
     >;
+    price_range: Schema.Attribute.Enumeration<
+      ['Econ\u00F3mico', 'Moderado', 'Pro', 'Premium']
+    >;
     publishedAt: Schema.Attribute.DateTime;
     reclamar_habilitado: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     reserva_habilitada: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<true>;
     reserva_url: Schema.Attribute.String;
+    schedules: Schema.Attribute.Component<'shared.schedule', true>;
     slug: Schema.Attribute.UID<'nombre'> & Schema.Attribute.Required;
     telefono: Schema.Attribute.String;
     trigger_discovery: Schema.Attribute.Boolean &

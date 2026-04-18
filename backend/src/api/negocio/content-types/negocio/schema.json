@@ -132,6 +132,20 @@
         "files"
       ],
       "description": "Archivo PDF o imagen para verificar la propiedad del negocio"
+    },
+    "price_range": {
+      "type": "enumeration",
+      "enum": [
+        "Económico",
+        "Moderado",
+        "Pro",
+        "Premium"
+      ]
+    },
+    "schedules": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.schedule"
     }
   }
 }

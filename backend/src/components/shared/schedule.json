@@ -1,0 +1,34 @@
+{
+  "collectionName": "components_shared_schedules",
+  "info": {
+    "displayName": "Schedule",
+    "icon": "clock",
+    "description": "Horarios granulares para negocios"
+  },
+  "options": {},
+  "attributes": {
+    "day": {
+      "type": "enumeration",
+      "enum": [
+        "Lunes",
+        "Martes",
+        "Miércoles",
+        "Jueves",
+        "Viernes",
+        "Sábado",
+        "Domingo"
+      ],
+      "required": true
+    },
+    "opening_time": {
+      "type": "time"
+    },
+    "closing_time": {
+      "type": "time"
+    },
+    "is_closed": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

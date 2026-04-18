@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getStrapiMedia } from "@/lib/strapi";
+import ScheduleEditor from "./ScheduleEditor";
 
 interface EditBusinessFormProps {
   negocio: any;
@@ -34,6 +35,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [instagram, setInstagram] = useState(negocio.instagram || "");
   const [website, setWebsite] = useState(negocio.website || "");
   const [reservaHabilitada, setReservaHabilitada] = useState(negocio.reserva_habilitada ?? true);
+  const [priceRange, setPriceRange] = useState(negocio.price_range || "Moderado");
+  const [schedules, setSchedules] = useState(negocio.schedules || []);
   
   // Files State
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -90,6 +93,14 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         instagram,
         website,
         reserva_habilitada: reservaHabilitada,
+        price_range: priceRange,
+        schedules: schedules.map((s: any) => ({
+          id: s.id, // Keep ID for updates if it exists
+          day: s.day,
+          opening_time: s.opening_time,
+          closing_time: s.closing_time,
+          is_closed: s.is_closed
+        })),
         galeria: existingGallery.map((f: any) => f.id) // Send existing IDs to keep
       }));
 
@@ -237,6 +248,37 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                   placeholder="https://instagram.com/tunegocio"
                   className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Horarios y Precios (Hito 2) */}
+          <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
+            <div className="grid grid-cols-1 gap-10">
+              <ScheduleEditor 
+                schedules={schedules} 
+                onChange={setSchedules} 
+              />
+
+              <div className="pt-6 border-t border-white/5">
+                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400 text-sm font-bold">$$</div>
+                  Nivel de Precios
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {["Económico", "Moderado", "Pro", "Premium"].map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => setPriceRange(range)}
+                      type="button"
+                      className={`py-3 px-4 rounded-2xl text-sm font-bold transition-all border ${priceRange === range 
+                        ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20' 
+                        : 'bg-slate-800 border-white/5 text-slate-400 hover:border-white/20'}`}
+                    >
+                      {range}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

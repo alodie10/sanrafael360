@@ -57,7 +57,16 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     if (!negocio) throw new NotFoundError('Negocio');
     if (Number(negocio.owner?.id) !== Number(userId)) throw new ForbiddenError();
 
-    const allowed = ['descripcion', 'facebook', 'instagram', 'website', 'reserva_habilitada', 'galeria'];
+    const allowed = [
+      'descripcion', 
+      'facebook', 
+      'instagram', 
+      'website', 
+      'reserva_habilitada', 
+      'galeria', 
+      'price_range', 
+      'schedules'
+    ];
     const updateData: any = {};
     allowed.forEach(f => { 
       if (bodyData[f] !== undefined) {
