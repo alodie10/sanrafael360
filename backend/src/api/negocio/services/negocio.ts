@@ -102,7 +102,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     await repo.publish(id);
 
     // Log Activity
-    await strapi.documents('api::actividad.actividad').create({
+    await (strapi.documents('api::actividad.actividad' as any) as any).create({
       data: {
         accion: 'Actualización de Perfil',
         detalles: `El dueño actualizó la información pública de ${negocio.nombre}`,
@@ -126,13 +126,13 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     await repo.publish(id);
 
     // Log Activity
-    await strapi.documents('api::actividad.actividad').create({
+    await (strapi.documents('api::actividad.actividad' as any) as any).create({
       data: {
         accion: isApproved ? 'Reclamo Aprobado' : 'Reclamo Rechazado',
-        detalles: `El administrador resolvió el reclamo de ${negocio.nombre}. Motivo: ${motivo}`,
-        negocio: negocio.id,
+        detalles: `El reclamo de ${negocio.nombre} fue ${isApproved ? 'aprobado' : 'rechazado'}${motivo ? ': ' + motivo : ''}`,
+        negocio: id,
         usuario: negocio.owner?.id,
-        tipo: isApproved ? 'success' : 'warning'
+        tipo: isApproved ? 'success' : 'error'
       }
     }).catch(err => strapi.log.error(`[ActivityLog] Error logging claim resolution: ${err.message}`));
 
