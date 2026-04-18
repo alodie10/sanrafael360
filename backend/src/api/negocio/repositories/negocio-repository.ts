@@ -48,8 +48,8 @@ export class NegocioRepository {
     });
   }
 
-  async uploadFile(documentId: string, field: string, files: any) {
-    this.strapi.log.info(`[Repo] Uploading file for ${field} on documentId ${documentId}`);
+  async uploadFile(documentId: string, field: string, files: any, isMultiple: boolean = false) {
+    this.strapi.log.info(`[Repo] Uploading file for ${field} on documentId ${documentId} (isMultiple: ${isMultiple})`);
     try {
       const uploadedFiles = await this.strapi.plugin('upload').service('upload').upload({
         data: {}, // Pure upload
@@ -60,17 +60,28 @@ export class NegocioRepository {
         throw new Error('Upload returned no files');
       }
 
-      const fileId = uploadedFiles[0].id;
-      this.strapi.log.info(`[Repo] File uploaded (ID: ${fileId}). Linking to document...`);
+      const newFileIds = uploadedFiles.map((f: any) => f.id);
+      this.strapi.log.info(`[Repo] Files uploaded (IDs: ${newFileIds.join(', ')}). Linking to document...`);
+
+      let finalMediaValue: any;
+
+      if (isMultiple) {
+        // Fetch existing entries to append
+        const existing = await this.findById(documentId, [field]);
+        const existingIds = (existing[field] || []).map((f: any) => f.id);
+        finalMediaValue = [...existingIds, ...newFileIds];
+      } else {
+        finalMediaValue = newFileIds[0];
+      }
 
       await this.strapi.documents('api::negocio.negocio').update({
         documentId,
         data: {
-          [field]: fileId,
+          [field]: finalMediaValue,
         },
       });
 
-      this.strapi.log.info(`[Repo] File link successful for field ${field}`);
+      this.strapi.log.info(`[Repo] Media link successful for field ${field}`);
       return uploadedFiles;
     } catch (err: any) {
       this.strapi.log.error(`[Repo] Upload/Link error: ${err.message}`);

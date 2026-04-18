@@ -93,7 +93,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     if (files) {
       if (files.logo) await repo.uploadFile(updated.id, 'logo', files.logo);
       if (files.imagen_portada) await repo.uploadFile(updated.id, 'imagen_portada', files.imagen_portada);
-      if (files.galeria) await repo.uploadFile(updated.id, 'galeria', files.galeria);
+      if (files.galeria) await repo.uploadFile(updated.id, 'galeria', files.galeria, true);
     }
     await repo.publish(id);
     return updated;
