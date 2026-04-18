@@ -483,7 +483,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
 
             <div className="mb-6">
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
-                Documentación de propiedad (Obligatorio - PDF/ID)
+                Documentación de propiedad (PDF o imagen de DNI, Habilitación, AFIP, etc.)
               </label>
               <div className="relative group">
                 <input 

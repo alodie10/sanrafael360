@@ -58,6 +58,10 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     if (Number(negocio.owner?.id) !== Number(userId)) throw new ForbiddenError();
 
     const allowed = [
+      'nombre', 
+      'direccion', 
+      'latitud', 
+      'longitud', 
       'descripcion', 
       'facebook', 
       'instagram', 
@@ -96,28 +100,68 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       if (files.galeria) await repo.uploadFile(updated.documentId, 'galeria', files.galeria, true);
     }
     await repo.publish(id);
+
+    // Log Activity
+    await strapi.documents('api::actividad.actividad').create({
+      data: {
+        accion: 'Actualización de Perfil',
+        detalles: `El dueño actualizó la información pública de ${negocio.nombre}`,
+        negocio: negocio.id,
+        usuario: userId,
+        tipo: 'info'
+      }
+    }).catch(err => strapi.log.error(`[ActivityLog] Error: ${err.message}`));
     return updated;
   },
 
   async resolveClaim(id: string, decision: string, motivo: string) {
     const repo = createNegocioRepository(strapi);
-    // Deep populate owner to ensure email is available
     const negocio = await repo.findById(id, ['owner']);
     if (!negocio) throw new NotFoundError('Negocio');
 
-    const data = decision === 'approved' ? { estado_reclamo: 'aprobado' } : { estado_reclamo: 'ninguno', owner: null };
+    const isApproved = decision === 'approved';
+    const data = isApproved ? { estado_reclamo: 'aprobado' } : { estado_reclamo: 'ninguno', owner: null };
+    
     await repo.update(id, data);
     await repo.publish(id);
 
-    const subject = decision === 'approved' ? '¡Perfil Aprobado!' : 'Información sobre tu solicitud';
+    // Log Activity
+    await strapi.documents('api::actividad.actividad').create({
+      data: {
+        accion: isApproved ? 'Reclamo Aprobado' : 'Reclamo Rechazado',
+        detalles: `El administrador resolvió el reclamo de ${negocio.nombre}. Motivo: ${motivo}`,
+        negocio: negocio.id,
+        usuario: negocio.owner?.id,
+        tipo: isApproved ? 'success' : 'warning'
+      }
+    }).catch(err => strapi.log.error(`[ActivityLog] Error logging claim resolution: ${err.message}`));
+
+    const subject = isApproved ? '¡Bienvenido a San Rafael 360!' : 'Actualización sobre tu solicitud de reclamo';
     const ownerEmail = negocio.owner?.email;
+    const portalUrl = 'https://www.sanrafael360.com/portal';
     
     if (ownerEmail) {
-      await repo.sendEmail(ownerEmail, subject, `
-        <p>Tu solicitud de reclamo para <b>${negocio.nombre}</b> ha sido: <b>${decision}</b>.</p>
-        <p><b>Mensaje de la administración:</b> ${motivo}</p>
-        ${decision === 'approved' ? '<p>Ya puedes acceder a tu portal para gestionar el negocio.</p>' : ''}
-      `).catch(e => strapi.log.error('Email error (User Notify):', e.message));
+      const html = isApproved 
+        ? `<div style="font-family: sans-serif; color: #333;">
+            <h2 style="color: #2563eb;">¡Felicidades, ${negocio.nombre} ya es tuyo!</h2>
+            <p>Tu solicitud de propiedad ha sido aprobada. Ya puedes empezar a gestionar tu perfil, actualizar horarios y subir fotos.</p>
+            <p><b>Mensaje del administrador:</b> ${motivo}</p>
+            <div style="margin: 30px 0;">
+              <a href="${portalUrl}" style="background: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Acceder a mi Portal</a>
+            </div>
+            <p style="font-size: 12px; color: #666;">Si el botón no funciona, copia y pega este link: ${portalUrl}</p>
+           </div>`
+        : `<div style="font-family: sans-serif; color: #333;">
+            <h2 style="color: #dc2626;">Información sobre tu solicitud</h2>
+            <p>Tu solicitud de reclamo para <b>${negocio.nombre}</b> ha sido rechazada por el siguiente motivo:</p>
+            <p style="background: #fef2f2; padding: 15px; border-left: 4px solid #dc2626;">"${motivo}"</p>
+            <p>No te preocupes, puedes volver a intentarlo corrigiendo la documentación o el mensaje en el portal.</p>
+            <div style="margin: 30px 0;">
+              <a href="${portalUrl}" style="background: #374151; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Volver a intentar</a>
+            </div>
+           </div>`;
+
+      await repo.sendEmail(ownerEmail, subject, html).catch(e => strapi.log.error('Email error (User Notify):', e.message));
     } else {
       strapi.log.warn(`Cannot send notification for claim ${id}: Owner email not found.`);
     }

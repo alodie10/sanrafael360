@@ -2,9 +2,9 @@
   "kind": "collectionType",
   "collectionName": "consultas-soporte",
   "info": {
-    "singularName": "consulta-soporte",
-    "pluralName": "consultas-soporte",
-    "displayName": "Consulta de Soporte",
+    "singularName": "soporte",
+    "pluralName": "soportes",
+    "displayName": "Soporte",
     "description": "Mensajes de soporte de los dueños de negocios"
   },
   "options": {

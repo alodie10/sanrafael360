@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "actividades",
+  "info": {
+    "singularName": "actividad",
+    "pluralName": "actividades",
+    "displayName": "Actividad",
+    "description": "Log de acciones realizadas por usuarios y administradores"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "accion": {
+      "type": "string",
+      "required": true
+    },
+    "detalles": {
+      "type": "text"
+    },
+    "negocio": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::negocio.negocio"
+    },
+    "usuario": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "tipo": {
+      "type": "enumeration",
+      "enum": [
+        "info",
+        "warning",
+        "success",
+        "error"
+      ],
+      "default": "info"
+    }
+  }
+}

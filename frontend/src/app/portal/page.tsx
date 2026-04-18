@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { 
+import {
   Building2, 
   PlusCircle, 
   MapPin, 
@@ -11,12 +12,14 @@ import {
   Clock,
   ShieldCheck,
   Zap,
-  MessageSquare
+  MessageSquare,
+  History
 } from "lucide-react";
 import Link from "next/link";
 import { getStrapiMedia } from "@/lib/strapi";
 import SupportForm from "@/components/portal/SupportForm";
 import BusinessPortalCard from "@/components/portal/BusinessPortalCard";
+import ActivityLogView from "@/components/portal/ActivityLogView";
 import Logo from "@/components/common/Logo";
 import { cn } from "@/lib/utils";
 
@@ -128,6 +131,19 @@ export default async function PortalPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Historial de Actividad */}
+        <div className="mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+           <div className="flex items-center gap-4 mb-8">
+             <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
+               <History className="w-5 h-5 text-primary" />
+             </div>
+             <h2 className="text-3xl font-serif font-bold text-white tracking-tight italic">Historial de Actividad</h2>
+           </div>
+           <div className="bg-zinc-950/20 border border-white/5 p-8 rounded-[3rem] backdrop-blur-sm">
+              <ActivityLogView jwt={session.jwt as string} userId={Number((session as any).user.id)} />
+           </div>
         </div>
 
         {/* Soporte y Ayuda */}

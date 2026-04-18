@@ -11,7 +11,9 @@ import {
   AlertCircle,
   X,
   Upload,
-  CalendarDays
+  CalendarDays,
+  MapPin,
+  Search
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,6 +32,10 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [success, setSuccess] = useState(false);
 
   // Form State
+  const [nombre, setNombre] = useState(negocio.nombre || "");
+  const [direccion, setDireccion] = useState(negocio.direccion || "");
+  const [latitud, setLatitud] = useState(negocio.latitud || null);
+  const [longitud, setLongitud] = useState(negocio.longitud || null);
   const [descripcion, setDescripcion] = useState(negocio.descripcion || "");
   const [facebook, setFacebook] = useState(negocio.facebook || "");
   const [instagram, setInstagram] = useState(negocio.instagram || "");
@@ -37,6 +43,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [reservaHabilitada, setReservaHabilitada] = useState(negocio.reserva_habilitada ?? true);
   const [priceRange, setPriceRange] = useState(negocio.price_range || "Moderado");
   const [schedules, setSchedules] = useState(negocio.schedules || []);
+  const [isGeocoding, setIsGeocoding] = useState(false);
   
   // Files State
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -77,6 +84,31 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     setNewGalleryFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleGeocode = async () => {
+    if (!direccion) return;
+    setIsGeocoding(true);
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(direccion + ", San Rafael, Mendoza")}&key=${apiKey}`
+      );
+      const data = await response.json();
+
+      if (data.status === "OK") {
+        const { lat, lng } = data.results[0].geometry.location;
+        setLatitud(lat);
+        setLongitud(lng);
+        alert(`Ubicación validada con éxito: ${lat}, ${lng}`);
+      } else {
+        throw new Error("No pudimos encontrar esa dirección en el mapa.");
+      }
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
   const handleSave = async () => {
     // Validación de horarios (Hito 2 Stabilization)
     const invalidSchedules = schedules.some((s: any) => !s.is_closed && (!s.opening_time || !s.closing_time));
@@ -95,6 +127,10 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       
       const formData = new FormData();
       formData.append("data", JSON.stringify({
+        nombre,
+        direccion,
+        latitud,
+        longitud,
         descripcion,
         facebook,
         instagram,
@@ -192,6 +228,49 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         {/* Main Info Column */}
         <div className="lg:col-span-2 space-y-8">
           
+          {/* Identidad y Ubicación */}
+          <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+               <MapPin className="w-6 h-6 text-blue-400" />
+               Identidad y Ubicación
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nombre Comercial</label>
+                <input 
+                  type="text"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Dirección</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text"
+                    value={direccion}
+                    onChange={(e) => setDireccion(e.target.value)}
+                    placeholder="Ej: Av. Mitre 123"
+                    className="flex-1 px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white"
+                  />
+                  <button 
+                    onClick={handleGeocode}
+                    disabled={isGeocoding || !direccion}
+                    type="button"
+                    className="px-4 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-2xl border border-blue-500/30 transition-all flex items-center gap-2"
+                  >
+                    {isGeocoding ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Search className="w-4 h-4" />}
+                    <span className="hidden md:inline text-xs font-bold uppercase">Validar</span>
+                  </button>
+                </div>
+                {latitud && (
+                  <p className="text-[10px] text-green-500 mt-1 ml-1 font-bold">✓ Ubicación válida ({latitud.toFixed(4)}, {longitud.toFixed(4)})</p>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Descripción */}
           <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
@@ -206,7 +285,6 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                 placeholder="Cuéntanos más sobre tu negocio, tu historia y qué te hace único..."
                 className="w-full h-48 px-5 py-4 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all"
               />
-              <p className="text-xs text-slate-500 mt-2 ml-1 italic">* Nota: Por ahora solo se soporta texto plano. Próximamente habilitaremos editor visual.</p>
             </div>
           </div>
 
@@ -422,13 +500,13 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
 
           {/* Ayuda */}
           <div className="p-6 bg-blue-600/10 border border-blue-500/20 rounded-3xl">
-             <h3 className="text-sm font-bold text-blue-400 mb-2">¿Necesitas cambiar el nombre?</h3>
+             <h3 className="text-sm font-bold text-blue-400 mb-2">Centro de Ayuda</h3>
              <p className="text-xs text-slate-400 leading-relaxed mb-4">
-               El nombre y la categoría están protegidos. Si necesitas modificarlos, contacta al equipo de San Rafael 360.
+               Si necesitas cambiar la categoría o tienes problemas técnicos, nuestro equipo está para ayudarte.
              </p>
-             <button className="text-xs font-bold text-white hover:underline underline-offset-4">
-               Enviar consulta →
-             </button>
+             <Link href="/portal/soporte" className="text-xs font-bold text-white hover:underline underline-offset-4">
+               Ir a Soporte →
+             </Link>
           </div>
         </div>
       </div>
