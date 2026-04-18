@@ -1,7 +1,7 @@
 {
-  "//": "Trigger build v11 - Soporte API Harmonization",
+  "//": "Trigger build v12 - Deep Clean & Soporte Fix",
   "name": "sanrafael360-monorepo",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Repositorio centralizado para San Rafael 360 (Next.js + Strapi)",
   "scripts": {
     "start": "cd backend && npm run start",
