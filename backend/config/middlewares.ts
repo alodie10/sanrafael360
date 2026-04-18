@@ -18,7 +18,9 @@ const config: Core.Config.Middlewares = [
             'res.cloudinary.com',
             'sanrafael360-production.up.railway.app',
             'sanrafael360.vercel.app',
-            '*.vercel.app'
+            '*.vercel.app',
+            'sanrafael360.com',
+            'www.sanrafael360.com'
           ],
           'media-src': [
             "'self'",
@@ -27,7 +29,9 @@ const config: Core.Config.Middlewares = [
             'res.cloudinary.com',
             'sanrafael360-production.up.railway.app',
             'sanrafael360.vercel.app',
-            '*.vercel.app'
+            '*.vercel.app',
+            'sanrafael360.com',
+            'www.sanrafael360.com'
           ],
           upgradeInsecureRequests: null,
         },
@@ -39,7 +43,12 @@ const config: Core.Config.Middlewares = [
   {
     name: 'strapi::cors',
     config: {
-      origin: ['http://localhost:3000', 'https://www.sanrafael360.com', 'https://sanrafael360.com'],
+      origin: [
+        'http://localhost:3000', 
+        'https://www.sanrafael360.com', 
+        'https://sanrafael360.com',
+        'https://sanrafael360.vercel.app'
+      ],
     },
   },
   'strapi::poweredBy',

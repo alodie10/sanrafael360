@@ -67,11 +67,25 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       'price_range', 
       'schedules'
     ];
+    
+    const normalizeTime = (time: string | null) => {
+      if (!time) return null;
+      if (/^\d{2}:\d{2}$/.test(time)) return `${time}:00.000`;
+      return time;
+    };
+
     const updateData: any = {};
     allowed.forEach(f => { 
       if (bodyData[f] !== undefined) {
-        // Strapi 5 expects an array of IDs for media relations to sync/keep
-        updateData[f] = bodyData[f];
+        if (f === 'schedules' && Array.isArray(bodyData[f])) {
+          updateData[f] = bodyData[f].map((s: any) => ({
+            ...s,
+            opening_time: normalizeTime(s.opening_time),
+            closing_time: normalizeTime(s.closing_time)
+          }));
+        } else {
+          updateData[f] = bodyData[f];
+        }
       }
     });
 

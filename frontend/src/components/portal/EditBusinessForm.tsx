@@ -78,6 +78,13 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   };
 
   const handleSave = async () => {
+    // Validación de horarios (Hito 2 Stabilization)
+    const invalidSchedules = schedules.some((s: any) => !s.is_closed && (!s.opening_time || !s.closing_time));
+    if (invalidSchedules) {
+      toast.error("Por favor, completa las horas de apertura y cierre para todos los días abiertos.");
+      return;
+    }
+
     setIsSaving(true);
     setError(null);
     setSuccess(false);
