@@ -51,6 +51,28 @@ export default {
    */
   async bootstrap({ strapi }: { strapi: any }) {
     try {
+      // 🚨 MIGRACIÓN DE EMERGENCIA: Reparar tabla up_users (Columna provider faltante)
+      try {
+        await (strapi.db.connection as any).raw(`
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='up_users' AND column_name='provider') THEN
+              ALTER TABLE up_users ADD COLUMN provider VARCHAR(255) DEFAULT 'local';
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='up_users' AND column_name='confirmed') THEN
+              ALTER TABLE up_users ADD COLUMN confirmed BOOLEAN DEFAULT TRUE;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='up_users' AND column_name='blocked') THEN
+              ALTER TABLE up_users ADD COLUMN blocked BOOLEAN DEFAULT FALSE;
+            END IF;
+          END
+          $$;
+        `);
+        strapi.log.info('🛠️ Base de Datos: Tabla up_users verificada y reparada.');
+      } catch (dbErr: any) {
+        console.error('⚠️ Error en migración manual:', dbErr.message);
+      }
+
       // 1. Configurar permisos para roles Públicos, Autenticados, Residente y Propietario
       const rolesToConfigure = ['public', 'authenticated', 'residente', 'propietario'];
 
