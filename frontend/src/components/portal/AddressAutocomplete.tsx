@@ -58,6 +58,14 @@ export default function AddressAutocomplete({
       // Inyección segura
       if (containerRef.current) {
         containerRef.current.replaceChildren(autocompleteElement);
+        
+        // Cargar valor inicial si existe para que el usuario vea su dirección actual al editar
+        if (initialValue) {
+          // El Web Component de Google expone el input interno tras un pequeño delay o al asignarle valor
+          setInputValue(initialValue);
+          // Intentamos asignar el valor al componente (algunas versiones usan valor de atributo o propiedad directa)
+          autocompleteElement.value = initialValue;
+        }
       }
 
       // Regla 2: Listener con cleanup implícito
