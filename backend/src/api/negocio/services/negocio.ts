@@ -139,5 +139,10 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     } catch (err: any) {
       strapi.log.error(`[ActivityLog] Error persistente: ${err.message}`);
     }
+  },
+
+  async getOwnerNegocios(userId: number) {
+    const repo = createNegocioRepository(strapi);
+    return await repo.findByOwner(userId, ['logo', 'categoria', 'imagen_portada', 'galeria']);
   }
 }));
