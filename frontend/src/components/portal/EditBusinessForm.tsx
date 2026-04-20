@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getStrapiMedia } from "@/lib/strapi";
 import ScheduleEditor from "./ScheduleEditor";
+import { toast } from "sonner";
 
 interface EditBusinessFormProps {
   negocio: any;
@@ -86,32 +87,40 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
 
   const handleGeocode = async () => {
     if (!direccion) return;
+    
     setIsGeocoding(true);
     setError(null);
+    // Limpiar coordenadas previas para evitar confusión si falla la nueva búsqueda
+    setLatitud(null);
+    setLongitud(null);
+
     try {
-      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(direccion + ", San Rafael, Mendoza")}&key=${apiKey}`
-      );
+      // Llamamos a nuestra propia API proxy para evitar problemas de CORS
+      const response = await fetch(`/api/geocode?address=${encodeURIComponent(direccion)}`);
       const data = await response.json();
 
       if (data.status === "OK") {
         const { lat, lng } = data.results[0].geometry.location;
         setLatitud(lat);
         setLongitud(lng);
+        toast.success("Ubicación encontrada correctamente");
       } else {
-        const detail = data.error_message ? ` (${data.error_message})` : "";
+        const detail = data.error_message ? `: ${data.error_message}` : "";
         const messages: Record<string, string> = {
-          ZERO_RESULTS: "No encontramos esa dirección. Intenta con una dirección más completa.",
-          REQUEST_DENIED: `La clave de Google Maps no tiene permisos para Geocoding${detail}.`,
-          INVALID_REQUEST: "La solicitud es inválida. Verifica que la dirección sea correcta.",
-          OVER_QUERY_LIMIT: "Se superó el límite de consultas de Google Maps. Intenta más tarde.",
-          UNKNOWN_ERROR: `Error interno de Google Maps${detail}. Intenta de nuevo.`,
+          ZERO_RESULTS: "No encontramos esa dirección. Prueba con algo más específico.",
+          REQUEST_DENIED: "Error de configuración de la API (Denegado)",
+          INVALID_REQUEST: "Dirección inválida",
+          OVER_QUERY_LIMIT: "Límite de consultas excedido",
+          UNKNOWN_ERROR: "Error desconocido de Google Maps",
         };
-        throw new Error(messages[data.status] ?? `Error de geolocalización: ${data.status}${detail}`);
+        const errorMsg = messages[data.status] || `Error de geolocalización: ${data.status}${detail}`;
+        toast.error(errorMsg);
+        setError(errorMsg); // Mantener para el banner principal si es necesario
       }
     } catch (e: any) {
-      setError(e.message);
+      const errorMessage = "Error de conexión con el servicio de mapas";
+      toast.error(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsGeocoding(false);
     }
