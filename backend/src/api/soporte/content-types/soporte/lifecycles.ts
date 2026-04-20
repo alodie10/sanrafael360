@@ -1,4 +1,4 @@
-import { createNegocioRepository } from '../../negocio/repositories/negocio-repository';
+import { createNegocioRepository } from '../../../../negocio/repositories/negocio-repository';
 
 export default {
   async afterCreate(event: any) {
