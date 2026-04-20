@@ -52,16 +52,6 @@ export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: true,
-          styles: [
-            {
-              "elementType": "geometry",
-              "stylers": [{ "color": "#1e293b" }]
-            },
-            {
-              "elementType": "labels.text.fill",
-              "stylers": [{ "color": "#94a3b8" }]
-            }
-          ]
         });
 
         // Marcador Avanzado

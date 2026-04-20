@@ -1,6 +1,4 @@
-"use client";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { 
   ShieldCheck, 
   Users, 
@@ -20,7 +18,16 @@ import ActivityLogView from "./ActivityLogView";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
   const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity'>('claims');
-  const [claims] = useState(initialClaims);
+  const [claims, setClaims] = useState(initialClaims);
+
+  // Sincronizar estado cuando router.refresh() trae nuevas props del servidor
+  useEffect(() => {
+    setClaims(initialClaims);
+  }, [initialClaims]);
+
+  const handleResolveLocally = (documentId: string) => {
+    setClaims(prev => prev.filter(c => c.documentId !== documentId));
+  };
 
   return (
     <div className="min-h-screen bg-black pb-20 pt-24">
@@ -95,6 +102,7 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
                         key={claim.id} 
                         claim={claim} 
                         jwt={session.jwt as string}
+                        onResolve={() => handleResolveLocally(claim.documentId)}
                       />
                     ))}
                   </div>

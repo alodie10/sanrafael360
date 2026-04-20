@@ -94,7 +94,7 @@ export class NegocioRepository {
     if (emailService) {
       return await emailService.send({
         to,
-        from: 'San Rafael 360 <no-reply@sanrafael360.com>',
+        from: 'San Rafael 360 <no-reply@sanrafael360.com.ar>',
         subject,
         html,
         text,
