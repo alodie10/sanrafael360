@@ -125,16 +125,28 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     await repo.update(id, data);
     await repo.publish(id);
 
-    // Log Activity
-    await (strapi.documents('api::actividad.actividad' as any) as any).create({
-      data: {
-        accion: isApproved ? 'Reclamo Aprobado' : 'Reclamo Rechazado',
-        detalles: `El reclamo de ${negocio.nombre} fue ${isApproved ? 'aprobado' : 'rechazado'}${motivo ? ': ' + motivo : ''}`,
-        negocio: id,
-        usuario: negocio.owner?.id,
-        tipo: isApproved ? 'success' : 'error'
-      }
-    }).catch(err => strapi.log.error(`[ActivityLog] Error logging claim resolution: ${err.message}`));
+    // DIAGNÓSTICO FORZADO - ESCRIBIR ERROR A ARCHIVO FÍSICO
+    const fs = require('fs');
+    const path = require('path');
+    const diagPath = path.join(process.cwd(), 'DIAGNOSTICO_REAL.txt');
+
+    try {
+      // 1. Log de Actividad
+      await (strapi.documents('api::actividad.actividad' as any) as any).create({
+        data: {
+          accion: isApproved ? 'Reclamo Aprobado' : 'Reclamo Rechazado',
+          detalles: `El reclamo de ${negocio.nombre} fue ${isApproved ? 'aprobado' : 'rechazado'}${motivo ? ': ' + motivo : ''}`,
+          negocio: id,
+          usuario: negocio.owner?.id,
+          tipo: isApproved ? 'success' : 'error'
+        }
+      });
+      fs.appendFileSync(diagPath, `[${new Date().toISOString()}] ✅ Actividad creada correctamente\n`);
+    } catch (err: any) {
+      const errorMsg = `[${new Date().toISOString()}] ❌ ERROR ACTIVIDAD: ${err.message}\n${JSON.stringify(err.details || {}, null, 2)}\n`;
+      fs.appendFileSync(diagPath, errorMsg);
+      strapi.log.error(errorMsg);
+    }
 
     const subject = isApproved ? '¡Bienvenido a San Rafael 360!' : 'Actualización sobre tu solicitud de reclamo';
     const ownerEmail = negocio.owner?.email;
@@ -161,9 +173,16 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
             </div>
            </div>`;
 
-      await repo.sendEmail(ownerEmail, subject, html).catch(e => strapi.log.error('Email error (User Notify):', e.message));
+      try {
+        await repo.sendEmail(ownerEmail, subject, html);
+        fs.appendFileSync(diagPath, `[${new Date().toISOString()}] ✅ Email enviado correctamente a ${ownerEmail}\n`);
+      } catch (e: any) {
+        const errorMsg = `[${new Date().toISOString()}] ❌ ERROR EMAIL (${ownerEmail}): ${e.message}\n`;
+        fs.appendFileSync(diagPath, errorMsg);
+        strapi.log.error(errorMsg);
+      }
     } else {
-      strapi.log.warn(`Cannot send notification for claim ${id}: Owner email not found.`);
+      fs.appendFileSync(diagPath, `[${new Date().toISOString()}] ⚠️ No se encontró email para el owner de ${id}\n`);
     }
 
     return { id, decision };
