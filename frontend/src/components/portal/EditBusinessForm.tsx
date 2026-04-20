@@ -100,7 +100,19 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       const data = await response.json();
 
       if (data.status === "OK") {
-        const { lat, lng } = data.results[0].geometry.location;
+        const result = data.results[0];
+        
+        // Validar si es una coincidencia demasiado genérica (ej: solo la ciudad)
+        const isTooGeneric = result.types.includes("locality") || result.types.includes("administrative_area_level_1");
+        const isApproximate = result.geometry.location_type === "APPROXIMATE";
+
+        if (result.partial_match || (isTooGeneric && isApproximate)) {
+          toast.error("Dirección imprecisa. Por favor, asegúrate de incluir el nombre de la calle y el número.");
+          setError("La dirección parece ser inválida o demasiado genérica.");
+          return;
+        }
+
+        const { lat, lng } = result.geometry.location;
         setLatitud(lat);
         setLongitud(lng);
         toast.success("Ubicación encontrada correctamente");
