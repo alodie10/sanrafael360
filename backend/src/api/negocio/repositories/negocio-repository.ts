@@ -90,17 +90,22 @@ export class NegocioRepository {
   }
 
   async sendEmail(to: string, subject: string, html: string, text?: string) {
-    const emailService = this.strapi.plugin('email')?.service('email');
-    if (emailService) {
-      return await emailService.send({
-        to,
-        from: 'San Rafael 360 <no-reply@sanrafael360.com>',
-        subject,
-        html,
-        text,
-      });
+    try {
+      const emailService = this.strapi.plugin('email')?.service('email');
+      if (emailService) {
+        return await emailService.send({
+          to,
+          from: 'San Rafael 360 <no-reply@sanrafael360.com>',
+          subject,
+          html,
+          text,
+        });
+      }
+      this.strapi.log.warn('Servicio de email no disponible en el repositorio');
+    } catch (err: any) {
+      this.strapi.log.error(`[NegocioRepository] Error controlado en sendEmail: ${err.message}`);
+      // No re-lanzamos el error para no colapsar la transacción de negocio
     }
-    throw new Error('Servicio de email no disponible');
   }
 
   async sendAdminEmail(subject: string, html: string) {

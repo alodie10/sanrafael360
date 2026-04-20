@@ -45,7 +45,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     return { id, status: 'pendiente' };
   },
 
-  async updateBusiness(id: string, userId: number, data: any, files: any) {
+  async updatePortal(id: string, userId: number, data: any, files: any) {
     const repo = createNegocioRepository(strapi);
     const negocio = await repo.findById(id, ['owner']);
     
@@ -104,7 +104,8 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
           </div>
         </div>
       `;
-      await repo.sendEmail(ownerEmail, subject, html).catch(e => strapi.log.error(`[EmailService] Error enviando a ${ownerEmail}: ${e.message}`));
+      // BLINDAJE SENIOR: Error de email no bloqueante en resolusión de reclamo
+      await repo.sendEmail(ownerEmail, subject, html).catch(e => strapi.log.error(`[EmailService] Error controlado enviando a ${ownerEmail}: ${e.message}`));
     }
 
     // Log Activity
