@@ -102,11 +102,12 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       if (data.status === "OK") {
         const result = data.results[0];
         
-        // Validar si es una coincidencia demasiado genérica (ej: solo la ciudad)
-        const isTooGeneric = result.types.includes("locality") || result.types.includes("administrative_area_level_1");
-        const isApproximate = result.geometry.location_type === "APPROXIMATE";
-
-        if (result.partial_match || (isTooGeneric && isApproximate)) {
+        // Determinar precisión
+        const isPrecise = result.geometry.location_type === "ROOFTOP" || result.geometry.location_type === "RANGE_INTERPOLATED";
+        const isGeneric = result.types.includes("locality") || result.types.includes("administrative_area_level_1");
+        
+        // Si no es preciso y además es una coincidencia parcial o genérica, rechazar
+        if (!isPrecise && (result.partial_match || isGeneric)) {
           toast.error("Dirección imprecisa. Por favor, asegúrate de incluir el nombre de la calle y el número.");
           setError("La dirección parece ser inválida o demasiado genérica.");
           return;
@@ -115,7 +116,9 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         const { lat, lng } = result.geometry.location;
         setLatitud(lat);
         setLongitud(lng);
-        toast.success("Ubicación encontrada correctamente");
+        toast.success(result.partial_match 
+          ? `Ubicación encontrada (corregida: ${result.formatted_address})` 
+          : "Ubicación encontrada correctamente");
       } else {
         const detail = data.error_message ? `: ${data.error_message}` : "";
         const messages: Record<string, string> = {
