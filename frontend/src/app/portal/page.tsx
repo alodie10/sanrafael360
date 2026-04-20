@@ -181,7 +181,11 @@ export default async function PortalPage() {
             </div>
           </div>
 
-          <SupportForm jwt={session.jwt as string} />
+          <SupportForm 
+            jwt={session.jwt as string} 
+            userEmail={session.user?.email || undefined}
+            userName={session.user?.name || undefined}
+          />
         </div>
       </main>
     </div>

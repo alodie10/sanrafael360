@@ -6,9 +6,11 @@ import { MessageSquare, Send, Loader2, CheckCircle2, AlertCircle } from "lucide-
 interface SupportFormProps {
   negocioId?: string;
   jwt: string;
+  userEmail?: string;
+  userName?: string;
 }
 
-export default function SupportForm({ negocioId, jwt }: SupportFormProps) {
+export default function SupportForm({ negocioId, jwt, userEmail, userName }: SupportFormProps) {
   const [asunto, setAsunto] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,13 +34,18 @@ export default function SupportForm({ negocioId, jwt }: SupportFormProps) {
           data: {
             asunto,
             mensaje,
+            email: userEmail,
+            nombre: userName,
             negocio: negocioId,
-            estado: "abierto"
+            estado: "pendiente"
           }
         })
       });
 
-      if (!res.ok) throw new Error("Error al enviar el ticket de soporte");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error?.message || "Error al enviar el ticket de soporte");
+      }
 
       setSent(true);
     } catch (e: any) {

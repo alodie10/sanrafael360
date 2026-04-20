@@ -96,7 +96,11 @@ export default async function SupportPage() {
                <div className="relative z-10">
                  <h2 className="text-3xl font-serif font-bold text-white mb-2 italic">Envíanos tu consulta</h2>
                  <p className="text-zinc-500 mb-10">Describe tu problema o solicitud de cambio con el mayor detalle posible.</p>
-                 <SupportForm jwt={session.jwt as string} />
+                 <SupportForm 
+                   jwt={session.jwt as string} 
+                   userEmail={session.user?.email || undefined}
+                   userName={session.user?.name || undefined}
+                 />
                </div>
             </div>
           </div>
