@@ -15,8 +15,10 @@ export default function ActivityLogView({ jwt, userId }: ActivityLogViewProps) {
   useEffect(() => {
     const fetchActivities = async () => {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-      // Simplificación Strapi 5: Usar filtro directo sobre la relación
-      const filterQuery = cleanUserId ? `&filters[usuario]=${cleanUserId}` : "";
+      
+      // Limpieza Senior: Asegurar ID puro eliminando :1 si existe
+      const formattedUserId = userId ? String(userId).split(':')[0] : null;
+      const filterQuery = formattedUserId ? `&filters[usuario][id][$eq]=${formattedUserId}` : "";
 
       try {
         const res = await fetch(`${strapiUrl}/api/actividades?populate=*&sort=createdAt:desc${filterQuery}`, {

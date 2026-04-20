@@ -24,14 +24,16 @@ export default function AddressAutocomplete({
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey) return;
 
+    // Regla 3: Unificación de versión y librerías
     const loader = new Loader({
       apiKey,
-      version: "weekly", // Estandarizado a weekly
-      libraries: ["marker", "places", "maps"],
+      version: "weekly", 
+      libraries: ["places", "marker", "maps"],
       language: "es",
     });
 
     let isMounted = true;
+    let observer: MutationObserver | null = null;
     let autocompleteElement: any = null;
 
     loader.load().then(async (google) => {
@@ -39,7 +41,7 @@ export default function AddressAutocomplete({
 
       const { PlaceAutocompleteElement } = await google.maps.importLibrary("places") as any;
       
-      // BLINDAJE REACT: Verificar si ya existe para evitar duplicados y errores de removeChild
+      // Evitar duplicados si el componente se re-renderiza sin desmontarse
       if (containerRef.current.querySelector('gmpx-place-autocomplete')) {
         setIsLoaded(true);
         return;
@@ -52,32 +54,36 @@ export default function AddressAutocomplete({
 
       autocompleteElement.classList.add("w-full");
       
-      // Limpiar de forma segura (sin tocar nodos de React si es posible)
+      // Inyección segura
       if (containerRef.current) {
-        containerRef.current.innerHTML = "";
-        containerRef.current.appendChild(autocompleteElement);
+        containerRef.current.replaceChildren(autocompleteElement);
       }
 
-      autocompleteElement.addEventListener("gmp-placeselect", (event: any) => {
+      // Regla 2: Listener con cleanup implícito
+      const handleSelect = (event: any) => {
         const place = event.place;
-        if (!place.location) return;
+        if (!place || !place.location) return;
 
         const formattedAddress = place.formattedAddress || "";
         setInputValue(formattedAddress);
         onAddressSelect(formattedAddress, place.location.lat(), place.location.lng());
-      });
+      };
+
+      autocompleteElement.addEventListener("gmp-placeselect", handleSelect);
 
       setIsLoaded(true);
     }).catch((e) => {
-      console.error("Error loading Google Maps (weekly):", e);
-      if (isMounted) setError("Error al cargar el buscador");
+      console.error("Error loading Google Maps (Senior Clean):", e);
+      if (isMounted) setError("Error al cargar buscador");
     });
 
+    // Regla 2: Cleanup Riguroso
     return () => {
       isMounted = false;
-      // Limpieza total del contenedor para que React no intente borrar nodos inexistentes
+      if (observer) observer.disconnect();
       if (containerRef.current) {
-        containerRef.current.innerHTML = "";
+        // No destruir el div, solo limpiar su contenido para la siguiente montura
+        containerRef.current.replaceChildren();
       }
     };
   }, [onAddressSelect]);
@@ -88,13 +94,17 @@ export default function AddressAutocomplete({
         {isLoaded ? <MapPin className="w-5 h-5" /> : <Loader2 className="w-5 h-5 animate-spin" />}
       </div>
       
-      {/* Contenedor estático para inyección manual */}
+      {/* Regla 1: El div contenedor SIEMPRE está en el DOM, no es condicional */}
       <div 
         ref={containerRef} 
         className={`w-full min-h-[56px] bg-slate-800 border border-white/10 rounded-2xl text-white overflow-hidden transition-all focus-within:ring-2 focus-within:ring-blue-500 ${className}`}
       >
+        {/* Usamos un placeholder visual mientras carga, pero el div padre es estático */}
         {!isLoaded && (
-          <div className="px-12 py-3.5 text-slate-500 italic">Inicializando buscador...</div>
+          <div className="px-12 py-3.5 text-slate-500 italic flex items-center gap-2">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Empieza a escribir...
+          </div>
         )}
       </div>
 
