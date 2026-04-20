@@ -124,7 +124,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
   async logActivity(tipo: 'info' | 'warning' | 'success' | 'error', accion: string, detalles: string, negocioId?: string, user?: any) {
     try {
       if (user && user.id) {
-        await strapi.documents('api::actividad.actividad').create({
+        await (strapi.documents('api::actividad.actividad' as any) as any).create({
           data: {
             tipo,
             accion,
