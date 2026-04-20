@@ -27,7 +27,7 @@ export default function AddressAutocomplete({
     const loader = new Loader({
       apiKey,
       version: "weekly",
-      libraries: ["places"],
+      libraries: ["marker", "places", "maps"],
       language: "es",
     });
 
