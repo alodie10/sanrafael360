@@ -42,7 +42,17 @@ export class DiscoveryService {
   }
 
   async discover(businessName: string): Promise<DiscoveryResult> {
-    const browser = await chromium.launch({ headless: true });
+    let browser;
+    try {
+      browser = await chromium.launch({ headless: true });
+    } catch (launchErr: any) {
+      console.warn(`[DiscoveryService] Browser launch failed (Likely missing in this environment): ${launchErr.message}`);
+      return {
+        success: false,
+        error: 'Navegador no disponible en el servidor (Playwright missing)'
+      };
+    }
+
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
       viewport: { width: 1280, height: 720 },
