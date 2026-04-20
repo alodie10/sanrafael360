@@ -15,8 +15,8 @@ export default function ActivityLogView({ jwt, userId }: ActivityLogViewProps) {
   useEffect(() => {
     const fetchActivities = async () => {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-      // Sanitizar el ID en caso de que traiga sufijos como :1
-      const cleanUserId = userId?.toString().split(':')[0];
+      // Blindaje absoluto: Forzar ID numérico eliminando :1 si existe mediante parseInt base 10
+      const cleanUserId = userId ? parseInt(userId.toString().split(':')[0], 10) : null;
       const filterQuery = cleanUserId ? `&filters[usuario][id][$eq]=${cleanUserId}` : "";
 
       try {

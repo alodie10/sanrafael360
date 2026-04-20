@@ -26,51 +26,58 @@ export default function AddressAutocomplete({
 
     const loader = new Loader({
       apiKey,
-      version: "weekly",
+      version: "weekly", // Estandarizado a weekly
       libraries: ["marker", "places", "maps"],
       language: "es",
     });
 
+    let isMounted = true;
+    let autocompleteElement: any = null;
+
     loader.load().then(async (google) => {
-      // Importar la librería de places de forma moderna (v3.56+)
+      if (!isMounted || !containerRef.current) return;
+
       const { PlaceAutocompleteElement } = await google.maps.importLibrary("places") as any;
       
-      if (!containerRef.current) return;
+      // BLINDAJE REACT: Verificar si ya existe para evitar duplicados y errores de removeChild
+      if (containerRef.current.querySelector('gmpx-place-autocomplete')) {
+        setIsLoaded(true);
+        return;
+      }
 
-      // Crear el elemento de autocompletado moderno (Web Component)
-      const autocompleteElement = new PlaceAutocompleteElement({
+      autocompleteElement = new PlaceAutocompleteElement({
         componentRestrictions: { country: "ar" },
         types: ["address"],
       });
 
-      // Estilizar el Shadow DOM para Pro Vibe (limitado, pero podemos aplicar clases al contenedor)
       autocompleteElement.classList.add("w-full");
       
-      // Limpiar contenedor y añadir el nuevo elemento
+      // Limpiar de forma segura (sin tocar nodos de React si es posible)
       containerRef.current.innerHTML = "";
       containerRef.current.appendChild(autocompleteElement);
 
-      // Listener para cambios de lugar (Sintaxis 2025)
       autocompleteElement.addEventListener("gmp-placeselect", (event: any) => {
         const place = event.place;
-        
-        if (!place.location) {
-          return;
-        }
+        if (!place.location) return;
 
-        const lat = place.location.lat();
-        const lng = place.location.lng();
         const formattedAddress = place.formattedAddress || "";
-
         setInputValue(formattedAddress);
-        onAddressSelect(formattedAddress, lat, lng);
+        onAddressSelect(formattedAddress, place.location.lat(), place.location.lng());
       });
 
       setIsLoaded(true);
     }).catch((e) => {
-      console.error("Error loading Google Maps v2025:", e);
-      setError("Error al cargar autocompletado moderno");
+      console.error("Error loading Google Maps (weekly):", e);
+      if (isMounted) setError("Error al cargar el buscador");
     });
+
+    return () => {
+      isMounted = false;
+      // Limpieza total del contenedor para que React no intente borrar nodos inexistentes
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
+      }
+    };
   }, [onAddressSelect]);
 
   return (
@@ -79,18 +86,18 @@ export default function AddressAutocomplete({
         {isLoaded ? <MapPin className="w-5 h-5" /> : <Loader2 className="w-5 h-5 animate-spin" />}
       </div>
       
+      {/* Contenedor estático para inyección manual */}
       <div 
         ref={containerRef} 
         className={`w-full min-h-[56px] bg-slate-800 border border-white/10 rounded-2xl text-white overflow-hidden transition-all focus-within:ring-2 focus-within:ring-blue-500 ${className}`}
       >
         {!isLoaded && (
-          <div className="px-12 py-3.5 text-slate-500 italic">Cargando buscador...</div>
+          <div className="px-12 py-3.5 text-slate-500 italic">Inicializando buscador...</div>
         )}
       </div>
 
       {error && <p className="text-xs text-red-500 mt-1 ml-1">{error}</p>}
       
-      {/* Estilos inyectados para el Web Component de Google */}
       <style jsx global>{`
         gmpx-place-autocomplete {
           --gmpx-font-family: inherit;

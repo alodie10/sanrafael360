@@ -10,8 +10,6 @@ interface GoogleMapProps {
   title?: string;
 }
 
-
-
 export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [googleMaps, setGoogleMaps] = useState<any>(null);
@@ -27,26 +25,38 @@ export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps
 
     const loader = new Loader({
       apiKey,
-      version: "weekly",
+      version: "weekly", // Consistente con AddressAutocomplete
       libraries: ["marker", "places", "maps"],
       language: "es",
     });
 
+    let isMounted = true;
+
     loader.load().then((google) => {
-      setGoogleMaps(google);
+      if (isMounted) setGoogleMaps(google);
     }).catch((e) => {
       console.error("Error al cargar Google Maps API:", e);
-      setError("Error al cargar el script de Google Maps");
+      if (isMounted) setError("Error al cargar el script de Google Maps");
     });
+
+    return () => {
+      isMounted = false;
+      // No limpiar innerHTML aquí para Mapas normales de Google, 
+      // ya que ellos gestionan su propia limpieza del div
+    };
   }, []);
 
   useEffect(() => {
     if (googleMaps && mapRef.current) {
       try {
+        // Limpiamos el contenedor antes de instanciar un nuevo mapa para evitar duplicados
+        // y errores de hidratación de React
+        mapRef.current.innerHTML = "";
+        
         const map = new googleMaps.maps.Map(mapRef.current, {
           center: { lat, lng },
           zoom,
-          mapId: "e9e8f6e7f7b7f7b7", // Usar un ID de mapa real si existe para custom styling
+          mapId: "e9e8f6e7f7b7f7b7", 
           disableDefaultUI: false,
           zoomControl: true,
           mapTypeControl: false,
@@ -54,7 +64,7 @@ export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps
           fullscreenControl: true,
         });
 
-        // Marcador Avanzado
+        // Marcador Avanzado (Sintaxis 2025 compatible con weekly)
         new googleMaps.maps.marker.AdvancedMarkerElement({
           position: { lat, lng },
           map,
