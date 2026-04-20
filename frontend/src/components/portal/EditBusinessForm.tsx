@@ -87,6 +87,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const handleGeocode = async () => {
     if (!direccion) return;
     setIsGeocoding(true);
+    setError(null);
     try {
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
       const response = await fetch(
@@ -98,12 +99,19 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         const { lat, lng } = data.results[0].geometry.location;
         setLatitud(lat);
         setLongitud(lng);
-        alert(`Ubicación validada con éxito: ${lat}, ${lng}`);
       } else {
-        throw new Error("No pudimos encontrar esa dirección en el mapa.");
+        const detail = data.error_message ? ` (${data.error_message})` : "";
+        const messages: Record<string, string> = {
+          ZERO_RESULTS: "No encontramos esa dirección. Intenta con una dirección más completa.",
+          REQUEST_DENIED: `La clave de Google Maps no tiene permisos para Geocoding${detail}.`,
+          INVALID_REQUEST: "La solicitud es inválida. Verifica que la dirección sea correcta.",
+          OVER_QUERY_LIMIT: "Se superó el límite de consultas de Google Maps. Intenta más tarde.",
+          UNKNOWN_ERROR: `Error interno de Google Maps${detail}. Intenta de nuevo.`,
+        };
+        throw new Error(messages[data.status] ?? `Error de geolocalización: ${data.status}${detail}`);
       }
     } catch (e: any) {
-      alert(e.message);
+      setError(e.message);
     } finally {
       setIsGeocoding(false);
     }
@@ -246,22 +254,24 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Dirección</label>
-                <div className="flex gap-2">
+                <div className="relative">
                   <input 
                     type="text"
                     value={direccion}
                     onChange={(e) => setDireccion(e.target.value)}
                     placeholder="Ej: Av. Mitre 123"
-                    className="flex-1 px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white"
+                    className="w-full pl-5 pr-28 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   />
                   <button 
                     onClick={handleGeocode}
                     disabled={isGeocoding || !direccion}
                     type="button"
-                    className="px-4 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-2xl border border-blue-500/30 transition-all flex items-center gap-2"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-xl border border-blue-500/30 transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    {isGeocoding ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Search className="w-4 h-4" />}
-                    <span className="hidden md:inline text-xs font-bold uppercase">Validar</span>
+                    {isGeocoding 
+                      ? <div className="w-3.5 h-3.5 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" /> 
+                      : <Search className="w-3.5 h-3.5" />}
+                    <span className="text-xs font-bold uppercase">Validar</span>
                   </button>
                 </div>
                 {latitud && (
