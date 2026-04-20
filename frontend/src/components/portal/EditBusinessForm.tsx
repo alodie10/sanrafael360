@@ -20,6 +20,8 @@ import { useRouter } from "next/navigation";
 import { getStrapiMedia } from "@/lib/strapi";
 import ScheduleEditor from "./ScheduleEditor";
 import { toast } from "sonner";
+import AddressAutocomplete from "./AddressAutocomplete";
+import GoogleMap from "@/components/common/GoogleMap";
 
 interface EditBusinessFormProps {
   negocio: any;
@@ -85,60 +87,11 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     setNewGalleryFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleGeocode = async () => {
-    if (!direccion) return;
-    
-    setIsGeocoding(true);
-    setError(null);
-    // Limpiar coordenadas previas para evitar confusión si falla la nueva búsqueda
-    setLatitud(null);
-    setLongitud(null);
-
-    try {
-      // Llamamos a nuestra propia API proxy para evitar problemas de CORS
-      const response = await fetch(`/api/geocode?address=${encodeURIComponent(direccion)}`);
-      const data = await response.json();
-
-      if (data.status === "OK") {
-        const result = data.results[0];
-        
-        // Determinar precisión
-        const isPrecise = result.geometry.location_type === "ROOFTOP" || result.geometry.location_type === "RANGE_INTERPOLATED";
-        const isGeneric = result.types.includes("locality") || result.types.includes("administrative_area_level_1");
-        
-        // Si no es preciso y además es una coincidencia parcial o genérica, rechazar
-        if (!isPrecise && (result.partial_match || isGeneric)) {
-          toast.error("Dirección imprecisa. Por favor, asegúrate de incluir el nombre de la calle y el número.");
-          setError("La dirección parece ser inválida o demasiado genérica.");
-          return;
-        }
-
-        const { lat, lng } = result.geometry.location;
-        setLatitud(lat);
-        setLongitud(lng);
-        toast.success(result.partial_match 
-          ? `Ubicación encontrada (corregida: ${result.formatted_address})` 
-          : "Ubicación encontrada correctamente");
-      } else {
-        const detail = data.error_message ? `: ${data.error_message}` : "";
-        const messages: Record<string, string> = {
-          ZERO_RESULTS: "No encontramos esa dirección. Prueba con algo más específico.",
-          REQUEST_DENIED: "Error de configuración de la API (Denegado)",
-          INVALID_REQUEST: "Dirección inválida",
-          OVER_QUERY_LIMIT: "Límite de consultas excedido",
-          UNKNOWN_ERROR: "Error desconocido de Google Maps",
-        };
-        const errorMsg = messages[data.status] || `Error de geolocalización: ${data.status}${detail}`;
-        toast.error(errorMsg);
-        setError(errorMsg); // Mantener para el banner principal si es necesario
-      }
-    } catch (e: any) {
-      const errorMessage = "Error de conexión con el servicio de mapas";
-      toast.error(errorMessage);
-      setError(errorMessage);
-    } finally {
-      setIsGeocoding(false);
-    }
+  const onAddressSelect = (formattedAddress: string, lat: number, lng: number) => {
+    setDireccion(formattedAddress);
+    setLatitud(lat);
+    setLongitud(lng);
+    toast.success("Dirección validada correctamente");
   };
 
   const handleSave = async () => {
@@ -276,30 +229,37 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                   className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Dirección</label>
-                <div className="relative">
-                  <input 
-                    type="text"
-                    value={direccion}
-                    onChange={(e) => setDireccion(e.target.value)}
-                    placeholder="Ej: Av. Mitre 123"
-                    className="w-full pl-5 pr-28 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Dirección</label>
+                  <AddressAutocomplete 
+                    initialValue={direccion}
+                    onAddressSelect={onAddressSelect}
                   />
-                  <button 
-                    onClick={handleGeocode}
-                    disabled={isGeocoding || !direccion}
-                    type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-xl border border-blue-500/30 transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {isGeocoding 
-                      ? <div className="w-3.5 h-3.5 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" /> 
-                      : <Search className="w-3.5 h-3.5" />}
-                    <span className="text-xs font-bold uppercase">Validar</span>
-                  </button>
                 </div>
-                {latitud && (
-                  <p className="text-[10px] text-green-500 mt-1 ml-1 font-bold">✓ Ubicación válida ({latitud.toFixed(4)}, {longitud.toFixed(4)})</p>
+                
+                {latitud && longitud && (
+                  <div className="animate-in fade-in zoom-in-95 duration-500 overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
+                    <div className="h-[250px] w-full">
+                      <GoogleMap 
+                        lat={latitud} 
+                        lng={longitud} 
+                        title={nombre}
+                      />
+                    </div>
+                    <div className="bg-slate-800/80 px-4 py-2 flex items-center justify-between">
+                      <p className="text-[10px] text-green-500 font-bold uppercase tracking-wider">
+                        ✓ Coordenadas capturadas: {latitud.toFixed(4)}, {longitud.toFixed(4)}
+                      </p>
+                      <button 
+                        type="button"
+                        onClick={() => { setLatitud(null); setLongitud(null); }}
+                        className="text-[10px] text-slate-400 hover:text-white underline uppercase tracking-wider font-bold"
+                      >
+                        Limpiar Mapa
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

@@ -28,7 +28,7 @@ export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps
     const loader = new Loader({
       apiKey,
       version: "weekly",
-      libraries: ["marker"],
+      libraries: ["marker", "places", "maps"],
       language: "es",
     });
 
@@ -46,19 +46,31 @@ export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps
         const map = new googleMaps.maps.Map(mapRef.current, {
           center: { lat, lng },
           zoom,
-          mapId: "DEMO_MAP_ID",
+          mapId: "e9e8f6e7f7b7f7b7", // Usar un ID de mapa real si existe para custom styling
           disableDefaultUI: false,
           zoomControl: true,
           mapTypeControl: false,
-          streetViewControl: true,
+          streetViewControl: false,
           fullscreenControl: true,
+          styles: [
+            {
+              "elementType": "geometry",
+              "stylers": [{ "color": "#1e293b" }]
+            },
+            {
+              "elementType": "labels.text.fill",
+              "stylers": [{ "color": "#94a3b8" }]
+            }
+          ]
         });
 
+        // Marcador Avanzado
         new googleMaps.maps.marker.AdvancedMarkerElement({
           position: { lat, lng },
           map,
           title: title || "Ubicación",
         });
+
       } catch (err) {
         console.error("Error al instanciar el mapa:", err);
       }
