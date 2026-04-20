@@ -11,19 +11,28 @@ import {
   AlertCircle
 } from "lucide-react";
 import AdminClaimCard from "@/components/portal/AdminClaimCard";
+import AdminDashboardContainer from "@/components/portal/AdminDashboardContainer";
 import Link from "next/link";
 
 async function getPendingClaims(jwt: string) {
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-  const res = await fetch(`${strapiUrl}/api/negocios/admin/pending-claims`, {
-    headers: {
-      Authorization: `Bearer ${jwt}`,
-    },
-    cache: 'no-store'
-  });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.data || [];
+  try {
+    const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+    const res = await fetch(`${strapiUrl}/api/negocios/admin/pending-claims`, {
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+      cache: 'no-store'
+    });
+    if (!res.ok) {
+      console.error(`[Admin] Error fetching claims: ${res.status}`);
+      return [];
+    }
+    const data = await res.json();
+    return data.data || [];
+  } catch (error) {
+    console.error("[Admin] Network error fetching claims:", error);
+    return [];
+  }
 }
 
 export default async function AdminDashboardPage() {
