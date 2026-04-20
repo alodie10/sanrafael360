@@ -53,8 +53,10 @@ export default function AddressAutocomplete({
       autocompleteElement.classList.add("w-full");
       
       // Limpiar de forma segura (sin tocar nodos de React si es posible)
-      containerRef.current.innerHTML = "";
-      containerRef.current.appendChild(autocompleteElement);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
+        containerRef.current.appendChild(autocompleteElement);
+      }
 
       autocompleteElement.addEventListener("gmp-placeselect", (event: any) => {
         const place = event.place;
