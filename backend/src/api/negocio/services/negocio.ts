@@ -15,27 +15,17 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       descripcion: bodyData.message || negocio.descripcion
     });
 
-
-    
-    // Normalize file key: check for 'documentacion_reclamo' OR fallback to 'files'
     const rawFile = files?.documentacion_reclamo || files?.files || files?.file;
-    
     if (rawFile) {
-      // Handle Strapi 5 sometimes sending file as a single object or an array of 1 element
       const claimFile = Array.isArray(rawFile) ? rawFile[0] : rawFile;
-
-      
       try {
-        // Use documentId in Strapi 5 to insure we link to the document draft/published correctly
         await repo.uploadFile(updated.documentId, 'documentacion_reclamo', claimFile);
-
       } catch (uploadErr: any) {
         strapi.log.error(`[ClaimFlow] Upload failed: ${uploadErr.message}`);
       }
-    } else {
-
     }
 
+    // Notificación Admin
     await repo.sendAdminEmail(
       `Nuevo Reclamo: ${negocio.nombre}`,
       `<div style="font-family: sans-serif; padding: 25px; border: 1px solid #eee; border-radius: 12px;">
@@ -48,55 +38,25 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
         </div>
       </div>`
     ).catch(e => strapi.log.error('Email error (Admin Notify):', e.message));
+
+    // Log Activity
+    await this.logActivity('info', 'Nuevo Reclamo', `El usuario ${user.email} reclamó el negocio ${negocio.nombre}`, id, user);
     
     return { id, status: 'pendiente' };
   },
 
-  async getOwnerNegocios(userId: number) {
-    const repo = createNegocioRepository(strapi);
-    const res = await repo.findByOwner(userId, ['logo', 'categoria', 'imagen_portada', 'galeria']);
-    return Array.from(new Map((res as any[]).map(i => [i.id, i])).values());
-  },
-
-  async updatePortal(id: string, userId: number, bodyData: any, files: any) {
+  async updateBusiness(id: string, userId: number, data: any, files: any) {
     const repo = createNegocioRepository(strapi);
     const negocio = await repo.findById(id, ['owner']);
-    if (!negocio) throw new NotFoundError('Negocio');
-    if (Number(negocio.owner?.id) !== Number(userId)) throw new ForbiddenError();
-
-    const allowed = [
-      'nombre', 
-      'direccion', 
-      'latitud', 
-      'longitud', 
-      'descripcion', 
-      'facebook', 
-      'instagram', 
-      'website', 
-      'reserva_habilitada', 
-      'galeria', 
-      'price_range', 
-      'schedules'
-    ];
     
-    const normalizeTime = (time: string | null) => {
-      if (!time) return null;
-      if (/^\d{2}:\d{2}$/.test(time)) return `${time}:00.000`;
-      return time;
-    };
+    if (!negocio) throw new NotFoundError('Negocio');
+    if (negocio.owner?.id !== userId) throw new ForbiddenError('No eres el dueño de este negocio');
 
-    const updateData: any = {};
-    allowed.forEach(f => { 
-      if (bodyData[f] !== undefined) {
-        if (f === 'schedules' && Array.isArray(bodyData[f])) {
-          updateData[f] = bodyData[f].map((s: any) => ({
-            ...s,
-            opening_time: normalizeTime(s.opening_time),
-            closing_time: normalizeTime(s.closing_time)
-          }));
-        } else {
-          updateData[f] = bodyData[f];
-        }
+    const protectedFields = ['nombre', 'categoria', 'documentacion_reclamo', 'estado_reclamo', 'owner', 'premium', 'destacado'];
+    const updateData = { ...data };
+    protectedFields.forEach(field => {
+      if (updateData[field] !== undefined && updateData[field] !== negocio[field]) {
+         delete updateData[field];
       }
     });
 
@@ -109,15 +69,8 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     await repo.publish(id);
 
     // Log Activity
-    await (strapi.documents('api::actividad.actividad' as any) as any).create({
-      data: {
-        accion: 'Actualización de Perfil',
-        detalles: `El dueño actualizó la información pública de ${negocio.nombre}`,
-        negocio: negocio.id,
-        usuario: userId,
-        tipo: 'info'
-      }
-    }).catch(err => strapi.log.error(`[ActivityLog] Error: ${err.message}`));
+    await this.logActivity('info', 'Actualización de Perfil', `El dueño actualizó la información de ${negocio.nombre}`, id, { id: userId });
+
     return updated;
   },
 
@@ -127,62 +80,62 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     if (!negocio) throw new NotFoundError('Negocio');
 
     const isApproved = decision === 'approved';
-    const data = isApproved ? { estado_reclamo: 'aprobado' } : { estado_reclamo: 'ninguno', owner: null };
+    const data = isApproved ? { estado_reclamo: 'aprobado' } : { estado_reclamo: 'ninguno', owner: null, trigger_discovery: true };
     
     await repo.update(id, data);
     await repo.publish(id);
 
-    try {
-      // 1. Log de Actividad - USAR documentId (Soporte Strapi 5)
-      const ownerDocId = negocio.owner?.documentId;
-      
-      if (ownerDocId) {
-        await (strapi.documents('api::actividad.actividad' as any) as any).create({
-          data: {
-            accion: isApproved ? 'Reclamo Aprobado' : 'Reclamo Rechazado',
-            detalles: `El reclamo de ${negocio.nombre} fue ${isApproved ? 'aprobado' : 'rechazado'}${motivo ? ': ' + motivo : ''}`,
-            negocio: id, // id es el documentId de la URL
-            usuario: ownerDocId,
-            tipo: isApproved ? 'success' : 'error'
-          }
-        });
-      } else {
-        strapi.log.warn(`[ActivityLog] No se pudo crear log: owner sin documentId para negocio ${id}`);
-      }
-    } catch (err: any) {
-      strapi.log.error(`[ActivityLog] Error: ${err.message}`);
+    const ownerEmail = negocio.owner?.email;
+    if (ownerEmail) {
+      const subject = isApproved ? '¡Tu reclamo ha sido aprobado!' : 'Información sobre tu reclamo';
+      const html = `
+        <div style="font-family: sans-serif; padding: 25px; border: 1px solid #eee; border-radius: 12px; max-width: 600px;">
+          <h2 style="color: ${isApproved ? '#16a34a' : '#dc2626'};">${isApproved ? 'Felicidades, tu negocio es tuyo' : 'Tu reclamo ha sido revisado'}</h2>
+          <p>Hola, el equipo de <b>San Rafael 360</b> ha procesado tu solicitud para <b>${negocio.nombre}</b>.</p>
+          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
+            <p><strong>Estado:</strong> ${isApproved ? 'Aprobado ✅' : 'Rechazado ❌'}</p>
+            ${motivo ? `<p><strong>Motivo:</strong> ${motivo}</p>` : ''}
+          </div>
+          ${isApproved ? '<p>Ya puedes acceder al portal para editar tu información premium.</p>' : '<p>Si crees que esto es un error, por favor contáctanos via Soporte.</p>'}
+          <div style="margin-top: 30px; text-align: center;">
+            <a href="https://www.sanrafael360.com/portal" style="background: #111; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ir al Portal</a>
+          </div>
+        </div>
+      `;
+      await repo.sendEmail(ownerEmail, subject, html).catch(e => strapi.log.error(`[EmailService] Error enviando a ${ownerEmail}: ${e.message}`));
     }
 
-    const subject = isApproved ? '¡Bienvenido a San Rafael 360!' : 'Actualización sobre tu solicitud de reclamo';
-    const ownerEmail = negocio.owner?.email;
-    const portalUrl = 'https://www.sanrafael360.com/portal';
-    
-    if (ownerEmail) {
-      const html = isApproved 
-        ? `<div style="font-family: sans-serif; color: #333;">
-            <h2 style="color: #2563eb;">¡Felicidades, ${negocio.nombre} ya es tuyo!</h2>
-            <p>Tu solicitud de propiedad ha sido aprobada. Ya puedes empezar a gestionar tu perfil, actualizar horarios y subir fotos.</p>
-            <p><b>Mensaje del administrador:</b> ${motivo}</p>
-            <div style="margin: 30px 0;">
-              <a href="${portalUrl}" style="background: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Acceder a mi Portal</a>
-            </div>
-            <p style="font-size: 12px; color: #666;">Si el botón no funciona, copia y pega este link: ${portalUrl}</p>
-           </div>`
-        : `<div style="font-family: sans-serif; color: #333;">
-            <h2 style="color: #dc2626;">Información sobre tu solicitud</h2>
-            <p>Tu solicitud de reclamo para <b>${negocio.nombre}</b> ha sido rechazada por el siguiente motivo:</p>
-            <p style="background: #fef2f2; padding: 15px; border-left: 4px solid #dc2626;">"${motivo}"</p>
-            <p>No te preocupes, puedes volver a intentarlo corrigiendo la documentación o el mensaje en el portal.</p>
-            <div style="margin: 30px 0;">
-              <a href="${portalUrl}" style="background: #374151; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Volver a intentar</a>
-            </div>
-           </div>`;
-
-      await repo.sendEmail(ownerEmail, subject, html).catch(e => strapi.log.error(`[EmailService] Error enviando a ${ownerEmail}: ${e.message}`));
-    } else {
-      strapi.log.warn(`[EmailService] No se envió notificación: email no encontrado para negocio ${id}`);
+    // Log Activity
+    const ownerId = negocio.owner?.id;
+    if (ownerId) {
+      await this.logActivity(
+        isApproved ? 'success' : 'error',
+        isApproved ? 'Reclamo Aprobado' : 'Reclamo Rechazado',
+        `El reclamo fue ${isApproved ? 'aprobado' : 'rechazado'}${motivo ? ': ' + motivo : ''}`,
+        id,
+        { id: ownerId }
+      );
     }
 
     return { id, decision };
+  },
+
+  // Helper para actividades
+  async logActivity(tipo: 'info' | 'warning' | 'success' | 'error', accion: string, detalles: string, negocioId?: string, user?: any) {
+    try {
+      if (user && user.id) {
+        await strapi.documents('api::actividad.actividad').create({
+          data: {
+            tipo,
+            accion,
+            detalles,
+            negocio: negocioId,
+            usuario: user.id,
+          }
+        });
+      }
+    } catch (err: any) {
+      strapi.log.error(`[ActivityLog] Error persistente: ${err.message}`);
+    }
   }
 }));
