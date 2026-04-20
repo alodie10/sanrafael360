@@ -15,8 +15,10 @@ export default function ActivityLogView({ jwt, userId }: ActivityLogViewProps) {
   useEffect(() => {
     const fetchActivities = async () => {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-      // Filtrar por usuario si es dueño, o mostrar todo si es admin
-      const filterQuery = userId ? `&filters[usuario][id][$eq]=${userId}` : "";
+      // Sanitizar el ID en caso de que traiga sufijos como :1
+      const cleanUserId = userId?.toString().split(':')[0];
+      const filterQuery = cleanUserId ? `&filters[usuario][id][$eq]=${cleanUserId}` : "";
+
       try {
         const res = await fetch(`${strapiUrl}/api/actividades?populate=*&sort=createdAt:desc${filterQuery}`, {
           headers: { Authorization: `Bearer ${jwt}` }
