@@ -125,27 +125,25 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     await repo.update(id, data);
     await repo.publish(id);
 
-    // DIAGNÓSTICO FORZADO - ESCRIBIR ERROR A ARCHIVO FÍSICO
-    const fs = require('fs');
-    const path = require('path');
-    const diagPath = path.join(process.cwd(), 'DIAGNOSTICO_REAL.txt');
-
     try {
-      // 1. Log de Actividad
-      await (strapi.documents('api::actividad.actividad' as any) as any).create({
-        data: {
-          accion: isApproved ? 'Reclamo Aprobado' : 'Reclamo Rechazado',
-          detalles: `El reclamo de ${negocio.nombre} fue ${isApproved ? 'aprobado' : 'rechazado'}${motivo ? ': ' + motivo : ''}`,
-          negocio: id,
-          usuario: negocio.owner?.id,
-          tipo: isApproved ? 'success' : 'error'
-        }
-      });
-      fs.appendFileSync(diagPath, `[${new Date().toISOString()}] ✅ Actividad creada correctamente\n`);
+      // 1. Log de Actividad - USAR documentId (Soporte Strapi 5)
+      const ownerDocId = negocio.owner?.documentId;
+      
+      if (ownerDocId) {
+        await (strapi.documents('api::actividad.actividad' as any) as any).create({
+          data: {
+            accion: isApproved ? 'Reclamo Aprobado' : 'Reclamo Rechazado',
+            detalles: `El reclamo de ${negocio.nombre} fue ${isApproved ? 'aprobado' : 'rechazado'}${motivo ? ': ' + motivo : ''}`,
+            negocio: id, // id es el documentId de la URL
+            usuario: ownerDocId,
+            tipo: isApproved ? 'success' : 'error'
+          }
+        });
+      } else {
+        strapi.log.warn(`[ActivityLog] No se pudo crear log: owner sin documentId para negocio ${id}`);
+      }
     } catch (err: any) {
-      const errorMsg = `[${new Date().toISOString()}] ❌ ERROR ACTIVIDAD: ${err.message}\n${JSON.stringify(err.details || {}, null, 2)}\n`;
-      fs.appendFileSync(diagPath, errorMsg);
-      strapi.log.error(errorMsg);
+      strapi.log.error(`[ActivityLog] Error: ${err.message}`);
     }
 
     const subject = isApproved ? '¡Bienvenido a San Rafael 360!' : 'Actualización sobre tu solicitud de reclamo';
@@ -173,16 +171,9 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
             </div>
            </div>`;
 
-      try {
-        await repo.sendEmail(ownerEmail, subject, html);
-        fs.appendFileSync(diagPath, `[${new Date().toISOString()}] ✅ Email enviado correctamente a ${ownerEmail}\n`);
-      } catch (e: any) {
-        const errorMsg = `[${new Date().toISOString()}] ❌ ERROR EMAIL (${ownerEmail}): ${e.message}\n`;
-        fs.appendFileSync(diagPath, errorMsg);
-        strapi.log.error(errorMsg);
-      }
+      await repo.sendEmail(ownerEmail, subject, html).catch(e => strapi.log.error(`[EmailService] Error enviando a ${ownerEmail}: ${e.message}`));
     } else {
-      fs.appendFileSync(diagPath, `[${new Date().toISOString()}] ⚠️ No se encontró email para el owner de ${id}\n`);
+      strapi.log.warn(`[EmailService] No se envió notificación: email no encontrado para negocio ${id}`);
     }
 
     return { id, decision };
