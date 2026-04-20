@@ -29,8 +29,8 @@ export default ({ env }) => ({
         apiKey: env('RESEND_API_KEY', 're_placeholder'),
       },
       settings: {
-        defaultFrom: env('RESEND_DEFAULT_FROM', 'no-reply@sanrafael360.com.ar'),
-        defaultReplyTo: env('RESEND_DEFAULT_REPLY_TO', 'admin@sanrafael360.com.ar'),
+        defaultFrom: env('RESEND_DEFAULT_FROM', 'no-reply@sanrafael360.com'),
+        defaultReplyTo: env('RESEND_DEFAULT_REPLY_TO', 'admin@sanrafael360.com'),
       },
     },
   },

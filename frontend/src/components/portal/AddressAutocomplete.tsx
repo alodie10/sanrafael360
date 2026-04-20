@@ -15,7 +15,7 @@ export default function AddressAutocomplete({
   onAddressSelect,
   className = ""
 }: AddressAutocompleteProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState(initialValue);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,30 +26,41 @@ export default function AddressAutocomplete({
 
     const loader = new Loader({
       apiKey,
-      version: "weekly",
-      libraries: ["marker", "places", "maps"],
+      version: "beta", // PlaceAutocompleteElement requiere version beta o semanal reciente
+      libraries: ["places", "marker"],
       language: "es",
     });
 
-    loader.load().then((google) => {
-      if (!inputRef.current) return;
+    loader.load().then(async (google) => {
+      // Importar la librería de places de forma moderna (v3.56+)
+      const { PlaceAutocompleteElement } = await google.maps.importLibrary("places") as any;
+      
+      if (!containerRef.current) return;
 
-      const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
-        componentRestrictions: { country: "ar" }, // Restringir a Argentina
-        fields: ["address_components", "geometry", "formatted_address"],
+      // Crear el elemento de autocompletado moderno (Web Component)
+      const autocompleteElement = new PlaceAutocompleteElement({
+        componentRestrictions: { country: "ar" },
         types: ["address"],
       });
 
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
+      // Estilizar el Shadow DOM para Pro Vibe (limitado, pero podemos aplicar clases al contenedor)
+      autocompleteElement.classList.add("w-full");
+      
+      // Limpiar contenedor y añadir el nuevo elemento
+      containerRef.current.innerHTML = "";
+      containerRef.current.appendChild(autocompleteElement);
+
+      // Listener para cambios de lugar (Sintaxis 2025)
+      autocompleteElement.addEventListener("gmp-placeselect", (event: any) => {
+        const place = event.place;
         
-        if (!place.geometry || !place.geometry.location) {
+        if (!place.location) {
           return;
         }
 
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-        const formattedAddress = place.formatted_address || "";
+        const lat = place.location.lat();
+        const lng = place.location.lng();
+        const formattedAddress = place.formattedAddress || "";
 
         setInputValue(formattedAddress);
         onAddressSelect(formattedAddress, lat, lng);
@@ -57,25 +68,45 @@ export default function AddressAutocomplete({
 
       setIsLoaded(true);
     }).catch((e) => {
-      console.error("Error loading Google Places:", e);
-      setError("Error al cargar autocompletado");
+      console.error("Error loading Google Maps v2025:", e);
+      setError("Error al cargar autocompletado moderno");
     });
   }, [onAddressSelect]);
 
   return (
     <div className="relative group">
-      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors">
+      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 z-10 pointer-events-none">
         {isLoaded ? <MapPin className="w-5 h-5" /> : <Loader2 className="w-5 h-5 animate-spin" />}
       </div>
-      <input
-        ref={inputRef}
-        type="text"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        placeholder="Busca tu dirección (ej: Av. Mitre 123)"
-        className={`w-full pl-12 pr-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${className}`}
-      />
+      
+      <div 
+        ref={containerRef} 
+        className={`w-full min-h-[56px] bg-slate-800 border border-white/10 rounded-2xl text-white overflow-hidden transition-all focus-within:ring-2 focus-within:ring-blue-500 ${className}`}
+      >
+        {!isLoaded && (
+          <div className="px-12 py-3.5 text-slate-500 italic">Cargando buscador...</div>
+        )}
+      </div>
+
       {error && <p className="text-xs text-red-500 mt-1 ml-1">{error}</p>}
+      
+      {/* Estilos inyectados para el Web Component de Google */}
+      <style jsx global>{`
+        gmpx-place-autocomplete {
+          --gmpx-font-family: inherit;
+          --gmpx-bg-color: transparent;
+          --gmpx-color: white;
+          width: 100%;
+        }
+        gmpx-place-autocomplete input {
+          background: transparent !important;
+          border: none !important;
+          color: white !important;
+          padding-left: 3rem !important;
+          height: 54px !important;
+          font-size: 0.875rem !important;
+        }
+      `}</style>
     </div>
   );
 }
