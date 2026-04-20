@@ -83,7 +83,9 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     const data = isApproved ? { estado_reclamo: 'aprobado' } : { estado_reclamo: 'ninguno', owner: null, trigger_discovery: true };
     
     await repo.update(id, data);
-    await repo.publish(id);
+    if (isApproved) {
+      await repo.publish(id);
+    }
 
     const ownerEmail = negocio.owner?.email;
     if (ownerEmail) {
