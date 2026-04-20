@@ -1,4 +1,5 @@
 "use client";
+/* v20-stabilized-dom */
 
 import { useEffect, useRef, useState } from "react";
 import { Loader } from "@googlemaps/js-api-loader";
@@ -93,19 +94,20 @@ export default function AddressAutocomplete({
       <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 z-10 pointer-events-none">
         {isLoaded ? <MapPin className="w-5 h-5" /> : <Loader2 className="w-5 h-5 animate-spin" />}
       </div>
-      
-      {/* Regla 1: El div contenedor SIEMPRE está en el DOM, no es condicional */}
-      <div 
-        ref={containerRef} 
-        className={`w-full min-h-[56px] bg-slate-800 border border-white/10 rounded-2xl text-white overflow-hidden transition-all focus-within:ring-2 focus-within:ring-blue-500 ${className}`}
-      >
-        {/* Usamos un placeholder visual mientras carga, pero el div padre es estático */}
+
+      {/* CRÍTICO: Este div está absolutamente vacío en el JSX.
+          React NUNCA gestiona sus hijos. Solo Google Maps lo usa.
+          El placeholder de carga vive en un div HERMANO, no adentro. */}
+      <div className={`relative w-full min-h-[56px] bg-slate-800 border border-white/10 rounded-2xl text-white overflow-hidden transition-all focus-within:ring-2 focus-within:ring-blue-500 ${className}`}>
+        {/* Placeholder gestionado por React — vive FUERA del ref */}
         {!isLoaded && (
-          <div className="px-12 py-3.5 text-slate-500 italic flex items-center gap-2">
+          <div className="absolute inset-0 px-12 py-3.5 text-slate-500 italic flex items-center gap-2 pointer-events-none">
             <Loader2 className="w-3 h-3 animate-spin" />
             Empieza a escribir...
           </div>
         )}
+        {/* Contenedor para Google Maps — React no lo toca por dentro */}
+        <div ref={containerRef} className="w-full h-full" />
       </div>
 
       {error && <p className="text-xs text-red-500 mt-1 ml-1">{error}</p>}
