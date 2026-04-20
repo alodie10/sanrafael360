@@ -36,10 +36,17 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
 
     }
 
-    await repo.sendEmail(
-      'diegocristianalonso@gmail.com',
-      `Nuevo reclamo: ${negocio.nombre}`,
-      `<p>El usuario <b>${user.email}</b> ha iniciado un reclamo para el negocio <b>${negocio.nombre}</b>.</p><p>Mensaje: ${bodyData.message || 'Sin mensaje'}</p>`
+    await repo.sendAdminEmail(
+      `Nuevo Reclamo: ${negocio.nombre}`,
+      `<div style="font-family: sans-serif; padding: 25px; border: 1px solid #eee; border-radius: 12px;">
+        <h2 style="color: #2563eb;">Se ha recibido un nuevo reclamo de propiedad</h2>
+        <p><strong>Negocio:</strong> ${negocio.nombre}</p>
+        <p><strong>Usuario:</strong> ${user.email}</p>
+        <p><strong>Mensaje:</strong> ${bodyData.message || 'Sin mensaje'}</p>
+        <div style="margin-top: 25px;">
+          <a href="https://www.sanrafael360.com/portal/admin" style="background: #111; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver en el Panel Admin</a>
+        </div>
+      </div>`
     ).catch(e => strapi.log.error('Email error (Admin Notify):', e.message));
     
     return { id, status: 'pendiente' };

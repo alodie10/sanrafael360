@@ -94,13 +94,17 @@ export class NegocioRepository {
     if (emailService) {
       return await emailService.send({
         to,
-        from: 'San Rafael 360 <no-reply@sanrafael360.com.ar>',
+        from: 'San Rafael 360 <no-reply@sanrafael360.com>',
         subject,
         html,
         text,
       });
     }
     throw new Error('Servicio de email no disponible');
+  }
+
+  async sendAdminEmail(subject: string, html: string) {
+    return await this.sendEmail('diegocristianalonso@gmail.com', subject, html);
   }
 }
 
