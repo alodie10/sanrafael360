@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { DiscoveryService } from '../src/services/discovery-service';
+import { DiscoveryService } from '../../src/services/discovery-service';
 
 test.describe('Discovery Service Unit Validation', () => {
   const service = new DiscoveryService();

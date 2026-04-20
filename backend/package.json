@@ -15,8 +15,8 @@
     "upgrade:dry": "npx @strapi/upgrade latest --dry",
     "upload-logos": "tsx scripts/upload-logos.ts",
     "sync-covers": "powershell scripts/sync-covers-forced.ps1",
-    "test:unit": "vitest run test/unit",
-    "test:integration": "vitest run test/integration",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "npx playwright test tests/integration",
     "test": "vitest"
   },
   "dependencies": {
