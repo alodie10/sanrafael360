@@ -219,42 +219,48 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                <MapPin className="w-6 h-6 text-blue-400" />
                Identidad y Ubicación
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="flex flex-col gap-8 mb-6">
+              {/* Nombre Comercial - Ancho Completo */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nombre Comercial</label>
                 <input 
                   type="text"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white"
+                  placeholder="Ej: Mi Negocio"
+                  className="w-full px-5 py-4 bg-slate-800 border border-white/10 rounded-2xl text-white text-lg font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 />
               </div>
-              <div className="space-y-4">
+
+              {/* Dirección y Mapa - Configuración Vertical */}
+              <div className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Dirección</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Dirección Exacta</label>
                   <AddressAutocomplete 
                     initialValue={direccion}
                     onAddressSelect={onAddressSelect}
+                    className="text-lg"
                   />
                 </div>
                 
                 {latitud && longitud && (
-                  <div className="animate-in fade-in zoom-in-95 duration-500 overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
-                    <div className="h-[250px] w-full">
+                  <div className="animate-in fade-in slide-in-from-top-4 duration-700 overflow-hidden rounded-3xl border border-white/10 shadow-2xl shadow-blue-500/5">
+                    <div className="h-[400px] w-full relative">
                       <GoogleMap 
                         lat={latitud} 
                         lng={longitud} 
                         title={nombre}
                       />
                     </div>
-                    <div className="bg-slate-800/80 px-4 py-2 flex items-center justify-between">
-                      <p className="text-[10px] text-green-500 font-bold uppercase tracking-wider">
-                        ✓ Coordenadas capturadas: {latitud.toFixed(4)}, {longitud.toFixed(4)}
+                    <div className="bg-slate-800/80 px-6 py-3 flex items-center justify-between border-t border-white/5">
+                      <p className="text-xs text-green-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Coordenadas Confirmadas: {latitud.toFixed(6)}, {longitud.toFixed(6)}
                       </p>
                       <button 
                         type="button"
                         onClick={() => { setLatitud(null); setLongitud(null); }}
-                        className="text-[10px] text-slate-400 hover:text-white underline uppercase tracking-wider font-bold"
+                        className="text-xs text-slate-400 hover:text-white underline underline-offset-4 uppercase tracking-wider font-bold transition-colors"
                       >
                         Limpiar Mapa
                       </button>
