@@ -1,6 +1,6 @@
 import type { Core } from '@strapi/strapi';
 
-const config: Core.Config.Middlewares = [
+const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Middlewares => [
   'strapi::logger',
   'strapi::errors',
   'global::errorHandler',
@@ -45,13 +45,9 @@ const config: Core.Config.Middlewares = [
   {
     name: 'strapi::cors',
     config: {
-      origin: [
-        'http://localhost:3000', 
-        'https://www.sanrafael360.com', 
-        'https://sanrafael360.com',
-        'https://sanrafael360.vercel.app',
-        /\.vercel\.app$/
-      ],
+      origin: env('CORS_ORIGIN', '*').split(','),
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
+      headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
       keepHeaderOnError: true,
     },
   },
