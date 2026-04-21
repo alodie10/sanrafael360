@@ -12,26 +12,49 @@ interface ActivityLogViewProps {
 export default function ActivityLogView({ jwt, userId }: ActivityLogViewProps) {
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     const fetchActivities = async () => {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-      
       try {
-        const res = await fetch(`${strapiUrl}/api/actividades?populate=*&sort=createdAt:desc`, {
+        // Populate explícito — populate=* falla con 'Invalid key usuario' en Strapi v5
+        // porque users-permissions tiene restricciones en wildcard populate.
+        const params = new URLSearchParams({
+          "populate[negocio][fields][0]": "nombre",
+          "populate[negocio][fields][1]": "slug",
+          "sort": "createdAt:desc",
+          "pagination[limit]": "50",
+        });
+        // Solo populamos usuario si no estamos filtrando por usuario
+        // (en ese caso ya sabemos quién es)
+        if (!userId) {
+          params.set("populate[usuario][fields][0]", "username");
+          params.set("populate[usuario][fields][1]", "email");
+        }
+
+        const res = await fetch(`${strapiUrl}/api/actividades?${params.toString()}`, {
           headers: { Authorization: `Bearer ${jwt}` }
         });
+
+        if (!res.ok) {
+          console.error("[ActivityLog] Error HTTP:", res.status);
+          setFetchError(true);
+          return;
+        }
+
         const data = await res.json();
         setActivities(data.data || []);
       } catch (e) {
-        console.error("Error fetching activity logs:", e);
+        console.error("[ActivityLog] Error fetching:", e);
+        setFetchError(true);
       } finally {
         setLoading(false);
       }
     };
 
     fetchActivities();
-  }, [jwt, userId]);
+  }, [jwt, userId]); // Una sola llamada — sin polling
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -43,6 +66,16 @@ export default function ActivityLogView({ jwt, userId }: ActivityLogViewProps) {
   };
 
   if (loading) return <div className="p-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /></div>;
+
+  if (fetchError) {
+    return (
+      <div className="bg-red-500/10 border border-red-500/20 rounded-[2.5rem] p-12 text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <p className="text-white font-serif italic text-xl mb-2">Error al cargar el log</p>
+        <p className="text-zinc-400 text-sm">No pudimos recuperar la actividad reciente. Por favor, intenta de nuevo más tarde.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
