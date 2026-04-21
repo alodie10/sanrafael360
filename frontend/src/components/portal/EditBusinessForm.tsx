@@ -13,7 +13,8 @@ import {
   Upload,
   CalendarDays,
   MapPin,
-  Search
+  Search,
+  Video
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -72,7 +73,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       setCoverFile(file);
       setCoverPreview(URL.createObjectURL(file));
     } else if (type === 'gallery') {
-      const availableSlots = 4 - existingGallery.length - newGalleryFiles.length;
+      const MAX_GALLERY = 20;
+      const availableSlots = MAX_GALLERY - existingGallery.length - newGalleryFiles.length;
       if (availableSlots <= 0) return;
       const selection = Array.from(files).slice(0, availableSlots);
       setNewGalleryFiles(prev => [...prev, ...selection]);
@@ -372,41 +374,65 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
           <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
             <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
                <ImageIcon className="w-6 h-6 text-blue-400" />
-               Galería de Fotos
+               Galería de Multimedia
             </h2>
-            <p className="text-sm text-slate-400 mb-6">Sube hasta 4 fotos para mostrar en la galería principal (reemplazará las actuales).</p>
+            <p className="text-sm text-slate-400 mb-6 font-medium">Sube hasta <strong className="text-white">20 fotos o videos</strong> para destacar tu comercio en la plataforma.</p>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
               {/* Existing Photos */}
-              {existingGallery.map((photo: any) => (
-                <div key={`existing-${photo.id}`} className="relative group aspect-square rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
-                  <img src={getStrapiMedia(photo.url)} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="" />
-                  <button 
-                    onClick={() => removeExistingPhoto(photo.id)}
-                    className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+              {existingGallery.map((photo: any) => {
+                const isVideo = photo.mime?.startsWith('video/') || photo.ext?.match(/\.(mp4|mov|webm)$/i);
+                return (
+                  <div key={`existing-${photo.id}`} className="relative group aspect-square rounded-2xl bg-zinc-950 border border-white/10 overflow-hidden shadow-xl">
+                    {isVideo ? (
+                      <video src={getStrapiMedia(photo.url)} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted />
+                    ) : (
+                      <img src={getStrapiMedia(photo.url)} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="" />
+                    )}
+                    {isVideo && (
+                      <div className="absolute top-2 left-2 p-1.5 bg-black/40 backdrop-blur-md rounded-lg border border-white/10">
+                        <Video className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                    <button 
+                      onClick={() => removeExistingPhoto(photo.id)}
+                      className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
 
-              {/* New Photos */}
-              {newGalleryFiles.map((file, i) => (
-                <div key={`new-${i}`} className="relative group aspect-square rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
-                  <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="" />
-                  <button 
-                    onClick={() => removeNewPhoto(i)}
-                    className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+              {/* New Files (Mixed) */}
+              {newGalleryFiles.map((file, i) => {
+                const isVideo = file.type.startsWith('video/');
+                return (
+                  <div key={`new-${i}`} className="relative group aspect-square rounded-2xl bg-zinc-950 border border-white/10 overflow-hidden shadow-xl">
+                    {isVideo ? (
+                      <video src={URL.createObjectURL(file)} className="w-full h-full object-cover" muted />
+                    ) : (
+                      <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="" />
+                    )}
+                    {isVideo && (
+                      <div className="absolute top-2 left-2 p-1.5 bg-blue-600/60 backdrop-blur-md rounded-lg border border-white/10">
+                        <Video className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                    <button 
+                      onClick={() => removeNewPhoto(i)}
+                      className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
 
-              {/* Empty Slots */}
-              {Array.from({ length: 4 - existingGallery.length - newGalleryFiles.length }).map((_, i) => (
+              {/* Empty Slots (Dynamic calculation) */}
+              {Array.from({ length: Math.max(0, 5 - (existingGallery.length + newGalleryFiles.length) % 5) }).map((_, i) => (
                 <div key={`empty-${i}`} className="aspect-square rounded-2xl bg-white/5 border-2 border-dashed border-white/10 flex items-center justify-center overflow-hidden">
-                  <ImageIcon className="w-6 h-6 text-white/10" />
+                  <Upload className="w-6 h-6 text-white/5" />
                 </div>
               ))}
             </div>
@@ -415,20 +441,20 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
               <input 
                 type="file" 
                 multiple 
-                accept="image/*"
+                accept="image/*,video/*"
                 onChange={(e) => handleFileChange(e, 'gallery')}
                 className="hidden" 
                 id="gallery-upload"
               />
               <label 
                 htmlFor="gallery-upload"
-                className="flex items-center justify-center gap-2 w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-white font-bold cursor-pointer transition-all border-dashed"
+                className="flex items-center justify-center gap-2 w-full py-4 px-6 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border-2 border-blue-600/30 rounded-2xl font-bold cursor-pointer transition-all border-dashed"
               >
-                <Upload className="w-5 h-5 text-blue-400" />
-                {(existingGallery.length + newGalleryFiles.length) > 0 ? "Añadir más fotos" : "Seleccionar hasta 4 fotos"}
+                <Upload className="w-5 h-5" />
+                {(existingGallery.length + newGalleryFiles.length) > 0 ? "Añadir más multimedia" : "Subir fotos o videos"}
               </label>
             </div>
-            <p className="text-[10px] text-slate-500 mt-3 text-center uppercase tracking-widest font-bold">Máximo 10MB en total</p>
+            <p className="text-[10px] text-slate-500 mt-3 text-center uppercase tracking-widest font-black">Máximo 20 elementos | Límite 50MB recomendado</p>
           </div>
         </div>
 
