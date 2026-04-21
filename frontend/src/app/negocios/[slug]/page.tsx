@@ -21,16 +21,17 @@ import {
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import WebsitePortlet from "@/components/business/WebsitePortlet";
-import BookingWidget from "@/components/business/BookingWidget";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import ReviewForm from "@/components/business/ReviewForm";
+import ReviewList from "@/components/business/ReviewList";
 
 export default function BusinessDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const [negocio, setNegocio] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
 
   // Claim Flow State
   const { data: session } = useSession();
@@ -63,8 +64,6 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       return;
     }
 
-    console.log("🚀 Iniciando solicitud de reclamo...");
-
     try {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
       const targetUrl = `${strapiUrl}/api/negocios/${negocio.documentId || negocio.id}/claim`;
@@ -79,49 +78,31 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         method: "POST",
         headers: {
           "Authorization": `Bearer ${session.jwt}`
-          // Note: Browser sets Content-Type to multipart/form-data with boundary
         },
         body: formData
       });
       
-      console.log(`📡 Respuesta recibida. Status: ${res.status}`);
-
-      // Intentar parsear el JSON solo si el status no es un error crudo del servidor
       let data: any = {};
       try {
         data = await res.json();
-      } catch (parseErr) {
-        console.error("❌ Fallo al parsear JSON de respuesta:", parseErr);
-      }
+      } catch (parseErr) {}
 
       if (res.ok) {
-        alert("¡Tu solicitud de reclamo ha sido enviada exitosamente! Se revisará a la brevedad.");
+        alert("¡Tu solicitud de reclamo ha sido enviada exitosamente!");
         setShowClaimModal(false);
         setNegocio((prev: any) => prev ? { ...prev, estado_reclamo: 'pendiente' } : prev);
       } else {
-        const errorMsg = data.error?.message || `Error del servidor (${res.status})`;
-        setClaimErrorMessage(errorMsg);
+        setClaimErrorMessage(data.error?.message || "Error al enviar reclamo");
       }
-    } catch (e: any) {
-      console.error("💥 Error de red o en la solicitud:", e);
-      setClaimErrorMessage("No se pudo conectar con el servidor. Por favor verifica tu internet o intenta más tarde.");
+    } catch (e) {
+      setClaimErrorMessage("Error de conexión");
     } finally {
-      console.log("🏁 Finalizando estado de carga.");
       setIsClaiming(false);
     }
   };
 
-  /**
-   * Fixes UTF-8 text stored with Latin-1 double-encoding (e.g. "SÃ¡bado" → "Sábado").
-   * SOLO se aplica cuando se detectan los marcadores de corrupción 'Ã' o 'Â',
-   * que son las representaciones Latin-1 de los bytes UTF-8 0xC3 y 0xC2.
-   * Si el texto ya está bien codificado (escrito manualmente en Strapi), se devuelve intacto.
-   */
   const sanitizeText = (text: string): string => {
-    // Guard: si no hay marcadores de corrupción, el texto está limpio → no tocar
-    if (!text.includes('Ã') && !text.includes('Â')) {
-      return text;
-    }
+    if (!text.includes('Ã') && !text.includes('Â')) return text;
     try {
       const bytes = Uint8Array.from(text, (c) => c.charCodeAt(0));
       return new TextDecoder('utf-8', { fatal: false }).decode(bytes);
@@ -130,37 +111,43 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
     }
   };
 
+  const loadBusinessData = async () => {
+    try {
+      setLoading(true);
+      // Populate reviews and their users
+      const populate = "populate[categoria]=*&populate[logo]=*&populate[imagen_portada]=*&populate[galeria]=*&populate[schedules]=*&populate[resenas][populate][usuario]=*";
+      const res = await fetchFromStrapi(`negocios?filters[slug][$eq]=${slug}&${populate}`);
+      
+      let businessData = res.data?.[0];
+      
+      if (!businessData) {
+        const resById = await fetchFromStrapi(`negocios?filters[documentId][$eq]=${slug}&${populate}`);
+        businessData = resById.data?.[0];
+      }
+
+      if (businessData) {
+        setNegocio(businessData);
+        // Handle Strapi 5 document format or collection format
+        const fetchedReviews = businessData.resenas || [];
+        setReviews(fetchedReviews);
+      } else {
+        setError(true);
+      }
+    } catch (err) {
+      console.error("Error cargando negocio:", err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadBusiness = async () => {
-      try {
-        setLoading(true);
-        // Intentar buscar por slug o por documentId como fallback
-        const res = await fetchFromStrapi(`negocios?filters[slug][$eq]=${slug}&populate[categoria]=*&populate[logo]=*&populate[imagen_portada]=*&populate[galeria]=*&populate[schedules]=*`);
-        
-        let businessData = res.data?.[0];
-        
-        if (!businessData) {
-          // Fallback: buscar por documentId si el slug no coincide
-          const resById = await fetchFromStrapi(`negocios?filters[documentId][$eq]=${slug}&populate[categoria]=*&populate[logo]=*&populate[imagen_portada]=*&populate[galeria]=*&populate[schedules]=*`);
-          businessData = resById.data?.[0];
-        }
-
-        if (businessData) {
-          setNegocio(businessData);
-        } else {
-          setError(true);
-        }
-      } catch (err) {
-        console.error("Error cargando negocio:", err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadBusiness();
+    loadBusinessData();
   }, [slug]);
+
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((acc, r) => acc + (r.calificacion || r.attributes?.calificacion || 0), 0) / reviews.length).toFixed(1)
+    : "0.0";
 
   if (loading) {
     return (
@@ -281,9 +268,15 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
             <div className="flex-1 pb-4">
               <div className="flex items-center gap-2 text-secondary mb-4">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-current" />
+                  <Star 
+                    key={i} 
+                    className={cn(
+                      "w-5 h-5", 
+                      i < Math.round(Number(averageRating)) ? "fill-current" : "text-slate-600"
+                    )} 
+                  />
                 ))}
-                <span className="text-white/60 text-sm ml-2 font-medium">(4.8 / 5.0)</span>
+                <span className="text-white/60 text-sm ml-2 font-medium">({averageRating} / 5.0)</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-heading font-extrabold text-white mb-4 tracking-tight text-balance">
                 {negocio.nombre}
@@ -371,6 +364,24 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                 </div>
               </div>
             )}
+
+            {/* SECCIÓN DE RESEÑAS (RF-15) */}
+            <div className="pt-16 pb-8">
+              <h2 className="text-3xl font-serif italic text-white mb-10 flex items-center gap-4">
+                Opiniones de la Comunidad 
+                <span className="h-px flex-1 bg-white/5" />
+                <span className="text-sm font-sans font-black uppercase tracking-widest text-zinc-500">{reviews.length} reseñas</span>
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+                 <div>
+                    <ReviewForm negocioId={negocio.id} onSuccess={loadBusinessData} />
+                 </div>
+                 <div>
+                    <ReviewList reviews={reviews} />
+                 </div>
+              </div>
+            </div>
           </div>
 
           {/* Sidebar Info */}

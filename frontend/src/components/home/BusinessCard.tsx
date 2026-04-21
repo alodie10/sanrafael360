@@ -69,10 +69,28 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
 
         {/* Contenido */}
         <div className="p-8 pt-12">
-          <div className="flex items-center gap-1 text-secondary mb-3">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className={cn("w-4 h-4 fill-current", i === 4 && "opacity-40")} />
-            ))}
+          {/* Valoración Real (RF-15) */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-1 text-secondary">
+              {[...Array(5)].map((_, i) => {
+                const reviews = negocio.resenas || [];
+                const avg = reviews.length > 0 
+                  ? reviews.reduce((acc: number, r: any) => acc + (r.calificacion || 0), 0) / reviews.length 
+                  : 0;
+                return (
+                  <Star 
+                    key={i} 
+                    className={cn(
+                      "w-4 h-4", 
+                      i < Math.round(avg) ? "fill-current" : "text-slate-600"
+                    )} 
+                  />
+                );
+              })}
+            </div>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              {negocio.resenas?.length || 0} reseñas
+            </span>
           </div>
 
           <h3 className="text-2xl font-heading font-bold mb-3 text-white group-hover:text-primary transition-colors duration-300 line-clamp-1">

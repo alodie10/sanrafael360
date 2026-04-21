@@ -64,7 +64,8 @@ function HomeContent() {
         let pageCount = 1;
 
         do {
-          const negRes = await fetchFromStrapi(`negocios?populate=*&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=100`);
+          const populate = "populate[categoria]=*&populate[logo]=*&populate[imagen_portada]=*&populate[resenas][fields][0]=calificacion";
+          const negRes = await fetchFromStrapi(`negocios?${populate}&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=100`);
           if (negRes.data) {
             allNegocios = [...allNegocios, ...negRes.data];
           }
