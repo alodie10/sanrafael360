@@ -12,13 +12,13 @@ function parseGoogleHours(hoursText: string) {
   if (!hoursText) return [];
 
   const daysMapping: { [key: string]: string } = {
-    'lunes': 'lunes',
-    'martes': 'martes',
-    'miércoles': 'miércoles',
-    'jueves': 'jueves',
-    'viernes': 'viernes',
-    'sábado': 'sábado',
-    'domingo': 'domingo'
+    'lunes': 'Lunes',
+    'martes': 'Martes',
+    'miércoles': 'Miércoles',
+    'jueves': 'Jueves',
+    'viernes': 'Viernes',
+    'sábado': 'Sábado',
+    'domingo': 'Domingo'
   };
 
   const schedules: any[] = [];

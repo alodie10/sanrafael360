@@ -136,13 +136,13 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       try {
         setLoading(true);
         // Intentar buscar por slug o por documentId como fallback
-        const res = await fetchFromStrapi(`negocios?filters[slug][$eq]=${slug}&populate=*`);
+        const res = await fetchFromStrapi(`negocios?filters[slug][$eq]=${slug}&populate[categoria]=*&populate[logo]=*&populate[imagen_portada]=*&populate[galeria]=*&populate[schedules]=*`);
         
         let businessData = res.data?.[0];
         
         if (!businessData) {
           // Fallback: buscar por documentId si el slug no coincide
-          const resById = await fetchFromStrapi(`negocios?filters[documentId][$eq]=${slug}&populate=*`);
+          const resById = await fetchFromStrapi(`negocios?filters[documentId][$eq]=${slug}&populate[categoria]=*&populate[logo]=*&populate[imagen_portada]=*&populate[galeria]=*&populate[schedules]=*`);
           businessData = resById.data?.[0];
         }
 
@@ -191,6 +191,44 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
 
   const logoUrl = negocio.logo?.url;
   const coverUrl = negocio.imagen_portada?.url;
+
+  // Logic for "Abierto Ahora" (RF-11)
+  const getBusinessStatus = () => {
+    if (!negocio.schedules || negocio.schedules.length === 0) return null;
+
+    const days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    const now = new Date();
+    const currentDay = days[now.getDay()];
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    const todaySchedule = negocio.schedules.find((s: any) => s.day === currentDay);
+
+    if (!todaySchedule || todaySchedule.is_closed) {
+      return { status: "Cerrado", color: "text-red-500 bg-red-500/10 border-red-500/20" };
+    }
+
+    // Parse times (assuming format HH:mm:ss.SSS)
+    const parseTime = (timeStr: string) => {
+      const [h, m] = timeStr.split(":");
+      return parseInt(h) * 60 + parseInt(m);
+    };
+
+    const openTime = parseTime(todaySchedule.opening_time);
+    const closeTime = parseTime(todaySchedule.closing_time);
+
+    // Handle overnight schedules (e.g. 12:00 to 02:00)
+    const isCurrentlyOpen = closeTime < openTime
+      ? (currentTime >= openTime || currentTime <= closeTime)
+      : (currentTime >= openTime && currentTime <= closeTime);
+
+    if (isCurrentlyOpen) {
+      return { status: "Abierto ahora", color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" };
+    }
+
+    return { status: "Cerrado", color: "text-red-500 bg-red-500/10 border-red-500/20" };
+  };
+
+  const businessStatus = getBusinessStatus();
 
   return (
     <main className="min-h-screen bg-background pb-20">
@@ -251,6 +289,11 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                 {negocio.nombre}
               </h1>
               <div className="flex flex-wrap items-center gap-6 text-slate-300">
+                {businessStatus && (
+                   <div className={cn("px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border", businessStatus.color)}>
+                     {businessStatus.status}
+                   </div>
+                )}
                 <div className="flex items-center gap-2">
                    <MapPin className="w-4 h-4 text-primary" />
                    <span className="text-sm font-medium">{negocio.direccion || "San Rafael, Mendoza"}</span>
