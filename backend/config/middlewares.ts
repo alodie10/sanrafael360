@@ -47,7 +47,8 @@ const config: Core.Config.Middlewares = [
         'http://localhost:3000', 
         'https://www.sanrafael360.com', 
         'https://sanrafael360.com',
-        'https://sanrafael360.vercel.app'
+        'https://sanrafael360.vercel.app',
+        /\.vercel\.app$/
       ],
     },
   },
