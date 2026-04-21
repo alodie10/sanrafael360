@@ -6,9 +6,10 @@ import { Clock, History, Building2, User as UserIcon, AlertCircle, CheckCircle2,
 
 interface ActivityLogViewProps {
   jwt: string;
+  userId?: number;
 }
 
-export default function ActivityLogView({ jwt }: ActivityLogViewProps) {
+export default function ActivityLogView({ jwt, userId }: ActivityLogViewProps) {
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
