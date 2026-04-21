@@ -26,7 +26,10 @@ Este archivo proporciona el contexto crítico para que cualquier agente de IA (G
 - **Mandatory Server Logs Access**: Un agente de IA **NUNCA** debe adivinar el motivo de un "Crash" o "502 Bad Gateway" (Especialmente en Railway).
 - **Directiva de Login**: Si el agente no tiene acceso a los logs de Railway, su primer paso OBLIGATORIO debe ser ejecutar comando `railway login` en consola asíncrona para desencadenar el login en el navegador del usuario y obtener visión nativa mediante `railway logs`. No depender de tokens si estos fallan.
 - **Troubleshooting First**: Siempre visualizar el build log o el deploy log antes de sugerir cambios en código para errores de infraestructura.
-- **Directiva Node.js Path (CRÍTICO)**: El usuario **NO PUEDE** modificar las variables de entorno de su PC (PATH). Node, npm y npx están instalados en `C:\Users\dialonso\node.js\`. Mapea siempre el PATH internamente en tus comandos (`$env:PATH = 'C:\Users\dialonso\node.js;' + $env:PATH;`) y si le das instrucciones al usuario para que ejecute en su terminal, usa SIEMPRE la ruta absoluta (ej. `C:\Users\dialonso\node.js\npx.cmd`).
+- **Directiva Node.js Path (CRÍTICO)**: El agente debe asegurar que Node, npm y npx estén en el PATH. 
+  - **En Windows**: Se encuentran en `C:\Users\dialonso\node.js\`. Mapear `$env:PATH = 'C:\Users\dialonso\node.js;' + $env:PATH;`.
+  - **En Mac (actual)**: Se encuentran en `/Users/diego/.nvm/versions/node/v20.20.2/bin`. Mapear `export PATH="/Users/diego/.nvm/versions/node/v20.20.2/bin:$PATH"`.
+  - Si los comandos directos fallan, el agente debe buscar los binarios en rutas comunes y actualizar su contexto de ejecución.
 - **Zero-Trust Verification (CRÍTICO)**: Railway utiliza Zero Downtime Deployments. **NUNCA** asumas que un push se aplicó solo porque la API `/api/categorias` responde (eso medirá el despliegue viejo). Antes de declarar un éxito al usuario, el agente DEBE confirmar que el despliegue finalizó de construir (vía Railway web o CLI si el servicio está enlazado correctamente) Y debe advertir claramente qué partes puede probar automatizadamente y cuáles requieren que el usuario inicie sesión (ej: Content Manager).
 
 ---

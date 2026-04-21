@@ -21,6 +21,8 @@ export class DiscoveryService {
     booking: 'a[data-item-id="action:3"], a[aria-label*="Cita"], a[aria-label*="Reserva"]',
     resultTitle: 'h1.DUwDvf',
     hours: 'div[aria-label*="Cerrado"], div[aria-label*="Abierto"], .t39Tv',
+    notFoundContainer: 'div.Q2vSnd, div.id6v7, div.O0ZZCc', // Various containers for "No results" or "Partial match"
+    addPlaceButton: 'button.kyuRq, a[href*="addplace"]', // "Agregar un lugar faltante"
   };
 
   /**
@@ -46,7 +48,7 @@ export class DiscoveryService {
     try {
       browser = await chromium.launch({ headless: true });
     } catch (launchErr: any) {
-      console.warn(`[DiscoveryService] Browser launch failed (Likely missing in this environment): ${launchErr.message}`);
+      console.warn(`[DiscoveryService] Browser launch failed: ${launchErr.message}`);
       return {
         success: false,
         error: 'Navegador no disponible en el servidor (Playwright missing)'
@@ -62,52 +64,59 @@ export class DiscoveryService {
 
     try {
       // 1. Ir a Google Maps
-      await page.goto(`https://www.google.com/maps/search/${encodeURIComponent(businessName + ' San Rafael Mendoza')}`);
+      const query = encodeURIComponent(businessName + ' San Rafael Mendoza');
+      await page.goto(`https://www.google.com/maps/search/${query}`, { waitUntil: 'domcontentloaded' });
       
-      // Esperar a que los resultados carguen o que se abra la ficha directamente
-      // Si se abre la ficha, el h1 del título aparecerá.
-      try {
-        await page.waitForSelector(this.selectors.resultTitle, { timeout: 8000 });
-      } catch (e) {
-          // Si no cargó h1, quizás hay una lista de resultados. Intentamos clicar el primero.
-          const firstResult = page.locator('a.hfpxzc').first();
-          if (await firstResult.isVisible()) {
-              await firstResult.click();
-              await page.waitForSelector(this.selectors.resultTitle);
-          } else {
-              throw new Error('Negocio no encontrado en Google Maps');
-          }
+      // Competencia de detección: ¿Ficha directa, Lista de resultados, o No encontrado?
+      const result = await Promise.race([
+        page.waitForSelector(this.selectors.resultTitle, { timeout: 10000 }).then(() => 'CARD'),
+        page.waitForSelector('a.hfpxzc', { timeout: 10000 }).then(() => 'LIST'),
+        page.waitForSelector(this.selectors.notFoundContainer, { timeout: 10000 }).then(() => 'NOT_FOUND'),
+        page.waitForSelector(this.selectors.addPlaceButton, { timeout: 10000 }).then(() => 'NOT_FOUND'),
+        page.waitForFunction(() => {
+          const text = document.body.innerText;
+          return text.includes('No se ha podido encontrar') || 
+                 text.includes('Google Maps no puede encontrar') ||
+                 text.includes('Coincidencia parcial');
+        }, { timeout: 10000 }).then(() => 'NOT_FOUND_TEXT')
+      ]).catch(() => 'TIMEOUT');
+
+      if (result === 'LIST') {
+        const firstResult = page.locator('a.hfpxzc').first();
+        await firstResult.click();
+        // Esperamos un momento a ver si carga la ficha, pero si no, seguimos (podría ser una lista de uno)
+        await page.waitForSelector(this.selectors.resultTitle, { timeout: 5000 }).catch(() => {});
+      } else if (result === 'NOT_FOUND' || result === 'NOT_FOUND_TEXT' || result === 'TIMEOUT') {
+        throw new Error('Negocio no encontrado en Google Maps');
       }
 
-      const result: DiscoveryResult = {
+      const discoveryResult: DiscoveryResult = {
         google_maps_url: page.url(),
         success: true
       };
 
-      // 2. Extraer Website
-      // Usamos el data-item-id de Maps que es muy estable para el link de sitio web
+      // 2. Extraer Website (Item ID stable)
       const websiteLink = page.locator(this.selectors.website);
-      if (await websiteLink.isVisible()) {
-        result.website = await websiteLink.getAttribute('href') || undefined;
+      if (await websiteLink.isVisible({ timeout: 2000 }).catch(() => false)) {
+        discoveryResult.website = await websiteLink.getAttribute('href') || undefined;
       }
 
-      // 3. Extraer Link de Reservas / Turnos
-      // El data-item-id "action:3" suele ser para citas/reservas en la mayoría de fichas
+      // 3. Extraer Link de Reservas (Item ID stable)
       const bookingLink = page.locator(this.selectors.booking).first();
-      if (await bookingLink.isVisible()) {
-        result.reserva_url = await bookingLink.getAttribute('href') || undefined;
+      if (await bookingLink.isVisible({ timeout: 2000 }).catch(() => false)) {
+        discoveryResult.reserva_url = await bookingLink.getAttribute('href') || undefined;
       }
 
-      // 4. Extraer Horarios
+      // 4. Extraer Horarios (Aria-label stable)
       const hoursEl = page.locator(this.selectors.hours).first();
-      if (await hoursEl.isVisible()) {
+      if (await hoursEl.isVisible({ timeout: 2000 }).catch(() => false)) {
         const rawHours = await hoursEl.getAttribute('aria-label') || await hoursEl.innerText() || '';
         if (rawHours) {
-           result.horarios_texto = this.sanitizeText(rawHours);
+           discoveryResult.horarios_texto = this.sanitizeText(rawHours);
         }
       }
 
-      return result;
+      return discoveryResult;
 
     } catch (error: any) {
       return {
