@@ -146,12 +146,6 @@
       "type": "component",
       "repeatable": true,
       "component": "shared.schedule"
-    },
-    "resenas": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::resena.resena",
-      "mappedBy": "negocio"
     }
   }
 }

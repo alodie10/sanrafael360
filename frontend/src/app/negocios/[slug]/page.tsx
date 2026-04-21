@@ -21,17 +21,13 @@ import {
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import ReviewForm from "@/components/business/ReviewForm";
-import ReviewList from "@/components/business/ReviewList";
 
 export default function BusinessDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const [negocio, setNegocio] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [reviews, setReviews] = useState<any[]>([]);
 
   // Claim Flow State
   const { data: session } = useSession();
@@ -114,8 +110,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   const loadBusinessData = async () => {
     try {
       setLoading(true);
-      // Populate reviews and their users
-      const populate = "populate[categoria]=*&populate[logo]=*&populate[imagen_portada]=*&populate[galeria]=*&populate[schedules]=*&populate[resenas][populate][usuario]=*";
+      // Populate basic info
+      const populate = "populate[categoria]=*&populate[logo]=*&populate[imagen_portada]=*&populate[galeria]=*&populate[schedules]=*";
       const res = await fetchFromStrapi(`negocios?filters[slug][$eq]=${slug}&${populate}`);
       
       let businessData = res.data?.[0];
@@ -127,9 +123,6 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
 
       if (businessData) {
         setNegocio(businessData);
-        // Handle Strapi 5 document format or collection format
-        const fetchedReviews = businessData.resenas || [];
-        setReviews(fetchedReviews);
       } else {
         setError(true);
       }
@@ -145,9 +138,6 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
     loadBusinessData();
   }, [slug]);
 
-  const averageRating = reviews.length > 0
-    ? (reviews.reduce((acc, r) => acc + (r.calificacion || r.attributes?.calificacion || 0), 0) / reviews.length).toFixed(1)
-    : "0.0";
 
   if (loading) {
     return (
@@ -266,18 +256,6 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
             </motion.div>
 
             <div className="flex-1 pb-4">
-              <div className="flex items-center gap-2 text-secondary mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star 
-                    key={i} 
-                    className={cn(
-                      "w-5 h-5", 
-                      i < Math.round(Number(averageRating)) ? "fill-current" : "text-slate-600"
-                    )} 
-                  />
-                ))}
-                <span className="text-white/60 text-sm ml-2 font-medium">({averageRating} / 5.0)</span>
-              </div>
               <h1 className="text-4xl md:text-6xl font-heading font-extrabold text-white mb-4 tracking-tight text-balance">
                 {negocio.nombre}
               </h1>
@@ -365,23 +343,6 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
               </div>
             )}
 
-            {/* SECCIÓN DE RESEÑAS (RF-15) */}
-            <div className="pt-16 pb-8">
-              <h2 className="text-3xl font-serif italic text-white mb-10 flex items-center gap-4">
-                Opiniones de la Comunidad 
-                <span className="h-px flex-1 bg-white/5" />
-                <span className="text-sm font-sans font-black uppercase tracking-widest text-zinc-500">{reviews.length} reseñas</span>
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-                 <div>
-                    <ReviewForm negocioId={negocio.id} onSuccess={loadBusinessData} />
-                 </div>
-                 <div>
-                    <ReviewList reviews={reviews} />
-                 </div>
-              </div>
-            </div>
           </div>
 
           {/* Sidebar Info */}

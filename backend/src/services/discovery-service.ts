@@ -51,13 +51,7 @@ export class DiscoveryService {
     try {
       browser = await chromium.launch({ 
         headless: true,
-        args: [
-          '--no-sandbox', 
-          '--disable-setuid-sandbox', 
-          '--disable-dev-shm-usage',
-          '--window-size=1920,1080',
-          '--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-        ]
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
       });
     } catch (launchErr: any) {
       console.warn(`[DiscoveryService] Browser launch failed: ${launchErr.message}`);
@@ -69,73 +63,45 @@ export class DiscoveryService {
 
     console.log(`[DiscoveryService] Browser launched. Opening Google Maps...`);
     const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-      viewport: { width: 1920, height: 1080 },
-      deviceScaleFactor: 1,
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      viewport: { width: 1280, height: 800 },
       locale: 'es-AR',
-      timezoneId: 'America/Argentina/Buenos_Aires',
     });
     const page = await context.newPage();
 
     try {
-      // 1. Ir a Google Maps con búsqueda inteligente
-      const query = encodeURIComponent(businessName + ' San Rafael');
+      // 1. Ir a Google Maps con búsqueda ultra-específica
+      const query = encodeURIComponent(`${businessName} San Rafael Mendoza`);
       let targetUrl = `https://www.google.com/maps/search/${query}`;
       
       console.log(`[DiscoveryService] Navigating to: ${targetUrl}`);
       await page.goto(targetUrl, { waitUntil: 'load', timeout: 30000 });
       
-      // Manejar muro de Cookies si aparece (común en es-AR)
+      // Manejar muro de Cookies (común en es-AR)
       const cookieBtn = page.locator('button[aria-label*="Aceptar"], button[aria-label*="Agree"], button[aria-label*="Todo"]').first();
       if (await cookieBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-        console.log(`[DiscoveryService] Cookie consent detected. Clicking accept...`);
         await cookieBtn.click().catch(() => {});
       }
 
-      // Función para detectar el estado actual con mayor tolerancia
-      const detectState = async () => {
-        return await Promise.race([
-          page.waitForSelector('h1.DUwDvf, [role="main"] h1', { timeout: 10000 }).then(() => 'CARD'),
-          page.waitForSelector('a.hfpxzc, [role="article"] a', { timeout: 10000 }).then(() => 'LIST'),
-          page.waitForFunction(() => {
-            const txt = document.body.innerText;
-            return txt.includes('No se ha podido encontrar') || txt.includes('no puede encontrar') || txt.includes('No hay resultados');
-          }, { timeout: 10000 }).then(() => 'NOT_FOUND'),
-        ]).catch(() => 'TIMEOUT');
-      };
-
-      let state = await detectState();
+      // 2. Detección de Estado (Ficha, Lista o Not Found)
+      const state = await Promise.race([
+        page.waitForSelector('h1.DUwDvf, [role="main"] h1', { timeout: 10000 }).then(() => 'CARD'),
+        page.waitForSelector('a.hfpxzc, [role="article"] a', { timeout: 10000 }).then(() => 'LIST'),
+        page.waitForFunction(() => {
+          const txt = document.body.innerText;
+          return txt.includes('No se ha podido encontrar') || txt.includes('no puede encontrar') || txt.includes('No hay resultados');
+        }, { timeout: 10000 }).then(() => 'NOT_FOUND'),
+      ]).catch(() => 'TIMEOUT');
 
       if (state === 'LIST') {
-        console.log(`[DiscoveryService] List view detected. Attempting to enter first result...`);
-        // Intentar múltiples selectores de lista (Estándar y Vista Limitada)
-        const selectors = ['a.hfpxzc', '[role="article"] a', 'div[aria-label*="' + businessName + '"]', 'h3'];
-        let clicked = false;
-        
-        for (const sel of selectors) {
-          const loc = page.locator(sel).first();
-          if (await loc.isVisible().catch(() => false)) {
-            console.log(`[DiscoveryService] Clicking result with selector: ${sel}`);
-            await loc.click({ force: true }).catch(() => {});
-            clicked = true;
-            break;
-          }
-        }
-
-        if (!clicked) {
-          console.log(`[DiscoveryService] No standard selector worked. Trying text-based click...`);
-          await page.getByText(businessName, { exact: false }).first().click({ force: true }).catch(() => {});
-        }
-
+        console.log(`[DiscoveryService] List view detected. Clicking first result...`);
+        const firstResult = page.locator('a.hfpxzc, [role="article"] a').first();
+        await firstResult.click();
         await page.waitForSelector('h1.DUwDvf, [role="main"] h1', { timeout: 10000 }).catch(() => {});
-      } else if (state === 'TIMEOUT') {
-         // Verificación final si dio timeout: ¿Quizás ya estamos en la ficha?
-         const hasTitle = await page.locator('h1.DUwDvf').isVisible().catch(() => false);
-         if (!hasTitle) {
-            throw new Error(`Timeout esperando la ficha del negocio (${state})`);
-         }
-      } else if (state === 'NOT_FOUND') {
-         throw new Error(`Negocio no encontrado en Google Maps para '${businessName}'`);
+      } else if (state === 'NOT_FOUND' || state === 'TIMEOUT') {
+         // Verificación final: ¿Quizás la ficha cargó sin los selectores esperados?
+         const hasTitle = await page.locator('h1').count() > 0;
+         if (!hasTitle) throw new Error('Negocio no encontrado en Google Maps');
       }
 
       const discoveryResult: DiscoveryResult = {
@@ -143,67 +109,49 @@ export class DiscoveryService {
         success: true
       };
 
-      // 2. Extraer Website (Item ID stable)
-      const websiteLink = page.locator(this.selectors.website);
+      // 3. Extracción de Datos con selectores robustos
+      const websiteLink = page.locator('a[data-item-id="authority"]').first();
       if (await websiteLink.isVisible({ timeout: 2000 }).catch(() => false)) {
         discoveryResult.website = await websiteLink.getAttribute('href') || undefined;
       }
 
-      // 3. Extraer Link de Reservas (Item ID stable)
-      const bookingLink = page.locator(this.selectors.booking).first();
-      if (await bookingLink.isVisible({ timeout: 2000 }).catch(() => false)) {
-        discoveryResult.reserva_url = await bookingLink.getAttribute('href') || undefined;
-      }
+      // 4. Extracción de Horarios (Detección de Vista Limitada vs Full)
+      const isLimited = await page.evaluate(() => document.body.innerText.toLowerCase().includes('vista limitada'));
+      const hoursBtn = page.locator('button[data-item-id="oh"], [jsaction*="pane.wfopn.hours"], button[aria-label*="Horarios"]').first();
 
-      // 4. Extraer Horarios (Expanded Weekly)
-      const hoursBtn = page.locator(this.selectors.hoursButton).first();
-      if (await hoursBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+      if (await hoursBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
         try {
           await hoursBtn.click({ force: true });
-          const table = page.locator(this.selectors.hoursTable).first();
-          await table.waitFor({ state: 'visible', timeout: 5000 });
-          
-          const rows = page.locator(`${this.selectors.hoursTable} tr[aria-label]`);
-          const count = await rows.count();
-          
-          if (count > 0) {
-            let fullHours: string[] = [];
+          const rows = page.locator('table.e07nqc tr[aria-label]');
+          if (await rows.count() > 0) {
+            const fullHours: string[] = [];
+            const count = await rows.count();
             for (let i = 0; i < count; i++) {
               const label = await rows.nth(i).getAttribute('aria-label');
               if (label) fullHours.push(label);
             }
             discoveryResult.horarios_texto = this.sanitizeText(fullHours.join('; '));
           } else {
-            const text = await table.innerText();
-            discoveryResult.horarios_texto = this.sanitizeText(text);
+            discoveryResult.horarios_texto = this.sanitizeText(await hoursBtn.getAttribute('aria-label') || '');
           }
         } catch (e) {
-          console.warn(`[DiscoveryService] Failed to expand hours: ${e}`);
-          const fallback = await hoursBtn.getAttribute('aria-label') || await hoursBtn.innerText();
-          discoveryResult.horarios_texto = this.sanitizeText(fallback || '');
+          discoveryResult.horarios_texto = this.sanitizeText(await hoursBtn.getAttribute('aria-label') || '');
         }
-      } else {
-        // DEBUG: ¿Por qué no vemos el botón?
-        console.warn(`[DiscoveryService] Hours button NOT VISIBLE.`);
-        const title = await page.title();
-        const url = page.url();
-        const buttons = await page.evaluate(() => Array.from(document.querySelectorAll('button')).map(b => b.ariaLabel).filter(l => l));
-        const bodyText = await page.evaluate(() => document.body.innerText.slice(0, 2000));
-        console.log(`[DiscoveryService] Debug - URL: ${url}`);
-        console.log(`[DiscoveryService] Debug - Title: ${title}`);
-        console.log(`[DiscoveryService] Debug - All Buttons (#${buttons.length}):`, buttons);
-        console.log(`[DiscoveryService] Debug - Body Snippet:`, bodyText.replace(/\n/g, ' '));
+      } else if (isLimited) {
+        // En vista limitada los horarios suelen estar en el bloque principal de texto
+        const statusText = await page.locator('div[aria-label*="Cierra"], div[aria-label*="Abre"]').first().getAttribute('aria-label').catch(() => null);
+        if (statusText) {
+          discoveryResult.horarios_texto = this.sanitizeText(statusText);
+        }
       }
 
       return discoveryResult;
 
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message
-      };
+      console.warn(`[DiscoveryService] Discovery failed: ${error.message}`);
+      return { success: false, error: error.message };
     } finally {
-      await browser.close();
+      await browser.close().catch(() => {});
     }
   }
 

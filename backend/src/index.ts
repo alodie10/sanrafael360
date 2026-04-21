@@ -103,14 +103,8 @@ export default {
             actions.push('api::discovery.discovery.googleSync'); // Fix 403
             actions.push('api::actividad.actividad.find');       // Fix 500
             actions.push('api::actividad.actividad.create');
-            actions.push('api::resena.resena.find');
-            actions.push('api::resena.resena.create');
           }
 
-          // Todos los roles pueden buscar reseñas
-          if (roleType === 'public') {
-             actions.push('api::resena.resena.find');
-          }
 
           for (const action of actions) {
             const exists = await strapi.query('plugin::users-permissions.permission').findOne({
