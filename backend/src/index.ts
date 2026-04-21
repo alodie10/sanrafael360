@@ -100,6 +100,9 @@ export default {
             actions.push('api::negocio.negocio.adminPendingClaims');
             actions.push('api::negocio.negocio.adminResolveClaim');
             actions.push('api::negocio.negocio.resetClaimForTest');
+            actions.push('api::discovery.discovery.googleSync'); // Fix 403
+            actions.push('api::actividad.actividad.find');       // Fix 500
+            actions.push('api::actividad.actividad.create');
           }
 
           for (const action of actions) {
