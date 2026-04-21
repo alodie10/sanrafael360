@@ -61,6 +61,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     });
 
     const updated = await repo.update(id, updateData);
+    strapi.log.info(`[portalUpdate] Data for ${id}: ${JSON.stringify(updateData)}`);
     if (files) {
       if (files.logo) await repo.uploadFile(updated.documentId, 'logo', files.logo);
       if (files.imagen_portada) await repo.uploadFile(updated.documentId, 'imagen_portada', files.imagen_portada);

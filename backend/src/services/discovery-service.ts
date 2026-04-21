@@ -45,7 +45,7 @@ const DAY_INDEX_MAP: Record<number, string> = {
 function formatPlacesTime(hhmm: string): string {
   const h = hhmm.substring(0, 2).padStart(2, '0');
   const m = hhmm.substring(2, 4).padStart(2, '0');
-  return `${h}:${m}:00.000`;
+  return `${h}:${m}:00`;
 }
 
 /**
