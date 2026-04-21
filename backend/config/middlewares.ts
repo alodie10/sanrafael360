@@ -52,6 +52,7 @@ const config: Core.Config.Middlewares = [
         'https://sanrafael360.vercel.app',
         /\.vercel\.app$/
       ],
+      keepHeaderOnError: true,
     },
   },
   'strapi::poweredBy',
