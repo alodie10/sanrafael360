@@ -58,13 +58,24 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Database 
     },
   };
 
-  return {
+  const config = {
     connection: {
       client,
       ...connections[client],
       acquireConnectionTimeout: env.int('DATABASE_CONNECTION_TIMEOUT', 60000),
     },
   };
+
+  console.log(`[DatabaseConfig] Client: ${client}`);
+  if (client === 'postgres') {
+    const pg = config.connection.connection;
+    console.log(`[DatabaseConfig] Host: ${pg.host || 'via connectionString'}`);
+    console.log(`[DatabaseConfig] User: ${pg.user}`);
+    console.log(`[DatabaseConfig] Database: ${pg.database}`);
+    console.log(`[DatabaseConfig] Using connectionString: ${!!pg.connectionString}`);
+  }
+
+  return config;
 };
 
 export default config;
