@@ -19,7 +19,7 @@ export default function ActivityLogView({ jwt, userId }: ActivityLogViewProps) {
       
       // Limpieza Senior: Asegurar ID puro eliminando :1 si existe
       const formattedUserId = userId ? String(userId).split(':')[0] : null;
-      const filterQuery = formattedUserId ? `&filters[usuario][id][$eq]=${formattedUserId}` : "";
+      const filterQuery = formattedUserId ? `&filters[usuario]=${formattedUserId}` : "";
 
       try {
         const res = await fetch(`${strapiUrl}/api/actividades?populate=*&sort=createdAt:desc${filterQuery}`, {
