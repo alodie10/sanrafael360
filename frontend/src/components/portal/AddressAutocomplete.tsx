@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Loader } from "@googlemaps/js-api-loader";
 import { MapPin, Loader2 } from "lucide-react";
 
 interface AddressAutocompleteProps {
@@ -10,20 +11,23 @@ interface AddressAutocompleteProps {
 }
 
 /**
- * AddressAutocomplete — Google PlaceAutocompleteElement (2025 API)
+ * AddressAutocomplete
  *
- * Uses the new PlaceAutocompleteElement Web Component recommended from March 2025.
- * Falls back gracefully if the API key is missing or the library fails to load.
+ * Uses the singleton @googlemaps/js-api-loader so it never conflicts with
+ * GoogleMap.tsx which also uses the same Loader. Both components share the
+ * same underlying script tag — no "already defined" warnings.
  *
- * The previous implementation used google.maps.places.Autocomplete (classic),
- * which still works but generates a deprecation warning in the console.
+ * Tries PlaceAutocompleteElement (2025 API) first via importLibrary.
+ * Falls back to classic Autocomplete if not available (both APIs are loaded
+ * by the same Loader instance so the fallback always succeeds).
  */
 export default function AddressAutocomplete({
   initialValue = "",
   onAddressSelect,
   className = "",
 }: AddressAutocompleteProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Stable ref avoids re-running the Loader effect when parent re-renders
   const callbackRef = useRef(onAddressSelect);
   useEffect(() => { callbackRef.current = onAddressSelect; }, [onAddressSelect]);
 
@@ -31,7 +35,7 @@ export default function AddressAutocomplete({
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Sync if parent changes initialValue (e.g. on data load)
+  // Sync if parent changes initialValue externally (e.g. on data load)
   useEffect(() => {
     if (initialValue && initialValue !== inputValue) {
       setInputValue(initialValue);
@@ -40,53 +44,42 @@ export default function AddressAutocomplete({
 
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey || !containerRef.current) return;
+    if (!apiKey) return;
 
     let isMounted = true;
 
-    // Lazy-load the new maps/places bootstrap script (importLibrary pattern)
-    const scriptId = "google-maps-bootstrap";
-    const loadScript = (): Promise<void> => {
-      return new Promise((resolve, reject) => {
-        if ((window as any).google?.maps) { resolve(); return; }
-        if (document.getElementById(scriptId)) {
-          // Script already injected — wait for load
-          const existing = document.getElementById(scriptId) as HTMLScriptElement;
-          existing.addEventListener("load", () => resolve());
-          existing.addEventListener("error", reject);
-          return;
-        }
-        const script = document.createElement("script");
-        script.id = scriptId;
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=es&loading=async`;
-        script.async = true;
-        script.defer = true;
-        script.onload = () => resolve();
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-    };
+    // Singleton Loader — same config as GoogleMap.tsx to guarantee deduplication
+    const loader = new Loader({
+      apiKey,
+      version: "weekly",
+      libraries: ["places", "marker", "maps"],
+      language: "es",
+    });
 
-    loadScript()
-      .then(async () => {
-        if (!isMounted || !containerRef.current) return;
+    loader.load().then(async (google) => {
+      if (!isMounted || !inputRef.current) return;
 
-        // Try new PlaceAutocompleteElement first
-        const placesLib = await (window as any).google?.maps?.importLibrary?.("places").catch(() => null);
+      // ── Try PlaceAutocompleteElement (new 2025 Web Component) ──────────────
+      try {
+        // importLibrary is available when using the new bootstrap approach.
+        // With the weekly Loader it may or may not expose this method.
+        const placesLib: any = await (google.maps as any).importLibrary?.("places");
         if (placesLib?.PlaceAutocompleteElement) {
-          const autocompleteEl = new placesLib.PlaceAutocompleteElement({
+          // The web component must be attached to a DOM container, not the input.
+          // We insert it right after the hidden input.
+          const container = inputRef.current.parentElement;
+          if (!container) throw new Error("no container");
+
+          const acEl = new placesLib.PlaceAutocompleteElement({
             componentRestrictions: { country: "ar" },
             types: ["address"],
-          }) as HTMLElement & { value: string };
+          }) as HTMLElement;
 
-          // Style the web component to match our design
-          autocompleteEl.style.width = "100%";
-          autocompleteEl.style.height = "3.5rem";
-          autocompleteEl.style.display = "block";
-          containerRef.current.appendChild(autocompleteEl);
+          // Hide our placeholder input and show the web component
+          inputRef.current.style.display = "none";
+          container.appendChild(acEl);
 
-          // New API event
-          autocompleteEl.addEventListener("gmp-placeselect", async (event: any) => {
+          acEl.addEventListener("gmp-placeselect", async (event: any) => {
             const place = event.place;
             await place.fetchFields({ fields: ["formattedAddress", "location"] });
             const lat = place.location?.lat() ?? 0;
@@ -96,52 +89,41 @@ export default function AddressAutocomplete({
             callbackRef.current(address, lat, lng);
           });
 
-          // Sync text changes
-          autocompleteEl.addEventListener("input", (e: any) => {
-            setInputValue(e.target?.value ?? "");
-          });
-
           setIsLoaded(true);
           return;
         }
+      } catch {
+        // importLibrary not supported or PlaceAutocompleteElement unavailable — use classic
+      }
 
-        // Fallback: classic Autocomplete (still works, no deprecation in this context
-        // since we only reach this branch if PlaceAutocompleteElement is unavailable)
-        if (!containerRef.current) return;
-        const input = document.createElement("input");
-        input.type = "text";
-        input.value = inputValue;
-        input.placeholder = "Buscar dirección...";
-        input.className = `w-full h-14 pl-12 pr-6 bg-slate-800 border border-white/10 rounded-2xl text-white text-sm outline-none transition-all placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 ${className}`;
-        containerRef.current.appendChild(input);
-
-        const g = (window as any).google.maps;
-        const ac = new g.places.Autocomplete(input, {
-          componentRestrictions: { country: "ar" },
-          types: ["address"],
-          fields: ["formatted_address", "geometry"],
-        });
-        ac.addListener("place_changed", () => {
-          const place = ac.getPlace();
-          if (!place?.geometry?.location) return;
-          const lat = place.geometry.location.lat();
-          const lng = place.geometry.location.lng();
-          const address = place.formatted_address ?? "";
-          setInputValue(address);
-          callbackRef.current(address, lat, lng);
-        });
-        input.addEventListener("input", (e: any) => setInputValue(e.target.value));
-        setIsLoaded(true);
-      })
-      .catch((e) => {
-        console.error("AddressAutocomplete: failed to load Google Maps", e);
-        if (isMounted) setError("Error al cargar el buscador de direcciones");
+      // ── Fallback: classic google.maps.places.Autocomplete ─────────────────
+      // This still works perfectly (advisory warning only, no breakage until further notice).
+      const autocomplete = new google.maps.places.Autocomplete(inputRef.current!, {
+        componentRestrictions: { country: "ar" },
+        types: ["address"],
+        fields: ["formatted_address", "geometry"],
       });
+
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (!place?.geometry?.location) return;
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        const address = place.formatted_address ?? "";
+        setInputValue(address);
+        callbackRef.current(address, lat, lng);
+      });
+
+      setIsLoaded(true);
+    }).catch((e) => {
+      console.error("AddressAutocomplete: Loader failed", e);
+      if (isMounted) setError("Error al cargar el buscador de direcciones");
+    });
 
     return () => {
       isMounted = false;
     };
-  }, []); // Empty deps — script is singleton, callbackRef handles stale closure
+  }, []); // Empty — Loader is singleton, callbackRef handles stale closure
 
   return (
     <div className="relative group">
@@ -149,23 +131,13 @@ export default function AddressAutocomplete({
         {isLoaded ? <MapPin className="w-5 h-5" /> : <Loader2 className="w-5 h-5 animate-spin" />}
       </div>
 
-      {/* When using PlaceAutocompleteElement (web component), it renders inside containerRef.
-          When using classic fallback, the input is injected there too.
-          We show a plain input as placeholder text while loading. */}
-      {!isLoaded && (
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Cargando buscador..."
-          readOnly
-          className={`w-full h-14 pl-12 pr-6 bg-slate-800 border border-white/10 rounded-2xl text-white text-sm outline-none transition-all placeholder:text-slate-500 ${className}`}
-        />
-      )}
-      <div
-        ref={containerRef}
-        className={`${isLoaded ? "block" : "hidden"} w-full`}
-        style={{ paddingLeft: "3rem" }}
+      <input
+        ref={inputRef}
+        type="text"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder={isLoaded ? "Buscar dirección..." : "Cargando buscador..."}
+        className={`w-full h-14 pl-12 pr-6 bg-slate-800 border border-white/10 rounded-2xl text-white text-sm outline-none transition-all placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 ${className}`}
       />
 
       {error && <p className="text-xs text-red-500 mt-1 ml-1">{error}</p>}

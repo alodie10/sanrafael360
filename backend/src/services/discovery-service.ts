@@ -162,15 +162,13 @@ export class DiscoveryService {
   };
 
   private sanitizeText(text: string): string {
-    let clean = text;
-    try {
-      clean = Buffer.from(clean, 'latin1').toString('utf8');
-    } catch(e) {}
-    return clean
-      .replace(/SÃ¡bado|SÃ;bado|Sã¡bado/gi, 'Sábado')
-      .replace(/MiÃ©rcoles|Miã©rcoles/gi, 'Miércoles')
+    // NOTE: Do NOT convert Buffer latin1→utf8 — text from Playwright is already
+    // valid UTF-8 in modern Node. That conversion corrupts characters like – (en dash).
+    return text
       .replace(/Ocultar horarios.*/gi, '')
       .replace(/Plus\s*Code:.*|Cerrado\s*temporalmente/gi, '')
+      .replace(/Copiar el horario de atención.*/gi, '')
+      .replace(/[\u00a0\u200b\u202f]/g, ' ')  // NBSP / zero-width / narrow NBSP → space
       .replace(/\s+/g, ' ')
       .trim();
   }
@@ -274,6 +272,9 @@ export class DiscoveryService {
   async discover(businessName: string): Promise<DiscoveryResult> {
     const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
+    // Diagnostic: log key presence (never log value)
+    console.log(`[DiscoveryService] GOOGLE_MAPS_API_KEY present: ${!!process.env.GOOGLE_MAPS_API_KEY} | NEXT_PUBLIC key present: ${!!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} | effective key length: ${apiKey?.length ?? 0}`);
+
     if (apiKey) {
       console.log(`[DiscoveryService] Using Places API for: ${businessName}`);
       try {
@@ -282,7 +283,7 @@ export class DiscoveryService {
         console.warn(`[DiscoveryService] Places API failed (${err.message}), falling back to Playwright`);
       }
     } else {
-      console.warn('[DiscoveryService] No API key found, using Playwright fallback');
+      console.warn('[DiscoveryService] No API key found — falling back to Playwright. Add GOOGLE_MAPS_API_KEY to Railway env vars.');
     }
 
     return this.discoverViaPlaywright(businessName);
