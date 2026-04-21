@@ -116,7 +116,7 @@ Los siguientes requerimientos funcionales están organizados por módulo y prior
 | ID | Módulo | Descripción | Prioridad | Estado |
 |----|--------|-------------|-----------|--------|
 | RF-07 | Negocios | Cada negocio debe tener perfil completo: nombre, descripción, categoría, dirección, teléfono, web, email y redes sociales. | 🔴 ALTA | Parcial |
-| RF-08 | Negocios | Los negocios deben mostrar horarios de atención diferenciados por día de la semana. | 🔴 ALTA | Pendiente |
+| RF-08 | Negocios | Los negocios deben mostrar horarios de atención diferenciados por día de la semana. | 🔴 ALTA | Pendiente | debe dar la opción de rellenar los horarios desde google (para los negocios que estén definidos en esta plataforma) y si no están definidos en google, debe dar la opción de rellenarlos manualmente. 
 | RF-09 | Negocios | Cada negocio debe tener una galería de fotos con hasta 20 imágenes. | 🔴 ALTA | Pendiente |
 | RF-10 | Negocios | Los negocios deben mostrar un indicador de rango de precios ($ / $$ / $$$ / $$$$). | 🟡 MEDIA | Pendiente |
 | RF-11 | Negocios | El sistema debe mostrar en cada perfil si el negocio está "Abierto ahora" o "Cerrado" en tiempo real. | 🔴 ALTA | Pendiente |
@@ -171,10 +171,12 @@ Los siguientes requerimientos funcionales están organizados por módulo y prior
 
 | ID | Módulo | Descripción | Prioridad | Estado |
 |----|--------|-------------|-----------|--------|
-| RF-38 | Admin | El administrador debe poder aprobar, rechazar o eliminar negocios y reseñas desde un panel de control. | 🔴 ALTA | Pendiente |
+| RF-38 | Admin | El administrador debe poder aprobar, rechazar o eliminar negocios y reseñas desde un panel de control. | 🔴 ALTA | Pendiente | toda acción debe quedar registrada en una bitácora de auditoría y además se deben enviar correos a los propietarios de los negocios (para avisar cada paso en el reclamo de su negocio o soporte de atención).
 | RF-39 | Admin | El panel de administración debe mostrar métricas globales: total de negocios, usuarios, reseñas y tráfico. | 🔴 ALTA | Pendiente |
 | RF-40 | Admin | El administrador debe poder gestionar categorías, etiquetas y atributos de negocios. | 🟡 MEDIA | Pendiente |
 | RF-41 | Admin | El sistema debe permitir al administrador destacar negocios en la home y en búsquedas (modelo de monetización). | 🔴 ALTA | Pendiente |
+| RF-42 | Admin | El administrador debe ser capaz de comunicarse con el propietario via email en todo momento usando el panel de admin.  
+| RF-43 | Admin | El sistema debe permitir desasignar un comercio para resetear todo el proceso del mismo a cero y que un nuevo dueño pueda reclamar o se puedan deshacer fácilmente pruebas y tests. 
 
 ---
 
