@@ -54,10 +54,10 @@ function parseGoogleHours(hoursText: string) {
 
 async function testLive() {
   const service = new DiscoveryService();
-  // Probamos un negocio con horarios garantizados
-  const name = "Il Panino";
+  // Mila Grosa es un éxito garantizado en San Rafael
+  const name = "Mila Grosa";
   
-  console.log(`🚀 Probando descubrimiento BASELINE para: ${name}...`);
+  console.log(`🚀 Probando descubrimiento GARANTIZADO para: ${name}...`);
   
   try {
     const result = await service.discover(name);

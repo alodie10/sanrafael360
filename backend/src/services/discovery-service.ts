@@ -51,7 +51,13 @@ export class DiscoveryService {
     try {
       browser = await chromium.launch({ 
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox', 
+          '--disable-dev-shm-usage',
+          '--window-size=1920,1080',
+          '--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+        ]
       });
     } catch (launchErr: any) {
       console.warn(`[DiscoveryService] Browser launch failed: ${launchErr.message}`);
@@ -63,37 +69,73 @@ export class DiscoveryService {
 
     console.log(`[DiscoveryService] Browser launched. Opening Google Maps...`);
     const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-      viewport: { width: 1280, height: 720 },
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      viewport: { width: 1920, height: 1080 },
+      deviceScaleFactor: 1,
       locale: 'es-AR',
+      timezoneId: 'America/Argentina/Buenos_Aires',
     });
     const page = await context.newPage();
 
     try {
-      // 1. Ir a Google Maps
-      const query = encodeURIComponent(businessName + ' San Rafael Mendoza');
-      await page.goto(`https://www.google.com/maps/search/${query}`, { waitUntil: 'domcontentloaded' });
+      // 1. Ir a Google Maps con búsqueda inteligente
+      const query = encodeURIComponent(businessName + ' San Rafael');
+      let targetUrl = `https://www.google.com/maps/search/${query}`;
       
-      // Competencia de detección: ¿Ficha directa, Lista de resultados, o No encontrado?
-      const result = await Promise.race([
-        page.waitForSelector(this.selectors.resultTitle, { timeout: 10000 }).then(() => 'CARD'),
-        page.waitForSelector('a.hfpxzc', { timeout: 10000 }).then(() => 'LIST'),
-        page.waitForSelector(this.selectors.notFoundContainer, { timeout: 10000 }).then(() => 'NOT_FOUND'),
-        page.waitForSelector(this.selectors.addPlaceButton, { timeout: 10000 }).then(() => 'NOT_FOUND'),
-        page.waitForFunction(`
-          document.body.innerText.includes('No se ha podido encontrar') || 
-          document.body.innerText.includes('Google Maps no puede encontrar') ||
-          document.body.innerText.includes('Coincidencia parcial')
-        `, { timeout: 10000 }).then(() => 'NOT_FOUND_TEXT')
-      ]).catch(() => 'TIMEOUT');
+      console.log(`[DiscoveryService] Navigating to: ${targetUrl}`);
+      await page.goto(targetUrl, { waitUntil: 'load', timeout: 30000 });
+      
+      // Manejar muro de Cookies si aparece (común en es-AR)
+      const cookieBtn = page.locator('button[aria-label*="Aceptar"], button[aria-label*="Agree"], button[aria-label*="Todo"]').first();
+      if (await cookieBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+        console.log(`[DiscoveryService] Cookie consent detected. Clicking accept...`);
+        await cookieBtn.click().catch(() => {});
+      }
 
-      if (result === 'LIST') {
-        const firstResult = page.locator('a.hfpxzc').first();
-        await firstResult.click();
-        // Esperamos un momento a ver si carga la ficha, pero si no, seguimos (podría ser una lista de uno)
-        await page.waitForSelector(this.selectors.resultTitle, { timeout: 5000 }).catch(() => {});
-      } else if (result === 'NOT_FOUND' || result === 'NOT_FOUND_TEXT' || result === 'TIMEOUT') {
-        throw new Error('Negocio no encontrado en Google Maps');
+      // Función para detectar el estado actual con mayor tolerancia
+      const detectState = async () => {
+        return await Promise.race([
+          page.waitForSelector('h1.DUwDvf, [role="main"] h1', { timeout: 10000 }).then(() => 'CARD'),
+          page.waitForSelector('a.hfpxzc, [role="article"] a', { timeout: 10000 }).then(() => 'LIST'),
+          page.waitForFunction(() => {
+            const txt = document.body.innerText;
+            return txt.includes('No se ha podido encontrar') || txt.includes('no puede encontrar') || txt.includes('No hay resultados');
+          }, { timeout: 10000 }).then(() => 'NOT_FOUND'),
+        ]).catch(() => 'TIMEOUT');
+      };
+
+      let state = await detectState();
+
+      if (state === 'LIST') {
+        console.log(`[DiscoveryService] List view detected. Attempting to enter first result...`);
+        // Intentar múltiples selectores de lista (Estándar y Vista Limitada)
+        const selectors = ['a.hfpxzc', '[role="article"] a', 'div[aria-label*="' + businessName + '"]', 'h3'];
+        let clicked = false;
+        
+        for (const sel of selectors) {
+          const loc = page.locator(sel).first();
+          if (await loc.isVisible().catch(() => false)) {
+            console.log(`[DiscoveryService] Clicking result with selector: ${sel}`);
+            await loc.click({ force: true }).catch(() => {});
+            clicked = true;
+            break;
+          }
+        }
+
+        if (!clicked) {
+          console.log(`[DiscoveryService] No standard selector worked. Trying text-based click...`);
+          await page.getByText(businessName, { exact: false }).first().click({ force: true }).catch(() => {});
+        }
+
+        await page.waitForSelector('h1.DUwDvf, [role="main"] h1', { timeout: 10000 }).catch(() => {});
+      } else if (state === 'TIMEOUT') {
+         // Verificación final si dio timeout: ¿Quizás ya estamos en la ficha?
+         const hasTitle = await page.locator('h1.DUwDvf').isVisible().catch(() => false);
+         if (!hasTitle) {
+            throw new Error(`Timeout esperando la ficha del negocio (${state})`);
+         }
+      } else if (state === 'NOT_FOUND') {
+         throw new Error(`Negocio no encontrado en Google Maps para '${businessName}'`);
       }
 
       const discoveryResult: DiscoveryResult = {
@@ -146,10 +188,10 @@ export class DiscoveryService {
         const title = await page.title();
         const url = page.url();
         const buttons = await page.evaluate(() => Array.from(document.querySelectorAll('button')).map(b => b.ariaLabel).filter(l => l));
-        const bodyText = await page.evaluate(() => document.body.innerText.slice(0, 1000));
+        const bodyText = await page.evaluate(() => document.body.innerText.slice(0, 2000));
         console.log(`[DiscoveryService] Debug - URL: ${url}`);
         console.log(`[DiscoveryService] Debug - Title: ${title}`);
-        console.log(`[DiscoveryService] Debug - Buttons:`, buttons.slice(0, 15));
+        console.log(`[DiscoveryService] Debug - All Buttons (#${buttons.length}):`, buttons);
         console.log(`[DiscoveryService] Debug - Body Snippet:`, bodyText.replace(/\n/g, ' '));
       }
 
