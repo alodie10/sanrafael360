@@ -105,6 +105,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
 
     setIsSyncing(true);
     const loadingToast = toast.loading("Sincronizando con Google Maps... Esto puede tardar unos segundos.");
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s Timeout
 
     try {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
@@ -114,8 +116,11 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
           "Content-Type": "application/json",
           "Authorization": `Bearer ${session.jwt}`
         },
-        body: JSON.stringify({ name: nombre })
+        body: JSON.stringify({ name: nombre }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       const result = await res.json();
 
@@ -124,13 +129,19 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       }
 
       const { data } = result;
-      
-      // Actualizar campos si vienen datos y están vacíos o el usuario acepta
-      if (data.schedules && data.schedules.length > 0) {
+
+      // Caso 1: No se encontraron horarios (Control pedido por el usuario)
+      if (!data.schedules || data.schedules.length === 0) {
+        toast.error("Google no tiene horarios registrados para este negocio. Por favor, ingrésalos manualmente.", { 
+          id: loadingToast,
+          duration: 5000 
+        });
+      } else {
         setSchedules(data.schedules);
         toast.success("Horarios importados correctamente desde Google Maps", { id: loadingToast });
       }
 
+      // Actualizar otros campos si vienen
       if (data.website && !website) {
         setWebsite(data.website);
         toast.info("Sitio web actualizado");
@@ -138,9 +149,13 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
 
     } catch (err: any) {
       console.error(err);
-      toast.error(`Error de sincronización: ${err.message}`, { id: loadingToast });
+      const errorMsg = err.name === 'AbortError' 
+        ? "La conexión tardó demasiado. Intenta nuevamente." 
+        : `Error de sincronización: ${err.message}`;
+      toast.error(errorMsg, { id: loadingToast });
     } finally {
       setIsSyncing(false);
+      clearTimeout(timeoutId);
     }
   };
 

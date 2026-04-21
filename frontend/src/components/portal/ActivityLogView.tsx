@@ -6,10 +6,9 @@ import { Clock, History, Building2, User as UserIcon, AlertCircle, CheckCircle2,
 
 interface ActivityLogViewProps {
   jwt: string;
-  userId?: number; // Si se provee, filtra por el usuario (dueño)
 }
 
-export default function ActivityLogView({ jwt, userId }: ActivityLogViewProps) {
+export default function ActivityLogView({ jwt }: ActivityLogViewProps) {
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,12 +16,8 @@ export default function ActivityLogView({ jwt, userId }: ActivityLogViewProps) {
     const fetchActivities = async () => {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
       
-      // Limpieza Senior: Asegurar ID puro eliminando :1 si existe
-      const formattedUserId = userId ? String(userId).split(':')[0] : null;
-      const filterQuery = formattedUserId ? `&filters[usuario]=${formattedUserId}` : "";
-
       try {
-        const res = await fetch(`${strapiUrl}/api/actividades?populate=*&sort=createdAt:desc${filterQuery}`, {
+        const res = await fetch(`${strapiUrl}/api/actividades?populate=*&sort=createdAt:desc`, {
           headers: { Authorization: `Bearer ${jwt}` }
         });
         const data = await res.json();

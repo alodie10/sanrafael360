@@ -45,16 +45,21 @@ export class DiscoveryService {
 
   async discover(businessName: string): Promise<DiscoveryResult> {
     let browser;
+    console.log(`[DiscoveryService] Starting browser for: ${businessName}`);
     try {
-      browser = await chromium.launch({ headless: true });
+      browser = await chromium.launch({ 
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+      });
     } catch (launchErr: any) {
       console.warn(`[DiscoveryService] Browser launch failed: ${launchErr.message}`);
       return {
         success: false,
-        error: 'Navegador no disponible en el servidor (Playwright missing)'
+        error: 'Navegador no disponible en el servidor (Playwright missing/crashed)'
       };
     }
 
+    console.log(`[DiscoveryService] Browser launched. Opening Google Maps...`);
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
       viewport: { width: 1280, height: 720 },
