@@ -88,8 +88,10 @@ export class DiscoveryService {
         page.waitForSelector('h1.DUwDvf, [role="main"] h1', { timeout: 10000 }).then(() => 'CARD'),
         page.waitForSelector('a.hfpxzc, [role="article"] a', { timeout: 10000 }).then(() => 'LIST'),
         page.waitForFunction(() => {
-          const txt = document.body.innerText;
-          return txt.includes('No se ha podido encontrar') || txt.includes('no puede encontrar') || txt.includes('No hay resultados');
+          const bodyTxt = (globalThis as any).document?.body?.innerText || '';
+          return bodyTxt.includes('No se ha podido encontrar') || 
+                 bodyTxt.includes('no puede encontrar') || 
+                 bodyTxt.includes('No hay resultados');
         }, { timeout: 10000 }).then(() => 'NOT_FOUND'),
       ]).catch(() => 'TIMEOUT');
 
@@ -116,7 +118,7 @@ export class DiscoveryService {
       }
 
       // 4. Extracción de Horarios (Detección de Vista Limitada vs Full)
-      const isLimited = await page.evaluate(() => document.body.innerText.toLowerCase().includes('vista limitada'));
+      const isLimited = await page.innerText('body').then(txt => txt.toLowerCase().includes('vista limitada')).catch(() => false);
       const hoursBtn = page.locator('button[data-item-id="oh"], [jsaction*="pane.wfopn.hours"], button[aria-label*="Horarios"]').first();
 
       if (await hoursBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
