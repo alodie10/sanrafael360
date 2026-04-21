@@ -63,7 +63,6 @@ function parseGoogleHours(hoursText: string) {
 
     const dayKey = dayMatch[0].toLowerCase()
       .replace('miercoles', 'miércoles')
-      .replace('miercoles', 'miércoles')
       .replace('sabado', 'sábado');
     const day = daysMapping[dayKey];
     if (!day) continue;
@@ -73,8 +72,26 @@ function parseGoogleHours(hoursText: string) {
       continue;
     }
 
-    // --- Format A: 24h range "12:00–23:00" or "12:00 a 23:00" ---
-    const match24h = segment.match(/(\d{1,2}:\d{2})\s*[-–—]\s*(\d{1,2}:\d{2})/);
+    // --- 12h ranges (handles split shifts via matchAll) ---
+    // Minutes optional: \d{1,2}(?::\d{2})?
+    // Separators: en-dash OR space-a-space
+    // Covers: "11 a.m.–3:30 p.m."  "7 p.m.–1 a.m."  "12:00 p. m. a 11:00 p. m."
+    const RANGE_12H = /(\d{1,2}(?::\d{2})?)\s*([aApP][.\s]*[mM][.\s]*)\s*(?:[-\u2013\u2014]|a\s+)(\d{1,2}(?::\d{2})?)\s*([aApP][.\s]*[mM][.\s]*)/g;
+    const ranges12h = [...segment.matchAll(RANGE_12H)];
+    if (ranges12h.length > 0) {
+      const first = ranges12h[0];
+      const last  = ranges12h.at(-1)!;
+      schedules.push({
+        day,
+        is_closed: false,
+        opening_time: normalizeTime(first[1], first[2]),
+        closing_time: normalizeTime(last[3],  last[4]),
+      });
+      continue;
+    }
+
+    // --- 24h range "12:00–23:00" ---
+    const match24h = segment.match(/(\d{1,2}:\d{2})\s*[-\u2013\u2014]\s*(\d{1,2}:\d{2})/);
     if (match24h) {
       schedules.push({
         day,
@@ -85,29 +102,14 @@ function parseGoogleHours(hoursText: string) {
       continue;
     }
 
-    // --- Format B: 12h "12:00 p. m. a 11:00 p. m." ---
-    // Regex captures: (time) (optional spaces + a.m./p.m.) (separator 'a') (time) (meridiem)
-    const match12h = segment.match(
-      /(\d{1,2}:\d{2})\s*([aApP][.\s]*[mM][.\s]*)\s+a\s+(\d{1,2}:\d{2})\s*([aApP][.\s]*[mM][.\s]*)/
-    );
-    if (match12h) {
+    // --- Plain "HH:MM a HH:MM" (24h, no meridiem) ---
+    const matchPlain = segment.match(/(\d{1,2}:\d{2})\s+a\s+(\d{1,2}:\d{2})/);
+    if (matchPlain) {
       schedules.push({
         day,
         is_closed: false,
-        opening_time: normalizeTime(match12h[1], match12h[2]),
-        closing_time: normalizeTime(match12h[3], match12h[4]),
-      });
-      continue;
-    }
-
-    // --- Format C: plain "a" separator without meridiem ("12:00 a 23:00") ---
-    const matchA = segment.match(/(\d{1,2}:\d{2})\s+a\s+(\d{1,2}:\d{2})/);
-    if (matchA) {
-      schedules.push({
-        day,
-        is_closed: false,
-        opening_time: normalizeTime(matchA[1], null),
-        closing_time: normalizeTime(matchA[2], null),
+        opening_time: normalizeTime(matchPlain[1], null),
+        closing_time: normalizeTime(matchPlain[2], null),
       });
     }
   }
