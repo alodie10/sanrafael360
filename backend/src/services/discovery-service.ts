@@ -1,67 +1,194 @@
-import { chromium } from 'playwright';
+/**
+ * DiscoveryService — Google Places API + Playwright fallback
+ *
+ * Primary strategy: Google Places Legacy API (Text Search + Place Details)
+ *   - Confiable, rápido, datos estructurados
+ *   - Requiere: GOOGLE_MAPS_API_KEY en variables de entorno del backend
+ *
+ * Fallback: Playwright headless (solo si no hay API key)
+ *   - Frágil (depende de la estructura HTML de Google Maps)
+ *   - Solo se activa si la API key no está disponible
+ */
 
 export interface DiscoveryResult {
   website?: string;
   reserva_url?: string;
   google_maps_url?: string;
   horarios_texto?: string;
+  /** Structured schedules ready to store — filled by Places API strategy */
+  schedules?: PlacesSchedule[];
   success: boolean;
   error?: string;
 }
 
+export interface PlacesSchedule {
+  day: string;
+  opening_time: string | null;
+  closing_time: string | null;
+  is_closed: boolean;
+}
+
+// Google Places day index → Spanish day name
+const DAY_INDEX_MAP: Record<number, string> = {
+  0: 'Domingo',
+  1: 'Lunes',
+  2: 'Martes',
+  3: 'Miércoles',
+  4: 'Jueves',
+  5: 'Viernes',
+  6: 'Sábado',
+};
+
+/**
+ * Convert "HHMM" string (e.g. "1930") to "HH:MM:00.000"
+ */
+function formatPlacesTime(hhmm: string): string {
+  const h = hhmm.substring(0, 2).padStart(2, '0');
+  const m = hhmm.substring(2, 4).padStart(2, '0');
+  return `${h}:${m}:00.000`;
+}
+
+/**
+ * Convert Google Places `opening_hours.periods` into our ScheduleEntry array.
+ * Handles split shifts (multiple open periods per day) by taking the first
+ * open and last close of each day.
+ */
+function periodsToSchedules(periods: any[]): PlacesSchedule[] {
+  // Build a lookup: for each period, key by open day + open time
+  // We store pairs [openTime, closeTime] per day, then pick earliest open + latest effective close.
+  const byDay: Record<number, Array<{ openTime: string; closeTime: string | null }>> = {};
+
+  for (const period of periods) {
+    const openDay: number = period.open?.day;
+    if (openDay === undefined) continue;
+
+    if (!byDay[openDay]) byDay[openDay] = [];
+    byDay[openDay].push({
+      openTime: period.open?.time ?? '0000',
+      closeTime: period.close?.time ?? null,
+    });
+  }
+
+  // Sort each day's periods by openTime so we can find earliest open and last-period close
+  for (const d of Object.keys(byDay).map(Number)) {
+    byDay[d].sort((a, b) => a.openTime.localeCompare(b.openTime));
+  }
+
+  // Build a schedule for every day of the week
+  const schedules: PlacesSchedule[] = [];
+
+  for (let d = 0; d <= 6; d++) {
+    const dayName = DAY_INDEX_MAP[d];
+    if (!dayName) continue;
+
+    if (!byDay[d]) {
+      // No period for this day → closed
+      schedules.push({ day: dayName, is_closed: true, opening_time: null, closing_time: null });
+    } else {
+      const periods = byDay[d];
+      const earliestOpen = periods[0].openTime;
+      // The last period's closeTime is the real end-of-day
+      // (e.g. "0100" for a restaurant open 19:00–01:00 next day)
+      const lastClose = periods.at(-1)?.closeTime ?? null;
+      schedules.push({
+        day: dayName,
+        is_closed: false,
+        opening_time: earliestOpen ? formatPlacesTime(earliestOpen) : null,
+        closing_time: lastClose ? formatPlacesTime(lastClose) : null,
+      });
+    }
+  }
+
+  return schedules;
+}
+
 export class DiscoveryService {
-  /**
-   * Resilient selectors for Google Maps
-   * Focus on role, aria-label and data-attributes for stability
-   */
-  private selectors = {
-    searchBox: 'input#searchboxinput',
-    searchButton: 'button#searchbox-searchbutton',
-    website: 'a[data-item-id="authority"]',
-    booking: 'a[data-item-id="action:3"], a[aria-label*="Cita"], a[aria-label*="Reserva"]',
-    resultTitle: 'h1.DUwDvf',
-    hoursButton: 'button[data-item-id="oh"], [jsaction*="pane.wfopn.hours"], button[aria-label*="Horarios"], button[aria-label*="Hours"]',
-    hoursTable: 'table.e07nqc, [aria-label*="Horas"], [aria-label*="Hours"]',
-    notFoundContainer: 'div.Q2vSnd, div.id6v7, div.O0ZZCc', // Various containers for "No results" or "Partial match"
-    addPlaceButton: 'button.kyuRq, a[href*="addplace"]', // "Agregar un lugar faltante"
-  };
+
+  // ─── Places API Strategy ────────────────────────────────────────────────────
+
+  private async discoverViaPlacesAPI(businessName: string): Promise<DiscoveryResult> {
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) throw new Error('No GOOGLE_MAPS_API_KEY in environment');
+
+    const base = 'https://maps.googleapis.com/maps/api/place';
+
+    // 1. Text Search → place_id
+    const query = encodeURIComponent(`${businessName} San Rafael Mendoza Argentina`);
+    const searchUrl = `${base}/textsearch/json?query=${query}&key=${apiKey}&language=es`;
+    const searchRes = await fetch(searchUrl);
+    const searchData: any = await searchRes.json();
+
+    if (searchData.status !== 'OK' || !searchData.results?.length) {
+      throw new Error(`Places Text Search failed: ${searchData.status} — ${searchData.error_message || ''}`);
+    }
+
+    const placeId: string = searchData.results[0].place_id;
+    console.log(`[DiscoveryService:PlacesAPI] Found place_id: ${placeId}`);
+
+    // 2. Place Details → opening_hours, website
+    const detailsUrl = `${base}/details/json?place_id=${placeId}&fields=name,opening_hours,website,url&key=${apiKey}&language=es`;
+    const detailsRes = await fetch(detailsUrl);
+    const detailsData: any = await detailsRes.json();
+
+    if (detailsData.status !== 'OK') {
+      throw new Error(`Places Details failed: ${detailsData.status}`);
+    }
+
+    const result = detailsData.result || {};
+    const schedules: PlacesSchedule[] = result.opening_hours?.periods
+      ? periodsToSchedules(result.opening_hours.periods)
+      : [];
+
+    // Build horarios_texto for legacy compatibility (logging/fallback display)
+    const horariosTexto = result.opening_hours?.weekday_text?.join('; ') || undefined;
+
+    return {
+      success: true,
+      schedules,
+      horarios_texto: horariosTexto,
+      website: result.website || undefined,
+      google_maps_url: result.url || undefined,
+    };
+  }
+
+  // ─── Playwright Fallback ────────────────────────────────────────────────────
 
   /**
-   * Cleans and normalizes decoded text to fix typical UTF-8 corruption
+   * Resilient selectors for Google Maps (kept as fallback)
    */
+  private selectors = {
+    resultTitle: 'h1.DUwDvf',
+    hoursExpand: '[aria-label*="Mostrar el horario"], [aria-label*="Ver el horario"]',
+  };
+
   private sanitizeText(text: string): string {
     let clean = text;
     try {
-      // Intentar decodificar corrupción común de UTF-8 a Latin1
       clean = Buffer.from(clean, 'latin1').toString('utf8');
     } catch(e) {}
-    
     return clean
       .replace(/SÃ¡bado|SÃ;bado|Sã¡bado/gi, 'Sábado')
       .replace(/MiÃ©rcoles|Miã©rcoles/gi, 'Miércoles')
       .replace(/Ocultar horarios.*/gi, '')
-      .replace(/Plus\s*Code:.*|Cerrado\s*temporalmente/gi, '') // Ignorar Plus Codes y avisos genéricos
+      .replace(/Plus\s*Code:.*|Cerrado\s*temporalmente/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
   }
 
-  async discover(businessName: string): Promise<DiscoveryResult> {
-    let browser;
-    console.log(`[DiscoveryService] Starting browser for: ${businessName}`);
+  private async discoverViaPlaywright(businessName: string): Promise<DiscoveryResult> {
+    let browser: any;
+    console.log(`[DiscoveryService:Playwright] Starting browser for: ${businessName}`);
+
+    const { chromium } = await import('playwright');
     try {
-      browser = await chromium.launch({ 
+      browser = await chromium.launch({
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
       });
     } catch (launchErr: any) {
-      console.warn(`[DiscoveryService] Browser launch failed: ${launchErr.message}`);
-      return {
-        success: false,
-        error: 'Navegador no disponible en el servidor (Playwright missing/crashed)'
-      };
+      return { success: false, error: `Navegador no disponible: ${launchErr.message}` };
     }
 
-    console.log(`[DiscoveryService] Browser launched. Opening Google Maps...`);
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       viewport: { width: 1280, height: 800 },
@@ -70,40 +197,29 @@ export class DiscoveryService {
     const page = await context.newPage();
 
     try {
-      // 1. Ir a Google Maps con búsqueda ultra-específica
       const query = encodeURIComponent(`${businessName} San Rafael Mendoza`);
-      let targetUrl = `https://www.google.com/maps/search/${query}`;
-      
-      console.log(`[DiscoveryService] Navigating to: ${targetUrl}`);
-      await page.goto(targetUrl, { waitUntil: 'load', timeout: 30000 });
-      
-      // Manejar muro de Cookies (común en es-AR)
-      const cookieBtn = page.locator('button[aria-label*="Aceptar"], button[aria-label*="Agree"], button[aria-label*="Todo"]').first();
+      await page.goto(`https://www.google.com/maps/search/${query}`, { waitUntil: 'load', timeout: 30000 });
+
+      const cookieBtn = page.locator('button[aria-label*="Aceptar"], button[aria-label*="Agree"]').first();
       if (await cookieBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
         await cookieBtn.click().catch(() => {});
       }
 
-      // 2. Detección de Estado (Ficha, Lista o Not Found)
       const state = await Promise.race([
-        page.waitForSelector('h1.DUwDvf, [role="main"] h1', { timeout: 10000 }).then(() => 'CARD'),
-        page.waitForSelector('a.hfpxzc, [role="article"] a', { timeout: 10000 }).then(() => 'LIST'),
+        page.waitForSelector('h1.DUwDvf', { timeout: 10000 }).then(() => 'CARD'),
+        page.waitForSelector('a.hfpxzc', { timeout: 10000 }).then(() => 'LIST'),
         page.waitForFunction(() => {
           const bodyTxt = (globalThis as any).document?.body?.innerText || '';
-          return bodyTxt.includes('No se ha podido encontrar') || 
-                 bodyTxt.includes('no puede encontrar') || 
-                 bodyTxt.includes('No hay resultados');
+          return bodyTxt.includes('No se ha podido encontrar') || bodyTxt.includes('No hay resultados');
         }, { timeout: 10000 }).then(() => 'NOT_FOUND'),
       ]).catch(() => 'TIMEOUT');
 
       if (state === 'LIST') {
-        console.log(`[DiscoveryService] List view detected. Clicking first result...`);
-        const firstResult = page.locator('a.hfpxzc, [role="article"] a').first();
-        await firstResult.click();
-        await page.waitForSelector('h1.DUwDvf, [role="main"] h1', { timeout: 10000 }).catch(() => {});
+        await page.locator('a.hfpxzc').first().click();
+        await page.waitForSelector('h1.DUwDvf', { timeout: 10000 }).catch(() => {});
       } else if (state === 'NOT_FOUND' || state === 'TIMEOUT') {
-         // Verificación final: ¿Quizás la ficha cargó sin los selectores esperados?
-         const hasTitle = await page.locator('h1').count() > 0;
-         if (!hasTitle) throw new Error('Negocio no encontrado en Google Maps');
+        const hasTitle = await page.locator('h1').count() > 0;
+        if (!hasTitle) throw new Error('Negocio no encontrado en Google Maps');
       }
 
       const discoveryResult: DiscoveryResult = {
@@ -111,55 +227,67 @@ export class DiscoveryService {
         success: true
       };
 
-      // 3. Extracción de Datos con selectores robustos
+      // Website
       const websiteLink = page.locator('a[data-item-id="authority"]').first();
       if (await websiteLink.isVisible({ timeout: 2000 }).catch(() => false)) {
         discoveryResult.website = await websiteLink.getAttribute('href') || undefined;
       }
 
-      // 4. Extracción de Horarios (Detección de Vista Limitada vs Full)
-      const isLimited = await page.innerText('body').then(txt => txt.toLowerCase().includes('vista limitada')).catch(() => false);
-      const hoursBtn = page.locator('button[data-item-id="oh"], [jsaction*="pane.wfopn.hours"], button[aria-label*="Horarios"]').first();
+      // Hours — try expand button first, then aria-label of day button
+      const expandBtn = page.locator(this.selectors.hoursExpand).first();
+      if (await expandBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await expandBtn.click({ force: true });
+        await page.waitForTimeout(2000);
+      }
 
-      if (await hoursBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-        try {
-          await hoursBtn.click({ force: true });
-          const rows = page.locator('table.e07nqc tr[aria-label]');
-          if (await rows.count() > 0) {
-            const fullHours: string[] = [];
-            const count = await rows.count();
-            for (let i = 0; i < count; i++) {
-              const label = await rows.nth(i).getAttribute('aria-label');
-              if (label) fullHours.push(label);
-            }
-            discoveryResult.horarios_texto = this.sanitizeText(fullHours.join('; '));
-          } else {
-            discoveryResult.horarios_texto = this.sanitizeText(await hoursBtn.getAttribute('aria-label') || '');
-          }
-        } catch (e) {
-          discoveryResult.horarios_texto = this.sanitizeText(await hoursBtn.getAttribute('aria-label') || '');
+      // New table class
+      const tableRows = page.locator('table.eK4R0e tr');
+      const rowCount = await tableRows.count();
+      if (rowCount > 0) {
+        const lines: string[] = [];
+        for (let i = 0; i < rowCount; i++) {
+          const text = await tableRows.nth(i).innerText().catch(() => '');
+          if (text.trim()) lines.push(text.replace(/\t/g, ' ').trim());
         }
-      } else if (isLimited) {
-        // En vista limitada los horarios suelen estar en el bloque principal de texto
-        const statusText = await page.locator('div[aria-label*="Cierra"], div[aria-label*="Abre"]').first().getAttribute('aria-label').catch(() => null);
-        if (statusText) {
-          discoveryResult.horarios_texto = this.sanitizeText(statusText);
+        discoveryResult.horarios_texto = this.sanitizeText(lines.join('; '));
+      } else {
+        // Try the day button aria-label (has today's hours)
+        const dayBtn = page.locator('button[aria-label*="a.m."], button[aria-label*="p.m."]').first();
+        if (await dayBtn.count() > 0) {
+          const label = await dayBtn.getAttribute('aria-label') || '';
+          discoveryResult.horarios_texto = this.sanitizeText(label);
         }
       }
 
       return discoveryResult;
 
     } catch (error: any) {
-      console.warn(`[DiscoveryService] Discovery failed: ${error.message}`);
+      console.warn(`[DiscoveryService:Playwright] Discovery failed: ${error.message}`);
       return { success: false, error: error.message };
     } finally {
       await browser.close().catch(() => {});
     }
   }
 
-  /**
-   * Bulk discovery with success rate threshold alerting
-   */
+  // ─── Public API ─────────────────────────────────────────────────────────────
+
+  async discover(businessName: string): Promise<DiscoveryResult> {
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+    if (apiKey) {
+      console.log(`[DiscoveryService] Using Places API for: ${businessName}`);
+      try {
+        return await this.discoverViaPlacesAPI(businessName);
+      } catch (err: any) {
+        console.warn(`[DiscoveryService] Places API failed (${err.message}), falling back to Playwright`);
+      }
+    } else {
+      console.warn('[DiscoveryService] No API key found, using Playwright fallback');
+    }
+
+    return this.discoverViaPlaywright(businessName);
+  }
+
   async discoverBatch(businesses: { id: string, name: string }[]): Promise<Map<string, DiscoveryResult>> {
     const results = new Map<string, DiscoveryResult>();
     let successCount = 0;
@@ -168,18 +296,15 @@ export class DiscoveryService {
       console.log(`Processing discovery for: ${biz.name}...`);
       const result = await this.discover(biz.name);
       results.set(biz.id, result);
-      
       if (result.success) successCount++;
-      
-      // Delay throttling to avoid blocks (3s to 7s)
-      await new Promise(r => setTimeout(r, 3000 + Math.random() * 4000));
+      await new Promise(r => setTimeout(r, 1000 + Math.random() * 2000));
     }
 
     const rate = (successCount / businesses.length) * 100;
     if (rate < 70) {
-      console.error(`⚠️ CRITICAL: Discovery success rate dropped to ${rate.toFixed(2)}%. Threshold is 70%. Check for CSS/HTML changes in target.`);
+      console.error(`⚠️ Discovery success rate: ${rate.toFixed(2)}% (threshold 70%)`);
     } else {
-      console.log(`Discovery successful for ${successCount}/${businesses.length} businesses (${rate.toFixed(2)}%).`);
+      console.log(`Discovery: ${successCount}/${businesses.length} (${rate.toFixed(2)}%)`);
     }
 
     return results;

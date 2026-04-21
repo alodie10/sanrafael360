@@ -134,10 +134,13 @@ export default {
         });
       }
 
-      // Parse hours to structured format
-      const structuredSchedules = result.horarios_texto 
-        ? parseGoogleHours(result.horarios_texto)
-        : [];
+      // Places API path: schedules are already structured and pre-parsed by the service.
+      // Playwright fallback path: schedules are parsed from raw horarios_texto.
+      const structuredSchedules = result.schedules?.length
+        ? result.schedules
+        : (result.horarios_texto ? parseGoogleHours(result.horarios_texto) : []);
+
+      console.log(`[DiscoveryController] Returning ${structuredSchedules.length} schedule entries for: ${name}`);
 
       return ctx.send({
         success: true,
