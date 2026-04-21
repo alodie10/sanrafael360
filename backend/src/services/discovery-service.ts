@@ -73,12 +73,11 @@ export class DiscoveryService {
         page.waitForSelector('a.hfpxzc', { timeout: 10000 }).then(() => 'LIST'),
         page.waitForSelector(this.selectors.notFoundContainer, { timeout: 10000 }).then(() => 'NOT_FOUND'),
         page.waitForSelector(this.selectors.addPlaceButton, { timeout: 10000 }).then(() => 'NOT_FOUND'),
-        page.waitForFunction(() => {
-          const text = (document as any).body.innerText;
-          return text.includes('No se ha podido encontrar') || 
-                 text.includes('Google Maps no puede encontrar') ||
-                 text.includes('Coincidencia parcial');
-        }, { timeout: 10000 }).then(() => 'NOT_FOUND_TEXT')
+        page.waitForFunction(`
+          document.body.innerText.includes('No se ha podido encontrar') || 
+          document.body.innerText.includes('Google Maps no puede encontrar') ||
+          document.body.innerText.includes('Coincidencia parcial')
+        `, { timeout: 10000 }).then(() => 'NOT_FOUND_TEXT')
       ]).catch(() => 'TIMEOUT');
 
       if (result === 'LIST') {
