@@ -16,6 +16,10 @@ export default function AddressAutocomplete({
   className = ""
 }: AddressAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  // Keep a stable ref to the callback so the Loader effect doesn't re-run on every parent render
+  const callbackRef = useRef(onAddressSelect);
+  useEffect(() => { callbackRef.current = onAddressSelect; }, [onAddressSelect]);
+
   const [inputValue, setInputValue] = useState(initialValue);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +48,7 @@ export default function AddressAutocomplete({
         fields: ["formatted_address", "geometry"]
       });
 
-      // Listener clásico de Google Maps
+      // Listener clásico de Google Maps — usa callbackRef para evitar cierre desactualizado
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete?.getPlace();
         
@@ -57,7 +61,7 @@ export default function AddressAutocomplete({
         const formattedAddress = place.formatted_address || "";
 
         setInputValue(formattedAddress);
-        onAddressSelect(formattedAddress, lat, lng);
+        callbackRef.current(formattedAddress, lat, lng);
       });
 
       setIsLoaded(true);
@@ -69,11 +73,11 @@ export default function AddressAutocomplete({
     return () => {
       isMounted = false;
       // Limpieza de listeners de Google
-      if (google.maps && google.maps.event && autocomplete) {
-        google.maps.event.clearInstanceListeners(autocomplete);
+      if (autocomplete && (window as any).google?.maps?.event) {
+        (window as any).google.maps.event.clearInstanceListeners(autocomplete);
       }
     };
-  }, [onAddressSelect]);
+  }, []); // Empty deps — Loader is a singleton; callbackRef handles stale closure
 
   // Sincronizar el valor inicial si cambia externamente (ej: al cargar los datos del negocio)
   useEffect(() => {

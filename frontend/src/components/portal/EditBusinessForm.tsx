@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { 
   Save, 
   ArrowLeft, 
@@ -49,6 +49,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [schedules, setSchedules] = useState(negocio.schedules || []);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const syncAbortRef = useRef<AbortController | null>(null);
   
   // Files State
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -97,15 +98,26 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     toast.success("Dirección validada correctamente");
   };
 
+  const cancelSync = useCallback(() => {
+    if (syncAbortRef.current) {
+      syncAbortRef.current.abort();
+    }
+  }, []);
+
   const handleGoogleSync = async () => {
     if (!nombre) {
       toast.error("Por favor, ingresa el nombre del negocio para buscar en Google.");
       return;
     }
 
-    setIsSyncing(true);
-    const loadingToast = toast.loading("Sincronizando con Google Maps... Esto puede tardar unos segundos.");
     const controller = new AbortController();
+    syncAbortRef.current = controller;
+    setIsSyncing(true);
+
+    const loadingToast = toast.loading(
+      "Sincronizando con Google Maps... Esto puede tardar unos segundos.",
+      { duration: Infinity }
+    );
     const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s Timeout
 
     try {
@@ -130,32 +142,38 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
 
       const { data } = result;
 
-      // Caso 1: No se encontraron horarios (Control pedido por el usuario)
-      if (!data.schedules || data.schedules.length === 0) {
-        toast.error("Google no tiene horarios registrados para este negocio. Por favor, ingrésalos manualmente.", { 
-          id: loadingToast,
-          duration: 5000 
-        });
-      } else {
-        setSchedules(data.schedules);
-        toast.success("Horarios importados correctamente desde Google Maps", { id: loadingToast });
-      }
-
-      // Actualizar otros campos si vienen
+      // Actualizar sitio web si viene y el campo está vacío
       if (data.website && !website) {
         setWebsite(data.website);
-        toast.info("Sitio web actualizado");
+      }
+
+      // Verificar horarios
+      if (!data.schedules || data.schedules.length === 0) {
+        // Mostrar raw_hours en consola para diagnóstico
+        console.warn('[GoogleSync] No se parsearon horarios. Raw:', data.raw_hours);
+        toast.warning(
+          "Google encontró el negocio pero no pudo extraer los horarios. Puedes ingresarlos manualmente.",
+          { id: loadingToast, duration: 6000 }
+        );
+      } else {
+        setSchedules(data.schedules);
+        const sitioMsg = data.website && !website ? " y sitio web" : "";
+        toast.success(
+          `✓ ${data.schedules.length} horarios${sitioMsg} importados desde Google Maps`,
+          { id: loadingToast, duration: 4000 }
+        );
       }
 
     } catch (err: any) {
-      console.error(err);
-      const errorMsg = err.name === 'AbortError' 
-        ? "La conexión tardó demasiado. Intenta nuevamente." 
-        : `Error de sincronización: ${err.message}`;
-      toast.error(errorMsg, { id: loadingToast });
+      clearTimeout(timeoutId);
+      const isCancelled = err.name === 'AbortError';
+      const errorMsg = isCancelled
+        ? "Sincronización cancelada."
+        : `Error al sincronizar: ${err.message}`;
+      toast[isCancelled ? 'info' : 'error'](errorMsg, { id: loadingToast, duration: 4000 });
     } finally {
       setIsSyncing(false);
-      clearTimeout(timeoutId);
+      syncAbortRef.current = null;
     }
   };
 
@@ -413,19 +431,31 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                     </div>
                     Horarios de Atención
                   </h3>
-                  <button
-                    type="button"
-                    onClick={handleGoogleSync}
-                    disabled={isSyncing}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
-                  >
-                    {isSyncing ? (
-                      <div className="w-4 h-4 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" />
-                    ) : (
-                      <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleGoogleSync}
+                      disabled={isSyncing}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                    >
+                      {isSyncing ? (
+                        <div className="w-4 h-4 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" />
+                      ) : (
+                        <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                      )}
+                      {isSyncing ? 'Sincronizando...' : 'Importar desde Google'}
+                    </button>
+                    {isSyncing && (
+                      <button
+                        type="button"
+                        onClick={cancelSync}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-sm font-medium transition-all animate-in fade-in duration-200"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        Cancelar
+                      </button>
                     )}
-                    {isSyncing ? 'Sincronizando...' : 'Importar desde Google'}
-                  </button>
+                  </div>
                 </div>
                 
                 <ScheduleEditor 
