@@ -22,19 +22,19 @@ function parseGoogleHours(hoursText: string) {
   };
 
   const schedules: any[] = [];
-  const parts = hoursText.split(',').map(p => p.trim());
+  // Split by semicolon (our new joiner) or comma (google's default)
+  const parts = hoursText.split(/;|,/).map(p => p.trim()).filter(p => p.length > 0);
 
   parts.forEach(part => {
-    const colonIndex = part.indexOf(':');
-    if (colonIndex === -1) return;
+    // Detect day name
+    const dayMatch = part.match(/(lunes|martes|miércoles|jueves|viernes|sábado|domingo)/i);
+    if (!dayMatch) return;
 
-    const dayNameRaw = part.substring(0, colonIndex).toLowerCase().trim();
-    const timeInfo = part.substring(colonIndex + 1).trim();
-    
+    const dayNameRaw = dayMatch[0].toLowerCase();
     const day = daysMapping[dayNameRaw];
     if (!day) return;
 
-    if (timeInfo.toLowerCase().includes('cerrado')) {
+    if (part.toLowerCase().includes('cerrado')) {
       schedules.push({
         day,
         is_closed: true,
@@ -44,10 +44,9 @@ function parseGoogleHours(hoursText: string) {
       return;
     }
 
-    // Google uses dash (–) or (—) for ranges
-    const times = timeInfo.split(/[–—\-]/).map(t => t.trim());
-    if (times.length === 2) {
-      // Normalize times (e.g. "8:00" -> "08:00:00.000")
+    // Capture time range: support "12:00-23:00", "12:00 a 23:00", and various dashes
+    const timeMatch = part.match(/(\d{1,2}:\d{2})\s*[-–—a]\s*(\d{1,2}:\d{2})/i);
+    if (timeMatch) {
       const formatTime = (t: string) => {
         const [h, m] = t.split(':');
         return `${h.padStart(2, '0')}:${m.padStart(2, '0')}:00.000`;
@@ -56,8 +55,8 @@ function parseGoogleHours(hoursText: string) {
       schedules.push({
         day,
         is_closed: false,
-        opening_time: formatTime(times[0]),
-        closing_time: formatTime(times[1])
+        opening_time: formatTime(timeMatch[1]),
+        closing_time: formatTime(timeMatch[2])
       });
     }
   });

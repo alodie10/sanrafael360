@@ -20,7 +20,8 @@ export class DiscoveryService {
     website: 'a[data-item-id="authority"]',
     booking: 'a[data-item-id="action:3"], a[aria-label*="Cita"], a[aria-label*="Reserva"]',
     resultTitle: 'h1.DUwDvf',
-    hours: 'div[aria-label*="Cerrado"], div[aria-label*="Abierto"], .t39Tv',
+    hoursButton: 'button[data-item-id="oh"], [jsaction*="pane.wfopn.hours"], button[aria-label*="Horarios"], button[aria-label*="Hours"]',
+    hoursTable: 'table.e07nqc, [aria-label*="Horas"], [aria-label*="Hours"]',
     notFoundContainer: 'div.Q2vSnd, div.id6v7, div.O0ZZCc', // Various containers for "No results" or "Partial match"
     addPlaceButton: 'button.kyuRq, a[href*="addplace"]', // "Agregar un lugar faltante"
   };
@@ -39,6 +40,7 @@ export class DiscoveryService {
       .replace(/SÃ¡bado|SÃ;bado|Sã¡bado/gi, 'Sábado')
       .replace(/MiÃ©rcoles|Miã©rcoles/gi, 'Miércoles')
       .replace(/Ocultar horarios.*/gi, '')
+      .replace(/Plus\s*Code:.*|Cerrado\s*temporalmente/gi, '') // Ignorar Plus Codes y avisos genéricos
       .replace(/\s+/g, ' ')
       .trim();
   }
@@ -111,13 +113,44 @@ export class DiscoveryService {
         discoveryResult.reserva_url = await bookingLink.getAttribute('href') || undefined;
       }
 
-      // 4. Extraer Horarios (Aria-label stable)
-      const hoursEl = page.locator(this.selectors.hours).first();
-      if (await hoursEl.isVisible({ timeout: 2000 }).catch(() => false)) {
-        const rawHours = await hoursEl.getAttribute('aria-label') || await hoursEl.innerText() || '';
-        if (rawHours) {
-           discoveryResult.horarios_texto = this.sanitizeText(rawHours);
+      // 4. Extraer Horarios (Expanded Weekly)
+      const hoursBtn = page.locator(this.selectors.hoursButton).first();
+      if (await hoursBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+        try {
+          await hoursBtn.click({ force: true });
+          const table = page.locator(this.selectors.hoursTable).first();
+          await table.waitFor({ state: 'visible', timeout: 5000 });
+          
+          const rows = page.locator(`${this.selectors.hoursTable} tr[aria-label]`);
+          const count = await rows.count();
+          
+          if (count > 0) {
+            let fullHours: string[] = [];
+            for (let i = 0; i < count; i++) {
+              const label = await rows.nth(i).getAttribute('aria-label');
+              if (label) fullHours.push(label);
+            }
+            discoveryResult.horarios_texto = this.sanitizeText(fullHours.join('; '));
+          } else {
+            const text = await table.innerText();
+            discoveryResult.horarios_texto = this.sanitizeText(text);
+          }
+        } catch (e) {
+          console.warn(`[DiscoveryService] Failed to expand hours: ${e}`);
+          const fallback = await hoursBtn.getAttribute('aria-label') || await hoursBtn.innerText();
+          discoveryResult.horarios_texto = this.sanitizeText(fallback || '');
         }
+      } else {
+        // DEBUG: ¿Por qué no vemos el botón?
+        console.warn(`[DiscoveryService] Hours button NOT VISIBLE.`);
+        const title = await page.title();
+        const url = page.url();
+        const buttons = await page.evaluate(() => Array.from(document.querySelectorAll('button')).map(b => b.ariaLabel).filter(l => l));
+        const bodyText = await page.evaluate(() => document.body.innerText.slice(0, 1000));
+        console.log(`[DiscoveryService] Debug - URL: ${url}`);
+        console.log(`[DiscoveryService] Debug - Title: ${title}`);
+        console.log(`[DiscoveryService] Debug - Buttons:`, buttons.slice(0, 15));
+        console.log(`[DiscoveryService] Debug - Body Snippet:`, bodyText.replace(/\n/g, ' '));
       }
 
       return discoveryResult;
