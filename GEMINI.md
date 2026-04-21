@@ -31,6 +31,7 @@ Este archivo proporciona el contexto crítico para que cualquier agente de IA (G
   - **En Mac (actual)**: Se encuentran en `/Users/diego/.nvm/versions/node/v20.20.2/bin`. Mapear `export PATH="/Users/diego/.nvm/versions/node/v20.20.2/bin:$PATH"`.
   - Si los comandos directos fallan, el agente debe buscar los binarios en rutas comunes y actualizar su contexto de ejecución.
 - **Zero-Trust Verification (CRÍTICO)**: Railway utiliza Zero Downtime Deployments. **NUNCA** asumas que un push se aplicó solo porque la API `/api/categorias` responde (eso medirá el despliegue viejo). Antes de declarar un éxito al usuario, el agente DEBE confirmar que el despliegue finalizó de construir (vía Railway web o CLI si el servicio está enlazado correctamente) Y debe advertir claramente qué partes puede probar automatizadamente y cuáles requieren que el usuario inicie sesión (ej: Content Manager).
+- **Protocolo de Push (OBLIGATORIO)**: El agente **NUNCA** debe hacer `git push` sin haber ejecutado localmente `npm run build` en el directorio afectado (`backend` o `frontend`). Esto evita que fallos de compilación de TypeScript lleguen a la infraestructura.
 
 ---
 
