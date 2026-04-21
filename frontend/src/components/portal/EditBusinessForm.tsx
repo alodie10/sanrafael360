@@ -48,6 +48,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [priceRange, setPriceRange] = useState(negocio.price_range || "Moderado");
   const [schedules, setSchedules] = useState(negocio.schedules || []);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // Files State
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -94,6 +95,53 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     setLatitud(lat);
     setLongitud(lng);
     toast.success("Dirección validada correctamente");
+  };
+
+  const handleGoogleSync = async () => {
+    if (!nombre) {
+      toast.error("Por favor, ingresa el nombre del negocio para buscar en Google.");
+      return;
+    }
+
+    setIsSyncing(true);
+    const loadingToast = toast.loading("Sincronizando con Google Maps... Esto puede tardar unos segundos.");
+
+    try {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
+      const res = await fetch(`${strapiUrl}/api/discovery/google`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.jwt}`
+        },
+        body: JSON.stringify({ name: nombre })
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || "No se pudo sincronizar.");
+      }
+
+      const { data } = result;
+      
+      // Actualizar campos si vienen datos y están vacíos o el usuario acepta
+      if (data.schedules && data.schedules.length > 0) {
+        setSchedules(data.schedules);
+        toast.success("Horarios importados correctamente desde Google Maps", { id: loadingToast });
+      }
+
+      if (data.website && !website) {
+        setWebsite(data.website);
+        toast.info("Sitio web actualizado");
+      }
+
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Error de sincronización: ${err.message}`, { id: loadingToast });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleSave = async () => {
@@ -342,10 +390,34 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
           {/* Horarios y Precios (Hito 2) */}
           <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
             <div className="grid grid-cols-1 gap-10">
-              <ScheduleEditor 
-                schedules={schedules} 
-                onChange={setSchedules} 
-              />
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400">
+                      <CalendarDays className="w-5 h-5" />
+                    </div>
+                    Horarios de Atención
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={handleGoogleSync}
+                    disabled={isSyncing}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                  >
+                    {isSyncing ? (
+                      <div className="w-4 h-4 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" />
+                    ) : (
+                      <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    )}
+                    {isSyncing ? 'Sincronizando...' : 'Importar desde Google'}
+                  </button>
+                </div>
+                
+                <ScheduleEditor 
+                  schedules={schedules} 
+                  onChange={setSchedules} 
+                />
+              </div>
 
               <div className="pt-6 border-t border-white/5">
                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
