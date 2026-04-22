@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { MessageSquare, Clock, CheckCircle2, Send, Loader2, User } from "lucide-react";
 
-export default function AdminSupportInbox({ jwt }: { jwt: string }) {
+export default function AdminSupportInbox({ jwt, onReplySuccess }: { jwt: string, onReplySuccess?: () => void }) {
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -54,6 +54,8 @@ export default function AdminSupportInbox({ jwt }: { jwt: string }) {
         setReplyingTo(null);
         setRespuesta("");
         await fetchTickets();
+        // Disparar actualización de contadores en el sidebar
+        if (onReplySuccess) onReplySuccess();
       } else {
         const errorData = await res.json();
         console.error("Error replying to ticket:", errorData);

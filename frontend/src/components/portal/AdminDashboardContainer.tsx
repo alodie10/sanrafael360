@@ -28,22 +28,23 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
     setClaims(initialClaims);
   }, [initialClaims]);
 
+  const fetchCounts = async () => {
+    try {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const res = await fetch(`${strapiUrl}/api/soportes?filters[estado][$eq]=pendiente&pagination[limit]=1`, {
+        headers: { Authorization: `Bearer ${session.jwt}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSupportCount(data.meta.pagination.total);
+      }
+    } catch (e) {
+      console.error("Error fetching counts", e);
+    }
+  };
+
   // Cargar conteo de soporte al montar
   useEffect(() => {
-    async function fetchCounts() {
-      try {
-        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-        const res = await fetch(`${strapiUrl}/api/soportes?filters[estado][$eq]=pendiente&pagination[limit]=1`, {
-          headers: { Authorization: `Bearer ${session.jwt}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setSupportCount(data.meta.pagination.total);
-        }
-      } catch (e) {
-        console.error("Error fetching counts", e);
-      }
-    }
     fetchCounts();
   }, [session.jwt]);
 
@@ -151,7 +152,7 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
             {activeTab === 'support' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Centro de Mensajes (Inbox)</h2>
-                <AdminSupportInbox jwt={session.jwt as string} />
+                <AdminSupportInbox jwt={session.jwt as string} onReplySuccess={fetchCounts} />
               </div>
             )}
 
