@@ -147,142 +147,24 @@ export class DiscoveryService {
     };
   }
 
-  // ─── Playwright Fallback ────────────────────────────────────────────────────
-
-  /**
-   * Resilient selectors for Google Maps (kept as fallback)
-   */
-  private selectors = {
-    resultTitle: 'h1.DUwDvf',
-    hoursExpand: '[aria-label*="Mostrar el horario"], [aria-label*="Ver el horario"]',
-  };
-
-  private sanitizeText(text: string): string {
-    // NOTE: Do NOT convert Buffer latin1→utf8 — text from Playwright is already
-    // valid UTF-8 in modern Node. That conversion corrupts characters like – (en dash).
-    return text
-      .replace(/Ocultar horarios.*/gi, '')
-      .replace(/Plus\s*Code:.*|Cerrado\s*temporalmente/gi, '')
-      .replace(/Copiar el horario de atención.*/gi, '')
-      .replace(/[\u00a0\u200b\u202f]/g, ' ')  // NBSP / zero-width / narrow NBSP → space
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  private async discoverViaPlaywright(businessName: string): Promise<DiscoveryResult> {
-    let browser: any;
-    console.log(`[DiscoveryService:Playwright] Starting browser for: ${businessName}`);
-
-    const { chromium } = await import('playwright');
-    try {
-      browser = await chromium.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-      });
-    } catch (launchErr: any) {
-      return { success: false, error: `Navegador no disponible: ${launchErr.message}` };
-    }
-
-    const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      viewport: { width: 1280, height: 800 },
-      locale: 'es-AR',
-    });
-    const page = await context.newPage();
-
-    try {
-      const query = encodeURIComponent(`${businessName} San Rafael Mendoza`);
-      await page.goto(`https://www.google.com/maps/search/${query}`, { waitUntil: 'load', timeout: 30000 });
-
-      const cookieBtn = page.locator('button[aria-label*="Aceptar"], button[aria-label*="Agree"]').first();
-      if (await cookieBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await cookieBtn.click().catch(() => {});
-      }
-
-      const state = await Promise.race([
-        page.waitForSelector('h1.DUwDvf', { timeout: 10000 }).then(() => 'CARD'),
-        page.waitForSelector('a.hfpxzc', { timeout: 10000 }).then(() => 'LIST'),
-        page.waitForFunction(() => {
-          const bodyTxt = (globalThis as any).document?.body?.innerText || '';
-          return bodyTxt.includes('No se ha podido encontrar') || bodyTxt.includes('No hay resultados');
-        }, { timeout: 10000 }).then(() => 'NOT_FOUND'),
-      ]).catch(() => 'TIMEOUT');
-
-      if (state === 'LIST') {
-        await page.locator('a.hfpxzc').first().click();
-        await page.waitForSelector('h1.DUwDvf', { timeout: 10000 }).catch(() => {});
-      } else if (state === 'NOT_FOUND' || state === 'TIMEOUT') {
-        const hasTitle = await page.locator('h1').count() > 0;
-        if (!hasTitle) throw new Error('Negocio no encontrado en Google Maps');
-      }
-
-      const discoveryResult: DiscoveryResult = {
-        google_maps_url: page.url(),
-        success: true
-      };
-
-      // Website
-      const websiteLink = page.locator('a[data-item-id="authority"]').first();
-      if (await websiteLink.isVisible({ timeout: 2000 }).catch(() => false)) {
-        discoveryResult.website = await websiteLink.getAttribute('href') || undefined;
-      }
-
-      // Hours — try expand button first, then aria-label of day button
-      const expandBtn = page.locator(this.selectors.hoursExpand).first();
-      if (await expandBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await expandBtn.click({ force: true });
-        await page.waitForTimeout(2000);
-      }
-
-      // New table class
-      const tableRows = page.locator('table.eK4R0e tr');
-      const rowCount = await tableRows.count();
-      if (rowCount > 0) {
-        const lines: string[] = [];
-        for (let i = 0; i < rowCount; i++) {
-          const text = await tableRows.nth(i).innerText().catch(() => '');
-          if (text.trim()) lines.push(text.replace(/\t/g, ' ').trim());
-        }
-        discoveryResult.horarios_texto = this.sanitizeText(lines.join('; '));
-      } else {
-        // Try the day button aria-label (has today's hours)
-        const dayBtn = page.locator('button[aria-label*="a.m."], button[aria-label*="p.m."]').first();
-        if (await dayBtn.count() > 0) {
-          const label = await dayBtn.getAttribute('aria-label') || '';
-          discoveryResult.horarios_texto = this.sanitizeText(label);
-        }
-      }
-
-      return discoveryResult;
-
-    } catch (error: any) {
-      console.warn(`[DiscoveryService:Playwright] Discovery failed: ${error.message}`);
-      return { success: false, error: error.message };
-    } finally {
-      await browser.close().catch(() => {});
-    }
-  }
-
-  // ─── Public API ─────────────────────────────────────────────────────────────
-
   async discover(businessName: string): Promise<DiscoveryResult> {
     const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
     // Diagnostic: log key presence (never log value)
     console.log(`[DiscoveryService] GOOGLE_MAPS_API_KEY present: ${!!process.env.GOOGLE_MAPS_API_KEY} | NEXT_PUBLIC key present: ${!!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} | effective key length: ${apiKey?.length ?? 0}`);
 
-    if (apiKey) {
-      console.log(`[DiscoveryService] Using Places API for: ${businessName}`);
-      try {
-        return await this.discoverViaPlacesAPI(businessName);
-      } catch (err: any) {
-        console.warn(`[DiscoveryService] Places API failed (${err.message}), falling back to Playwright`);
-      }
-    } else {
-      console.warn('[DiscoveryService] No API key found — falling back to Playwright. Add GOOGLE_MAPS_API_KEY to Railway env vars.');
+    if (!apiKey) {
+      console.error('[DiscoveryService] No API key found. Add GOOGLE_MAPS_API_KEY to environment variables.');
+      return { success: false, error: 'Google Maps API Key not configured' };
     }
 
-    return this.discoverViaPlaywright(businessName);
+    console.log(`[DiscoveryService] Using Places API for: ${businessName}`);
+    try {
+      return await this.discoverViaPlacesAPI(businessName);
+    } catch (err: any) {
+      console.error(`[DiscoveryService] Places API failed: ${err.message}`);
+      return { success: false, error: err.message };
+    }
   }
 
   async discoverBatch(businesses: { id: string, name: string }[]): Promise<Map<string, DiscoveryResult>> {
