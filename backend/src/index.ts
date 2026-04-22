@@ -32,12 +32,22 @@ export default {
 
       if (ctx.status === 200 && tipo_registro === 'propietario') {
         const user = ctx.body.user;
-        await strapi.query('plugin::users-permissions.user').update({
-          where: { id: user.id },
-          data: { role: 8, tipo_registro: 'propietario' },
+        
+        // Buscar dinámicamente el ID del rol "Propietario"
+        const propietarioRole = await strapi.query('plugin::users-permissions.role').findOne({
+          where: { name: 'Propietario' }
         });
-        ctx.body.user.role = { id: 8, name: 'Propietario' };
-        strapi.log.info(`👤 Usuario [${user.email}] registrado como Propietario.`);
+        
+        if (propietarioRole) {
+          await strapi.query('plugin::users-permissions.user').update({
+            where: { id: user.id },
+            data: { role: propietarioRole.id, tipo_registro: 'propietario' },
+          });
+          ctx.body.user.role = { id: propietarioRole.id, name: 'Propietario' };
+          strapi.log.info(`👤 Usuario [${user.email}] registrado como Propietario (Role ID: ${propietarioRole.id}).`);
+        } else {
+          strapi.log.error(`❌ Rol 'Propietario' no encontrado en la base de datos para el usuario [${user.email}]. Quedará con rol por defecto.`);
+        }
       }
     };
   },
