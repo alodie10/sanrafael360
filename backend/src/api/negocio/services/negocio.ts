@@ -2,6 +2,24 @@ import { factories } from '@strapi/strapi';
 import { createNegocioRepository } from '../repositories/negocio-repository';
 import { NotFoundError, ValidationError, ForbiddenError } from '../../../utils/errors';
 
+/**
+ * Normaliza cualquier formato de hora al exacto HH:mm:ss.SSS que exige
+ * Strapi v5 / PostgreSQL para el tipo `time`.
+ *
+ * Acepta: "11:00", "11:00:00", "11:00:00.000", "1:5" → devuelve siempre "HH:MM:SS.SSS"
+ */
+function normalizeTimeForDB(time: string): string {
+  if (!time) return '00:00:00.000';
+  const parts = time.split(':');
+  const h = String(parseInt(parts[0] || '0', 10)).padStart(2, '0');
+  const m = String(parseInt(parts[1] || '0', 10)).padStart(2, '0');
+  // parts[2] puede ser "00", "00.000", "00.123", undefined
+  const secParts = (parts[2] || '0').split('.');
+  const s = String(parseInt(secParts[0] || '0', 10)).padStart(2, '0');
+  const ms = String(parseInt(secParts[1] || '0', 10)).padStart(3, '0');
+  return `${h}:${m}:${s}.${ms}`;
+}
+
 export default factories.createCoreService('api::negocio.negocio', ({ strapi }) => ({
   async claimNegocio(id: string, user: any, bodyData: any, files: any) {
     const repo = createNegocioRepository(strapi);
@@ -60,8 +78,19 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       }
     });
 
+    // Normalizar el formato de hora de los schedules antes de guardar.
+    // Strapi/PostgreSQL exige exactamente HH:mm:ss.SSS — no importa qué
+    // formato envíe el frontend (HH:MM, HH:MM:SS, HH:MM:SS.SSS, etc.)
+    if (Array.isArray(updateData.schedules)) {
+      updateData.schedules = updateData.schedules.map((s: any) => ({
+        ...s,
+        opening_time: s.opening_time ? normalizeTimeForDB(s.opening_time) : null,
+        closing_time: s.closing_time ? normalizeTimeForDB(s.closing_time) : null,
+      }));
+    }
+
     const updated = await repo.update(id, updateData);
-    strapi.log.info(`[portalUpdate] Data for ${id}: ${JSON.stringify(updateData)}`);
+    strapi.log.info(`[portalUpdate] schedules guardados: ${JSON.stringify(updateData.schedules ?? [])}`);
     if (files) {
       if (files.logo) await repo.uploadFile(updated.documentId, 'logo', files.logo);
       if (files.imagen_portada) await repo.uploadFile(updated.documentId, 'imagen_portada', files.imagen_portada);
