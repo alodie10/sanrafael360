@@ -55,7 +55,6 @@ function formatPlacesTime(hhmm: string): string {
  */
 function periodsToSchedules(periods: any[]): PlacesSchedule[] {
   // Build a lookup: for each period, key by open day + open time
-  // We store pairs [openTime, closeTime] per day, then pick earliest open + latest effective close.
   const byDay: Record<number, Array<{ openTime: string; closeTime: string | null }>> = {};
 
   for (const period of periods) {
@@ -69,33 +68,30 @@ function periodsToSchedules(periods: any[]): PlacesSchedule[] {
     });
   }
 
-  // Sort each day's periods by openTime so we can find earliest open and last-period close
+  // Sort each day's periods by openTime
   for (const d of Object.keys(byDay).map(Number)) {
     byDay[d].sort((a, b) => a.openTime.localeCompare(b.openTime));
   }
 
-  // Build a schedule for every day of the week
   const schedules: PlacesSchedule[] = [];
 
   for (let d = 0; d <= 6; d++) {
     const dayName = DAY_INDEX_MAP[d];
     if (!dayName) continue;
 
-    if (!byDay[d]) {
+    if (!byDay[d] || byDay[d].length === 0) {
       // No period for this day → closed
       schedules.push({ day: dayName, is_closed: true, opening_time: null, closing_time: null });
     } else {
-      const periods = byDay[d];
-      const earliestOpen = periods[0].openTime;
-      // The last period's closeTime is the real end-of-day
-      // (e.g. "0100" for a restaurant open 19:00–01:00 next day)
-      const lastClose = periods.at(-1)?.closeTime ?? null;
-      schedules.push({
-        day: dayName,
-        is_closed: false,
-        opening_time: earliestOpen ? formatPlacesTime(earliestOpen) : null,
-        closing_time: lastClose ? formatPlacesTime(lastClose) : null,
-      });
+      // Return all periods for the day
+      for (const p of byDay[d]) {
+        schedules.push({
+          day: dayName,
+          is_closed: false,
+          opening_time: p.openTime ? formatPlacesTime(p.openTime) : null,
+          closing_time: p.closeTime ? formatPlacesTime(p.closeTime) : null,
+        });
+      }
     }
   }
 

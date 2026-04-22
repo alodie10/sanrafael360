@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { 
   Save, 
   ArrowLeft, 
@@ -34,6 +34,16 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncUsed, setSyncUsed] = useState(false);
+  const syncAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const sessionKey = `places_sync_used_${negocio.documentId || negocio.id}`;
+    if (sessionStorage.getItem(sessionKey)) {
+      setSyncUsed(true);
+    }
+  }, [negocio.documentId, negocio.id]);
 
   // Form State
   const [nombre, setNombre] = useState(negocio.nombre || "");
@@ -95,6 +105,91 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     toast.success("Dirección validada correctamente");
   };
 
+  const cancelSync = useCallback(() => {
+    if (syncAbortRef.current) {
+      syncAbortRef.current.abort();
+    }
+  }, []);
+
+  const handleGoogleSync = async () => {
+    if (!nombre) {
+      toast.error("Por favor, ingresa el nombre del negocio para buscar en Google.");
+      return;
+    }
+
+    // Check if sync was already used in this session for this business
+    const sessionKey = `places_sync_used_${negocio.documentId || negocio.id}`;
+    if (sessionStorage.getItem(sessionKey)) {
+      toast.info("Ya has importado datos en esta sesión. Por favor, revisa y guarda los cambios.");
+      return;
+    }
+
+    const controller = new AbortController();
+    syncAbortRef.current = controller;
+    setIsSyncing(true);
+
+    const loadingToast = toast.loading(
+      "Importando datos desde Google Places... Esto puede tardar unos segundos.",
+      { duration: Infinity }
+    );
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
+
+    try {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
+      const res = await fetch(`${strapiUrl}/api/discovery/google`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.jwt}`
+        },
+        body: JSON.stringify({ name: nombre }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || "No se pudo sincronizar.");
+      }
+
+      const { data } = result;
+
+      // Actualizar sitio web si viene y el campo está vacío
+      if (data.website && !website) {
+        setWebsite(data.website);
+      }
+
+      // Verificar horarios
+      if (!data.schedules || data.schedules.length === 0) {
+        toast.warning(
+          "Google encontró el negocio pero no pudo extraer los horarios. Puedes ingresarlos manualmente.",
+          { id: loadingToast, duration: 6000 }
+        );
+      } else {
+        setSchedules(data.schedules);
+        const sitioMsg = data.website && !website ? " y sitio web" : "";
+        toast.success(
+          `✓ ${data.schedules.length} turnos de horario${sitioMsg} importados desde Google Places`,
+          { id: loadingToast, duration: 4000 }
+        );
+        // Mark as used for this session
+        sessionStorage.setItem(sessionKey, "true");
+        setSyncUsed(true);
+      }
+
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      const isCancelled = err.name === 'AbortError';
+      const errorMsg = isCancelled
+        ? "Importación cancelada."
+        : `Error al importar: ${err.message}`;
+      toast[isCancelled ? 'info' : 'error'](errorMsg, { id: loadingToast, duration: 4000 });
+    } finally {
+      setIsSyncing(false);
+      syncAbortRef.current = null;
+    }
+  };
 
   const handleSave = async () => {
     // Validación de horarios (Hito 2 Stabilization)
@@ -232,6 +327,31 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                   placeholder="Ej: Mi Negocio"
                   className="w-full px-5 py-4 bg-slate-800 border border-white/10 rounded-2xl text-white text-lg font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 />
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={handleGoogleSync}
+                    disabled={isSyncing || syncUsed || !nombre}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                  >
+                    {isSyncing ? (
+                      <div className="w-4 h-4 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" />
+                    ) : (
+                      <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    )}
+                    {syncUsed ? 'Datos Importados' : (isSyncing ? 'Importando...' : 'Importar datos de Places')}
+                  </button>
+                  {isSyncing && (
+                    <button
+                      type="button"
+                      onClick={cancelSync}
+                      className="flex items-center gap-1.5 px-3 py-2 ml-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-sm font-medium transition-all animate-in fade-in duration-200"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      Cancelar
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Dirección y Mapa - Configuración Vertical */}
