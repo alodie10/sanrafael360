@@ -80,22 +80,28 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     if (!negocio) throw new NotFoundError('Negocio');
     if (negocio.owner?.id !== userId) throw new ForbiddenError('No eres el dueño de este negocio');
 
-    const protectedFields = ['nombre', 'categoria', 'documentacion_reclamo', 'estado_reclamo', 'owner', 'premium', 'destacado'];
+    // Eliminar campos protegidos
+    const forbiddenFields = ['owner', 'slug', 'documentId', 'id', 'estado_reclamo', 'publishedAt'];
     const updateData = { ...data };
-    protectedFields.forEach(field => {
-      if (updateData[field] !== undefined && updateData[field] !== negocio[field]) {
-         delete updateData[field];
-      }
-    });
+    forbiddenFields.forEach(f => delete updateData[f]);
+
+    // FIX Strapi 5: Eliminar IDs de componentes (schedules) 
+    // para evitar el error "components not related to the entity"
+    if (updateData.schedules && Array.isArray(updateData.schedules)) {
+      updateData.schedules = updateData.schedules.map((h: any) => {
+        const { id, ...rest } = h;
+        return rest;
+      });
+    }
 
     // Normalizar el formato de hora de los schedules antes de guardar.
     // Strapi/PostgreSQL exige exactamente HH:mm:ss.SSS — no importa qué
-    // formato envíe el frontend (HH:MM, HH:MM:SS, HH:MM:SS.SSS, etc.)
+    // mande el frontend (ej: 10:30 o 10:30:00), lo forzamos a 10:30:00.000
     if (Array.isArray(updateData.schedules)) {
       updateData.schedules = updateData.schedules.map((s: any) => ({
         ...s,
-        opening_time: s.opening_time ? normalizeTimeForDB(s.opening_time) : null,
-        closing_time: s.closing_time ? normalizeTimeForDB(s.closing_time) : null,
+        opening_time: s.opening_time ? (s.opening_time.split('.')[0].length === 5 ? `${s.opening_time.split('.')[0]}:00.000` : (s.opening_time.split('.')[0].length === 8 ? `${s.opening_time.split('.')[0]}.000` : s.opening_time)) : null,
+        closing_time: s.closing_time ? (s.closing_time.split('.')[0].length === 5 ? `${s.closing_time.split('.')[0]}:00.000` : (s.closing_time.split('.')[0].length === 8 ? `${s.closing_time.split('.')[0]}.000` : s.closing_time)) : null,
       }));
     }
 
