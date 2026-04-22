@@ -28,26 +28,32 @@ export default {
       // Limpiamos el campo para que el validador estricto de Strapi 5 no lo rechace
       delete ctx.request.body.tipo_registro;
 
-      await originalRegister(ctx);
+      try {
+        await originalRegister(ctx);
 
-      if (ctx.status === 200 && tipo_registro === 'propietario') {
-        const user = ctx.body.user;
-        
-        // Buscar dinámicamente el ID del rol "Propietario"
-        const propietarioRole = await strapi.query('plugin::users-permissions.role').findOne({
-          where: { name: 'Propietario' }
-        });
-        
-        if (propietarioRole) {
-          await strapi.query('plugin::users-permissions.user').update({
-            where: { id: user.id },
-            data: { role: propietarioRole.id, tipo_registro: 'propietario' },
+        if (ctx.status === 200 && tipo_registro === 'propietario') {
+          const user = ctx.body.user;
+          
+          // Buscar dinámicamente el ID del rol "Propietario"
+          const propietarioRole = await strapi.query('plugin::users-permissions.role').findOne({
+            where: { name: 'Propietario' }
           });
-          ctx.body.user.role = { id: propietarioRole.id, name: 'Propietario' };
-          strapi.log.info(`👤 Usuario [${user.email}] registrado como Propietario (Role ID: ${propietarioRole.id}).`);
-        } else {
-          strapi.log.error(`❌ Rol 'Propietario' no encontrado en la base de datos para el usuario [${user.email}]. Quedará con rol por defecto.`);
+          
+          if (propietarioRole) {
+            await strapi.query('plugin::users-permissions.user').update({
+              where: { id: user.id },
+              data: { role: propietarioRole.id, tipo_registro: 'propietario' },
+            });
+            ctx.body.user.role = { id: propietarioRole.id, name: 'Propietario' };
+            strapi.log.info(`👤 Usuario [${user.email}] registrado como Propietario (Role ID: ${propietarioRole.id}).`);
+          } else {
+            strapi.log.error(`❌ Rol 'Propietario' no encontrado en la base de datos para el usuario [${user.email}]. Quedará con rol por defecto.`);
+          }
         }
+      } catch (error: any) {
+        strapi.log.warn(`[auth.register] Error capturado: ${error.message}`);
+        // Forzar una respuesta 400 para que el frontend pueda manejar el error
+        return ctx.badRequest(error.message || 'Error de validación durante el registro');
       }
     };
   },
