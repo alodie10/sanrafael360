@@ -37,7 +37,7 @@ export default async function EditBusinessPage({ params }: EditPageProps) {
   const negocio = negocios.find((n: any) => n.slug === slug);
 
   if (!negocio) {
-    return notFound();
+    redirect("/portal");
   }
 
   return (

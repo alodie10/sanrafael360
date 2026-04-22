@@ -22,7 +22,7 @@ export class NegocioRepository {
         },
       },
       populate,
-      status: 'draft',
+      status: 'published',
     });
   }
 
