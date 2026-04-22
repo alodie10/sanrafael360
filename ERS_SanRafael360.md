@@ -104,20 +104,20 @@ Los siguientes requerimientos funcionales están organizados por módulo y prior
 
 | ID | Módulo | Descripción | Prioridad | Estado |
 |----|--------|-------------|-----------|--------|
-| RF-01 | Usuarios | El sistema debe permitir registro de nuevos usuarios con email y contraseña, con validación de email. | 🔴 ALTA | Pendiente |
-| RF-02 | Usuarios | El sistema debe soportar autenticación OAuth con Google y Facebook. | 🔴 ALTA | Pendiente |
+| RF-01 | Usuarios | El sistema debe permitir registro de nuevos usuarios con email y contraseña, con validación de email. | 🔴 ALTA | ✅ Completado (Registro Propietario estable y con manejo de errores 400) |
+| RF-02 | Usuarios | El sistema debe soportar autenticación OAuth con Google y Facebook. | 🔴 ALTA | ✅ Parcial (Google implementado en NextAuth, pendiente handshake final con Strapi) |
 | RF-03 | Usuarios | Los usuarios deben poder gestionar su perfil: foto, nombre, bio, historial de reseñas. | 🟡 MEDIA | Pendiente |
 | RF-04 | Usuarios | El sistema debe implementar recuperación de contraseña por email. | 🔴 ALTA | Pendiente |
 | RF-05 | Usuarios | Los usuarios deben poder guardar negocios favoritos en una lista personal. | 🟡 MEDIA | Pendiente |
-| RF-06 | Usuarios | El sistema debe diferenciar roles: Usuario, Propietario de Negocio y Administrador. | 🔴 ALTA | Pendiente |
+| RF-06 | Usuarios | El sistema debe diferenciar roles: Usuario, Propietario de Negocio y Administrador. | 🔴 ALTA | ✅ Completado (Lógica de asignación dinámica resuelta) |
 
 ### 3.2 Módulo de Negocios
 
 | ID | Módulo | Descripción | Prioridad | Estado |
 |----|--------|-------------|-----------|--------|
 | RF-07 | Negocios | Cada negocio debe tener perfil completo: nombre, descripción, categoría, dirección, teléfono, web, email y redes sociales. | 🔴 ALTA | Parcial |
-| RF-08 | Negocios | Los negocios deben mostrar horarios de atención diferenciados por día de la semana. | 🔴 ALTA | Pendiente | debe dar la opción de rellenar los horarios desde google (para los negocios que estén definidos en esta plataforma) y si no están definidos en google, debe dar la opción de rellenarlos manualmente. 
-| RF-09 | Negocios | Cada negocio debe tener una galería de fotos con hasta 20 imágenes. | 🔴 ALTA | Pendiente |
+| RF-08 | Negocios | Los negocios deben mostrar horarios de atención diferenciados por día de la semana. | 🔴 ALTA | ✅ Completado (Sanitización de IDs y persistencia estable en Strapi 5) | debe dar la opción de rellenar los horarios desde google (para los negocios que estén definidos en esta plataforma) y si no están definidos en google, debe dar la opción de rellenarlos manualmente. 
+| RF-09 | Negocios | Cada negocio debe tener una galería de fotos con hasta 20 imágenes. | 🔴 ALTA | ✅ Completado (Soporte para Portada, Logo y Galería integrado en el formulario de edición) |
 | RF-10 | Negocios | Los negocios deben mostrar un indicador de rango de precios ($ / $$ / $$$ / $$$$). | 🟡 MEDIA | Pendiente |
 | RF-11 | Negocios | El sistema debe mostrar en cada perfil si el negocio está "Abierto ahora" o "Cerrado" en tiempo real. | 🔴 ALTA | Pendiente |
 | RF-12 | Negocios | Los negocios de gastronomía deben poder subir su carta/menú en formato estructurado. | 🟡 MEDIA | Pendiente |
@@ -153,7 +153,7 @@ Los siguientes requerimientos funcionales están organizados por módulo y prior
 | ID | Módulo | Descripción | Prioridad | Estado |
 |----|--------|-------------|-----------|--------|
 | RF-29 | Panel Negocio | Los propietarios deben tener un dashboard con métricas: visitas al perfil, clics en teléfono/web, evolución de rating. | 🔴 ALTA | Pendiente |
-| RF-30 | Panel Negocio | Los propietarios deben poder actualizar todos los datos de su negocio sin intervención del administrador. | 🔴 ALTA | Pendiente |
+| RF-30 | Panel Negocio | Los propietarios deben poder actualizar todos los datos de su negocio sin intervención del administrador. | 🔴 ALTA | ✅ Parcial (Endpoint `portalUpdate` estable, UX del formulario funcional) |
 | RF-31 | Panel Negocio | El sistema debe permitir a los propietarios publicar ofertas y promociones con fecha de vencimiento. | 🟡 MEDIA | Pendiente |
 | RF-32 | Panel Negocio | Los propietarios deben poder gestionar un calendario de disponibilidad para actividades y alojamientos. | 🟡 MEDIA | Pendiente |
 | RF-33 | Panel Negocio | El sistema debe enviar reportes semanales por email al propietario con las métricas de su negocio. | 🟢 BAJA | Pendiente |
@@ -171,11 +171,11 @@ Los siguientes requerimientos funcionales están organizados por módulo y prior
 
 | ID | Módulo | Descripción | Prioridad | Estado |
 |----|--------|-------------|-----------|--------|
-| RF-38 | Admin | El administrador debe poder aprobar, rechazar o eliminar negocios y reseñas desde un panel de control. | 🔴 ALTA | Pendiente | toda acción debe quedar registrada en una bitácora de auditoría y además se deben enviar correos a los propietarios de los negocios (para avisar cada paso en el reclamo de su negocio o soporte de atención).
+| RF-38 | Admin | El administrador debe poder aprobar, rechazar o eliminar negocios y reseñas desde un panel de control. | 🔴 ALTA | ✅ Completado (Bandeja de Reclamos y Soporte estilo mail-client con notificaciones en vivo) | toda acción debe quedar registrada en una bitácora de auditoría y además se deben enviar correos a los propietarios de los negocios (para avisar cada paso en el reclamo de su negocio o soporte de atención).
 | RF-39 | Admin | El panel de administración debe mostrar métricas globales: total de negocios, usuarios, reseñas y tráfico. | 🔴 ALTA | Pendiente |
 | RF-40 | Admin | El administrador debe poder gestionar categorías, etiquetas y atributos de negocios. | 🟡 MEDIA | Pendiente |
 | RF-41 | Admin | El sistema debe permitir al administrador destacar negocios en la home y en búsquedas (modelo de monetización). | 🔴 ALTA | Pendiente |
-| RF-42 | Admin | El administrador debe ser capaz de comunicarse con el propietario via email en todo momento usando el panel de admin.  
+| RF-42 | Admin | El administrador debe ser capaz de comunicarse con el propietario via email en todo momento usando el panel de admin. | 🔴 ALTA | ✅ Completado (Integrado en el flujo de Aprobación/Rechazo de Reclamos) |
 | RF-43 | Admin | El sistema debe permitir desasignar un comercio para resetear todo el proceso del mismo a cero y que un nuevo dueño pueda reclamar o se puedan deshacer fácilmente pruebas y tests. 
 
 ---
