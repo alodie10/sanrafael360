@@ -38,14 +38,16 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Middlewar
           upgradeInsecureRequests: null,
         },
       },
-      crossOriginResourcePolicy: 'cross-origin',
+      crossOriginResourcePolicy: {
+        policy: 'cross-origin'
+      },
       crossOriginEmbedderPolicy: false,
     },
   },
   {
     name: 'strapi::cors',
     config: {
-      origin: env('CORS_ORIGIN', '*').split(','),
+      origin: ['*'],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
       headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
       keepHeaderOnError: true,
