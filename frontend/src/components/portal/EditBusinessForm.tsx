@@ -14,7 +14,8 @@ import {
   CalendarDays,
   MapPin,
   Search,
-  Video
+  Video,
+  Phone
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -54,6 +55,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [facebook, setFacebook] = useState(negocio.facebook || "");
   const [instagram, setInstagram] = useState(negocio.instagram || "");
   const [website, setWebsite] = useState(negocio.website || "");
+  const [telefono, setTelefono] = useState(negocio.telefono || "");
+  const [whatsapp, setWhatsapp] = useState(negocio.whatsapp || "");
   const [reservaHabilitada, setReservaHabilitada] = useState(negocio.reserva_habilitada ?? true);
   
   // Normalize legacy lowercase price_range from DB to match new Capitalized enum
@@ -172,6 +175,16 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       if (data.website && !website) {
         setWebsite(data.website);
       }
+      
+      // Actualizar teléfono si viene y el campo está vacío
+      if (data.telefono && !telefono) {
+        setTelefono(data.telefono);
+      }
+      
+      // Actualizar dirección si viene y el campo está vacío (solo texto, el usuario debe validar en el mapa)
+      if (data.direccion && !direccion) {
+        setDireccion(data.direccion);
+      }
 
       // Verificar horarios
       if (!data.schedules || data.schedules.length === 0) {
@@ -227,6 +240,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         latitud,
         longitud,
         descripcion,
+        telefono,
+        whatsapp,
         facebook,
         instagram,
         website,
@@ -432,6 +447,33 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-2">
+                  <Phone className="w-3 h-3 text-slate-400" /> Teléfono
+                </label>
+                <input 
+                  type="tel"
+                  value={telefono}
+                  onChange={(e) => setTelefono(e.target.value)}
+                  placeholder="Ej: 260 412 3456"
+                  className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-2 font-heading">
+                   <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                     <Phone className="w-2.5 h-2.5 text-white" />
+                   </div> 
+                   WhatsApp
+                </label>
+                <input 
+                  type="tel"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="Ej: 2604123456 (sin espacios)"
+                  className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-2">
                   <Globe className="w-3 h-3 text-slate-400" /> Sitio Web
                 </label>
                 <input 
@@ -454,7 +496,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                   className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-2 font-heading">
                    <div className="w-4 h-4 rounded bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center">
                      <div className="w-2.5 h-2.5 border border-white rounded-full" />

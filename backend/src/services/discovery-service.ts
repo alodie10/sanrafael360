@@ -15,6 +15,8 @@ export interface DiscoveryResult {
   reserva_url?: string;
   google_maps_url?: string;
   horarios_texto?: string;
+  telefono?: string;
+  direccion?: string;
   /** Structured schedules ready to store — filled by Places API strategy */
   schedules?: PlacesSchedule[];
   success: boolean;
@@ -121,8 +123,8 @@ export class DiscoveryService {
     const placeId: string = searchData.results[0].place_id;
     console.log(`[DiscoveryService:PlacesAPI] Found place_id: ${placeId}`);
 
-    // 2. Place Details → opening_hours, website
-    const detailsUrl = `${base}/details/json?place_id=${placeId}&fields=name,opening_hours,website,url&key=${apiKey}&language=es`;
+    // 2. Place Details → opening_hours, website, phone, address, url
+    const detailsUrl = `${base}/details/json?place_id=${placeId}&fields=name,opening_hours,website,url,formatted_phone_number,formatted_address&key=${apiKey}&language=es`;
     const detailsRes = await fetch(detailsUrl);
     const detailsData: any = await detailsRes.json();
 
@@ -143,6 +145,8 @@ export class DiscoveryService {
       schedules,
       horarios_texto: horariosTexto,
       website: result.website || undefined,
+      telefono: result.formatted_phone_number || undefined,
+      direccion: result.formatted_address || undefined,
       google_maps_url: result.url || undefined,
     };
   }
