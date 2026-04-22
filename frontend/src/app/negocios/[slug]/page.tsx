@@ -111,7 +111,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
     try {
       setLoading(true);
       // Populate basic info
-      const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[logo]=*&populate[imagen_portada]=*&populate[galeria]=*&populate[schedules]=*";
+      const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[galeria][fields][0]=url&populate[schedules]=*";
       const res = await fetchFromStrapi(`negocios?filters[slug][$eq]=${slug}&${populate}`);
       
       let businessData = res.data?.[0];
