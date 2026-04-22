@@ -6,6 +6,7 @@ import { Negocio } from "@/types/strapi";
 import Navbar from "@/components/layout/Navbar";
 import GoogleMap from "@/components/common/GoogleMap";
 import WebsitePortlet from "@/components/business/WebsitePortlet";
+import BookingWidget from "@/components/business/BookingWidget";
 import { 
   MapPin, 
   Phone, 
