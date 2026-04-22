@@ -9,7 +9,6 @@ function RegisterForm() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [roleType, setRoleType] = useState("residente");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
@@ -33,7 +32,7 @@ function RegisterForm() {
           username,
           email,
           password,
-          tipo_registro: roleType,
+          tipo_registro: "propietario",
         }),
       });
 
@@ -71,17 +70,7 @@ function RegisterForm() {
       <h1 className="text-2xl font-heading font-bold text-center text-gray-900 dark:text-white">Crea tu Cuenta</h1>
       {error && <p className="text-red-500 text-center text-sm">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Cuenta</label>
-          <div className="grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => setRoleType("residente")} className={`p-2 text-sm border rounded-lg transition-all ${roleType === "residente" ? "bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500" : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"}`}>
-              🙋‍♂️ Residente
-            </button>
-            <button type="button" onClick={() => setRoleType("propietario")} className={`p-2 text-sm border rounded-lg transition-all ${roleType === "propietario" ? "bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500" : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"}`}>
-              💼 Propietario
-            </button>
-          </div>
-        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre de usuario</label>
           <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg dark:bg-gray-800 dark:text-white" required />
@@ -98,6 +87,10 @@ function RegisterForm() {
           {isLoading ? "Registrando..." : "Registrarse"}
         </button>
       </form>
+      
+      <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+        ¿Ya tienes cuenta? <a href={claimSlug ? `/login?callbackUrl=/negocios/${claimSlug}?auto_claim=1` : "/login"} className="text-blue-600 hover:underline dark:text-blue-400">Ingresa aquí</a>
+      </p>
     </div>
   );
 }

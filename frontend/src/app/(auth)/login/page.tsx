@@ -84,7 +84,13 @@ function LoginForm() {
         Continuar con Google
       </button>
       <p className="text-sm text-center text-gray-600 dark:text-gray-400">
-        ¿No tienes cuenta? <a href="/registro" className="text-blue-600 hover:underline dark:text-blue-400">Regístrate</a>
+        ¿No tienes cuenta? <a href={(() => {
+          if (callbackUrl.includes("/negocios/") && callbackUrl.includes("auto_claim=1")) {
+            const match = callbackUrl.match(/\/negocios\/([^\?]+)/);
+            if (match && match[1]) return `/registro?claim=${match[1]}`;
+          }
+          return "/registro";
+        })()} className="text-blue-600 hover:underline dark:text-blue-400">Regístrate</a>
       </p>
     </div>
   );
