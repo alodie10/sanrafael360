@@ -174,6 +174,6 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
 
   async getOwnerNegocios(userId: number) {
     const repo = createNegocioRepository(strapi);
-    return await repo.findByOwner(userId, ['logo', 'categoria', 'imagen_portada', 'galeria']);
+    return await repo.findByOwner(userId, ['logo', 'categoria', 'imagen_portada', 'galeria', 'schedules']);
   }
 }));
