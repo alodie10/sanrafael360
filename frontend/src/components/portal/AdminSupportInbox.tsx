@@ -6,8 +6,9 @@ import { MessageSquare, Clock, CheckCircle2, Send, Loader2, User } from "lucide-
 export default function AdminSupportInbox({ jwt }: { jwt: string }) {
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [respuesta, setRespuesta] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchTickets();
@@ -28,28 +29,41 @@ export default function AdminSupportInbox({ jwt }: { jwt: string }) {
     }
   };
 
-  const handleReply = async (id: number) => {
-    if (!respuesta.trim()) return;
+  const handleReply = async (documentId: string) => {
+    if (!respuesta.trim() || isSubmitting) return;
     
+    setIsSubmitting(true);
     const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-    const res = await fetch(`${strapiUrl}/api/soportes/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${jwt}`
-      },
-      body: JSON.stringify({
-        data: {
-          respuesta,
-          estado: "respondido"
-        }
-      })
-    });
+    
+    try {
+      const res = await fetch(`${strapiUrl}/api/soportes/${documentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`
+        },
+        body: JSON.stringify({
+          data: {
+            respuesta,
+            estado: "respondido"
+          }
+        })
+      });
 
-    if (res.ok) {
-      setReplyingTo(null);
-      setRespuesta("");
-      fetchTickets();
+      if (res.ok) {
+        setReplyingTo(null);
+        setRespuesta("");
+        await fetchTickets();
+      } else {
+        const errorData = await res.json();
+        console.error("Error replying to ticket:", errorData);
+        alert("Error al enviar la respuesta. Por favor intenta de nuevo.");
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Error de conexión al servidor.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -96,7 +110,7 @@ export default function AdminSupportInbox({ jwt }: { jwt: string }) {
               </div>
             ) : (
               <div className="mt-4">
-                {replyingTo === ticket.id ? (
+                {replyingTo === ticket.documentId ? (
                   <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
                     <textarea 
                       value={respuesta}
@@ -106,13 +120,16 @@ export default function AdminSupportInbox({ jwt }: { jwt: string }) {
                     />
                     <div className="flex items-center gap-3">
                       <button 
-                        onClick={() => handleReply(ticket.id)}
-                        className="px-8 py-3 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl flex items-center gap-2 hover:bg-primary/90 transition-all"
+                        onClick={() => handleReply(ticket.documentId)}
+                        disabled={isSubmitting}
+                        className="px-8 py-3 bg-primary disabled:opacity-50 text-black font-black uppercase tracking-widest text-[10px] rounded-xl flex items-center gap-2 hover:bg-primary/90 transition-all"
                       >
-                        <Send className="w-4 h-4" /> Enviar Mensaje
+                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        {isSubmitting ? "Enviando..." : "Enviar Mensaje"}
                       </button>
                       <button 
                         onClick={() => setReplyingTo(null)} 
+                        disabled={isSubmitting}
                         className="px-8 py-3 bg-zinc-800 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-zinc-700 transition-all"
                       >
                         Descartar
@@ -121,7 +138,7 @@ export default function AdminSupportInbox({ jwt }: { jwt: string }) {
                   </div>
                 ) : (
                   <button 
-                    onClick={() => setReplyingTo(ticket.id)}
+                    onClick={() => setReplyingTo(ticket.documentId)}
                     className="flex items-center gap-2 px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-xl border border-white/5 transition-all"
                   >
                     Responder ahora →
