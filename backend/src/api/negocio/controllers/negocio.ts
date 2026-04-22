@@ -1,6 +1,7 @@
 import { factories } from '@strapi/strapi';
 import { asyncHandler } from '../../../utils/asyncHandler';
 import { ValidationError } from '../../../utils/errors';
+import { createNegocioRepository } from '../repositories/negocio-repository';
 
 export default factories.createCoreController('api::negocio.negocio', ({ strapi }) => ({
   claim: asyncHandler(async (ctx) => {
