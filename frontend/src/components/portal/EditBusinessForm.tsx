@@ -37,6 +37,12 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [success, setSuccess] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncUsed, setSyncUsed] = useState(false);
+  const [syncSummary, setSyncSummary] = useState<{
+    schedules: number;
+    telefono?: string;
+    direccion?: string;
+    website?: string;
+  } | null>(null);
   const syncAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -186,23 +192,30 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         setDireccion(data.direccion);
       }
 
+      setSyncSummary({
+        schedules: data.schedules?.length || 0,
+        telefono: data.telefono,
+        direccion: data.direccion,
+        website: data.website
+      });
+
       // Verificar horarios
       if (!data.schedules || data.schedules.length === 0) {
         toast.warning(
-          "Google encontró el negocio pero no pudo extraer los horarios. Puedes ingresarlos manualmente.",
-          { id: loadingToast, duration: 6000 }
+          "Importación completada, pero Google no tenía horarios. Revisa la ficha resumen.",
+          { id: loadingToast, duration: 5000 }
         );
       } else {
         setSchedules(data.schedules);
-        const sitioMsg = data.website && !website ? " y sitio web" : "";
         toast.success(
-          `✓ ${data.schedules.length} turnos de horario${sitioMsg} importados desde Google Places`,
+          "Datos importados exitosamente. Revisa la ficha resumen debajo.",
           { id: loadingToast, duration: 4000 }
         );
-        // Mark as used for this session
-        sessionStorage.setItem(sessionKey, "true");
-        setSyncUsed(true);
       }
+      
+      // Mark as used for this session
+      sessionStorage.setItem(sessionKey, "true");
+      setSyncUsed(true);
 
     } catch (err: any) {
       clearTimeout(timeoutId);
@@ -380,6 +393,38 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                     </button>
                   )}
                 </div>
+                
+                {/* Resumen de Importación */}
+                {syncSummary && (
+                  <div className="mt-4 p-5 bg-blue-500/10 border border-blue-500/20 rounded-2xl animate-in fade-in slide-in-from-top-2">
+                    <h4 className="text-sm font-bold text-blue-400 mb-3 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Ficha Resumen: Datos extraídos de Google
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5">
+                        <span className="text-slate-500 block text-xs uppercase tracking-wider font-bold mb-1">Horarios</span>
+                        <span className="text-white font-medium">{syncSummary.schedules > 0 ? `${syncSummary.schedules} turnos encontrados` : <span className="text-slate-500 italic">No encontrados</span>}</span>
+                      </div>
+                      <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5">
+                        <span className="text-slate-500 block text-xs uppercase tracking-wider font-bold mb-1">Teléfono Público</span>
+                        <span className="text-white font-medium">{syncSummary.telefono || <span className="text-slate-500 italic">No encontrado</span>}</span>
+                      </div>
+                      <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5">
+                        <span className="text-slate-500 block text-xs uppercase tracking-wider font-bold mb-1">Sitio Web</span>
+                        <span className="text-white font-medium">{syncSummary.website || <span className="text-slate-500 italic">No encontrado</span>}</span>
+                      </div>
+                      <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5">
+                        <span className="text-slate-500 block text-xs uppercase tracking-wider font-bold mb-1">Dirección Exacta</span>
+                        <span className="text-white font-medium">{syncSummary.direccion || <span className="text-slate-500 italic">No encontrada</span>}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-blue-400 mt-4 italic flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      Los datos encontrados han sido rellenados automáticamente en las cajas vacías. Revisa y corrige si es necesario antes de guardar.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Dirección y Mapa - Configuración Vertical */}
