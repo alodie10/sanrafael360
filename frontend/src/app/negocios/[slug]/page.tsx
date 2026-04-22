@@ -5,6 +5,7 @@ import { fetchFromStrapi, getStrapiMedia } from "@/lib/strapi";
 import { Negocio } from "@/types/strapi";
 import Navbar from "@/components/layout/Navbar";
 import GoogleMap from "@/components/common/GoogleMap";
+import WebsitePortlet from "@/components/business/WebsitePortlet";
 import { 
   MapPin, 
   Phone, 
