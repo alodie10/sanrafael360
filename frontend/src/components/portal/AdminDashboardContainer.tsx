@@ -21,11 +21,31 @@ import ActivityLogView from "./ActivityLogView";
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
   const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity'>('claims');
   const [claims, setClaims] = useState(initialClaims);
+  const [supportCount, setSupportCount] = useState(0);
 
   // Sincronizar estado cuando router.refresh() trae nuevas props del servidor
   useEffect(() => {
     setClaims(initialClaims);
   }, [initialClaims]);
+
+  // Cargar conteo de soporte al montar
+  useEffect(() => {
+    async function fetchCounts() {
+      try {
+        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+        const res = await fetch(`${strapiUrl}/api/soportes?filters[estado][$eq]=pendiente&pagination[limit]=1`, {
+          headers: { Authorization: `Bearer ${session.jwt}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setSupportCount(data.meta.pagination.total);
+        }
+      } catch (e) {
+        console.error("Error fetching counts", e);
+      }
+    }
+    fetchCounts();
+  }, [session.jwt]);
 
   const handleResolveLocally = (documentId: string) => {
     setClaims(prev => prev.filter(c => c.documentId !== documentId));
@@ -62,33 +82,44 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
       <main className="max-w-7xl mx-auto px-6 pt-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
-          {/* Sidebar Navigation */}
-          <aside className="lg:col-span-1 space-y-2">
-            <div className="p-6 mb-6 bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/20 rounded-[2rem] text-white shadow-2xl shadow-primary/5">
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary/70 mb-2 italic">PENDIENTES</p>
-              <p className="text-3xl font-serif font-bold italic">{claims.length}</p>
-              <p className="text-xs text-zinc-500 font-medium">Solicitudes actuales</p>
-            </div>
-
+          {/* Sidebar Navigation (Mail Client Style) */}
+          <aside className="lg:col-span-1 space-y-3">
             <button 
               onClick={() => setActiveTab('claims')}
-              className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg ${activeTab === 'claims' ? 'bg-primary text-black shadow-primary/20 border-primary' : 'bg-white/5 text-zinc-500 hover:text-white border border-transparent hover:border-white/10'}`}
+              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'claims' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
             >
-              <ShieldCheck className="w-4 h-4" /> Gestión Reclamos
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="w-4 h-4" /> 
+                <span>Gestión Reclamos</span>
+              </div>
+              {claims.length > 0 && (
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${activeTab === 'claims' ? 'bg-black text-primary' : 'bg-primary text-black'}`}>
+                  {claims.length}
+                </span>
+              )}
             </button>
             
             <button 
               onClick={() => setActiveTab('support')}
-              className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg ${activeTab === 'support' ? 'bg-primary text-black shadow-primary/20 border-primary' : 'bg-white/5 text-zinc-500 hover:text-white border border-transparent hover:border-white/10'}`}
+              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'support' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
             >
-              <MessageSquare className="w-4 h-4" /> Bandeja de Soporte
+              <div className="flex items-center gap-3">
+                <MessageSquare className="w-4 h-4" /> 
+                <span>Bandeja Soporte</span>
+              </div>
+              {supportCount > 0 && (
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${activeTab === 'support' ? 'bg-black text-primary' : 'bg-primary text-black'}`}>
+                  {supportCount}
+                </span>
+              )}
             </button>
 
             <button 
               onClick={() => setActiveTab('activity')}
-              className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg ${activeTab === 'activity' ? 'bg-primary text-black shadow-primary/20 border-primary' : 'bg-white/5 text-zinc-500 hover:text-white border border-transparent hover:border-white/10'}`}
+              className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'activity' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
             >
-              <History className="w-4 h-4" /> Log de Actividad
+              <History className="w-4 h-4" /> 
+              <span>Log de Actividad</span>
             </button>
           </aside>
 
