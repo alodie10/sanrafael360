@@ -136,10 +136,10 @@
     "price_range": {
       "type": "enumeration",
       "enum": [
-        "Económico",
+        "Economico",
         "Moderado",
-        "Pro",
-        "Premium"
+        "Medio-Alto",
+        "Alto"
       ]
     },
     "schedules": {

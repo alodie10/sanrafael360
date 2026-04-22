@@ -47,9 +47,6 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [reservaHabilitada, setReservaHabilitada] = useState(negocio.reserva_habilitada ?? true);
   const [priceRange, setPriceRange] = useState(negocio.price_range || "Moderado");
   const [schedules, setSchedules] = useState(negocio.schedules || []);
-  const [isGeocoding, setIsGeocoding] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const syncAbortRef = useRef<AbortController | null>(null);
   
   // Files State
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -98,84 +95,6 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     toast.success("Dirección validada correctamente");
   };
 
-  const cancelSync = useCallback(() => {
-    if (syncAbortRef.current) {
-      syncAbortRef.current.abort();
-    }
-  }, []);
-
-  const handleGoogleSync = async () => {
-    if (!nombre) {
-      toast.error("Por favor, ingresa el nombre del negocio para buscar en Google.");
-      return;
-    }
-
-    const controller = new AbortController();
-    syncAbortRef.current = controller;
-    setIsSyncing(true);
-
-    const loadingToast = toast.loading(
-      "Sincronizando con Google Maps... Esto puede tardar unos segundos.",
-      { duration: Infinity }
-    );
-    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s Timeout
-
-    try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
-      const res = await fetch(`${strapiUrl}/api/discovery/google`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.jwt}`
-        },
-        body: JSON.stringify({ name: nombre }),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      const result = await res.json();
-
-      if (!res.ok || !result.success) {
-        throw new Error(result.error || "No se pudo sincronizar.");
-      }
-
-      const { data } = result;
-
-      // Actualizar sitio web si viene y el campo está vacío
-      if (data.website && !website) {
-        setWebsite(data.website);
-      }
-
-      // Verificar horarios
-      if (!data.schedules || data.schedules.length === 0) {
-        // Mostrar raw_hours en consola para diagnóstico
-        console.warn('[GoogleSync] No se parsearon horarios. Raw:', data.raw_hours);
-        toast.warning(
-          "Google encontró el negocio pero no pudo extraer los horarios. Puedes ingresarlos manualmente.",
-          { id: loadingToast, duration: 6000 }
-        );
-      } else {
-        setSchedules(data.schedules);
-        const sitioMsg = data.website && !website ? " y sitio web" : "";
-        toast.success(
-          `✓ ${data.schedules.length} horarios${sitioMsg} importados desde Google Maps`,
-          { id: loadingToast, duration: 4000 }
-        );
-      }
-
-    } catch (err: any) {
-      clearTimeout(timeoutId);
-      const isCancelled = err.name === 'AbortError';
-      const errorMsg = isCancelled
-        ? "Sincronización cancelada."
-        : `Error al sincronizar: ${err.message}`;
-      toast[isCancelled ? 'info' : 'error'](errorMsg, { id: loadingToast, duration: 4000 });
-    } finally {
-      setIsSyncing(false);
-      syncAbortRef.current = null;
-    }
-  };
 
   const handleSave = async () => {
     // Validación de horarios (Hito 2 Stabilization)
@@ -432,29 +351,6 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                     Horarios de Atención
                   </h3>
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleGoogleSync}
-                      disabled={isSyncing}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-xl text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
-                    >
-                      {isSyncing ? (
-                        <div className="w-4 h-4 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" />
-                      ) : (
-                        <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                      )}
-                      {isSyncing ? 'Sincronizando...' : 'Importar desde Google'}
-                    </button>
-                    {isSyncing && (
-                      <button
-                        type="button"
-                        onClick={cancelSync}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-sm font-medium transition-all animate-in fade-in duration-200"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        Cancelar
-                      </button>
-                    )}
                   </div>
                 </div>
                 
@@ -470,7 +366,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                   Nivel de Precios
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {["Económico", "Moderado", "Pro", "Premium"].map((range) => (
+                  {["Economico", "Moderado", "Medio-Alto", "Alto"].map((range) => (
                     <button
                       key={range}
                       onClick={() => setPriceRange(range)}
