@@ -55,7 +55,20 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [instagram, setInstagram] = useState(negocio.instagram || "");
   const [website, setWebsite] = useState(negocio.website || "");
   const [reservaHabilitada, setReservaHabilitada] = useState(negocio.reserva_habilitada ?? true);
-  const [priceRange, setPriceRange] = useState(negocio.price_range || "Moderado");
+  
+  // Normalize legacy lowercase price_range from DB to match new Capitalized enum
+  const normalizePriceRange = (val?: string) => {
+    if (!val) return "Moderado";
+    const map: Record<string, string> = {
+      'economico': 'Economico',
+      'moderado': 'Moderado',
+      'medio-alto': 'Medio-Alto',
+      'alto': 'Alto'
+    };
+    return map[val.toLowerCase()] || "Moderado";
+  };
+  const [priceRange, setPriceRange] = useState(normalizePriceRange(negocio.price_range));
+  
   const [schedules, setSchedules] = useState(negocio.schedules || []);
   
   // Files State
