@@ -54,15 +54,21 @@ export default function ScheduleEditor({ schedules, onChange }: ScheduleEditorPr
           <p className="text-slate-500 text-sm">No hay horarios. Haz clic en añadir para empezar.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="bg-slate-900 border border-white/10 rounded-2xl overflow-hidden divide-y divide-white/5">
+          <div className="hidden md:grid grid-cols-[1fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-slate-800/50 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/5">
+            <div>Día</div>
+            <div>Apertura</div>
+            <div>Cierre</div>
+            <div className="text-right pr-2">Acciones</div>
+          </div>
+
           {schedules.map((entry, idx) => (
-            <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-5 bg-slate-800/50 border border-white/5 rounded-2xl items-end relative group">
+            <div key={idx} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] gap-3 p-4 md:py-2.5 items-center group hover:bg-white/[0.02] transition-colors">
               <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Día</label>
                 <select 
                   value={entry.day}
                   onChange={(e) => updateEntry(idx, { day: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-900 border border-white/10 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="w-full px-3 py-2 bg-slate-800/80 border border-white/5 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-all hover:bg-slate-800"
                 >
                   {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
@@ -71,43 +77,42 @@ export default function ScheduleEditor({ schedules, onChange }: ScheduleEditorPr
               {!entry.is_closed ? (
                 <>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Apertura</label>
                     <input 
                       type="time" 
                       value={entry.opening_time || ""} 
                       onChange={(e) => updateEntry(idx, { opening_time: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-white/10 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-3 py-2 bg-slate-800/80 border border-white/5 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-all hover:bg-slate-800"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Cierre</label>
                     <input 
                       type="time" 
                       value={entry.closing_time || ""} 
                       onChange={(e) => updateEntry(idx, { closing_time: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-white/10 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-3 py-2 bg-slate-800/80 border border-white/5 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-all hover:bg-slate-800"
                     />
                   </div>
                 </>
               ) : (
-                <div className="md:col-span-2 py-2 text-red-400 text-sm italic font-medium flex items-center gap-2">
+                <div className="md:col-span-2 py-2 px-3 bg-red-500/10 border border-red-500/10 rounded-xl text-red-400 text-sm italic font-medium flex items-center justify-center gap-2">
                   <AlertCircle className="w-4 h-4" />
                   Cerrado todo el día
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 justify-end">
                 <button 
                   onClick={() => updateEntry(idx, { is_closed: !entry.is_closed })}
-                  className={`flex-grow py-2 px-3 rounded-xl text-xs font-bold transition-colors ${entry.is_closed ? 'bg-green-600/20 text-green-400 border border-green-500/20' : 'bg-slate-700/50 text-slate-400 border border-white/5'}`}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${entry.is_closed ? 'bg-green-600/20 text-green-400 border border-green-500/20' : 'bg-slate-700/50 text-slate-400 border border-white/5 hover:bg-slate-700 hover:text-white'}`}
                 >
                   {entry.is_closed ? 'Abrir' : 'Cerrar'}
                 </button>
                 <button 
                   onClick={() => removeEntry(idx)}
-                  className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
+                  className="p-2 text-slate-500 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-colors"
+                  title="Eliminar turno"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
