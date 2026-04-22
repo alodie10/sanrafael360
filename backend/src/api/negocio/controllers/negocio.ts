@@ -37,23 +37,25 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
 
   adminPendingClaims: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
-    const userRole = user?.role?.name?.toLowerCase();
-    const isAdmin = userRole === 'admin' || userRole === 'super admin' || user?.email === 'diegocristianalonso@gmail.com';
-    
-    if (!user || !isAdmin) return ctx.forbidden();
-    const data = await strapi.documents('api::negocio.negocio').findMany({
-      filters: { estado_reclamo: 'pendiente' },
-      status: 'draft',
-      populate: {
-        owner: true,
-        logo: true,
-        documentacion_reclamo: { 
-          fields: ['url', 'name', 'mime', 'size'] 
-        }
-      }
-    });
-    
+    if (!user) return ctx.unauthorized();
 
+    // Blindaje de Rol: Aseguramos tener el rol para validar
+    const fullUser = await strapi.query('plugin::users-permissions.user').findOne({
+      where: { id: user.id },
+      populate: ['role']
+    });
+
+    const userRole = fullUser?.role?.name?.toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'super admin' || fullUser?.email === 'diegocristianalonso@gmail.com';
+    
+    if (!isAdmin) return ctx.forbidden();
+
+    const repo = createNegocioRepository(strapi);
+    const data = await repo.findPendingClaims([
+      'owner', 
+      'logo', 
+      'documentacion_reclamo'
+    ]);
     
     return ctx.send({ success: true, data });
   }),

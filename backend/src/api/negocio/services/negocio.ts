@@ -45,15 +45,25 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
 
     // Notificación Admin
     await repo.sendAdminEmail(
-      `Nuevo Reclamo: ${negocio.nombre}`,
-      `<div style="font-family: sans-serif; padding: 25px; border: 1px solid #eee; border-radius: 12px;">
-        <h2 style="color: #2563eb;">Se ha recibido un nuevo reclamo de propiedad</h2>
-        <p><strong>Negocio:</strong> ${negocio.nombre}</p>
-        <p><strong>Usuario:</strong> ${user.email}</p>
-        <p><strong>Mensaje:</strong> ${bodyData.message || 'Sin mensaje'}</p>
-        <div style="margin-top: 25px;">
-          <a href="https://www.sanrafael360.com/portal/admin" style="background: #111; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver en el Panel Admin</a>
+      `🔔 Nuevo Reclamo de Propiedad: ${negocio.nombre}`,
+      `<div style="font-family: sans-serif; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; max-width: 600px; margin: 0 auto; color: #1e293b;">
+        <h2 style="color: #2563eb; margin-top: 0;">Nueva Solicitud de Verificación</h2>
+        <p style="font-size: 16px; line-height: 1.6;">Se ha recibido una nueva solicitud para reclamar la propiedad de un negocio en <strong>San Rafael 360</strong>.</p>
+        
+        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Negocio:</strong> ${negocio.nombre}</p>
+          <p style="margin: 5px 0;"><strong>Solicitante:</strong> ${user.email}</p>
+          <p style="margin: 5px 0;"><strong>Mensaje:</strong> ${bodyData.message || '<em>Sin mensaje adjunto</em>'}</p>
         </div>
+
+        <p style="font-size: 14px; color: #64748b; margin-bottom: 25px;">Por favor, revise la documentación adjunta y apruebe o rechace el reclamo desde el portal de administración.</p>
+        
+        <div style="text-align: center;">
+          <a href="https://www.sanrafael360.com/portal/admin" style="display: inline-block; background: #0f172a; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px;">Ir al Portal de Administración</a>
+        </div>
+        
+        <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
+        <p style="font-size: 12px; color: #94a3b8; text-align: center;">Este es un mensaje automático de San Rafael 360.</p>
       </div>`
     ).catch(e => strapi.log.error('Email error (Admin Notify):', e.message));
 

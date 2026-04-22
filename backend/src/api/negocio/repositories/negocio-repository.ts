@@ -40,11 +40,14 @@ export class NegocioRepository {
   }
 
   async findPendingClaims(populate: string[] = []) {
+    // Buscamos en 'draft' porque los reclamos nuevos o actualizaciones de publicados
+    // viven en el estado borrador hasta ser aprobados/publicados.
     return await this.strapi.documents('api::negocio.negocio').findMany({
       filters: {
         estado_reclamo: 'pendiente',
       },
       populate,
+      status: 'draft',
     });
   }
 
