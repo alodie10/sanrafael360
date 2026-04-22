@@ -103,6 +103,10 @@ export default {
             actions.push('api::discovery.discovery.googleSync'); // Fix 403
             actions.push('api::actividad.actividad.find');       // Fix 500
             actions.push('api::actividad.actividad.create');
+            actions.push('api::soporte.soporte.find');           // Fix Soporte 403
+            actions.push('api::soporte.soporte.findOne');
+            actions.push('api::soporte.soporte.create');
+            actions.push('api::soporte.soporte.update');
           }
 
 
