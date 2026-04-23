@@ -196,16 +196,16 @@ export class DiscoveryService {
 
       // 2. If no placeId yet, use Text Search
       if (!placeId) {
-        // If we have a CID, use it as primary query for exact match
-        const query = extractedCid 
-          ? `cid:${extractedCid}` 
-          : encodeURIComponent(`${businessName} San Rafael Mendoza Argentina`);
-          
+        // Build a clean query using the business name
+        const query = encodeURIComponent(businessName);
         let searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${apiKey}&language=es`;
         
-        // If we have coordinates (and NOT a CID), bias search towards them
-        if (biasLocation && !extractedCid) {
-          searchUrl += `&location=${biasLocation.lat},${biasLocation.lng}&radius=500`;
+        // Use coordinates to bias the search (1km radius)
+        if (biasLocation) {
+          searchUrl += `&location=${biasLocation.lat},${biasLocation.lng}&radius=1000`;
+        } else {
+          // Fallback to general area if no coordinates
+          searchUrl += `&location=-34.617,-68.333&radius=10000`; // San Rafael center
         }
 
         const searchRes = await fetch(searchUrl);
