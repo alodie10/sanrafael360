@@ -237,11 +237,17 @@ export default {
       const emailStore = strapi.store({ type: 'plugin', name: 'users-permissions', key: 'email' });
       const emailTemplates = await emailStore.get();
       
-      if (emailTemplates.reset_password.options.from.email.includes('strapi.io')) {
+      if (emailTemplates.reset_password.options.from.email.includes('strapi.io') || !emailTemplates.reset_password.options.message.includes('San Rafael 360')) {
         emailTemplates.reset_password.options.from.email = defaultEmail;
         emailTemplates.reset_password.options.from.name = 'San Rafael 360';
+        emailTemplates.reset_password.options.object = 'Configuración de acceso - San Rafael 360';
+        emailTemplates.reset_password.options.message = `<p>¡Gracias por ser parte de San Rafael 360!</p>
+<p>Para gestionar tu negocio, por favor define tu contraseña en el siguiente enlace:</p>
+<p><%= URL %>?code=<%= TOKEN %></p>
+<p>Si no has solicitado este acceso, puedes ignorar este mensaje.</p>`;
+        
         await emailStore.set({ value: emailTemplates });
-        strapi.log.info(`📧 Plantilla de reset_password actualizada con: ${defaultEmail}`);
+        strapi.log.info(`📧 Plantilla de email (Reset/Welcome) actualizada con éxito.`);
       }
 
     } catch (error) {

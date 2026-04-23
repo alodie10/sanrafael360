@@ -60,11 +60,21 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
         } as any
       });
 
-      // 5. Enviar Email (Opcional por ahora, lo haremos en el bootstrap si es necesario)
+      // 5. Disparar el flujo de configuración de contraseña (Email de Bienvenida)
+      // Usamos el servicio interno de Strapi para generar el token y enviar el email
+      try {
+        await strapi.plugin('users-permissions').service('auth').forgotPassword({
+          email: lead.email
+        });
+        strapi.log.info(`📧 Email de bienvenida y configuración enviado a: ${lead.email}`);
+      } catch (emailErr: any) {
+        strapi.log.error(`❌ Error al enviar email de onboarding: ${emailErr.message}`);
+        // No bloqueamos la respuesta exitosa si el email falla, pero lo logueamos
+      }
       
       return ctx.send({ 
         success: true, 
-        message: 'Lead convertido y vinculado con éxito',
+        message: 'Lead convertido y email de bienvenida enviado',
         userId: user.id
       });
 
