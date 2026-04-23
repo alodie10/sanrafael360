@@ -52,11 +52,12 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
         } as any
       });
 
-      // 4. Actualizar estado del Lead
+      // 4. Actualizar estado del Lead y guardar relación
       await strapi.documents('api::lead.lead' as any).update({
         documentId: id,
         data: {
-          estado: 'convertido'
+          estado: 'convertido',
+          negocio_vinculado: negocioId
         } as any
       });
 
