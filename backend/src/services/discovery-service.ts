@@ -71,18 +71,27 @@ async function expandUrl(shortUrl: string): Promise<string> {
 }
 
 /**
- * Extract Place ID or Search Term from a Google Maps URL
+ * Extract Name and Coordinates from a Google Maps URL
  */
-function extractFromUrl(url: string): { placeId?: string; searchTerm?: string } {
-  // Pattern 1: Place ID in URL (usually after !1s0x...)
-  const placeIdMatch = url.match(/!1s(0x[a-f0-9]+:0x[a-f0-9]+)/i);
-  if (placeIdMatch) return { placeId: placeIdMatch[1] };
+function extractFromUrl(url: string): { searchTerm?: string; location?: { lat: number; lng: number } } {
+  const result: { searchTerm?: string; location?: { lat: number; lng: number } } = {};
 
-  // Pattern 2: Place Name in URL (after /place/NAME/)
-  const nameMatch = url.match(/\/place\/([^/]+)/);
-  if (nameMatch) return { searchTerm: decodeURIComponent(nameMatch[1].replace(/\+/g, ' ')) };
+  // 1. Extract Business Name (after /place/NAME/)
+  const nameMatch = url.match(/\/place\/([^/@]+)/);
+  if (nameMatch) {
+    result.searchTerm = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
+  }
 
-  return {};
+  // 2. Extract Coordinates (after /@LAT,LNG/)
+  const coordsMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (coordsMatch) {
+    result.location = {
+      lat: parseFloat(coordsMatch[1]),
+      lng: parseFloat(coordsMatch[2])
+    };
+  }
+
+  return result;
 }
 
 /**
@@ -162,23 +171,31 @@ export class DiscoveryService {
     try {
       let placeId: string | undefined;
       let businessName = input;
+      let biasLocation: { lat: number; lng: number } | undefined;
 
       // 1. Detect if input is a Google Maps URL
       if (input.includes('google.com/maps') || input.includes('maps.app.goo.gl')) {
         const fullUrl = input.includes('goo.gl') ? await expandUrl(input) : input;
         const extracted = extractFromUrl(fullUrl);
-        placeId = extracted.placeId;
         if (extracted.searchTerm) businessName = extracted.searchTerm;
+        if (extracted.location) biasLocation = extracted.location;
       }
 
       // 2. If no placeId yet, use Text Search
       if (!placeId) {
         const query = encodeURIComponent(`${businessName} San Rafael Mendoza Argentina`);
-        const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${apiKey}&language=es`;
+        let searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${apiKey}&language=es`;
+        
+        // If we have coordinates from URL, bias search towards them (radius 500m)
+        if (biasLocation) {
+          searchUrl += `&location=${biasLocation.lat},${biasLocation.lng}&radius=500`;
+        }
+
         const searchRes = await fetch(searchUrl);
         const searchData: any = await searchRes.json();
 
         if (searchData.status === 'OK' && searchData.results?.length > 0) {
+          // If we have a bias location, try to find the result closest to it
           placeId = searchData.results[0].place_id;
         }
       }
