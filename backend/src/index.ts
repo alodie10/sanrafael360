@@ -105,6 +105,8 @@ export default {
             'api::categoria.categoria.findOne',
             'api::negocio.negocio.resetClaimForTest',
             'plugin::users-permissions.user.me',
+            'plugin::users-permissions.auth.forgotPassword',
+            'plugin::users-permissions.auth.resetPassword',
           ];
 
           // El rol autenticado (y los nuevos residentes/propietarios) necesitan permisos de gestion
