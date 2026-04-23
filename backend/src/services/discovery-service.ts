@@ -194,18 +194,46 @@ export class DiscoveryService {
         if (extracted.cid) extractedCid = extracted.cid;
       }
 
-      // 2. If no placeId yet, use Text Search
+      // 2. Direct Call by CID (Pinpoint Accuracy)
+      if (extractedCid) {
+        const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?cid=${extractedCid}&key=${apiKey}&language=es&fields=name,formatted_address,formatted_phone_number,website,url,rating,user_ratings_total,photos,geometry,opening_hours,place_id`;
+        const detailsRes = await fetch(detailsUrl);
+        const detailsData: any = await detailsRes.json();
+
+        if (detailsData.status === 'OK' && detailsData.result) {
+          const result = detailsData.result;
+          const schedules = result.opening_hours?.periods?.map((p: any) => ({
+            day: p.open.day,
+            opening_time: convertTime(p.open.time),
+            closing_time: convertTime(p.close.time)
+          })) || [];
+
+          return {
+            success: true,
+            data: {
+              place_id: result.place_id,
+              nombre: result.name,
+              website: result.website,
+              telefono: result.formatted_phone_number,
+              direccion: result.formatted_address,
+              google_maps_url: result.url,
+              rating: result.rating,
+              user_ratings_total: result.user_ratings_total,
+              photo_reference: result.photos?.[0]?.photo_reference,
+              location: result.geometry?.location,
+              schedules
+            }
+          };
+        }
+      }
+
+      // 3. Fallback to Text Search (if no CID or CID failed)
       if (!placeId) {
-        // Build a clean query using the business name
         const query = encodeURIComponent(businessName);
         let searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${apiKey}&language=es`;
         
-        // Use coordinates to bias the search (1km radius)
         if (biasLocation) {
           searchUrl += `&location=${biasLocation.lat},${biasLocation.lng}&radius=1000`;
-        } else {
-          // Fallback to general area if no coordinates
-          searchUrl += `&location=-34.617,-68.333&radius=10000`; // San Rafael center
         }
 
         const searchRes = await fetch(searchUrl);
