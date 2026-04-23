@@ -112,6 +112,7 @@ export default {
 
           // El rol autenticado (y los nuevos residentes/propietarios) necesitan permisos de gestion
           if (['authenticated', 'residente', 'propietario'].includes(roleType)) {
+            actions.push('api::negocio.negocio.create');
             actions.push('api::negocio.negocio.claim');
             actions.push('api::negocio.negocio.update');
             actions.push('api::negocio.negocio.me');
