@@ -45,7 +45,7 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
     setSuccess(false);
 
     try {
-      const res = await fetch(`${STRAPI_URL}/api/discovery/google-sync`, {
+      const res = await fetch(`${STRAPI_URL}/api/discovery/google`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
