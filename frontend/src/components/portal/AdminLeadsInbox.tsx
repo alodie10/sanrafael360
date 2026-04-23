@@ -15,7 +15,7 @@ interface Lead {
   createdAt: string;
 }
 
-export default function AdminLeadsInbox({ jwt }: { jwt: string }) {
+export default function AdminLeadsInbox({ jwt, onConverted }: { jwt: string, onConverted?: () => void }) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -86,6 +86,7 @@ export default function AdminLeadsInbox({ jwt }: { jwt: string }) {
 
       setVinculatingLead(null);
       await fetchLeads();
+      if (onConverted) onConverted();
     } catch (err: any) {
       setError(err.message);
     } finally {
