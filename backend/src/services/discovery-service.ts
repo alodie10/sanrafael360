@@ -214,6 +214,7 @@ export class DiscoveryService {
       return {
         success: true,
         data: {
+          place_id: placeId,
           nombre: result.name,
           website: result.website,
           telefono: result.formatted_phone_number,

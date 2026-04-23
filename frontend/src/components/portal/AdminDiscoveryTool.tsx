@@ -5,6 +5,7 @@ import { Search, MapPin, Globe, Phone, Clock, Plus, Loader2, CheckCircle2, Alert
 import { STRAPI_URL } from "@/lib/strapi";
 
 interface DiscoveryData {
+  place_id: string;
   nombre: string;
   website?: string;
   telefono?: string;
