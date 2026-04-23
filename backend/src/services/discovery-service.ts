@@ -202,11 +202,9 @@ export class DiscoveryService {
 
         if (detailsData.status === 'OK' && detailsData.result) {
           const result = detailsData.result;
-          const schedules = result.opening_hours?.periods?.map((p: any) => ({
-            day: p.open.day,
-            opening_time: convertTime(p.open.time),
-            closing_time: convertTime(p.close.time)
-          })) || [];
+          const schedules = result.opening_hours?.periods
+            ? periodsToSchedules(result.opening_hours.periods)
+            : [];
 
           return {
             success: true,
