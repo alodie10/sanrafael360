@@ -175,6 +175,7 @@ export default function AdminLeadsInbox({ jwt, onConverted, onGoToDiscovery }: {
             )}
 
             <div className="flex flex-wrap items-center gap-4">
+              {/* Botón de Vinculación */}
               <button 
                 onClick={() => {
                   setVinculatingLead(lead);
@@ -182,18 +183,45 @@ export default function AdminLeadsInbox({ jwt, onConverted, onGoToDiscovery }: {
                   searchBusinesses(lead.nombre_negocio);
                 }}
                 disabled={lead.estado === 'convertido'}
-                className="flex items-center gap-2 px-6 py-3 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/10 disabled:opacity-50"
+                className={`flex items-center gap-2 px-6 py-3 font-black uppercase tracking-widest text-[10px] rounded-xl transition-all shadow-lg ${
+                  lead.estado === 'convertido' 
+                    ? 'bg-green-500/20 text-green-500 border border-green-500/30 cursor-default' 
+                    : 'bg-primary text-black hover:bg-primary/90 shadow-primary/10 active:scale-95'
+                }`}
               >
                 {lead.estado === 'convertido' ? <CheckCircle2 className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-                {lead.estado === 'convertido' ? "Vinculado" : "Vincular con Negocio"}
+                {lead.estado === 'convertido' ? "Negocio Vinculado" : "Vincular con Negocio"}
               </button>
               
-              <button 
-                onClick={() => updateLeadStatus(lead.documentId, 'contactado')}
-                className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-xl border border-white/10 transition-all"
-              >
-                Marcar como Contactado
-              </button>
+              {/* Botón de Contacto (Solo visible/habilitado si no está convertido) */}
+              {lead.estado !== 'convertido' && (
+                <button 
+                  onClick={() => updateLeadStatus(lead.documentId, 'contactado')}
+                  disabled={lead.estado === 'contactado'}
+                  className={`flex items-center gap-2 px-6 py-3 font-black uppercase tracking-widest text-[10px] rounded-xl border transition-all ${
+                    lead.estado === 'contactado'
+                      ? 'bg-white/5 text-zinc-600 border-white/5 cursor-default'
+                      : 'bg-white/5 hover:bg-white/10 text-white border-white/10 active:scale-95'
+                  }`}
+                >
+                  {lead.estado === 'contactado' ? <CheckCircle2 className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
+                  {lead.estado === 'contactado' ? "Ya Contactado" : "Marcar como Contactado"}
+                </button>
+              )}
+
+              {/* Opción de Descartar (Solo si no está convertido) */}
+              {lead.estado !== 'convertido' && lead.estado !== 'descartado' && (
+                <button 
+                  onClick={() => {
+                    if(confirm("¿Estás seguro de descartar este lead?")) {
+                      updateLeadStatus(lead.documentId, 'descartado');
+                    }
+                  }}
+                  className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-red-500 transition-colors"
+                >
+                  Descartar
+                </button>
+              )}
             </div>
           </div>
         ))
