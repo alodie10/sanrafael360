@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, MapPin, Globe, Phone, Clock, Plus, Loader2, CheckCircle2, AlertCircle, Building2 } from "lucide-react";
+import { Search, MapPin, Globe, Phone, Clock, Plus, Loader2, CheckCircle2, AlertCircle, Building2, Zap } from "lucide-react";
 import { STRAPI_URL } from "@/lib/strapi";
 
 interface DiscoveryData {
