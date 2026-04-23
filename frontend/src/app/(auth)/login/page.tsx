@@ -50,7 +50,7 @@ function LoginForm() {
             required
           />
         </div>
-        <div>
+        <div className="space-y-1">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
           <input
             type="password"
@@ -59,6 +59,11 @@ function LoginForm() {
             className="w-full px-4 py-2 mt-1 text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
             required
           />
+          <div className="flex justify-end">
+            <a href="/olvide-password" title="Recuperar contraseña" className="text-xs text-blue-600 hover:underline dark:text-blue-400">
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
         </div>
         <button type="submit" className="w-full px-4 py-2 font-bold text-white bg-black dark:bg-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
           Entrar
