@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { Clock, History, Building2, User as UserIcon, AlertCircle, CheckCircle2, Info, Loader2 } from "lucide-react";
+import { STRAPI_URL } from "@/lib/strapi";
 
 interface ActivityLogViewProps {
   jwt: string;
@@ -16,6 +17,14 @@ export default function ActivityLogView({ jwt, userId }: ActivityLogViewProps) {
 
   useEffect(() => {
     const fetchActivities = async () => {
+      if (!jwt) {
+        console.warn("[ActivityLog] No JWT found in props.");
+        setLoading(false);
+        return;
+      }
+
+      console.log(`[ActivityLog] Fetching from ${STRAPI_URL}/api/actividades with JWT starting with: ${jwt.substring(0, 10)}...`);
+      
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
       try {
         // Populate explícito — populate=* falla con 'Invalid key usuario' en Strapi v5
