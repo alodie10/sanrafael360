@@ -24,24 +24,40 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
         where: { email: lead.email }
       });
 
-      if (!user) {
-        // Obtener el rol de propietario
-        const ownerRole = await strapi.query('plugin::users-permissions.role').findOne({
-          where: { name: 'propietario' }
-        });
+      // Obtener el rol de propietario
+      const ownerRole = await strapi.query('plugin::users-permissions.role').findOne({
+        where: { name: 'propietario' }
+      });
 
+      if (!user) {
         user = await strapi.query('plugin::users-permissions.user').create({
           data: {
             username: lead.email,
             email: lead.email,
-            password: Math.random().toString(36).slice(-10), // Password temporal aleatoria
+            password: Math.random().toString(36).slice(-10),
             confirmed: true,
-            role: ownerRole?.id || 2, // Fallback al ID 2 si no se encuentra
+            role: ownerRole?.id || 1, // Authenticated como fallback seguro
           }
+        });
+      } else if (user.role?.name !== 'propietario') {
+        // Si el usuario existe pero no es propietario, subirle el rango
+        await strapi.query('plugin::users-permissions.user').update({
+          where: { id: user.id },
+          data: { role: ownerRole?.id || user.role?.id }
         });
       }
 
-      // 3. Vincular el Usuario al Negocio
+      // 3. Verificar si el negocio ya tiene un dueño
+      const negocio = await strapi.documents('api::negocio.negocio' as any).findOne({
+        documentId: negocioId,
+        populate: ['owner']
+      });
+
+      if (negocio?.owner) {
+        return ctx.badRequest(`El negocio "${negocio.nombre}" ya tiene un dueño asignado.`);
+      }
+
+      // 4. Vincular el Usuario al Negocio
       await strapi.documents('api::negocio.negocio' as any).update({
         documentId: negocioId,
         data: {

@@ -198,26 +198,24 @@ export default {
         }
       }
 
-      // 3. Lifecycle Hook para asignar roles dinámicos (Hito 1)
-      strapi.db.lifecycles.subscribe({
-        models: ['plugin::users-permissions.user'],
-        async afterCreate(event: any) {
-          const { result, params } = event;
-          
-          // Si el usuario se registró como propietario
-          if (params.data.tipo_registro === 'propietario') {
-            try {
-              await strapi.query('plugin::users-permissions.user').update({
-                where: { id: result.id },
-                data: { role: 8 }, // ID del rol Propietario
-              });
-              strapi.log.info(`✅ Rol Propietario asignado a: ${result.email}`);
-            } catch (err) {
-              strapi.log.error(`❌ Error asignando rol Propietario:`, err);
+      // 3. Asegurar que existan los roles personalizados
+      // Asegurar que existan los roles personalizados
+      const customRoles = ['propietario', 'residente'];
+      for (const roleName of customRoles) {
+        const existingRole = await strapi.query('plugin::users-permissions.role').findOne({
+          where: { name: roleName }
+        });
+        if (!existingRole) {
+          strapi.log.info(`🛠️ Creando rol faltante: ${roleName}`);
+          await strapi.query('plugin::users-permissions.role').create({
+            data: {
+              name: roleName,
+              description: `Rol para ${roleName} de San Rafael 360`,
+              type: roleName
             }
-          }
-        },
-      });
+          });
+        }
+      }
 
       // 4. Configurar el remitente de email para Users-Permissions (Evitar error strapi.io en Resend)
       const upStore = strapi.store({ type: 'plugin', name: 'users-permissions', key: 'advanced' });
