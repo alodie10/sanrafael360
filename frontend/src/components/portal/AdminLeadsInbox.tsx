@@ -13,6 +13,10 @@ interface Lead {
   mensaje: string;
   estado: string;
   createdAt: string;
+  negocio_vinculado?: {
+    nombre: string;
+    documentId: string;
+  };
 }
 
 export default function AdminLeadsInbox({ jwt, onConverted, onGoToDiscovery }: { jwt: string, onConverted?: () => void, onGoToDiscovery?: () => void }) {
@@ -33,7 +37,7 @@ export default function AdminLeadsInbox({ jwt, onConverted, onGoToDiscovery }: {
 
   const fetchLeads = async () => {
     try {
-      const res = await fetch(`${STRAPI_URL}/api/leads?sort=createdAt:desc`, {
+      const res = await fetch(`${STRAPI_URL}/api/leads?sort=createdAt:desc&populate[negocio_vinculado][fields][0]=nombre`, {
         headers: { Authorization: `Bearer ${jwt}` }
       });
       const data = await res.json();
