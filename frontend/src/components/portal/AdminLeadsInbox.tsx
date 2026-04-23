@@ -15,7 +15,7 @@ interface Lead {
   createdAt: string;
 }
 
-export default function AdminLeadsInbox({ jwt, onConverted }: { jwt: string, onConverted?: () => void }) {
+export default function AdminLeadsInbox({ jwt, onConverted, onGoToDiscovery }: { jwt: string, onConverted?: () => void, onGoToDiscovery?: () => void }) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   
