@@ -1,4 +1,4 @@
-import { Users, Mail, Phone, Building2, CheckCircle2, Loader2, ArrowRight, Search, X, AlertCircle } from "lucide-react";
+import { Users, Mail, Phone, Building2, CheckCircle2, Loader2, ArrowRight, Search, X, AlertCircle, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { STRAPI_URL } from "@/lib/strapi";
 import { motion, AnimatePresence } from "framer-motion";
