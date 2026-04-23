@@ -133,7 +133,13 @@ export default function AdminLeadsInbox({ jwt, onConverted, onGoToDiscovery }: {
                 </div>
                 <div>
                   <h4 className="text-2xl font-serif font-bold text-white italic">{lead.nombre_negocio}</h4>
-                  <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mt-1 flex items-center gap-2">
+                  {lead.negocio_vinculado && (
+                    <div className="flex items-center gap-2 mt-1 px-2 py-0.5 bg-green-500/10 border border-green-500/20 rounded-lg w-fit">
+                      <CheckCircle2 className="w-3 h-3 text-green-500" />
+                      <span className="text-[9px] text-green-400 font-bold uppercase tracking-widest">Vinculado con: {lead.negocio_vinculado.nombre}</span>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mt-2 flex items-center gap-2">
                     <Users className="w-3 h-3" /> Solicitado por: <span className="text-white">{lead.nombre_completo}</span>
                   </p>
                 </div>
