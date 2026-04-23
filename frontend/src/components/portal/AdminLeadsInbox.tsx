@@ -251,9 +251,20 @@ export default function AdminLeadsInbox({ jwt, onConverted, onGoToDiscovery }: {
                       </button>
                     ))
                   ) : businessSearch.length >= 3 && !isSearching ? (
-                    <div className="text-center py-8">
-                      <p className="text-zinc-600 text-sm italic">No se encontraron negocios con ese nombre.</p>
-                      <p className="text-[10px] text-zinc-700 uppercase font-black mt-2 tracking-widest">Asegúrate de haberlo importado antes desde Google.</p>
+                    <div className="text-center py-10 px-6 bg-white/5 border border-dashed border-white/10 rounded-3xl">
+                      <Zap className="w-10 h-10 text-primary/30 mx-auto mb-4" />
+                      <p className="text-zinc-400 text-sm italic mb-2">No encontramos ese negocio en nuestra base.</p>
+                      <p className="text-[10px] text-zinc-600 uppercase font-black mb-8 tracking-widest leading-relaxed">
+                        Es probable que aún no lo hayas importado de Google Maps.
+                      </p>
+                      
+                      <button 
+                        onClick={onGoToDiscovery}
+                        className="px-8 py-4 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-primary/90 transition-all flex items-center gap-3 mx-auto shadow-xl shadow-primary/10"
+                      >
+                        <Search className="w-4 h-4" />
+                        Ir a Discovery para Importar
+                      </button>
                     </div>
                   ) : null}
                 </div>
