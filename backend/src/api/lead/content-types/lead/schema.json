@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "leads",
+  "info": {
+    "singularName": "lead",
+    "pluralName": "leads",
+    "displayName": "Lead de Negocio",
+    "description": "Interesados en sumarse a la plataforma"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "nombre_completo": {
+      "type": "string",
+      "required": true
+    },
+    "nombre_negocio": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "telefono": {
+      "type": "string",
+      "required": true
+    },
+    "mensaje": {
+      "type": "text"
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": [
+        "nuevo",
+        "contactado",
+        "descartado",
+        "convertido"
+      ],
+      "default": "nuevo"
+    }
+  }
+}

@@ -107,6 +107,7 @@ export default {
             'plugin::users-permissions.user.me',
             'plugin::users-permissions.auth.forgotPassword',
             'plugin::users-permissions.auth.resetPassword',
+            'api::lead.lead.create',
           ];
 
           // El rol autenticado (y los nuevos residentes/propietarios) necesitan permisos de gestion
@@ -125,6 +126,8 @@ export default {
             actions.push('api::soporte.soporte.findOne');
             actions.push('api::soporte.soporte.create');
             actions.push('api::soporte.soporte.update');
+            actions.push('api::lead.lead.find');
+            actions.push('api::lead.lead.findOne');
           }
 
           strapi.log.info(`🔑 Configurando permisos para rol: ${roleType} (ID: ${role.id})`);
