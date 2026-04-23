@@ -618,9 +618,9 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                 return (
                   <div key={`existing-${photo.id}`} className="relative group aspect-square rounded-2xl bg-zinc-950 border border-white/10 overflow-hidden shadow-xl">
                     {isVideo ? (
-                      <video src={getStrapiMedia(photo.url)} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted />
+                      <video src={getStrapiMedia(photo.url) || undefined} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted />
                     ) : (
-                      <img src={getStrapiMedia(photo.url)} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="" />
+                      <img src={getStrapiMedia(photo.url) || undefined} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="" />
                     )}
                     {isVideo && (
                       <div className="absolute top-2 left-2 p-1.5 bg-black/40 backdrop-blur-md rounded-lg border border-white/10">

@@ -90,8 +90,52 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
+    async jwt({ token, user, account }) {
+      if (account?.provider === 'google') {
+        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+        try {
+          const res = await fetch(`${strapiUrl}/api/auth/google/callback?access_token=${account.access_token}`);
+          
+          if (!res.ok) {
+            const errorText = await res.text();
+            console.error(`❌ Strapi Google Auth Error: ${res.status} ${res.statusText} - ${errorText}`);
+            throw new Error("Strapi Google Auth Failed");
+          }
+          
+          const data = await res.json();
+          if (data.jwt) {
+            token.jwt = data.jwt;
+            token.id = data.user.id.toString();
+
+            // Identificar si es el dueño
+            const isSovereignAdmin = data.user.email === 'diegocristianalonso@gmail.com';
+            let userRole = isSovereignAdmin ? 'Admin' : 'Authenticated';
+            
+            // Obtener rol
+            try {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 3000);
+              const userRes = await fetch(`${strapiUrl}/api/users/me?populate=role`, {
+                headers: { "Authorization": `Bearer ${data.jwt}` },
+                signal: controller.signal
+              });
+              clearTimeout(timeoutId);
+              
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                userRole = userData.role?.name || 'Authenticated';
+              }
+            } catch (roleErr) {
+              // Silent fail
+            }
+            
+            if (isSovereignAdmin) userRole = 'Admin';
+            token.role = userRole;
+          }
+        } catch (e) {
+          console.error("Google Handshake Exception:", e);
+        }
+      } else if (user) {
         token.jwt = (user as any).jwt;
         token.id = user.id;
         token.role = (user as any).role;
