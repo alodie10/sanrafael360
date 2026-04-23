@@ -12,12 +12,14 @@ import {
   History,
   Zap,
   CheckCircle2,
-  Building2
+  Building2,
+  Search
 } from "lucide-react";
 import Link from "next/link";
 import AdminClaimCard from "./AdminClaimCard";
 import AdminSupportInbox from "./AdminSupportInbox";
 import AdminLeadsInbox from "./AdminLeadsInbox";
+import AdminDiscoveryTool from "./AdminDiscoveryTool";
 import ActivityLogView from "./ActivityLogView";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
