@@ -11,17 +11,20 @@ import {
   AlertCircle,
   History,
   Zap,
-  CheckCircle2
+  CheckCircle2,
+  Building2
 } from "lucide-react";
 import Link from "next/link";
 import AdminClaimCard from "./AdminClaimCard";
 import AdminSupportInbox from "./AdminSupportInbox";
+import AdminLeadsInbox from "./AdminLeadsInbox";
 import ActivityLogView from "./ActivityLogView";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
-  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity'>('claims');
+  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads'>('claims');
   const [claims, setClaims] = useState(initialClaims);
   const [supportCount, setSupportCount] = useState(0);
+  const [leadsCount, setLeadsCount] = useState(0);
 
   // Sincronizar estado cuando router.refresh() trae nuevas props del servidor
   useEffect(() => {
@@ -31,19 +34,30 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
   const fetchCounts = async () => {
     try {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-      const res = await fetch(`${strapiUrl}/api/soportes?filters[estado][$eq]=pendiente&pagination[limit]=1`, {
+      
+      // Conteo de Soporte
+      const resSupport = await fetch(`${strapiUrl}/api/soportes?filters[estado][$eq]=pendiente&pagination[limit]=1`, {
         headers: { Authorization: `Bearer ${session.jwt}` }
       });
-      if (res.ok) {
-        const data = await res.json();
+      if (resSupport.ok) {
+        const data = await resSupport.json();
         setSupportCount(data.meta.pagination.total);
+      }
+
+      // Conteo de Leads
+      const resLeads = await fetch(`${strapiUrl}/api/leads?filters[estado][$eq]=nuevo&pagination[limit]=1`, {
+        headers: { Authorization: `Bearer ${session.jwt}` }
+      });
+      if (resLeads.ok) {
+        const data = await resLeads.json();
+        setLeadsCount(data.meta.pagination.total);
       }
     } catch (e) {
       console.error("Error fetching counts", e);
     }
   };
 
-  // Cargar conteo de soporte al montar
+  // Cargar conteos al montar
   useEffect(() => {
     fetchCounts();
   }, [session.jwt]);
@@ -99,6 +113,21 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
                 </span>
               )}
             </button>
+
+            <button 
+              onClick={() => setActiveTab('leads')}
+              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'leads' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+            >
+              <div className="flex items-center gap-3">
+                <Users className="w-4 h-4" /> 
+                <span>Nuevos Interesados</span>
+              </div>
+              {leadsCount > 0 && (
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${activeTab === 'leads' ? 'bg-black text-primary' : 'bg-primary text-black'}`}>
+                  {leadsCount}
+                </span>
+              )}
+            </button>
             
             <button 
               onClick={() => setActiveTab('support')}
@@ -146,6 +175,13 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
                     <p className="text-zinc-500 font-serif italic text-xl">No hay reclamos pendientes.</p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'leads' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Bandeja de Interesados (Leads)</h2>
+                <AdminLeadsInbox jwt={session.jwt as string} />
               </div>
             )}
 
