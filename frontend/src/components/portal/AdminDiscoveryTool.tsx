@@ -92,14 +92,15 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
             descripcion: `Negocio importado desde Google Maps. Ubicado en ${result.direccion}.`,
             direccion: result.direccion,
             telefono: result.telefono,
-            sitio_web: result.website,
+            website: result.website,
             google_maps_url: result.google_maps_url,
             categoria: selectedCategory,
-            reclamable: true,
-            estado: "publicado",
-            horarios: result.schedules,
-            // Guardamos el rating original de Google como referencia
-            promedio_estrellas: result.rating || 0
+            reclamar_habilitado: true,
+            publishedAt: new Date().toISOString(), // Auto-publicar en Strapi
+            schedules: result.schedules,
+            latitud: result.location?.lat,
+            longitud: result.location?.lng,
+            horarios_texto: `Rating Google: ${result.rating} con ${result.user_ratings_total} reseñas.`
           }
         })
       });
