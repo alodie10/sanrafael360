@@ -128,6 +128,8 @@ export default {
             actions.push('api::soporte.soporte.update');
             actions.push('api::lead.lead.find');
             actions.push('api::lead.lead.findOne');
+            actions.push('api::lead.lead.update');
+            actions.push('api::lead.lead.convert');
           }
 
           strapi.log.info(`🔑 Configurando permisos para rol: ${roleType} (ID: ${role.id})`);
