@@ -10,14 +10,28 @@
  *   - Solo se activa si la API key no está disponible
  */
 
+export interface DiscoveryCandidate {
+  place_id: string;
+  nombre: string;
+  direccion?: string;
+  rating?: number;
+  user_ratings_total?: number;
+  photo_reference?: string;
+  location?: { lat: number; lng: number };
+  types?: string[];
+}
+
 export interface DiscoveryResult {
+  candidates: DiscoveryCandidate[];
+  success: boolean;
+  error?: string;
+}
+
+export interface DetailedDiscovery {
   website?: string;
-  reserva_url?: string;
   google_maps_url?: string;
   horarios_texto?: string;
   telefono?: string;
-  direccion?: string;
-  /** Structured schedules ready to store — filled by Places API strategy */
   schedules?: PlacesSchedule[];
   success: boolean;
   error?: string;
@@ -30,7 +44,9 @@ export interface PlacesSchedule {
   is_closed: boolean;
 }
 
-// Google Places day index → Spanish day name
+/**
+ * Google Places day index → Spanish day name
+ */
 const DAY_INDEX_MAP: Record<number, string> = {
   0: 'Domingo',
   1: 'Lunes',
@@ -42,7 +58,35 @@ const DAY_INDEX_MAP: Record<number, string> = {
 };
 
 /**
- * Convert "HHMM" string (e.g. "1930") to "HH:MM:00.000"
+ * Utility to expand shortened URLs (goo.gl/maps or maps.app.goo.gl)
+ */
+async function expandUrl(shortUrl: string): Promise<string> {
+  try {
+    const response = await fetch(shortUrl, { method: 'HEAD', redirect: 'follow' });
+    return response.url;
+  } catch (err) {
+    console.error('[DiscoveryService] Error expanding URL:', err);
+    return shortUrl;
+  }
+}
+
+/**
+ * Extract Place ID or Search Term from a Google Maps URL
+ */
+function extractFromUrl(url: string): { placeId?: string; searchTerm?: string } {
+  // Pattern 1: Place ID in URL (usually after !1s0x...)
+  const placeIdMatch = url.match(/!1s(0x[a-f0-9]+:0x[a-f0-9]+)/i);
+  if (placeIdMatch) return { placeId: placeIdMatch[1] };
+
+  // Pattern 2: Place Name in URL (after /place/NAME/)
+  const nameMatch = url.match(/\/place\/([^/]+)/);
+  if (nameMatch) return { searchTerm: decodeURIComponent(nameMatch[1].replace(/\+/g, ' ')) };
+
+  return {};
+}
+
+/**
+ * Convert "HHMM" string (e.g. "1930") to "HH:MM:00"
  */
 function formatPlacesTime(hhmm: string): string {
   const h = hhmm.substring(0, 2).padStart(2, '0');
@@ -104,69 +148,69 @@ export class DiscoveryService {
 
   // ─── Places API Strategy ────────────────────────────────────────────────────
 
-  private async discoverViaPlacesAPI(businessName: string): Promise<DiscoveryResult> {
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) throw new Error('No GOOGLE_MAPS_API_KEY in environment');
-
-    const base = 'https://maps.googleapis.com/maps/api/place';
-
-    // 1. Text Search → place_id
-    const query = encodeURIComponent(`${businessName} San Rafael Mendoza Argentina`);
-    const searchUrl = `${base}/textsearch/json?query=${query}&key=${apiKey}&language=es`;
-    const searchRes = await fetch(searchUrl);
-    const searchData: any = await searchRes.json();
-
-    if (searchData.status !== 'OK' || !searchData.results?.length) {
-      throw new Error(`Places Text Search failed: ${searchData.status} — ${searchData.error_message || ''}`);
-    }
-
-    const placeId: string = searchData.results[0].place_id;
-    console.log(`[DiscoveryService:PlacesAPI] Found place_id: ${placeId}`);
-
-    // 2. Place Details → opening_hours, website, phone, address, url
-    const detailsUrl = `${base}/details/json?place_id=${placeId}&fields=name,opening_hours,website,url,formatted_phone_number,formatted_address&key=${apiKey}&language=es`;
+  private async fetchDetails(placeId: string, apiKey: string): Promise<any> {
+    const fields = 'name,opening_hours,website,url,formatted_phone_number,formatted_address,rating,user_ratings_total,photos,geometry';
+    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${apiKey}&language=es`;
     const detailsRes = await fetch(detailsUrl);
-    const detailsData: any = await detailsRes.json();
-
-    if (detailsData.status !== 'OK') {
-      throw new Error(`Places Details failed: ${detailsData.status}`);
-    }
-
-    const result = detailsData.result || {};
-    const schedules: PlacesSchedule[] = result.opening_hours?.periods
-      ? periodsToSchedules(result.opening_hours.periods)
-      : [];
-
-    // Build horarios_texto for legacy compatibility (logging/fallback display)
-    const horariosTexto = result.opening_hours?.weekday_text?.join('; ') || undefined;
-
-    return {
-      success: true,
-      schedules,
-      horarios_texto: horariosTexto,
-      website: result.website || undefined,
-      telefono: result.formatted_phone_number || undefined,
-      direccion: result.formatted_address || undefined,
-      google_maps_url: result.url || undefined,
-    };
+    return await detailsRes.json();
   }
 
-  async discover(businessName: string): Promise<DiscoveryResult> {
+  async discover(input: string): Promise<any> {
     const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) return { success: false, error: 'Google Maps API Key not configured' };
 
-    // Diagnostic: log key presence (never log value)
-    console.log(`[DiscoveryService] GOOGLE_MAPS_API_KEY present: ${!!process.env.GOOGLE_MAPS_API_KEY} | NEXT_PUBLIC key present: ${!!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} | effective key length: ${apiKey?.length ?? 0}`);
-
-    if (!apiKey) {
-      console.error('[DiscoveryService] No API key found. Add GOOGLE_MAPS_API_KEY to environment variables.');
-      return { success: false, error: 'Google Maps API Key not configured' };
-    }
-
-    console.log(`[DiscoveryService] Using Places API for: ${businessName}`);
     try {
-      return await this.discoverViaPlacesAPI(businessName);
+      let placeId: string | undefined;
+      let businessName = input;
+
+      // 1. Detect if input is a Google Maps URL
+      if (input.includes('google.com/maps') || input.includes('maps.app.goo.gl')) {
+        const fullUrl = input.includes('goo.gl') ? await expandUrl(input) : input;
+        const extracted = extractFromUrl(fullUrl);
+        placeId = extracted.placeId;
+        if (extracted.searchTerm) businessName = extracted.searchTerm;
+      }
+
+      // 2. If no placeId yet, use Text Search
+      if (!placeId) {
+        const query = encodeURIComponent(`${businessName} San Rafael Mendoza Argentina`);
+        const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${apiKey}&language=es`;
+        const searchRes = await fetch(searchUrl);
+        const searchData: any = await searchRes.json();
+
+        if (searchData.status === 'OK' && searchData.results?.length > 0) {
+          placeId = searchData.results[0].place_id;
+        }
+      }
+
+      if (!placeId) throw new Error('No se pudo identificar el negocio en Google Maps.');
+
+      // 3. Fetch full details
+      const detailsData = await this.fetchDetails(placeId, apiKey);
+      if (detailsData.status !== 'OK') throw new Error(`Google API Error: ${detailsData.status}`);
+
+      const result = detailsData.result || {};
+      const schedules = result.opening_hours?.periods
+        ? periodsToSchedules(result.opening_hours.periods)
+        : [];
+
+      return {
+        success: true,
+        data: {
+          nombre: result.name,
+          website: result.website,
+          telefono: result.formatted_phone_number,
+          direccion: result.formatted_address,
+          google_maps_url: result.url,
+          rating: result.rating,
+          user_ratings_total: result.user_ratings_total,
+          photo_reference: result.photos?.[0]?.photo_reference,
+          location: result.geometry?.location,
+          schedules
+        }
+      };
     } catch (err: any) {
-      console.error(`[DiscoveryService] Places API failed: ${err.message}`);
+      console.error(`[DiscoveryService] Error: ${err.message}`);
       return { success: false, error: err.message };
     }
   }
