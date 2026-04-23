@@ -214,6 +214,31 @@ export default {
         },
       });
 
+      // 4. Configurar el remitente de email para Users-Permissions (Evitar error strapi.io en Resend)
+      const upStore = strapi.store({ type: 'plugin', name: 'users-permissions', key: 'advanced' });
+      const upSettings = await upStore.get();
+      const defaultEmail = process.env.RESEND_DEFAULT_FROM || 'no-reply@sanrafael360.com';
+      
+      if (upSettings.email_confirmation_redirection !== process.env.PUBLIC_URL + '/restablecer-password') {
+        await upStore.set({
+          value: {
+            ...upSettings,
+            email_confirmation_redirection: process.env.PUBLIC_URL + '/restablecer-password'
+          }
+        });
+      }
+
+      // Actualizar plantillas de email (Forgot Password)
+      const emailStore = strapi.store({ type: 'plugin', name: 'users-permissions', key: 'email' });
+      const emailTemplates = await emailStore.get();
+      
+      if (emailTemplates.reset_password.options.from.email.includes('strapi.io')) {
+        emailTemplates.reset_password.options.from.email = defaultEmail;
+        emailTemplates.reset_password.options.from.name = 'San Rafael 360';
+        await emailStore.set({ value: emailTemplates });
+        strapi.log.info(`📧 Plantilla de reset_password actualizada con: ${defaultEmail}`);
+      }
+
     } catch (error) {
       console.error('❌ Error configurando bootstrap:', error);
     }
