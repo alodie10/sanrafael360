@@ -89,6 +89,12 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
         body: JSON.stringify({
           data: {
             nombre: result.nombre,
+            slug: result.nombre
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '') // Quitar acentos
+              .replace(/[^a-z0-9]+/g, '-')    // Reemplazar todo lo no alfanumérico por guion
+              .replace(/(^-|-$)/g, ''),      // Quitar guiones al inicio o final
             descripcion: `Negocio importado desde Google Maps. Ubicado en ${result.direccion}.`,
             direccion: result.direccion,
             telefono: result.telefono,
@@ -96,7 +102,7 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
             google_maps_url: result.google_maps_url,
             categoria: selectedCategory,
             reclamar_habilitado: true,
-            publishedAt: new Date().toISOString(), // Auto-publicar en Strapi
+            publishedAt: new Date().toISOString(),
             schedules: result.schedules,
             latitud: result.location?.lat,
             longitud: result.location?.lng,
