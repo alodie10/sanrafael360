@@ -200,7 +200,11 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
             {activeTab === 'leads' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Bandeja de Interesados (Leads)</h2>
-                <AdminLeadsInbox jwt={session.jwt as string} onConverted={fetchCounts} />
+                <AdminLeadsInbox 
+                  jwt={session.jwt as string} 
+                  onConverted={fetchCounts} 
+                  onGoToDiscovery={() => setActiveTab('discovery')}
+                />
               </div>
             )}
 
