@@ -210,7 +210,7 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
                     height="100%"
                     frameBorder="0"
                     style={{ border: 0 }}
-                    src={`https://www.google.com/maps/embed/v1/place?key=${GOOGLE_KEY}&q=place_id:${result.place_id}`}
+                    src={`https://www.google.com/maps/embed/v1/place?key=${GOOGLE_KEY}&q=${result.place_id ? `place_id:${result.place_id}` : encodeURIComponent(result.direccion || result.nombre || 'San Rafael Mendoza')}`}
                     allowFullScreen
                   ></iframe>
                 </div>
