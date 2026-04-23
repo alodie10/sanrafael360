@@ -147,9 +147,7 @@ export default {
       return ctx.send({
         success: true,
         data: {
-          website: result.website,
-          reserva_url: result.reserva_url,
-          google_maps_url: result.google_maps_url,
+          ...result.data, // This includes place_id, nombre, direccion, telefono, rating, user_ratings_total, photo_reference, location
           schedules: structuredSchedules,
           raw_hours: result.horarios_texto
         }
