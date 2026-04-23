@@ -118,30 +118,38 @@ export default {
             actions.push('api::negocio.negocio.adminPendingClaims');
             actions.push('api::negocio.negocio.adminResolveClaim');
             actions.push('api::negocio.negocio.resetClaimForTest');
-            actions.push('api::discovery.discovery.googleSync'); // Fix 403
-            actions.push('api::actividad.actividad.find');       // Fix 500
+            actions.push('api::discovery.discovery.googleSync');
+            actions.push('api::actividad.actividad.find');
             actions.push('api::actividad.actividad.create');
-            actions.push('api::soporte.soporte.find');           // Fix Soporte 403
+            actions.push('api::soporte.soporte.find');
             actions.push('api::soporte.soporte.findOne');
             actions.push('api::soporte.soporte.create');
             actions.push('api::soporte.soporte.update');
           }
 
+          strapi.log.info(`🔑 Configurando permisos para rol: ${roleType} (ID: ${role.id})`);
 
           for (const action of actions) {
-            const exists = await strapi.query('plugin::users-permissions.permission').findOne({
-              where: { action, role: role.id },
-            });
-
-            if (!exists) {
-              await strapi.query('plugin::users-permissions.permission').create({
-                data: { action, role: role.id, target: null },
+            try {
+              const exists = await strapi.query('plugin::users-permissions.permission').findOne({
+                where: { action, role: role.id },
               });
+
+              if (!exists) {
+                await strapi.query('plugin::users-permissions.permission').create({
+                  data: { action, role: role.id, target: null },
+                });
+                strapi.log.debug(`   ✅ Permiso añadido: ${action}`);
+              }
+            } catch (permErr: any) {
+              strapi.log.error(`   ❌ Error en permiso ${action}: ${permErr.message}`);
             }
           }
+        } else {
+          strapi.log.warn(`⚠️ Rol no encontrado: ${roleType}`);
         }
       }
-      console.log('✅ Permisos de Strapi (Public & Authenticated) configurados correctamente.');
+      strapi.log.info('✅ Configuración de permisos finalizada.');
 
       // 2. Seeding de Test Data si se solicita
       if (process.env.SEED_TEST_DATA === 'true') {
