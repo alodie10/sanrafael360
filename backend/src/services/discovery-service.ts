@@ -71,18 +71,29 @@ async function expandUrl(shortUrl: string): Promise<string> {
 }
 
 /**
- * Extract Name and Coordinates from a Google Maps URL
+ * Extract Name, Coordinates and CID from a Google Maps URL
  */
-function extractFromUrl(url: string): { searchTerm?: string; location?: { lat: number; lng: number } } {
-  const result: { searchTerm?: string; location?: { lat: number; lng: number } } = {};
+function extractFromUrl(url: string): { searchTerm?: string; location?: { lat: number; lng: number }; cid?: string } {
+  const result: { searchTerm?: string; location?: { lat: number; lng: number }; cid?: string } = {};
 
-  // 1. Extract Business Name (after /place/NAME/)
+  // 1. Extract CID (Internal Google ID) - usually after !1s0x...:0x...
+  const cidMatch = url.match(/!1s0x[a-f0-9]+:(0x[a-f0-9]+)/i);
+  if (cidMatch) {
+    // Convert hex CID to decimal (Google API sometimes prefers decimal CID)
+    try {
+      result.cid = BigInt(cidMatch[1]).toString();
+    } catch (e) {
+      result.cid = cidMatch[1];
+    }
+  }
+
+  // 2. Extract Business Name (after /place/NAME/)
   const nameMatch = url.match(/\/place\/([^/@]+)/);
   if (nameMatch) {
     result.searchTerm = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
   }
 
-  // 2. Extract Coordinates (after /@LAT,LNG/)
+  // 3. Extract Coordinates (after /@LAT,LNG/)
   const coordsMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
   if (coordsMatch) {
     result.location = {
@@ -172,6 +183,7 @@ export class DiscoveryService {
       let placeId: string | undefined;
       let businessName = input;
       let biasLocation: { lat: number; lng: number } | undefined;
+      let extractedCid: string | undefined;
 
       // 1. Detect if input is a Google Maps URL
       if (input.includes('google.com/maps') || input.includes('maps.app.goo.gl')) {
@@ -179,15 +191,20 @@ export class DiscoveryService {
         const extracted = extractFromUrl(fullUrl);
         if (extracted.searchTerm) businessName = extracted.searchTerm;
         if (extracted.location) biasLocation = extracted.location;
+        if (extracted.cid) extractedCid = extracted.cid;
       }
 
       // 2. If no placeId yet, use Text Search
       if (!placeId) {
-        const query = encodeURIComponent(`${businessName} San Rafael Mendoza Argentina`);
+        // If we have a CID, use it as primary query for exact match
+        const query = extractedCid 
+          ? `cid:${extractedCid}` 
+          : encodeURIComponent(`${businessName} San Rafael Mendoza Argentina`);
+          
         let searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${apiKey}&language=es`;
         
-        // If we have coordinates from URL, bias search towards them (radius 500m)
-        if (biasLocation) {
+        // If we have coordinates (and NOT a CID), bias search towards them
+        if (biasLocation && !extractedCid) {
           searchUrl += `&location=${biasLocation.lat},${biasLocation.lng}&radius=500`;
         }
 
@@ -195,7 +212,6 @@ export class DiscoveryService {
         const searchData: any = await searchRes.json();
 
         if (searchData.status === 'OK' && searchData.results?.length > 0) {
-          // If we have a bias location, try to find the result closest to it
           placeId = searchData.results[0].place_id;
         }
       }
