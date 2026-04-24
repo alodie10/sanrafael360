@@ -80,8 +80,9 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
       // 5. Disparar el flujo de configuración de contraseña (Email de Bienvenida)
       // Usamos el servicio interno de Strapi para generar el token y enviar el email
       try {
-        await strapi.plugin('users-permissions').service('auth').forgotPassword({
-          email: lead.email
+        const authService: any = strapi.service('plugin::users-permissions.auth');
+        await authService.forgotPassword({
+          email: lead.email.toLowerCase().trim()
         });
         strapi.log.info(`📧 Email de bienvenida y configuración enviado a: ${lead.email}`);
       } catch (emailErr: any) {
