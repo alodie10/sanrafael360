@@ -87,57 +87,78 @@ export default function ActivityLogView({ jwt, userId }: ActivityLogViewProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {activities.length === 0 ? (
-        <div className="bg-zinc-950/40 border border-white/5 rounded-[2.5rem] p-20 text-center">
-           <History className="w-12 h-12 text-zinc-800 mx-auto mb-4" />
-           <p className="text-zinc-500 font-serif italic text-xl">Sin actividad reciente registrada</p>
-        </div>
-      ) : (
-        <div className="relative">
-          {/* Línea de tiempo vertical */}
-          <div className="absolute left-6 top-0 bottom-0 w-[1px] bg-white/5 md:left-8" />
-          
-          <div className="space-y-6">
-            {activities.map((act) => (
-              <div key={act.id} className="relative pl-14 md:pl-20">
-                {/* Punto de la línea de tiempo */}
-                <div className="absolute left-[21px] md:left-[29px] top-1 w-2.5 h-2.5 rounded-full bg-zinc-800 border-2 border-primary shadow-[0_0_10px_rgba(255,200,0,0.3)] transition-all hover:scale-150" />
-                
-                <div className="bg-zinc-950/40 border border-white/5 p-6 rounded-[2rem] hover:border-primary/20 transition-all group">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary/20">
-                         {getIcon(act.tipo)}
-                      </div>
-                      <span className="text-sm font-bold text-white tracking-tight">{act.accion}</span>
-                    </div>
-                    <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">{new Date(act.createdAt).toLocaleString()}</span>
-                  </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed mb-4 italic">\"{act.detalles}\"</p>
-                  
-                  {(act.negocio || act.usuario) && (
-                    <div className="flex flex-wrap gap-4 pt-4 border-t border-white/5">
-                      {act.negocio && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5">
-                          <Building2 className="w-3.5 h-3.5 text-primary/50" />
-                          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">{act.negocio.nombre}</span>
-                        </div>
-                      )}
-                      {act.usuario && !userId && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5">
-                          <UserIcon className="w-3.5 h-3.5 text-primary/50" />
-                          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">{act.usuario.username}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+    <div className="w-full bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden shadow-2xl font-mono text-[11px] leading-tight">
+      {/* Terminal Header */}
+      <div className="bg-zinc-900/50 px-4 py-2 border-b border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500/20 border border-red-500/40" />
+            <div className="w-2.5 h-2.5 rounded-full bg-amber-500/20 border border-amber-500/40" />
+            <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/40" />
           </div>
+          <span className="text-zinc-500 font-bold uppercase tracking-widest text-[9px] ml-4">system.log — San Rafael 360</span>
         </div>
-      )}
+        <div className="text-zinc-600">
+           {activities.length} entries
+        </div>
+      </div>
+
+      {/* Log Content */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-white/5 text-zinc-600 uppercase text-[9px] font-black">
+              <th className="px-4 py-3 font-black">Timestamp</th>
+              <th className="px-4 py-3 font-black">Action</th>
+              <th className="px-4 py-3 font-black">Entity / Details</th>
+              {!userId && <th className="px-4 py-3 font-black">User</th>}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/[0.02]">
+            {activities.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-4 py-12 text-center text-zinc-700 italic">No activities recorded in the last 50 entries.</td>
+              </tr>
+            ) : (
+              activities.map((act) => (
+                <tr key={act.id} className="hover:bg-white/[0.02] transition-colors group">
+                  <td className="px-4 py-2 whitespace-nowrap text-blue-400/70 group-hover:text-blue-400">
+                    {new Date(act.createdAt).toLocaleString('es-AR', { 
+                      month: 'short', 
+                      day: '2-digit', 
+                      hour: '2-digit', 
+                      minute: '2-digit', 
+                      second: '2-digit' 
+                    })}
+                  </td>
+                  <td className="px-4 py-2 whitespace-nowrap">
+                    <span className={cn(
+                      "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border",
+                      act.tipo === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/20' :
+                      act.tipo === 'error' ? 'text-red-400 bg-red-500/10 border-red-500/20' :
+                      act.tipo === 'warning' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' :
+                      'text-blue-400 bg-blue-500/10 border-blue-500/20'
+                    )}>
+                      {act.accion}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2 max-w-md truncate text-zinc-300">
+                    {act.negocio && (
+                      <span className="text-primary/70 font-bold mr-2">[{act.negocio.nombre}]</span>
+                    )}
+                    <span className="text-zinc-500 italic">{act.detalles}</span>
+                  </td>
+                  {!userId && (
+                    <td className="px-4 py-2 whitespace-nowrap text-zinc-500">
+                      {act.usuario?.username || 'system'}
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

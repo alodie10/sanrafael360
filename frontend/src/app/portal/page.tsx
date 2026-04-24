@@ -51,6 +51,10 @@ export default async function PortalPage() {
   const negocios = await getNegocios(session.jwt as string);
   const isAdmin = (session as any).user?.role === 'Admin';
 
+  if (isAdmin) {
+    redirect("/portal/admin");
+  }
+
   return (
     <div className="min-h-screen bg-black font-sans selection:bg-primary/30 pt-24">
       {/* Breadcrumb / Sub-header Premium */}
