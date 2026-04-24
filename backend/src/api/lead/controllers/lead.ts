@@ -91,10 +91,10 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
 
         // Obtener configuración de emails de Strapi
         const pluginStore = await strapi.store({ type: 'plugin', name: 'users-permissions' });
-        const emailSettings = await pluginStore.get({ key: 'email' });
-        const advancedSettings = await pluginStore.get({ key: 'advanced' });
+        const emailSettings: any = await pluginStore.get({ key: 'email' });
+        const advancedSettings: any = await pluginStore.get({ key: 'advanced' });
         
-        const resetPasswordSettings = emailSettings.reset_password.options;
+        const resetPasswordSettings = emailSettings?.reset_password?.options || {};
         const publicUrl = process.env.PUBLIC_URL || 'http://localhost:3000';
         
         // El link de reset debe apuntar al frontend
