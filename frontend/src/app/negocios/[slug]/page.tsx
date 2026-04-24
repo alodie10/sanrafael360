@@ -468,7 +468,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                   </div>
                   <div className="h-56 rounded-3xl overflow-hidden border border-white/5">
                     {negocio.latitud && negocio.longitud ? (
-                      <GoogleMap lat={negocio.latitud} lng={longitud} title={negocio.nombre} />
+                      <GoogleMap lat={negocio.latitud} lng={negocio.longitud} title={negocio.nombre} />
                     ) : (
                       <div className="w-full h-full bg-slate-800 flex items-center justify-center p-6 text-center text-xs text-slate-500 italic">
                         Ubicación no disponible
