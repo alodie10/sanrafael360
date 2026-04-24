@@ -430,6 +430,45 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiActividadActividad extends Struct.CollectionTypeSchema {
+  collectionName: 'actividades';
+  info: {
+    description: 'Log de acciones realizadas por usuarios y administradores';
+    displayName: 'Actividad';
+    pluralName: 'actividades';
+    singularName: 'actividad';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    accion: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    detalles: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::actividad.actividad'
+    > &
+      Schema.Attribute.Private;
+    negocio: Schema.Attribute.Relation<'manyToOne', 'api::negocio.negocio'>;
+    publishedAt: Schema.Attribute.DateTime;
+    tipo: Schema.Attribute.Enumeration<
+      ['info', 'warning', 'success', 'error']
+    > &
+      Schema.Attribute.DefaultTo<'info'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    usuario: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+  };
+}
+
 export interface ApiCategoriaCategoria extends Struct.CollectionTypeSchema {
   collectionName: 'categorias';
   info: {
@@ -466,42 +505,41 @@ export interface ApiCategoriaCategoria extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiConsultaSoporteConsultaSoporte
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'consultas-soporte';
+export interface ApiLeadLead extends Struct.CollectionTypeSchema {
+  collectionName: 'leads';
   info: {
-    description: 'Mensajes de soporte de los due\u00F1os de negocios';
-    displayName: 'Consulta de Soporte';
-    pluralName: 'consultas-soporte';
-    singularName: 'consulta-soporte';
+    description: 'Interesados en sumarse a la plataforma';
+    displayName: 'Lead de Negocio';
+    pluralName: 'leads';
+    singularName: 'lead';
   };
   options: {
     draftAndPublish: false;
   };
   attributes: {
-    asunto: Schema.Attribute.String & Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    estado: Schema.Attribute.Enumeration<['pendiente', 'respondido']> &
-      Schema.Attribute.DefaultTo<'pendiente'>;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::consulta-soporte.consulta-soporte'
+    email: Schema.Attribute.Email & Schema.Attribute.Required;
+    estado: Schema.Attribute.Enumeration<
+      ['nuevo', 'contactado', 'descartado', 'convertido']
     > &
+      Schema.Attribute.DefaultTo<'nuevo'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::lead.lead'> &
       Schema.Attribute.Private;
-    mensaje: Schema.Attribute.Text & Schema.Attribute.Required;
-    negocio: Schema.Attribute.Relation<'manyToOne', 'api::negocio.negocio'>;
+    mensaje: Schema.Attribute.Text;
+    negocio_vinculado: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::negocio.negocio'
+    >;
+    nombre_completo: Schema.Attribute.String & Schema.Attribute.Required;
+    nombre_negocio: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
-    respuesta: Schema.Attribute.Text;
+    telefono: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    usuario: Schema.Attribute.Relation<
-      'manyToOne',
-      'plugin::users-permissions.user'
-    >;
   };
 }
 
@@ -556,7 +594,7 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
       'plugin::users-permissions.user'
     >;
     price_range: Schema.Attribute.Enumeration<
-      ['Econ\u00F3mico', 'Moderado', 'Pro', 'Premium']
+      ['Economico', 'Moderado', 'Medio-Alto', 'Alto']
     >;
     publishedAt: Schema.Attribute.DateTime;
     reclamar_habilitado: Schema.Attribute.Boolean &
@@ -575,6 +613,46 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     verificado: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     website: Schema.Attribute.String;
     whatsapp: Schema.Attribute.String;
+  };
+}
+
+export interface ApiSoporteSoporte extends Struct.CollectionTypeSchema {
+  collectionName: 'consultas-soporte';
+  info: {
+    description: 'Mensajes de soporte de los due\u00F1os de negocios';
+    displayName: 'Soporte';
+    pluralName: 'soportes';
+    singularName: 'soporte';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    asunto: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.String;
+    estado: Schema.Attribute.Enumeration<['pendiente', 'respondido']> &
+      Schema.Attribute.DefaultTo<'pendiente'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::soporte.soporte'
+    > &
+      Schema.Attribute.Private;
+    mensaje: Schema.Attribute.Text & Schema.Attribute.Required;
+    negocio: Schema.Attribute.Relation<'manyToOne', 'api::negocio.negocio'>;
+    nombre: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    respuesta: Schema.Attribute.Text;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    usuario: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
   };
 }
 
@@ -1089,9 +1167,11 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::actividad.actividad': ApiActividadActividad;
       'api::categoria.categoria': ApiCategoriaCategoria;
-      'api::consulta-soporte.consulta-soporte': ApiConsultaSoporteConsultaSoporte;
+      'api::lead.lead': ApiLeadLead;
       'api::negocio.negocio': ApiNegocioNegocio;
+      'api::soporte.soporte': ApiSoporteSoporte;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;
