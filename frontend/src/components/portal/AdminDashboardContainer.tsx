@@ -107,7 +107,7 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
             >
               <div className="flex items-center gap-3">
                 <ShieldCheck className="w-4 h-4" /> 
-                <span>Gestión Reclamos</span>
+                <span>Reclamos de Propiedad</span>
               </div>
               {claims.length > 0 && (
                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${activeTab === 'claims' ? 'bg-black text-primary' : 'bg-primary text-black'}`}>
@@ -122,7 +122,7 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
             >
               <div className="flex items-center gap-3">
                 <Search className="w-4 h-4" /> 
-                <span>Descubrir Negocios</span>
+                <span>Directorio Global</span>
               </div>
             </button>
 
@@ -169,7 +169,7 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
           <div className="lg:col-span-3 space-y-8">
             {activeTab === 'claims' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Solicitudes de Propiedad</h2>
+                <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Solicitudes de Reclamo</h2>
                 {claims.length > 0 ? (
                   <div className="grid grid-cols-1 gap-6">
                     {claims.map((claim: any) => (
@@ -192,7 +192,7 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
 
             {activeTab === 'discovery' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Discovery Tool (Google Maps)</h2>
+                <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Directorio Global (Curación Proactiva)</h2>
                 <AdminDiscoveryTool jwt={session.jwt as string} />
               </div>
             )}
