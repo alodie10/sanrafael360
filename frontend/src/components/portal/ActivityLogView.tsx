@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { Clock, History, Building2, User as UserIcon, AlertCircle, CheckCircle2, Info, Loader2 } from "lucide-react";
 import { STRAPI_URL } from "@/lib/strapi";
+import { cn } from "@/lib/utils";
 
 interface ActivityLogViewProps {
   jwt: string;
