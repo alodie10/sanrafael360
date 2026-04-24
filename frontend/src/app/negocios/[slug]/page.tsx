@@ -491,45 +491,22 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                 )}
               </div>
 
-              {/* Map Container */}
-              <div className="mt-10">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-white font-bold">Ubicación</h4>
-                  <a 
-                    href={negocio.google_maps_url || `https://www.google.com/maps/search/?api=1&query=${negocio.latitud},${negocio.longitud}`} 
-                    target="_blank"
-                    className="text-primary text-xs font-bold hover:underline flex items-center gap-1"
-                  >
-                    Ver en Maps <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-                <div data-testid="map-section" className="h-64">
-                   {negocio.latitud && negocio.longitud ? (
-                     <GoogleMap 
-                        lat={negocio.latitud} 
-                        lng={negocio.longitud} 
-                        title={negocio.nombre}
-                      />
-                   ) : (
-                     <div data-testid="location-not-found" className="w-full h-full bg-slate-800 rounded-3xl flex items-center justify-center p-6 text-center">
-                        <p className="text-slate-500 text-sm italic">Ubicación no disponible en el mapa.</p>
-                     </div>
-                   )}
-                </div>
+                {/* Horarios */}
+                {negocio.horarios_texto && (
+                  <div className="pt-6 border-t border-white/5">
+                    <div className="flex items-center gap-3 mb-4 text-primary">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-xs font-black uppercase tracking-widest">Horarios</span>
+                    </div>
+                    <p className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed">
+                      {sanitizeText(negocio.horarios_texto)}
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {/* Horarios Card */}
-              {negocio.horarios_texto && (
-                <div className="mt-10 p-6 bg-primary/5 rounded-2xl border border-primary/10">
-                  <div className="flex items-center gap-3 mb-4 text-primary">
-                    <Clock className="w-5 h-5" />
-                    <span className="font-bold">Horarios Actualizados</span>
-                  </div>
-                  <p className="text-slate-400 text-sm whitespace-pre-wrap leading-relaxed">
-                    {sanitizeText(negocio.horarios_texto)}
-                  </p>
-                </div>
-              )}
+              {/* Action Buttons (Ya cubiertos arriba, pero se mantienen lógicas si necesarias) */}
+              
             </div>
           </div>
         </div>
