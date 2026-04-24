@@ -26,9 +26,9 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
         where: { email: userEmail }
       });
 
-      // Obtener el rol de propietario
+      // Obtener el rol de propietario (Nota: En index.ts se usa 'Propietario' con P mayúscula)
       const ownerRole = await strapi.query('plugin::users-permissions.role').findOne({
-        where: { name: 'propietario' }
+        where: { name: 'Propietario' }
       });
 
       if (!user) {
@@ -41,7 +41,7 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
             role: ownerRole?.id || 1,
           }
         });
-      } else if (user.role?.name !== 'propietario') {
+      } else if (user.role?.name !== 'Propietario') {
         await strapi.query('plugin::users-permissions.user').update({
           where: { id: user.id },
           data: { role: ownerRole?.id || user.role?.id }
@@ -83,10 +83,13 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
         // Generar Token de Reset (Estándar Strapi)
         const resetPasswordToken = crypto.randomBytes(64).toString('hex');
         
-        // Actualizar usuario con el token
+        // Actualizar usuario con el token (Aseguramos ambos campos por compatibilidad)
         await strapi.query('plugin::users-permissions.user').update({
           where: { id: user.id },
-          data: { resetPasswordToken }
+          data: { 
+            resetPasswordToken: resetPasswordToken,
+            reset_password_token: resetPasswordToken // Fallback para algunas versiones de DB
+          }
         });
 
         // Obtener configuración de emails de Strapi
