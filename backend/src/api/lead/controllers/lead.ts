@@ -22,29 +22,33 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
 
       // 2. Buscar o Crear el Usuario (Propietario)
       const userEmail = lead.email.toLowerCase().trim();
-      let user = await strapi.query('plugin::users-permissions.user').findOne({
+      
+      // Usar DB Query para máxima precisión en Strapi 5
+      let user = await strapi.db.query('plugin::users-permissions.user').findOne({
         where: { email: userEmail }
       });
 
-      // Obtener el rol de propietario (Nota: En index.ts se usa 'Propietario' con P mayúscula)
-      const ownerRole = await strapi.query('plugin::users-permissions.role').findOne({
+      // Obtener el rol de Propietario (Case sensitive en Strapi 5)
+      const propietarioRole = await strapi.db.query('plugin::users-permissions.role').findOne({
         where: { name: 'Propietario' }
       });
 
       if (!user) {
-        user = await strapi.query('plugin::users-permissions.user').create({
+        user = await strapi.db.query('plugin::users-permissions.user').create({
           data: {
             username: userEmail,
             email: userEmail,
             password: crypto.randomBytes(20).toString('hex'),
             confirmed: true,
-            role: ownerRole?.id || 1,
+            role: propietarioRole?.id || 1,
+            provider: 'local'
           }
         });
-      } else if (user.role?.name !== 'Propietario') {
-        await strapi.query('plugin::users-permissions.user').update({
+      } else {
+        // Asegurar que tenga el rol de Propietario
+        await strapi.db.query('plugin::users-permissions.user').update({
           where: { id: user.id },
-          data: { role: ownerRole?.id || user.role?.id }
+          data: { role: propietarioRole?.id || user.role }
         });
       }
 
@@ -78,14 +82,14 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
         } as any
       });
 
-        // 5. BLINDAJE SENIOR: Envío manual de Email de Bienvenida
+      // 5. BLINDAJE SENIOR: Generación de Acceso
       try {
-        // Generar Token de Reset (Estándar Strapi)
         const resetPasswordToken = crypto.randomBytes(64).toString('hex');
         
-        // Actualizar usuario usando el SERVICIO OFICIAL (como en index.ts)
-        await strapi.plugin('users-permissions').service('user').edit(user.id, {
-          resetPasswordToken
+        // Persistencia directa en DB (Inmune a capas de servicios)
+        await strapi.db.query('plugin::users-permissions.user').update({
+          where: { id: user.id },
+          data: { resetPasswordToken }
         });
 
         // Obtener configuración de emails de Strapi
