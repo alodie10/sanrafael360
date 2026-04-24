@@ -78,18 +78,14 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
         } as any
       });
 
-      // 5. BLINDAJE SENIOR: Envío manual de Email de Bienvenida
+        // 5. BLINDAJE SENIOR: Envío manual de Email de Bienvenida
       try {
         // Generar Token de Reset (Estándar Strapi)
         const resetPasswordToken = crypto.randomBytes(64).toString('hex');
         
-        // Actualizar usuario con el token (Aseguramos ambos campos por compatibilidad)
-        await strapi.query('plugin::users-permissions.user').update({
-          where: { id: user.id },
-          data: { 
-            resetPasswordToken: resetPasswordToken,
-            reset_password_token: resetPasswordToken // Fallback para algunas versiones de DB
-          }
+        // Actualizar usuario usando el SERVICIO OFICIAL (como en index.ts)
+        await strapi.plugin('users-permissions').service('user').edit(user.id, {
+          resetPasswordToken
         });
 
         // Obtener configuración de emails de Strapi
