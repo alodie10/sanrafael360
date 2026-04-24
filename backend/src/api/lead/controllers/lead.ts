@@ -95,10 +95,13 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
         const advancedSettings: any = await pluginStore.get({ key: 'advanced' });
         
         const resetPasswordSettings = emailSettings?.reset_password?.options || {};
-        const publicUrl = process.env.PUBLIC_URL || 'http://localhost:3000';
+        // El link de reset debe apuntar al frontend (usamos la config oficial de Strapi)
+        let resetLink = advancedSettings.email_reset_password || 'https://www.sanrafael360.com/restablecer-password';
         
-        // El link de reset debe apuntar al frontend
-        const resetLink = `${publicUrl}/restablecer-password?code=${resetPasswordToken}`;
+        // Asegurar que el link tenga el token
+        resetLink = resetLink.includes('?') 
+          ? `${resetLink}&code=${resetPasswordToken}` 
+          : `${resetLink}?code=${resetPasswordToken}`;
 
         // Usar el servicio de email DIRECTO (el que funciona en soporte)
         await strapi.plugin('email').service('email').send({
