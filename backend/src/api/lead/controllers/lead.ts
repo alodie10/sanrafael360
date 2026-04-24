@@ -73,6 +73,11 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
         } as any
       });
 
+      // PUBLICACIÓN OBLIGATORIA (Strapi 5 exige publish para que los cambios de update sean visibles)
+      await strapi.documents('api::negocio.negocio' as any).publish({
+        documentId: negocioId
+      });
+
       // 4. Actualizar estado del Lead
       await strapi.documents('api::lead.lead' as any).update({
         documentId: id,
