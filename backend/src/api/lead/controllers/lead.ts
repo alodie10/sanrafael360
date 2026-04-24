@@ -1,4 +1,5 @@
 import { factories } from '@strapi/strapi';
+import crypto from 'crypto';
 
 export default factories.createCoreController('api::lead.lead' as any, ({ strapi }) => ({
   async convert(ctx) {
@@ -20,8 +21,9 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
       }
 
       // 2. Buscar o Crear el Usuario (Propietario)
+      const userEmail = lead.email.toLowerCase().trim();
       let user = await strapi.query('plugin::users-permissions.user').findOne({
-        where: { email: lead.email }
+        where: { email: userEmail }
       });
 
       // Obtener el rol de propietario
@@ -32,15 +34,14 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
       if (!user) {
         user = await strapi.query('plugin::users-permissions.user').create({
           data: {
-            username: lead.email,
-            email: lead.email,
-            password: Math.random().toString(36).slice(-10),
+            username: userEmail,
+            email: userEmail,
+            password: crypto.randomBytes(20).toString('hex'),
             confirmed: true,
-            role: ownerRole?.id || 1, // Authenticated como fallback seguro
+            role: ownerRole?.id || 1,
           }
         });
       } else if (user.role?.name !== 'propietario') {
-        // Si el usuario existe pero no es propietario, subirle el rango
         await strapi.query('plugin::users-permissions.user').update({
           where: { id: user.id },
           data: { role: ownerRole?.id || user.role?.id }
@@ -68,7 +69,7 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
         } as any
       });
 
-      // 4. Actualizar estado del Lead y guardar relación
+      // 4. Actualizar estado del Lead
       await strapi.documents('api::lead.lead' as any).update({
         documentId: id,
         data: {
@@ -77,17 +78,49 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
         } as any
       });
 
-      // 5. Disparar el flujo de configuración de contraseña (Email de Bienvenida)
-      // Usamos el servicio interno de Strapi para generar el token y enviar el email
+      // 5. BLINDAJE SENIOR: Envío manual de Email de Bienvenida
       try {
-        const authService: any = strapi.service('plugin::users-permissions.auth');
-        await authService.forgotPassword({
-          email: lead.email.toLowerCase().trim()
+        // Generar Token de Reset (Estándar Strapi)
+        const resetPasswordToken = crypto.randomBytes(64).toString('hex');
+        
+        // Actualizar usuario con el token
+        await strapi.query('plugin::users-permissions.user').update({
+          where: { id: user.id },
+          data: { resetPasswordToken }
         });
-        strapi.log.info(`📧 Email de bienvenida y configuración enviado a: ${lead.email}`);
+
+        // Obtener configuración de emails de Strapi
+        const pluginStore = await strapi.store({ type: 'plugin', name: 'users-permissions' });
+        const emailSettings = await pluginStore.get({ key: 'email' });
+        const advancedSettings = await pluginStore.get({ key: 'advanced' });
+        
+        const resetPasswordSettings = emailSettings.reset_password.options;
+        const publicUrl = process.env.PUBLIC_URL || 'http://localhost:3000';
+        
+        // El link de reset debe apuntar al frontend
+        const resetLink = `${publicUrl}/restablecer-password?code=${resetPasswordToken}`;
+
+        // Usar el servicio de email DIRECTO (el que funciona en soporte)
+        await strapi.plugin('email').service('email').send({
+          to: userEmail,
+          from: `San Rafael 360 <${process.env.RESEND_DEFAULT_FROM || 'no-reply@sanrafael360.com'}>`,
+          subject: 'Configuración de acceso - San Rafael 360',
+          html: `
+            <div style="font-family: sans-serif; padding: 25px; border: 1px solid #f0f0f0; border-radius: 12px; max-width: 600px; margin: auto;">
+              <h2 style="color: #111;">¡Gracias por ser parte de San Rafael 360!</h2>
+              <p>Para gestionar tu negocio, por favor define tu contraseña en el siguiente enlace:</p>
+              <div style="margin: 30px 0; text-align: center;">
+                <a href="${resetLink}" 
+                   style="background: #111; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Configurar mi Contraseña</a>
+              </div>
+              <p style="color: #666; font-size: 12px;">Si no has solicitado este acceso, puedes ignorar este mensaje.</p>
+            </div>
+          `
+        });
+
+        strapi.log.info(`📧 Email de bienvenida enviado con éxito vía motor directo a: ${userEmail}`);
       } catch (emailErr: any) {
-        strapi.log.error(`❌ Error al enviar email de onboarding: ${emailErr.message}`);
-        // No bloqueamos la respuesta exitosa si el email falla, pero lo logueamos
+        strapi.log.error(`❌ Error en blindaje de email: ${emailErr.message}`);
       }
       
       return ctx.send({ 
