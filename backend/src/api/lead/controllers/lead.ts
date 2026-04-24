@@ -62,11 +62,11 @@ export default factories.createCoreController('api::lead.lead' as any, ({ strapi
         return ctx.badRequest(`El negocio "${negocio.nombre}" ya tiene un dueño asignado.`);
       }
 
-      // 4. Vincular el Usuario al Negocio
+      // 4. Vincular el Usuario al Negocio (Usando documentId para Strapi 5)
       await strapi.documents('api::negocio.negocio' as any).update({
         documentId: negocioId,
         data: {
-          owner: user.id,
+          owner: user.documentId || user.id, // Preferir documentId si existe
           reclamar_habilitado: true,
           verificado: true,
           estado_reclamo: 'aprobado'
