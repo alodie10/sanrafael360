@@ -283,74 +283,135 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         </div>
       </section>
 
+      {/* QUICK ACTIONS BAR (Conversión Directa) */}
+      <section className="bg-slate-900/50 border-b border-white/5 py-8 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto flex flex-wrap justify-center md:justify-start gap-4">
+          {negocio.website && (
+            <a 
+              href={negocio.website} 
+              target="_blank" 
+              className="flex-1 min-w-[200px] md:flex-none flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-white/10"
+            >
+              <Globe className="w-5 h-5" />
+              Visitar Web
+            </a>
+          )}
+          {negocio.whatsapp && (
+            <a 
+              href={`https://wa.me/${negocio.whatsapp.replace(/\D/g,'')}`} 
+              target="_blank" 
+              className="flex-1 min-w-[200px] md:flex-none flex items-center justify-center gap-3 bg-emerald-500 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-emerald-500/20"
+            >
+              <MessageCircle className="w-5 h-5" />
+              WhatsApp
+            </a>
+          )}
+          {negocio.instagram && (
+            <a 
+              href={negocio.instagram} 
+              target="_blank" 
+              className="flex-1 min-w-[200px] md:flex-none flex items-center justify-center gap-3 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-pink-500/20"
+            >
+              <Instagram className="w-5 h-5" />
+              Instagram
+            </a>
+          )}
+          {negocio.facebook && (
+            <a 
+              href={negocio.facebook} 
+              target="_blank" 
+              className="flex-1 min-w-[200px] md:flex-none flex items-center justify-center gap-3 bg-[#1877F2] text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-blue-600/20"
+            >
+              <Facebook className="w-5 h-5" />
+              Facebook
+            </a>
+          )}
+        </div>
+      </section>
+
       {/* CONTENT GRID */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16 items-start">
           
-          {/* Main Info */}
-          <div className="lg:col-span-2 space-y-12">
+          {/* Main Column */}
+          <div className="lg:col-span-2 space-y-16">
+            
+            {/* Gallery (Lugar Destacado) */}
+            {negocio.galeria && negocio.galeria.length > 0 && (
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="aspect-[4/3] rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5"
+                  >
+                    <img 
+                      src={getStrapiMedia(negocio.galeria[0].url)!} 
+                      alt={negocio.nombre}
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+                    />
+                  </motion.div>
+                  <div className="grid grid-rows-2 gap-4">
+                    {negocio.galeria.slice(1, 3).map((img: any, i: number) => (
+                      <motion.div 
+                        key={img.id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="rounded-3xl overflow-hidden shadow-xl border border-white/5"
+                      >
+                        <img 
+                          src={getStrapiMedia(img.url)!} 
+                          alt={`${negocio.nombre} ${i}`}
+                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+                {negocio.galeria.length > 3 && (
+                  <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
+                    {negocio.galeria.slice(3, 7).map((img: any, i: number) => (
+                      <motion.div 
+                        key={img.id}
+                        whileHover={{ scale: 1.05 }}
+                        className="aspect-square rounded-2xl overflow-hidden shadow-lg border border-white/5"
+                      >
+                        <img 
+                          src={getStrapiMedia(img.url)!} 
+                          alt={`${negocio.nombre} ${i + 3}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Descripción */}
             <div>
-              <h2 className="text-2xl font-heading font-bold text-white mb-6 flex items-center gap-3">
-                Descripción
+              <h2 className="text-2xl font-heading font-bold text-white mb-6 flex items-center gap-3 italic">
+                Acerca de este lugar
                 <div className="h-px flex-1 bg-white/5" />
               </h2>
               {negocio.descripcion ? (
                 <div 
-                  className="text-slate-400 leading-relaxed text-lg whitespace-pre-wrap mb-12"
+                  className="text-slate-400 leading-relaxed text-lg whitespace-pre-wrap"
                   dangerouslySetInnerHTML={{ __html: negocio.descripcion }}
                 />
               ) : (
-                /* Placeholder glassmorphic — se muestra si el negocio no tiene descripción */
-                <div className="mb-12 p-8 rounded-3xl bg-white/3 border border-white/8 backdrop-blur-sm flex items-center gap-5">
-                  <div className="w-12 h-12 shrink-0 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                    <span className="text-2xl">🏔️</span>
-                  </div>
-                  <div>
-                    <p className="text-white font-bold mb-1">Descripción próximamente</p>
-                    <p className="text-slate-500 text-sm">Estamos recopilando la información de este comercio. Volvé pronto.</p>
-                  </div>
+                <div className="p-8 rounded-3xl bg-white/3 border border-white/8 backdrop-blur-sm flex items-center gap-5 italic text-slate-500">
+                  Sin descripción detallada por el momento.
                 </div>
               )}
             </div>
-
-            {/* Website Portlet - Prioridad sobre galería */}
-            {negocio.website && (
-              <WebsitePortlet 
-                url={negocio.website} 
-                businessName={negocio.nombre} 
-              />
-            )}
-
-            {/* Gallery placeholder or actual images */}
-            {negocio.galeria && negocio.galeria.length > 0 && (
-              <div className="pt-8">
-                <h2 className="text-2xl font-heading font-bold text-white mb-8 flex items-center gap-3">
-                  Galería de Fotos
-                  <div className="h-px flex-1 bg-white/5" />
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {negocio.galeria.map((img: any, i: number) => (
-                    <motion.div 
-                      key={img.id}
-                      whileHover={{ scale: 1.02 }}
-                      className="aspect-square rounded-2xl overflow-hidden cursor-pointer shadow-xl border border-white/5"
-                    >
-                      <img 
-                        src={getStrapiMedia(img.url)!} 
-                        alt={`${negocio.nombre} ${i}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            )}
 
           </div>
 
           {/* Sidebar Info */}
           <div className="space-y-8">
-            {/* Booking Widget Principal: Solo si está habilitado */}
+            {/* Booking Widget */}
             {negocio.reserva_habilitada && (
               <BookingWidget 
                 reservaUrl={negocio.reserva_url} 
@@ -359,78 +420,75 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
               />
             )}
 
-            {/* Action Buttons */}
+            {/* Sidebar Details Card */}
             <div className="bg-slate-900/40 rounded-[2rem] p-8 border border-white/5 backdrop-blur-md shadow-xl sticky top-32">
-              {/* Sección de Reclamo: Solo visible si no hay dueño y el estado es 'ninguno' */}
+              {/* Claim Section */}
               {negocio.reclamar_habilitado && !negocio.owner && (!negocio.estado_reclamo || negocio.estado_reclamo === 'ninguno') && (
-                <div className="mb-8 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center">
-                  <h4 className="text-white font-bold mb-2">¿Eres el dueño de este negocio?</h4>
-                  <p className="text-sm text-blue-200/70 mb-4 text-balance">Reclama este perfil para administrar la información, responder comentarios y más.</p>
+                <div className="mb-10 p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+                  <h4 className="text-white font-bold mb-2">¿Gestionas este negocio?</h4>
+                  <p className="text-xs text-blue-200/50 mb-4 leading-relaxed">Toma el control para actualizar fotos, horarios y responder a tus clientes.</p>
                   <button 
                     onClick={() => {
                       if (!session) router.push(`/registro?claim=${slug}`);
                       else setShowClaimModal(true);
                     }}
-                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-500/20"
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all"
                   >
                     Reclamar Perfil
                   </button>
                 </div>
               )}
               
-              {negocio.estado_reclamo === 'pendiente' && (
-                <div className="mb-8 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center">
-                  <p className="text-amber-400 font-bold text-sm">Tu solicitud de reclamo está pendiente de aprobación.</p>
-                </div>
-              )}
-
-              <h3 className="text-xl font-bold text-white mb-6">Información Detallada</h3>
+              <h3 className="text-xl font-bold text-white mb-6">Ubicación y Contacto</h3>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {negocio.telefono && (
-                  <a href={`tel:${negocio.telefono}`} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5 group">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        <Phone className="w-5 h-5" />
-                      </div>
-                      <div>
-                         <p className="text-[10px] uppercase font-bold text-slate-500">Teléfono</p>
-                         <p className="text-white font-medium">{negocio.telefono}</p>
-                      </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-primary">
+                      <Phone className="w-5 h-5" />
                     </div>
-                  </a>
+                    <div>
+                        <p className="text-[10px] uppercase font-bold text-slate-500">Teléfono</p>
+                        <p className="text-white font-medium">{negocio.telefono}</p>
+                    </div>
+                  </div>
                 )}
 
-                {negocio.whatsapp && (
-                  <a href={`https://wa.me/${negocio.whatsapp.replace(/\D/g,'')}`} target="_blank" className="flex items-center justify-between p-4 bg-green-500/10 rounded-2xl hover:bg-green-500/20 transition-all border border-green-500/10 group">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-green-500 flex items-center justify-center text-white">
-                        <MessageCircle className="w-5 h-5" />
-                      </div>
-                      <div>
-                         <p className="text-[10px] uppercase font-bold text-green-500/70">WhatsApp</p>
-                         <p className="text-white font-medium">Chatear ahora</p>
-                      </div>
-                    </div>
-                  </a>
-                )}
-
-                {/* Sitio Web removido del sidebar — cubierto por WebsitePortlet en columna principal */}
-                
-                <div className="pt-4 flex gap-4">
-                  {negocio.instagram && (
-                    <a href={negocio.instagram} target="_blank" className="flex-1 h-14 rounded-2xl bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] p-[1px] group transition-transform hover:scale-105">
-                      <div className="w-full h-full bg-slate-900 rounded-[0.9rem] flex items-center justify-center text-white">
-                        <Instagram className="w-6 h-6" />
-                      </div>
+                {/* Map */}
+                <div className="pt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">Cómo llegar</h4>
+                    <a 
+                      href={negocio.google_maps_url || `https://www.google.com/maps/search/?api=1&query=${negocio.latitud},${negocio.longitud}`} 
+                      target="_blank"
+                      className="text-primary text-[10px] font-black uppercase hover:underline flex items-center gap-1"
+                    >
+                      Maps <ExternalLink className="w-3 h-3" />
                     </a>
-                  )}
-                  {negocio.facebook && (
-                    <a href={negocio.facebook} target="_blank" className="flex-1 h-14 rounded-2xl bg-[#1877F2] flex items-center justify-center text-white transition-transform hover:scale-105">
-                      <Facebook className="w-6 h-6" />
-                    </a>
-                  )}
+                  </div>
+                  <div className="h-56 rounded-3xl overflow-hidden border border-white/5">
+                    {negocio.latitud && negocio.longitud ? (
+                      <GoogleMap lat={negocio.latitud} lng={longitud} title={negocio.nombre} />
+                    ) : (
+                      <div className="w-full h-full bg-slate-800 flex items-center justify-center p-6 text-center text-xs text-slate-500 italic">
+                        Ubicación no disponible
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Horarios */}
+                {negocio.horarios_texto && (
+                  <div className="pt-6 border-t border-white/5">
+                    <div className="flex items-center gap-3 mb-4 text-primary">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-xs font-black uppercase tracking-widest">Horarios</span>
+                    </div>
+                    <p className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed">
+                      {sanitizeText(negocio.horarios_texto)}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Map Container */}

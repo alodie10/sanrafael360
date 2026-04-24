@@ -559,51 +559,26 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
             </div>
           </div>
 
-          {/* Horarios y Precios (Hito 2) */}
+          {/* Horarios (Hito 2) */}
           <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
-            <div className="grid grid-cols-1 gap-10">
-              <div className="flex flex-col gap-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400">
-                      <CalendarDays className="w-5 h-5" />
-                    </div>
-                    Horarios de Atención
-                  </h3>
-                  <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400">
+                    <CalendarDays className="w-5 h-5" />
                   </div>
-                </div>
-                
-                <ScheduleEditor 
-                  schedules={schedules} 
-                  onChange={setSchedules} 
-                />
-              </div>
-
-              <div className="pt-6 border-t border-white/5">
-                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400 text-sm font-bold">$$</div>
-                  Nivel de Precios
+                  Horarios de Atención
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {["Economico", "Moderado", "Medio-Alto", "Alto"].map((range) => (
-                    <button
-                      key={range}
-                      onClick={() => setPriceRange(range)}
-                      type="button"
-                      className={`py-3 px-4 rounded-2xl text-sm font-bold transition-all border ${priceRange === range 
-                        ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20' 
-                        : 'bg-slate-800 border-white/5 text-slate-400 hover:border-white/20'}`}
-                    >
-                      {range}
-                    </button>
-                  ))}
-                </div>
               </div>
+              
+              <ScheduleEditor 
+                schedules={schedules} 
+                onChange={setSchedules} 
+              />
             </div>
           </div>
 
-          {/* Galería (4 Fotos) */}
+          {/* Galería */}
           <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
             <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
                <ImageIcon className="w-6 h-6 text-blue-400" />
@@ -735,26 +710,6 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Opciones */}
-          <div className="bg-slate-900 border border-white/10 rounded-3xl p-6">
-            <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-3">
-              <CalendarDays className="w-5 h-5 text-blue-400" /> Reservas
-            </h2>
-            <div className="flex items-center justify-between p-4 bg-slate-800/50 border border-white/5 rounded-2xl">
-              <span className="text-sm font-medium text-white">Habilitar reservas</span>
-              <button 
-                type="button"
-                onClick={() => setReservaHabilitada(!reservaHabilitada)}
-                className={`w-12 h-6 rounded-full transition-colors relative ${reservaHabilitada ? 'bg-blue-600' : 'bg-slate-700'}`}
-              >
-                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${reservaHabilitada ? 'left-7' : 'left-1'}`} />
-              </button>
-            </div>
-            <p className="text-[10px] text-slate-500 mt-4 leading-relaxed">
-              * Si tu negocio acepta reservas directas, activa esta opción para que se muestre el botón en tu perfil.
-            </p>
           </div>
 
           {/* Ayuda */}
