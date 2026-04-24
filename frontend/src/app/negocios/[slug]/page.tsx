@@ -490,23 +490,6 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                   </div>
                 )}
               </div>
-
-                {/* Horarios */}
-                {negocio.horarios_texto && (
-                  <div className="pt-6 border-t border-white/5">
-                    <div className="flex items-center gap-3 mb-4 text-primary">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-xs font-black uppercase tracking-widest">Horarios</span>
-                    </div>
-                    <p className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed">
-                      {sanitizeText(negocio.horarios_texto)}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons (Ya cubiertos arriba, pero se mantienen lógicas si necesarias) */}
-              
             </div>
           </div>
         </div>
