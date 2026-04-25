@@ -211,12 +211,22 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
 
   const businessStatus = getBusinessStatus();
 
-  const canManage = (session as any)?.user?.role === 'Admin' || 
-                   ((session as any)?.user?.id && negocio.owner?.id && String(negocio.owner.id) === String((session as any).user.id));
+  // Detección flexible de dueño para Strapi 5
+  const sessionUserId = String((session as any)?.user?.id || "");
+  const ownerId = String(negocio.owner?.id || negocio.owner?.documentId || "");
+  
+  const isAdmin = (session as any)?.user?.role === 'Admin';
+  const isOwner = sessionUserId && ownerId && sessionUserId === ownerId;
+  const canManage = isAdmin || isOwner;
 
-  // Debug para dueños
+  // Debug profundo para diagnosticar el botón faltante
   if (session) {
-    console.log(`[canManage Check] UserID: ${(session as any).user.id}, OwnerID: ${negocio.owner?.id}, Role: ${(session as any).user.role}, Match: ${canManage}`);
+    console.log("--- DEBUG PROPIEDAD ---");
+    console.log("Sesión User ID:", sessionUserId);
+    console.log("Negocio Owner ID:", ownerId);
+    console.log("Objeto Owner completo:", JSON.stringify(negocio.owner));
+    console.log("Resultado canManage:", canManage);
+    console.log("-----------------------");
   }
 
   return (

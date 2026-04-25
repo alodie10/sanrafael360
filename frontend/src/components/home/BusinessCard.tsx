@@ -19,8 +19,11 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
   const coverUrl = negocio.imagen_portada?.url;
   const businessSlug = negocio.slug || negocio.documentId;
 
+  const sessionUserId = String((session as any)?.user?.id || "");
+  const ownerId = String(negocio.owner?.id || negocio.owner?.documentId || "");
+  
   const isAdmin = (session as any)?.user?.role === 'Admin';
-  const isOwner = (session as any)?.user?.id && negocio.owner?.id && String(negocio.owner.id) === String((session as any).user.id);
+  const isOwner = sessionUserId && ownerId && sessionUserId === ownerId;
   const canManage = isAdmin || isOwner;
 
   return (
