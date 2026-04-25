@@ -13,7 +13,8 @@ import {
   Zap,
   CheckCircle2,
   Building2,
-  Search
+  Search,
+  BarChart3
 } from "lucide-react";
 import Link from "next/link";
 import AdminClaimCard from "./AdminClaimCard";
@@ -24,7 +25,7 @@ import ActivityLogView from "./ActivityLogView";
 import PortalStats from "./PortalStats";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
-  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery'>('claims');
+  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats'>('claims');
   const [claims, setClaims] = useState(initialClaims);
   const [supportCount, setSupportCount] = useState(0);
   const [leadsCount, setLeadsCount] = useState(0);
@@ -103,6 +104,16 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
           {/* Sidebar Navigation (Mail Client Style) */}
           <aside className="lg:col-span-1 space-y-3">
             <button 
+              onClick={() => setActiveTab('stats')}
+              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'stats' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+            >
+              <div className="flex items-center gap-3">
+                <BarChart3 className="w-4 h-4" /> 
+                <span>Rendimiento Global</span>
+              </div>
+            </button>
+
+            <button 
               onClick={() => setActiveTab('claims')}
               className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'claims' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
             >
@@ -168,11 +179,12 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
 
           {/* Main Content Area */}
           <div className="lg:col-span-3 space-y-8">
-            {/* Global Performance Summary for Admin */}
-            <div className="mb-10">
-              <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Rendimiento General de la Plataforma</h2>
-              <PortalStats />
-            </div>
+            {activeTab === 'stats' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Rendimiento General de la Plataforma</h2>
+                <PortalStats />
+              </div>
+            )}
 
             {activeTab === 'claims' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
