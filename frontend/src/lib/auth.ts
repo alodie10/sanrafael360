@@ -91,16 +91,30 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user, account }) {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
       if (account?.provider === 'google') {
-        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-        try {
+          console.log(`[AUTH] Attempting Strapi Handshake with provider: google`);
+          console.log(`[AUTH] Access Token length: ${account.access_token?.length || 0}`);
+          
           const res = await fetch(`${strapiUrl}/api/auth/google/callback?access_token=${account.access_token}`);
           
           if (!res.ok) {
             const errorText = await res.text();
-            console.error(`❌ Strapi Google Auth Error: [${res.status}] ${res.statusText}`);
-            console.error(`Full error response from Strapi: ${errorText}`);
-            // No lanzamos error para que NextAuth no rompa el flujo, pero el token no tendrá JWT
+            console.error(`❌ STRAPI AUTH REJECTED [${res.status}]: ${res.statusText}`);
+            console.error(`Payload received from Strapi:`, errorText);
+            
+            // Intento alternativo con id_token si el access_token falló
+            if (account.id_token) {
+              console.log(`[AUTH] Retrying with id_token...`);
+              const resId = await fetch(`${strapiUrl}/api/auth/google/callback?id_token=${account.id_token}`);
+              if (resId.ok) {
+                const dataId = await resId.json();
+                console.log(`✅ Success with id_token!`);
+                token.jwt = dataId.jwt;
+                token.id = dataId.user.id.toString();
+                // ... el resto de la lógica de roles vendría aquí, pero priorizamos el JWT
+              }
+            }
           }
           
           const data = await res.json();
