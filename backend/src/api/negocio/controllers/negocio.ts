@@ -29,10 +29,16 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
 
+    // Obtener usuario completo con rol para validación en el servicio
+    const fullUser = await strapi.query('plugin::users-permissions.user').findOne({
+      where: { id: user.id },
+      populate: ['role']
+    });
+
     let body = ctx.request.body;
     const data = typeof body.data === 'string' ? JSON.parse(body.data) : (body.data || body);
 
-    const result = await strapi.service('api::negocio.negocio').updatePortal(id, user.id, data, (ctx.request as any).files);
+    const result = await strapi.service('api::negocio.negocio').updatePortal(id, fullUser, data, (ctx.request as any).files);
     return ctx.send({ success: true, data: result });
   }),
 

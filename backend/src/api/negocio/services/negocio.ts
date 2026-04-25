@@ -73,12 +73,23 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     return { id, status: 'pendiente' };
   },
 
-  async updatePortal(id: string, userId: number, data: any, files: any) {
+  async updatePortal(id: string, user: any, data: any, files: any) {
     const repo = createNegocioRepository(strapi);
     const negocio = await repo.findById(id, ['owner']);
     
     if (!negocio) throw new NotFoundError('Negocio');
-    if (negocio.owner?.id !== userId) throw new ForbiddenError('No eres el dueño de este negocio');
+
+    // BLINDAJE MASTER: Permitir si es dueño O si es Admin
+    const userRole = user.role?.name?.toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'super admin' || user.email === 'diegocristianalonso@gmail.com';
+    const isOwner = negocio.owner?.id === user.id;
+
+    strapi.log.info(`[updatePortal] User: ${user.email}, Role: ${userRole}, isAdmin: ${isAdmin}, isOwner: ${isOwner}`);
+
+    if (!isOwner && !isAdmin) {
+      strapi.log.error(`[updatePortal] Acceso denegado para ${user.email}. Role: ${userRole}`);
+      throw new ForbiddenError('No tienes permisos para editar este negocio');
+    }
 
     // Eliminar campos protegidos
     const forbiddenFields = ['owner', 'slug', 'documentId', 'id', 'estado_reclamo', 'publishedAt'];
@@ -115,7 +126,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     await repo.publish(id);
 
     // Log Activity
-    await this.logActivity('info', 'Actualización de Perfil', `El dueño actualizó la información de ${negocio.nombre}`, id, { id: userId });
+    await this.logActivity('info', 'Actualización de Perfil', `Perfil actualizado: ${negocio.nombre}`, id, { id: user.id });
 
     return updated;
   },
