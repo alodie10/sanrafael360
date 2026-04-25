@@ -8,6 +8,14 @@ export const authOptions: NextAuthOptions = {
       ? [GoogleProvider({
           clientId: process.env.GOOGLE_CLIENT_ID,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          authorization: {
+            params: {
+              prompt: "consent",
+              access_type: "offline",
+              response_type: "code",
+              scope: "openid email profile"
+            }
+          }
         })] 
       : []),
     CredentialsProvider({
@@ -94,8 +102,9 @@ export const authOptions: NextAuthOptions = {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
       if (account?.provider === 'google') {
         try {
-          console.log(`[AUTH] Attempting Strapi Handshake with provider: google`);
-          console.log(`[AUTH] Access Token length: ${account.access_token?.length || 0}`);
+          console.error(`[DEBUG-AUTH] Handshake Iniciado - Provider: google`);
+          console.error(`[DEBUG-AUTH] AccessToken present: ${!!account.access_token} (length: ${account.access_token?.length || 0})`);
+          console.error(`[DEBUG-AUTH] IdToken present: ${!!account.id_token}`);
           
           const res = await fetch(`${strapiUrl}/api/auth/google/callback?access_token=${account.access_token}`);
           
