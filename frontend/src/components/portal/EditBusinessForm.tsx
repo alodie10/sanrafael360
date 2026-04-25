@@ -63,7 +63,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [website, setWebsite] = useState(negocio.website || "");
   const [telefono, setTelefono] = useState(negocio.telefono || "");
   const [whatsapp, setWhatsapp] = useState(negocio.whatsapp || "");
-  const [reservaHabilitada, setReservaHabilitada] = useState(negocio.reserva_habilitada ?? true);
+  const [reservaHabilitada, setReservaHabilitada] = useState(negocio.reserva_habilitada ?? false);
+  const [reservaUrl, setReservaUrl] = useState(negocio.reserva_url || "");
   
   // Normalize legacy lowercase price_range from DB to match new Capitalized enum
   const normalizePriceRange = (val?: string) => {
@@ -292,7 +293,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
 
       setSuccess(true);
       setTimeout(() => {
-        router.push("/portal");
+        router.push(`/negocios/${negocio.slug}`);
         router.refresh();
       }, 2000);
     } catch (e: any) {
