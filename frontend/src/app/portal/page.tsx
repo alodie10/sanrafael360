@@ -108,6 +108,18 @@ export default async function PortalPage() {
           </div>
         )}
 
+        {/* Error de Sincronización con Strapi */}
+        {(session as any).error && (
+          <div className="mb-12 p-6 bg-red-500/10 border border-red-500/30 rounded-[2rem] flex items-center gap-4 text-red-400 animate-pulse">
+            <AlertCircle className="w-8 h-8 shrink-0" />
+            <div>
+              <h3 className="font-bold text-lg">Error de Sincronización</h3>
+              <p className="text-sm opacity-80">{(session as any).error}</p>
+              <p className="text-[10px] mt-2 uppercase font-black tracking-widest opacity-50">Esto significa que entraste con Google pero Strapi no te reconoce como usuario válido.</p>
+            </div>
+          </div>
+        )}
+
         {/* Sección de Negocios - Solo para Propietarios */}
         {!isAdmin && (
           <>

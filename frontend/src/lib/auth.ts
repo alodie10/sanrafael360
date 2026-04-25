@@ -115,7 +115,11 @@ export const authOptions: NextAuthOptions = {
                 token.id = dataId.user.id.toString();
                 // ... el resto de la lógica de roles vendría aquí, pero priorizamos el JWT
               }
+              }
             }
+            
+            // Si llegamos aquí y no hay token, guardamos el error para mostrarlo
+            token.error = `Strapi rechazó el login [${res.status}]. Asegurate de que el proveedor Google esté activo en Strapi Admin.`;
           }
           
           const data = await res.json();
@@ -147,9 +151,12 @@ export const authOptions: NextAuthOptions = {
             
             if (isSovereignAdmin) userRole = 'Admin';
             token.role = userRole;
+          } else {
+            token.error = "Strapi no devolvió un JWT. Verificá la configuración del plugin users-permissions.";
           }
         } catch (e: any) {
           console.error("🚨 Google Handshake Exception:", e.message || e);
+          token.error = `Error de red con Strapi: ${e.message}`;
         }
       } else if (user) {
         token.jwt = (user as any).jwt;
@@ -162,6 +169,7 @@ export const authOptions: NextAuthOptions = {
       (session as any).jwt = token.jwt as string;
       (session as any).user.id = token.id as string;
       (session as any).user.role = token.role as string;
+      (session as any).error = token.error as string;
       return session;
     }
   },
