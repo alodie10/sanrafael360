@@ -222,7 +222,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       {canManage && (
         <div className="fixed bottom-8 right-8 z-50 animate-in fade-in slide-in-from-bottom-6 duration-700">
           <Link 
-            href={`/portal/negocios/${negocio.documentId || negocio.id}/editar`}
+            href={`/portal/negocios/${negocio.slug}/editar`}
             className="flex items-center gap-3 bg-primary text-black px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-xs md:text-sm shadow-[0_10px_40px_rgba(255,191,0,0.4)] hover:scale-110 active:scale-95 transition-all group border-2 border-black/10"
           >
             <Settings className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
