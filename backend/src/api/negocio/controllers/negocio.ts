@@ -4,6 +4,42 @@ import { ValidationError } from '../../../utils/errors';
 import { createNegocioRepository } from '../repositories/negocio-repository';
 
 export default factories.createCoreController('api::negocio.negocio', ({ strapi }) => ({
+  // Sobrescribir FIND para incluir el ID del dueño en listados (Home)
+  async find(ctx) {
+    const { data, meta } = await super.find(ctx);
+    
+    if (data && Array.isArray(data)) {
+      await Promise.all(data.map(async (item) => {
+        const fullItem = await strapi.documents('api::negocio.negocio').findOne({
+          documentId: item.documentId,
+          populate: ['owner']
+        });
+        if (fullItem?.owner) {
+          item.owner = { id: fullItem.owner.id };
+        }
+      }));
+    }
+    
+    return { data, meta };
+  },
+
+  // Sobrescribir FINDONE para incluir el ID del dueño en el detalle (Perfil)
+  async findOne(ctx) {
+    const { data, meta } = await super.findOne(ctx);
+    
+    if (data) {
+      const fullItem = await strapi.documents('api::negocio.negocio').findOne({
+        documentId: data.documentId,
+        populate: ['owner']
+      });
+      if (fullItem?.owner) {
+        data.owner = { id: fullItem.owner.id };
+      }
+    }
+    
+    return { data, meta };
+  },
+
   claim: asyncHandler(async (ctx) => {
     const { id } = ctx.params;
     const user = ctx.state.user;
