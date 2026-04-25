@@ -318,6 +318,14 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         </div>
         
         <div className="flex items-center gap-3">
+          <Link 
+            href={`/negocios/${negocio.slug}`}
+            target="_blank"
+            className="hidden md:flex items-center gap-2 px-6 py-3 bg-white/5 text-slate-300 font-bold rounded-2xl border border-white/10 hover:bg-white/10 transition-all text-sm group"
+          >
+            <Globe className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+            Ver Perfil
+          </Link>
           <button 
             onClick={handleSave}
             disabled={isSaving}

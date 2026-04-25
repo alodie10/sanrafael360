@@ -85,7 +85,7 @@ export default function Navbar() {
             </div>
           ) : (
             <Link
-              href="/login"
+              href={`/login?callbackUrl=${pathname}`}
               className="text-sm font-bold text-slate-300 hover:text-white transition-colors"
             >
               Entrar
@@ -108,7 +108,7 @@ export default function Navbar() {
               <User className="w-6 h-6" />
             </Link>
           ) : (
-             <Link href="/login" className="text-slate-300 text-xs font-bold uppercase tracking-wider">
+             <Link href={`/login?callbackUrl=${pathname}`} className="text-slate-300 text-xs font-bold uppercase tracking-wider">
               Entrar
             </Link>
           )}

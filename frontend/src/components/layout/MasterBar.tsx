@@ -23,7 +23,7 @@ export default function MasterBar() {
         </div>
         <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
         <p className="text-[10px] text-zinc-500 uppercase font-bold hidden md:block">
-          Estás navegando como administrador global
+          {pathname.startsWith('/negocios/') ? 'Gestión de Contenido Activa' : 'Estás navegando como administrador global'}
         </p>
       </div>
 
