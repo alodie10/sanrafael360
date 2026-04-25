@@ -98,8 +98,9 @@ export const authOptions: NextAuthOptions = {
           
           if (!res.ok) {
             const errorText = await res.text();
-            console.error(`❌ Strapi Google Auth Error: ${res.status} ${res.statusText} - ${errorText}`);
-            throw new Error("Strapi Google Auth Failed");
+            console.error(`❌ Strapi Google Auth Error: [${res.status}] ${res.statusText}`);
+            console.error(`Full error response from Strapi: ${errorText}`);
+            // No lanzamos error para que NextAuth no rompa el flujo, pero el token no tendrá JWT
           }
           
           const data = await res.json();
@@ -132,8 +133,8 @@ export const authOptions: NextAuthOptions = {
             if (isSovereignAdmin) userRole = 'Admin';
             token.role = userRole;
           }
-        } catch (e) {
-          console.error("Google Handshake Exception:", e);
+        } catch (e: any) {
+          console.error("🚨 Google Handshake Exception:", e.message || e);
         }
       } else if (user) {
         token.jwt = (user as any).jwt;
