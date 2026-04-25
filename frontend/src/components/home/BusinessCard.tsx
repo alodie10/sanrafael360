@@ -112,6 +112,26 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
               </span>
             </div>
 
+            {/* Rango de Precios (RF-10) */}
+            {negocio.price_range && (
+              <div className="flex items-center gap-0.5 text-primary/80 font-black text-[10px] bg-primary/5 px-2 py-1 rounded-lg border border-primary/10">
+                {Array.from({ length: 4 }).map((_, i) => {
+                  const levels: Record<string, number> = {
+                    "Economico": 1,
+                    "Moderado": 2,
+                    "Medio-Alto": 3,
+                    "Alto": 4
+                  };
+                  const currentLevel = levels[negocio.price_range!] || 1;
+                  return (
+                    <span key={i} className={cn(i < currentLevel ? "opacity-100" : "opacity-20")}>
+                      $
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
             <motion.div
               whileHover={{ scale: 1.1, rotate: -45 }}
               className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300"

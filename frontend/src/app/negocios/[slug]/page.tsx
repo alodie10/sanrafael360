@@ -311,6 +311,25 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                     {negocio.categoria.nombre}
                   </div>
                 )}
+                {negocio.price_range && (
+                  <div className="flex items-center gap-0.5 text-primary/80 font-black text-xs bg-primary/5 px-3 py-1 rounded-full border border-primary/20">
+                    {Array.from({ length: 4 }).map((_, i) => {
+                      const levels: Record<string, number> = {
+                        "Economico": 1,
+                        "Moderado": 2,
+                        "Medio-Alto": 3,
+                        "Alto": 4
+                      };
+                      const currentLevel = levels[negocio.price_range!] || 1;
+                      return (
+                        <span key={i} className={cn(i < currentLevel ? "opacity-100" : "opacity-20")}>
+                          $
+                        </span>
+                      );
+                    })}
+                    <span className="ml-2 text-[10px] opacity-60 uppercase tracking-tighter">{negocio.price_range}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -20,6 +20,7 @@ import SupportForm from "@/components/portal/SupportForm";
 import BusinessPortalCard from "@/components/portal/BusinessPortalCard";
 import ActivityLogView from "@/components/portal/ActivityLogView";
 import Logo from "@/components/common/Logo";
+import PortalStats from "@/components/portal/PortalStats";
 import { cn } from "@/lib/utils";
 
 async function getNegocios(jwt: string) {
@@ -124,6 +125,9 @@ export default async function PortalPage() {
         {!isAdmin && (
           <>
             <div className="mb-12">
+              <h2 className="text-4xl font-serif font-bold text-white mb-8 tracking-tight italic">Resumen de Rendimiento</h2>
+              <PortalStats />
+              
               <h2 className="text-4xl font-serif font-bold text-white mb-8 tracking-tight italic">Mis Negocios</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {negocios.length > 0 ? (
