@@ -140,6 +140,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
 
   useEffect(() => {
     loadBusinessData();
+    // Forzar scroll al inicio al cambiar de negocio
+    window.scrollTo(0, 0);
   }, [slug]);
 
 
