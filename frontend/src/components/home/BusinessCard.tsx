@@ -1,11 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MapPin, ArrowRight } from "lucide-react";
+import { MapPin, ArrowRight, Settings } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 interface BusinessCardProps {
   negocio: Negocio;
@@ -13,12 +14,29 @@ interface BusinessCardProps {
 }
 
 export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) {
+  const { data: session } = useSession();
   const logoUrl = negocio.logo?.url;
   const coverUrl = negocio.imagen_portada?.url;
   const businessSlug = negocio.slug || negocio.documentId;
 
+  const isAdmin = (session as any)?.user?.role === 'Admin';
+  const isOwner = (session as any)?.user?.id && negocio.owner?.id && String(negocio.owner.id) === String((session as any).user.id);
+  const canManage = isAdmin || isOwner;
+
   return (
-    <Link href={`/negocios/${businessSlug}`}>
+    <div className="relative h-full group">
+      {/* Botón de Gestión Rápida Overlay */}
+      {canManage && (
+        <Link 
+          href={`/portal/negocios/${businessSlug}/editar`}
+          className="absolute top-4 right-4 z-[30] bg-primary text-black px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center gap-2 border border-black/10"
+        >
+          <Settings className="w-3.5 h-3.5" />
+          <span>Gestionar</span>
+        </Link>
+      )}
+
+      <Link href={`/negocios/${businessSlug}`}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -104,5 +122,6 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       </motion.div>
     </Link>
+    </div>
   );
 }

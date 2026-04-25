@@ -29,13 +29,14 @@ export default function Navbar() {
   }, []);
 
   const { data: session } = useSession();
-  const isAdmin = (session as any)?.user?.role === 'Admin';
+  const userRole = (session as any)?.user?.role;
+  const hasMasterBar = !!session && (userRole === 'Admin' || userRole === 'Propietario' || userRole === 'Authenticated');
 
   return (
     <nav
       className={cn(
         "fixed left-0 right-0 z-50 transition-all duration-500 px-4 md:px-8 py-5",
-        isAdmin ? "top-[37px]" : "top-0",
+        hasMasterBar ? "top-10" : "top-0",
         scrolled 
           ? "bg-[#000000]/95 backdrop-blur-xl border-b border-primary/30 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.8)]" 
           : "bg-[#000000]/60 backdrop-blur-md border-b border-primary/10"

@@ -212,7 +212,12 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   const businessStatus = getBusinessStatus();
 
   const canManage = (session as any)?.user?.role === 'Admin' || 
-                   ((session as any)?.user?.id && negocio.owner?.id === Number((session as any).user.id));
+                   ((session as any)?.user?.id && negocio.owner?.id && String(negocio.owner.id) === String((session as any).user.id));
+
+  // Debug para dueños
+  if (session) {
+    console.log(`[canManage Check] UserID: ${(session as any).user.id}, OwnerID: ${negocio.owner?.id}, Role: ${(session as any).user.role}, Match: ${canManage}`);
+  }
 
   return (
     <main className="min-h-screen bg-background pb-20">
