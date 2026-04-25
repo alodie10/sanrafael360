@@ -113,46 +113,45 @@ export const authOptions: NextAuthOptions = {
                 console.log(`✅ Success with id_token!`);
                 token.jwt = dataId.jwt;
                 token.id = dataId.user.id.toString();
-                // ... el resto de la lógica de roles vendría aquí, pero priorizamos el JWT
-              }
               }
             }
             
-            // Si llegamos aquí y no hay token, guardamos el error para mostrarlo
-            token.error = `Strapi rechazó el login [${res.status}]. Asegurate de que el proveedor Google esté activo en Strapi Admin.`;
-          }
-          
-          const data = await res.json();
-          if (data.jwt) {
-            token.jwt = data.jwt;
-            token.id = data.user.id.toString();
-
-            // Identificar si es el dueño
-            const isSovereignAdmin = data.user.email === 'diegocristianalonso@gmail.com';
-            let userRole = isSovereignAdmin ? 'Admin' : 'Authenticated';
-            
-            // Obtener rol
-            try {
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 3000);
-              const userRes = await fetch(`${strapiUrl}/api/users/me?populate=role`, {
-                headers: { "Authorization": `Bearer ${data.jwt}` },
-                signal: controller.signal
-              });
-              clearTimeout(timeoutId);
-              
-              if (userRes.ok) {
-                const userData = await userRes.json();
-                userRole = userData.role?.name || 'Authenticated';
-              }
-            } catch (roleErr) {
-              // Silent fail
+            if (!token.jwt) {
+              token.error = `Strapi rechazó el login [${res.status}]. Asegurate de que el proveedor Google esté activo en Strapi Admin.`;
             }
-            
-            if (isSovereignAdmin) userRole = 'Admin';
-            token.role = userRole;
           } else {
-            token.error = "Strapi no devolvió un JWT. Verificá la configuración del plugin users-permissions.";
+            const data = await res.json();
+            if (data.jwt) {
+              token.jwt = data.jwt;
+              token.id = data.user.id.toString();
+
+              // Identificar si es el dueño
+              const isSovereignAdmin = data.user.email === 'diegocristianalonso@gmail.com';
+              let userRole = isSovereignAdmin ? 'Admin' : 'Authenticated';
+              
+              // Obtener rol
+              try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const userRes = await fetch(`${strapiUrl}/api/users/me?populate=role`, {
+                  headers: { "Authorization": `Bearer ${data.jwt}` },
+                  signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                
+                if (userRes.ok) {
+                  const userData = await userRes.json();
+                  userRole = userData.role?.name || 'Authenticated';
+                }
+              } catch (roleErr) {
+                // Silent fail
+              }
+              
+              if (isSovereignAdmin) userRole = 'Admin';
+              token.role = userRole;
+            } else {
+              token.error = "Strapi no devolvió un JWT. Verificá la configuración del plugin users-permissions.";
+            }
           }
         } catch (e: any) {
           console.error("🚨 Google Handshake Exception:", e.message || e);
