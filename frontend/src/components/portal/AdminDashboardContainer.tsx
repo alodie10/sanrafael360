@@ -21,6 +21,7 @@ import AdminSupportInbox from "./AdminSupportInbox";
 import AdminLeadsInbox from "./AdminLeadsInbox";
 import AdminDiscoveryTool from "./AdminDiscoveryTool";
 import ActivityLogView from "./ActivityLogView";
+import PortalStats from "./PortalStats";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
   const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery'>('claims');
@@ -167,6 +168,12 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
 
           {/* Main Content Area */}
           <div className="lg:col-span-3 space-y-8">
+            {/* Global Performance Summary for Admin */}
+            <div className="mb-10">
+              <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Rendimiento General de la Plataforma</h2>
+              <PortalStats />
+            </div>
+
             {activeTab === 'claims' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Solicitudes de Reclamo</h2>
