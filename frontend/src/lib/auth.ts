@@ -93,6 +93,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account }) {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
       if (account?.provider === 'google') {
+        try {
           console.log(`[AUTH] Attempting Strapi Handshake with provider: google`);
           console.log(`[AUTH] Access Token length: ${account.access_token?.length || 0}`);
           
