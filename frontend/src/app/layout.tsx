@@ -3,6 +3,7 @@ import { Inter, Outfit, Playfair_Display } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import SessionProvider from "@/components/providers/SessionProvider";
 import Navbar from "@/components/layout/Navbar";
+import MasterBar from "@/components/layout/MasterBar";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -37,6 +38,7 @@ export default function RootLayout({
         <Toaster richColors position="top-right" />
         <SessionProvider>
           <div className="app-container font-sans">
+            <MasterBar />
             <Navbar />
             {children}
             <SpeedInsights />

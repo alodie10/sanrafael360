@@ -18,7 +18,8 @@ import {
   Star,
   Clock,
   MessageCircle,
-  ExternalLink
+  ExternalLink,
+  Settings
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -114,7 +115,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
     try {
       setLoading(true);
       // Populate basic info
-      const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[galeria][fields][0]=url&populate[schedules]=*";
+      const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[galeria][fields][0]=url&populate[schedules]=*&populate[owner][fields][0]=id";
       const res = await fetchFromStrapi(`negocios?filters[slug][$eq]=${slug}&${populate}`);
       
       let businessData = res.data?.[0];
@@ -210,9 +211,25 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
 
   const businessStatus = getBusinessStatus();
 
+  const canManage = (session as any)?.user?.role === 'Admin' || 
+                   ((session as any)?.user?.id && negocio.owner?.id === Number((session as any).user.id));
+
   return (
     <main className="min-h-screen bg-background pb-20">
       <Navbar />
+
+      {/* Botón de Gestión Proactiva (Solo para Admin o Dueño) */}
+      {canManage && (
+        <div className="fixed bottom-8 right-8 z-50 animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <Link 
+            href={`/portal/negocios/${negocio.documentId || negocio.id}/editar`}
+            className="flex items-center gap-3 bg-primary text-black px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-xs md:text-sm shadow-[0_10px_40px_rgba(255,191,0,0.4)] hover:scale-110 active:scale-95 transition-all group border-2 border-black/10"
+          >
+            <Settings className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+            <span>Gestionar Perfil</span>
+          </Link>
+        </div>
+      )}
 
       {/* HERO SECTION */}
       <section className="relative h-[50vh] md:h-[60vh] overflow-hidden">

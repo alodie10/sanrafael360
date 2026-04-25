@@ -15,26 +15,33 @@ export default async function EditBusinessPage({ params }: EditPageProps) {
     redirect("/login");
   }
 
-  // Fetch business data specifically for the owner
+  // Fetch business data
   const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
-  const res = await fetch(`${strapiUrl}/api/negocios/me`, {
-    headers: {
-      "Authorization": `Bearer ${session.jwt}`
-    },
-    cache: "no-store"
-  });
+  const isAdmin = session.user?.role === 'Admin';
+  
+  let negocio = null;
 
-  if (!res.ok) {
-    return (
-      <div className="min-h-screen pt-32 px-4 text-center">
-        <h1 className="text-2xl font-bold text-white mb-4">Error al cargar datos</h1>
-        <p className="text-slate-400">No pudimos verificar la propiedad de este negocio.</p>
-      </div>
-    );
+  if (isAdmin) {
+    // Si es admin, buscamos de forma global por slug
+    const res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate=*`, {
+      headers: { "Authorization": `Bearer ${session.jwt}` },
+      cache: "no-store"
+    });
+    if (res.ok) {
+      const { data } = await res.json();
+      negocio = data?.[0];
+    }
+  } else {
+    // Si no es admin, buscamos solo entre sus negocios
+    const res = await fetch(`${strapiUrl}/api/negocios/me`, {
+      headers: { "Authorization": `Bearer ${session.jwt}` },
+      cache: "no-store"
+    });
+    if (res.ok) {
+      const { data: negocios } = await res.json();
+      negocio = negocios.find((n: any) => n.slug === slug);
+    }
   }
-
-  const { data: negocios } = await res.json();
-  const negocio = negocios.find((n: any) => n.slug === slug);
 
   if (!negocio) {
     redirect("/portal");
