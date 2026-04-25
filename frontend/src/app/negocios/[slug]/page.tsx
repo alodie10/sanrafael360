@@ -530,16 +530,35 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                   </div>
                 </div>
 
-                {/* Horarios */}
-                {negocio.horarios_texto && (
+                {/* Horarios (RF-07) */}
+                {(negocio.horarios_texto || (negocio.schedules && negocio.schedules.length > 0)) && (
                   <div className="pt-6 border-t border-white/5">
                     <div className="flex items-center gap-3 mb-4 text-primary">
                       <Clock className="w-4 h-4" />
                       <span className="text-xs font-black uppercase tracking-widest">Horarios</span>
                     </div>
-                    <p className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed">
-                      {sanitizeText(negocio.horarios_texto)}
-                    </p>
+                    
+                    {negocio.horarios_texto ? (
+                      <p className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed">
+                        {sanitizeText(negocio.horarios_texto)}
+                      </p>
+                    ) : (
+                      <div className="space-y-1">
+                        {["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].map(day => {
+                          const daySched = negocio.schedules.find((s: any) => s.day === day);
+                          return (
+                            <div key={day} className="flex justify-between text-[11px]">
+                              <span className="text-slate-500 font-bold">{day}</span>
+                              <span className="text-slate-300 font-medium tracking-tight">
+                                {daySched ? (
+                                  daySched.is_closed ? 'Cerrado' : `${daySched.opening_time.slice(0, 5)} - ${daySched.closing_time.slice(0, 5)}`
+                                ) : 'Consultar'}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
