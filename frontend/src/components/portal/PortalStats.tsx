@@ -56,7 +56,10 @@ export default function PortalStats() {
         const isAdmin = (session as any)?.user?.role === 'Admin' || session?.user?.email === 'diegocristianalonso@gmail.com';
         
         // Si es admin traemos todos, si es dueño usamos nuestra ruta especial /me
-        const endpoint = isAdmin ? 'negocios' : 'negocios/me';
+        // Agregamos fields[0]=views... para obligar a Strapi a enviarlos
+        const fields = "fields[0]=nombre&fields[1]=views&fields[2]=clicks_whatsapp&fields[3]=clicks_website";
+        const endpoint = isAdmin ? `negocios?${fields}` : 'negocios/me';
+        
         const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
         const strapiToken = (session as any)?.jwt || process.env.STRAPI_API_TOKEN;
         
