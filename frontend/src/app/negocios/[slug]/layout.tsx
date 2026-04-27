@@ -3,7 +3,9 @@ import { ReactNode } from "react";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+  
+  console.log(`[SEO Debug] Generando metadata para: ${slug} usando ${strapiUrl}`);
   
   try {
     let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate[logo]=*&populate[categoria]=*&populate[imagen_portada]=*`);
@@ -12,6 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     
     // Plan B: Buscar por documentId
     if (!negocio) {
+      console.warn(`[SEO Debug] Negocio no encontrado por slug, reintentando por documentId: ${slug}`);
       res = await fetch(`${strapiUrl}/api/negocios?filters[documentId][$eq]=${slug}&populate[logo]=*&populate[categoria]=*&populate[imagen_portada]=*`);
       data = await res.json();
       negocio = data.data?.[0];
@@ -46,7 +49,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BusinessLayout({ children, params }: { children: ReactNode, params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
   
   let jsonLd = null;
   try {
