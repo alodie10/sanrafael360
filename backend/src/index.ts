@@ -110,6 +110,7 @@ export default {
             'api::lead.lead.create',
             'api::negocio.negocio.incrementStats',
             'api::negocio.negocio.getStatsSummary',
+            'api::review.review.find',
           ];
 
           // El rol autenticado (y los nuevos residentes/propietarios) necesitan permisos de gestion
@@ -119,6 +120,7 @@ export default {
             actions.push('api::negocio.negocio.update');
             actions.push('api::negocio.negocio.me');
             actions.push('api::negocio.negocio.portalUpdate');
+            actions.push('api::review.review.create');
             actions.push('api::negocio.negocio.adminPendingClaims');
             actions.push('api::negocio.negocio.adminResolveClaim');
             actions.push('api::negocio.negocio.resetClaimForTest');

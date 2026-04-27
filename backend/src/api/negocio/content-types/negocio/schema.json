@@ -158,6 +158,20 @@
     "clicks_website": {
       "type": "integer",
       "default": 0
+    },
+    "rating": {
+      "type": "float",
+      "default": 0
+    },
+    "review_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "reviews": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::review.review",
+      "mappedBy": "negocio"
     }
   }
 }
