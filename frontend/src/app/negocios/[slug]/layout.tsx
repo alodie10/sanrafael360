@@ -52,6 +52,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         card: 'summary_large_image',
         title,
         description,
+      },
+      alternates: {
+        canonical: `https://sanrafael360.com/negocios/${slug}`,
       }
     };
   } catch (e: any) {
