@@ -6,10 +6,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
   
   try {
-    const res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate[logo]=*&populate[categoria]=*&populate[imagen_portada]=*`);
-    const data = await res.json();
-    const negocio = data.data?.[0];
+    let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate[logo]=*&populate[categoria]=*&populate[imagen_portada]=*`);
+    let data = await res.json();
+    let negocio = data.data?.[0];
     
+    // Plan B: Buscar por documentId
+    if (!negocio) {
+      res = await fetch(`${strapiUrl}/api/negocios?filters[documentId][$eq]=${slug}&populate[logo]=*&populate[categoria]=*&populate[imagen_portada]=*`);
+      data = await res.json();
+      negocio = data.data?.[0];
+    }
+
     if (!negocio) return { title: "Negocio no encontrado | San Rafael 360" };
 
     const title = `${negocio.nombre} | ${negocio.categoria?.nombre || 'San Rafael'} | San Rafael 360`;
@@ -43,9 +50,16 @@ export default async function BusinessLayout({ children, params }: { children: R
   
   let jsonLd = null;
   try {
-    const res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate[schedules]=*&populate[categoria]=*&populate[imagen_portada]=*&populate[logo]=*`);
-    const data = await res.json();
-    const negocio = data.data?.[0];
+    let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate[schedules]=*&populate[categoria]=*&populate[imagen_portada]=*&populate[logo]=*`);
+    let data = await res.json();
+    let negocio = data.data?.[0];
+
+    // Plan B: Buscar por documentId
+    if (!negocio) {
+      res = await fetch(`${strapiUrl}/api/negocios?filters[documentId][$eq]=${slug}&populate[schedules]=*&populate[categoria]=*&populate[imagen_portada]=*&populate[logo]=*`);
+      data = await res.json();
+      negocio = data.data?.[0];
+    }
     
     if (negocio) {
       jsonLd = {
