@@ -8,6 +8,9 @@ import {
   TrendingUp 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { fetchFromStrapi } from "@/lib/strapi";
 
 interface StatCardProps {
   title: string;
@@ -29,12 +32,6 @@ function StatCard({ title, value, label, icon: Icon, trend, color }: StatCardPro
         <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center border", color)}>
           <Icon className="w-6 h-6" />
         </div>
-        {trend && (
-          <div className="flex items-center gap-1 text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg uppercase tracking-tighter">
-            <TrendingUp className="w-3 h-3" />
-            {trend}
-          </div>
-        )}
       </div>
       <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-1">{title}</p>
       <h3 className="text-3xl font-serif font-bold text-white mb-1">{value}</h3>
@@ -44,34 +41,73 @@ function StatCard({ title, value, label, icon: Icon, trend, color }: StatCardPro
 }
 
 export default function PortalStats() {
+  const { data: session } = useSession();
+  const [data, setData] = useState({
+    views: 0,
+    leads: 0,
+    clicks: 0,
+    score: 0,
+    loading: true
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const isAdmin = (session as any)?.user?.role === 'Admin' || session?.user?.email === 'diegocristianalonso@gmail.com';
+        
+        // Si es admin traemos todos, si es dueño traemos solo los suyos
+        const query = isAdmin ? 'negocios' : `negocios?filters[owner][id][$eq]=${(session as any)?.user?.id}`;
+        const res = await fetchFromStrapi(query);
+        const negocios = res.data || [];
+
+        const totals = negocios.reduce((acc: any, curr: any) => ({
+          views: acc.views + Number(curr.views || 0),
+          whatsapp: acc.whatsapp + Number(curr.clicks_whatsapp || 0),
+          website: acc.website + Number(curr.clicks_website || 0)
+        }), { views: 0, whatsapp: 0, website: 0 });
+
+        setData({
+          views: totals.views,
+          leads: totals.whatsapp,
+          clicks: totals.website,
+          score: negocios.length > 0 ? 85 : 0, // Score ficticio basado en completitud (luego lo haremos real)
+          loading: false
+        });
+      } catch (e) {
+        console.error("Error loading stats:", e);
+        setData(prev => ({ ...prev, loading: false }));
+      }
+    };
+
+    if (session) loadStats();
+  }, [session]);
+
   const stats = [
     {
       title: "Visitas Totales",
-      value: "1,284",
-      label: "Usuarios que vieron tu perfil",
+      value: data.loading ? "..." : data.views.toLocaleString(),
+      label: "Usuarios que vieron el perfil",
       icon: Eye,
-      trend: "+12%",
       color: "bg-blue-500/10 border-blue-500/20 text-blue-400"
     },
     {
-      title: "Interacciones",
-      value: "84",
-      label: "Clicks en Teléfono / Web / WA",
+      title: "Clicks a la Web",
+      value: data.loading ? "..." : data.clicks.toLocaleString(),
+      label: "Tráfico enviado a sitios externos",
       icon: MousePointer2,
-      trend: "+5%",
       color: "bg-primary/10 border-primary/20 text-primary"
     },
     {
-      title: "Consultas",
-      value: "12",
-      label: "Mensajes directos recibidos",
+      title: "Contactos WhatsApp",
+      value: data.loading ? "..." : data.leads.toLocaleString(),
+      label: "Consultas directas generadas",
       icon: MessageSquare,
       color: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
     },
     {
-      title: "Rating Promedio",
-      value: "4.8",
-      label: "Basado en la salud del perfil",
+      title: "Salud del Perfil",
+      value: data.loading ? "..." : `${data.score}%`,
+      label: "Basado en info completada",
       icon: TrendingUp,
       color: "bg-amber-500/10 border-amber-500/20 text-amber-400"
     }
