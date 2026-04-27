@@ -53,6 +53,18 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     return ctx.send({ success: true, data: result });
   }),
 
+  getStatsSummary: asyncHandler(async (ctx) => {
+    const user = ctx.state.user;
+    if (!user) return ctx.unauthorized();
+
+    const isAdmin = user.role?.name?.toLowerCase() === 'admin' || user.email === 'diegocristianalonso@gmail.com';
+    
+    // Si es admin calculamos el total del portal, si no, solo lo suyo
+    const stats = await strapi.service('api::negocio.negocio').getPortalStats(isAdmin ? undefined : user.id);
+    
+    return ctx.send({ success: true, data: stats });
+  }),
+
   me: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();

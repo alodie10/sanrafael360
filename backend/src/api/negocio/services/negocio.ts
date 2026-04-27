@@ -202,5 +202,24 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
   async getOwnerNegocios(userId: number) {
     const repo = createNegocioRepository(strapi);
     return await repo.findByOwner(userId, ['logo', 'categoria', 'imagen_portada', 'galeria', 'schedules']);
+  },
+
+  async getPortalStats(userId?: number) {
+    // Usamos el query engine para traer TODOS los registros sin paginación (solo los campos necesarios)
+    const filters = userId ? { owner: userId } : {};
+    
+    // @ts-ignore
+    const results = await strapi.documents('api::negocio.negocio').findMany({
+      filters,
+      fields: ['views', 'clicks_whatsapp', 'clicks_website'],
+      limit: -1, 
+    } as any);
+
+    return results.reduce((acc, curr: any) => ({
+      views: acc.views + (Number(curr.views) || 0),
+      clicks_whatsapp: acc.clicks_whatsapp + (Number(curr.clicks_whatsapp) || 0),
+      clicks_website: acc.clicks_website + (Number(curr.clicks_website) || 0),
+      totalNegocios: results.length
+    }), { views: 0, clicks_whatsapp: 0, clicks_website: 0, totalNegocios: 0 });
   }
 }));

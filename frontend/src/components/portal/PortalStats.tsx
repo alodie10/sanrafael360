@@ -53,17 +53,11 @@ export default function PortalStats() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const isAdmin = (session as any)?.user?.role === 'Admin' || session?.user?.email === 'diegocristianalonso@gmail.com';
-        
-        // Si es admin traemos todos, si es dueño usamos nuestra ruta especial /me
-        // Agregamos fields[0]=views... para obligar a Strapi a enviarlos
-        const fields = "fields[0]=nombre&fields[1]=views&fields[2]=clicks_whatsapp&fields[3]=clicks_website";
-        const endpoint = isAdmin ? `negocios?${fields}` : 'negocios/me';
-        
         const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
         const strapiToken = (session as any)?.jwt || process.env.STRAPI_API_TOKEN;
         
-        const response = await fetch(`${strapiUrl}/api/${endpoint}`, {
+        // Usamos la nueva ruta de resumen súper eficiente
+        const response = await fetch(`${strapiUrl}/api/negocios/stats/summary`, {
           headers: {
             Authorization: `Bearer ${strapiToken}`
           },
@@ -73,34 +67,16 @@ export default function PortalStats() {
         if (!response.ok) throw new Error(`Error en API: ${response.status}`);
         
         const res = await response.json();
-        // Nuestra ruta /me devuelve la data directamente en .data
-        const negocios = res.data || [];
+        const stats = res.data || { views: 0, clicks_whatsapp: 0, clicks_website: 0, totalNegocios: 0 };
         
-        console.log("--- DEBUG DASHBOARD ---");
-        console.log("Negocios encontrados:", negocios.length);
-        if (negocios.length > 0) {
-          console.log("Primer negocio stats:", {
-            nombre: negocios[0].nombre,
-            vistas: negocios[0].views,
-            wa: negocios[0].clicks_whatsapp,
-            web: negocios[0].clicks_website
-          });
-        }
-
-        const totals = negocios.reduce((acc: any, curr: any) => ({
-          views: acc.views + (Number(curr.views) || 0),
-          whatsapp: acc.whatsapp + (Number(curr.clicks_whatsapp) || 0),
-          website: acc.website + (Number(curr.clicks_website) || 0)
-        }), { views: 0, whatsapp: 0, website: 0 });
-
-        console.log("Totales calculados:", totals);
-        console.log("-----------------------");
+        console.log("--- DASHBOARD SUMMARY ---");
+        console.log("Stats recibidas:", stats);
 
         setData({
-          views: totals.views,
-          leads: totals.whatsapp,
-          clicks: totals.website,
-          score: negocios.length > 0 ? 85 : 0, // Score ficticio basado en completitud (luego lo haremos real)
+          views: stats.views,
+          leads: stats.clicks_whatsapp,
+          clicks: stats.clicks_website,
+          score: stats.totalNegocios > 0 ? 85 : 0,
           loading: false
         });
       } catch (e) {
