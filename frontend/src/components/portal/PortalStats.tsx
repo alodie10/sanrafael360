@@ -57,7 +57,19 @@ export default function PortalStats() {
         
         // Si es admin traemos todos, si es dueño traemos solo los suyos
         const query = isAdmin ? 'negocios' : `negocios?filters[owner][id][$eq]=${(session as any)?.user?.id}`;
-        const res = await fetchFromStrapi(query);
+        
+        // Forzamos que no haya caché en esta petición específica
+        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+        const strapiToken = process.env.STRAPI_API_TOKEN;
+        
+        const response = await fetch(`${strapiUrl}/api/${query}`, {
+          headers: {
+            ...(strapiToken ? { Authorization: `Bearer ${strapiToken}` } : {})
+          },
+          cache: 'no-store' // <--- CLAVE: Evita que veas datos viejos
+        });
+        
+        const res = await response.json();
         const negocios = res.data || [];
 
         const totals = negocios.reduce((acc: any, curr: any) => ({

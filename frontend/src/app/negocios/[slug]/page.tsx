@@ -53,22 +53,21 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   }, [autoClaim, session, negocio, slug, router]);
 
   useEffect(() => {
-    if (negocio?.documentId) {
+    if (negocio?.documentId || slug) {
+      const targetId = negocio?.documentId || slug;
       const incrementView = async () => {
         try {
-          const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-          await fetch(`${strapiUrl}/api/negocios/${negocio.documentId}/stats`, {
+          const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+          await fetch(`${strapiUrl}/api/negocios/${targetId}/stats`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'view' })
           });
-        } catch (e) {
-          console.error("Error incrementing views:", e);
-        }
+        } catch (e) {}
       };
       incrementView();
     }
-  }, [negocio?.documentId]);
+  }, [negocio?.documentId, slug]);
 
   const trackClick = async (type: 'whatsapp' | 'website') => {
     if (!negocio?.documentId) return;
@@ -309,7 +308,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
             <motion.div 
                initial={{ opacity: 0, scale: 0.8 }}
                animate={{ opacity: 1, scale: 1 }}
-               className="w-32 h-32 md:w-48 md:h-48 bg-white p-4 rounded-[2.5rem] shadow-2xl border border-white/10 shrink-0 flex items-center justify-center overflow-hidden"
+               className="w-32 h-32 md:w-48 md:h-48 bg-white p-2 md:p-3 rounded-[2.5rem] shadow-2xl border border-white/10 shrink-0 flex items-center justify-center overflow-hidden"
             >
               {logoUrl ? (
                 <img 
