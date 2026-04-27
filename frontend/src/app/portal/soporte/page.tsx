@@ -77,7 +77,7 @@ export default async function SupportPage() {
                   <span className="text-sm font-bold text-white">Email Corporativo</span>
                 </a>
                 <a 
-                  href="https://wa.me/5492604000000" 
+                  href={`https://wa.me/5492604000000?text=${encodeURIComponent("Hola! Necesito soporte técnico con mi cuenta de San Rafael 360.")}`} 
                   className="flex items-center gap-4 p-4 bg-black/40 rounded-2xl border border-white/5 hover:border-primary/30 transition-all group"
                 >
                   <MessageCircle className="w-5 h-5 text-primary/60 group-hover:text-primary transition-colors" />

@@ -183,7 +183,7 @@ export default async function PortalPage() {
               <div className="p-8 bg-zinc-950/40 border border-white/5 rounded-[2.5rem] group hover:border-primary/30 transition-all">
                 <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-3">Dudas inmediatas</p>
                 <a 
-                  href="https://wa.me/5492604000000" 
+                  href={`https://wa.me/5492604000000?text=${encodeURIComponent("Hola! Necesito soporte técnico con mi cuenta de San Rafael 360.")}`} 
                   target="_blank"
                   className="text-white font-bold hover:text-primary transition-colors flex items-center gap-3 text-lg"
                 >

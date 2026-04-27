@@ -75,7 +75,7 @@ export default function BookingWidget({ reservaUrl, whatsapp, businessName }: Bo
             </motion.a>
           ) : (
             <motion.a 
-               href={`https://wa.me/${validWhatsapp?.replace(/\D/g,'')}`}
+               href={`https://wa.me/${validWhatsapp?.replace(/\D/g,'')}?text=${encodeURIComponent(`¡Hola! Vi tu negocio "${businessName}" en sanrafael360.com y quería consultar por una cita.`)}`}
                target="_blank"
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}

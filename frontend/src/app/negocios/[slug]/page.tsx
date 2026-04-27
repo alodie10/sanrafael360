@@ -351,7 +351,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
           )}
           {negocio.whatsapp && (
             <a 
-              href={`https://wa.me/${negocio.whatsapp.replace(/\D/g,'')}`} 
+              href={`https://wa.me/${negocio.whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent(`¡Hola! Vi tu negocio "${negocio.nombre}" en sanrafael360.com y quería hacerte una consulta.`)}`} 
               target="_blank" 
               className="flex-1 min-w-[200px] md:flex-none flex items-center justify-center gap-3 bg-emerald-500 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-emerald-500/20"
             >
