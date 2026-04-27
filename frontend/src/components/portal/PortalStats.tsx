@@ -71,12 +71,26 @@ export default function PortalStats() {
         
         const res = await response.json();
         const negocios = res.data || [];
+        
+        console.log("--- DEBUG DASHBOARD ---");
+        console.log("Negocios encontrados:", negocios.length);
+        if (negocios.length > 0) {
+          console.log("Primer negocio stats:", {
+            nombre: negocios[0].nombre,
+            vistas: negocios[0].views,
+            wa: negocios[0].clicks_whatsapp,
+            web: negocios[0].clicks_website
+          });
+        }
 
         const totals = negocios.reduce((acc: any, curr: any) => ({
-          views: acc.views + Number(curr.views || 0),
-          whatsapp: acc.whatsapp + Number(curr.clicks_whatsapp || 0),
-          website: acc.website + Number(curr.clicks_website || 0)
+          views: acc.views + (Number(curr.views) || 0),
+          whatsapp: acc.whatsapp + (Number(curr.clicks_whatsapp) || 0),
+          website: acc.website + (Number(curr.clicks_website) || 0)
         }), { views: 0, whatsapp: 0, website: 0 });
+
+        console.log("Totales calculados:", totals);
+        console.log("-----------------------");
 
         setData({
           views: totals.views,
