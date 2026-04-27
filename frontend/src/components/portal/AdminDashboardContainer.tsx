@@ -23,9 +23,10 @@ import AdminLeadsInbox from "./AdminLeadsInbox";
 import AdminDiscoveryTool from "./AdminDiscoveryTool";
 import ActivityLogView from "./ActivityLogView";
 import PortalStats from "./PortalStats";
+import AdminTopRanking from "./AdminTopRanking";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
-  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats'>('claims');
+  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats'>('stats');
   const [claims, setClaims] = useState(initialClaims);
   const [supportCount, setSupportCount] = useState(0);
   const [leadsCount, setLeadsCount] = useState(0);
@@ -180,9 +181,24 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
           {/* Main Content Area */}
           <div className="lg:col-span-3 space-y-8">
             {activeTab === 'stats' && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Rendimiento General de la Plataforma</h2>
-                <PortalStats />
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-12">
+                <div>
+                  <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Rendimiento General de la Plataforma</h2>
+                  <PortalStats />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <AdminTopRanking jwt={session.jwt} />
+                  
+                  {/* Espacio para futuros gráficos o métricas rápidas */}
+                  <div className="bg-primary/5 border border-primary/10 rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-center">
+                    <Zap className="w-12 h-12 text-primary mb-4" />
+                    <h3 className="text-xl font-serif font-bold text-white italic mb-2">Modo Master Admin</h3>
+                    <p className="text-sm text-zinc-400 max-w-xs">
+                      Estás viendo datos en tiempo real de todo San Rafael. Los clics y vistas se actualizan cada vez que un usuario interactúa con el sitio.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
