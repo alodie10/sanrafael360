@@ -108,6 +108,8 @@ export default {
             'plugin::users-permissions.auth.forgotPassword',
             'plugin::users-permissions.auth.resetPassword',
             'api::lead.lead.create',
+            'api::negocio.negocio.incrementStats',
+            'api::negocio.negocio.getStatsSummary',
           ];
 
           // El rol autenticado (y los nuevos residentes/propietarios) necesitan permisos de gestion
