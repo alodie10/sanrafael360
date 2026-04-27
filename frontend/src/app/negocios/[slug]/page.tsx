@@ -52,6 +52,38 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
     }
   }, [autoClaim, session, negocio, slug, router]);
 
+  useEffect(() => {
+    if (negocio?.documentId) {
+      const incrementView = async () => {
+        try {
+          const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+          await fetch(`${strapiUrl}/api/negocios/${negocio.documentId}/stats`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'view' })
+          });
+        } catch (e) {
+          console.error("Error incrementing views:", e);
+        }
+      };
+      incrementView();
+    }
+  }, [negocio?.documentId]);
+
+  const trackClick = async (type: 'whatsapp' | 'website') => {
+    if (!negocio?.documentId) return;
+    try {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      await fetch(`${strapiUrl}/api/negocios/${negocio.documentId}/stats`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type })
+      });
+    } catch (e) {
+      console.error(`Error tracking ${type} click:`, e);
+    }
+  };
+
   const handleClaimSubmit = async () => {
     if (!session) {
       router.push(`/registro?claim=${slug}`);
@@ -339,24 +371,28 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       {/* QUICK ACTIONS BAR (Conversión Directa) */}
       <section className="bg-slate-900/50 border-b border-white/5 py-8 px-4 md:px-8">
         <div className="max-w-7xl mx-auto flex flex-wrap justify-center md:justify-start gap-4">
-          {negocio.website && (
-            <a 
-              href={negocio.website} 
-              target="_blank" 
-              className="flex-1 min-w-[200px] md:flex-none flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-white/10"
-            >
-              <Globe className="w-5 h-5" />
-              Visitar Web
-            </a>
-          )}
           {negocio.whatsapp && (
             <a 
               href={`https://wa.me/${negocio.whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent(`¡Hola! Vi tu negocio "${negocio.nombre}" en sanrafael360.com y quería hacerte una consulta.`)}`} 
-              target="_blank" 
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackClick('whatsapp')}
               className="flex-1 min-w-[200px] md:flex-none flex items-center justify-center gap-3 bg-emerald-500 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-emerald-500/20"
             >
               <MessageCircle className="w-5 h-5" />
               WhatsApp
+            </a>
+          )}
+          {negocio.website && (
+            <a 
+              href={negocio.website.startsWith('http') ? negocio.website : `https://${negocio.website}`} 
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackClick('website')}
+              className="flex-1 min-w-[200px] md:flex-none flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-white/10"
+            >
+              <Globe className="w-5 h-5" />
+              Visitar Web
             </a>
           )}
           {negocio.instagram && (

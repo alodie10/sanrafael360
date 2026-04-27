@@ -147,5 +147,41 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     });
 
     return ctx.send({ success: true, message: `Reset exitoso para ${slug}` });
+  }),
+
+  incrementStats: asyncHandler(async (ctx) => {
+    const { id } = ctx.params;
+    const { type } = ctx.request.body;
+    
+    if (!['view', 'whatsapp', 'website'].includes(type)) {
+      throw new ValidationError('Tipo de estadística inválido');
+    }
+
+    // Buscar el negocio (por documentId o slug)
+    let negocio = await strapi.documents('api::negocio.negocio').findOne({
+      documentId: id,
+    });
+
+    if (!negocio) {
+      const results = await strapi.documents('api::negocio.negocio').findMany({
+        filters: { slug: id },
+      });
+      negocio = results[0];
+    }
+
+    if (!negocio) throw new ValidationError('Negocio no encontrado');
+
+    const field = type === 'view' ? 'views' : type === 'whatsapp' ? 'clicks_whatsapp' : 'clicks_website';
+    const currentValue = Number(negocio[field] || 0);
+
+    // Actualizar campo (Usando Strapi 5 Document Service)
+    const result = await strapi.documents('api::negocio.negocio').update({
+      documentId: negocio.documentId,
+      data: {
+        [field]: currentValue + 1
+      }
+    });
+
+    return ctx.send({ success: true, count: result[field] });
   })
 }));

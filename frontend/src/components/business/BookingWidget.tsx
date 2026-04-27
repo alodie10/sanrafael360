@@ -66,6 +66,7 @@ export default function BookingWidget({ reservaUrl, whatsapp, businessName }: Bo
             <motion.a 
                href={validReservaUrl}
                target="_blank"
+               onClick={() => trackClick('website')}
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}
                className="w-full bg-primary text-primary-foreground px-6 py-4 rounded-2xl font-extrabold text-base flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 hover:bg-primary/90 transition-all"
@@ -77,6 +78,7 @@ export default function BookingWidget({ reservaUrl, whatsapp, businessName }: Bo
             <motion.a 
                href={`https://wa.me/${validWhatsapp?.replace(/\D/g,'')}?text=${encodeURIComponent(`¡Hola! Vi tu negocio "${businessName}" en sanrafael360.com y quería consultar por una cita.`)}`}
                target="_blank"
+               onClick={() => trackClick('whatsapp')}
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}
                className="w-full bg-green-500 text-white px-6 py-4 rounded-2xl font-extrabold text-base flex items-center justify-center gap-3 shadow-2xl shadow-green-500/30 hover:bg-green-600 transition-all"

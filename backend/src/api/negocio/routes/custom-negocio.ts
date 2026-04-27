@@ -1,12 +1,11 @@
 export default {
   routes: [
     {
-      method: 'GET',
-      path: '/negocios/me',
-      handler: 'api::negocio.negocio.me',
+      method: 'POST',
+      path: '/negocios/:id/stats',
+      handler: 'api::negocio.negocio.incrementStats',
       config: {
-        policies: [],
-        middlewares: [],
+        auth: false, // Permitimos que usuarios anónimos generen estadísticas
       },
     },
   ],
