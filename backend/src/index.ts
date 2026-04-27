@@ -251,6 +251,20 @@ export default {
         strapi.log.info(`📧 Plantilla de email (Reset/Welcome) actualizada con éxito.`);
       }
 
+      // 5. INICIALIZACIÓN DE ESTADÍSTICAS (Poner 0 donde hay null)
+      strapi.log.info('📊 Iniciando limpieza de estadísticas...');
+      try {
+        await (strapi.db.connection as any).raw(`
+          UPDATE negocios 
+          SET views = COALESCE(views, 0), 
+              clicks_whatsapp = COALESCE(clicks_whatsapp, 0), 
+              clicks_website = COALESCE(clicks_website, 0);
+        `);
+        strapi.log.info('✅ Estadísticas inicializadas a 0.');
+      } catch (err: any) {
+        strapi.log.error('❌ Error inicializando estadísticas:', err.message);
+      }
+
     } catch (error) {
       console.error('❌ Error configurando bootstrap:', error);
     }
