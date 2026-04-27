@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
+  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
   const strapiToken = process.env.STRAPI_API_TOKEN;
   
   const fetchOptions = {
@@ -13,17 +14,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
   
   try {
-    let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate[logo]=*&populate[categoria]=*&populate[imagen_portada]=*`, fetchOptions);
+    const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[schedules]=*";
+    let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&${populate}`, fetchOptions);
     let data = await res.json();
     let negocio = data.data?.[0];
     
+    // Plan B: Buscar por documentId
     if (!negocio) {
-      res = await fetch(`${strapiUrl}/api/negocios?filters[documentId][$eq]=${slug}&populate[logo]=*&populate[categoria]=*&populate[imagen_portada]=*`, fetchOptions);
+      res = await fetch(`${strapiUrl}/api/negocios?filters[documentId][$eq]=${slug}&${populate}`, fetchOptions);
+      if (!res.ok) {
+        console.error(`[SEO Error] Falló reintento por documentId. Status: ${res.status}`);
+      }
       data = await res.json();
       negocio = data.data?.[0];
     }
 
-    if (!negocio) return { title: "Negocio no encontrado | San Rafael 360" };
+    if (!negocio) {
+      console.warn(`[SEO Warning] Negocio no encontrado después de ambos intentos: ${slug}`);
+      return { title: "Negocio no encontrado | San Rafael 360" };
+    }
 
     const title = `${negocio.nombre} | ${negocio.categoria?.nombre || 'San Rafael'} | San Rafael 360`;
     const description = negocio.descripcion 
@@ -45,7 +54,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         description,
       }
     };
-  } catch (e) {
+  } catch (e: any) {
+    console.error(`[SEO Critical Error] Error en generateMetadata para ${slug}:`, e.message || e);
     return { title: "San Rafael 360" };
   }
 }
@@ -64,12 +74,13 @@ export default async function BusinessLayout({ children, params }: { children: R
 
   let jsonLd = null;
   try {
-    let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate[schedules]=*&populate[categoria]=*&populate[imagen_portada]=*&populate[logo]=*`, fetchOptions);
+    const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[schedules]=*";
+    let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&${populate}`, fetchOptions);
     let data = await res.json();
     let negocio = data.data?.[0];
 
     if (!negocio) {
-      res = await fetch(`${strapiUrl}/api/negocios?filters[documentId][$eq]=${slug}&populate[schedules]=*&populate[categoria]=*&populate[imagen_portada]=*&populate[logo]=*`, fetchOptions);
+      res = await fetch(`${strapiUrl}/api/negocios?filters[documentId][$eq]=${slug}&${populate}`, fetchOptions);
       data = await res.json();
       negocio = data.data?.[0];
     }
