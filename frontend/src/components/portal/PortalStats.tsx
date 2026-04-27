@@ -55,21 +55,22 @@ export default function PortalStats() {
       try {
         const isAdmin = (session as any)?.user?.role === 'Admin' || session?.user?.email === 'diegocristianalonso@gmail.com';
         
-        // Si es admin traemos todos, si es dueño traemos solo los suyos
-        const query = isAdmin ? 'negocios' : `negocios?filters[owner][id][$eq]=${(session as any)?.user?.id}`;
-        
-        // Forzamos que no haya caché en esta petición específica
+        // Si es admin traemos todos, si es dueño usamos nuestra ruta especial /me
+        const endpoint = isAdmin ? 'negocios' : 'negocios/me';
         const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
-        const strapiToken = process.env.STRAPI_API_TOKEN;
+        const strapiToken = (session as any)?.jwt || process.env.STRAPI_API_TOKEN;
         
-        const response = await fetch(`${strapiUrl}/api/${query}`, {
+        const response = await fetch(`${strapiUrl}/api/${endpoint}`, {
           headers: {
-            ...(strapiToken ? { Authorization: `Bearer ${strapiToken}` } : {})
+            Authorization: `Bearer ${strapiToken}`
           },
-          cache: 'no-store' // <--- CLAVE: Evita que veas datos viejos
+          cache: 'no-store'
         });
         
+        if (!response.ok) throw new Error(`Error en API: ${response.status}`);
+        
         const res = await response.json();
+        // Nuestra ruta /me devuelve la data directamente en .data
         const negocios = res.data || [];
         
         console.log("--- DEBUG DASHBOARD ---");
