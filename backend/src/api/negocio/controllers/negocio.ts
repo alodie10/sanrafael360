@@ -179,7 +179,8 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       documentId: negocio.documentId,
       data: {
         [field]: currentValue + 1
-      }
+      },
+      status: 'published' // <--- CLAVE: Actualiza la versión que ve el público
     });
 
     return ctx.send({ success: true, count: result[field] });
