@@ -3,19 +3,22 @@ import { ReactNode } from "react";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+  const strapiToken = process.env.STRAPI_API_TOKEN;
   
-  console.log(`[SEO Debug] Generando metadata para: ${slug} usando ${strapiUrl}`);
+  const fetchOptions = {
+    headers: {
+      ...(strapiToken ? { Authorization: `Bearer ${strapiToken}` } : {})
+    },
+    next: { revalidate: 60 } // Cache de 1 minuto para SEO
+  };
   
   try {
-    let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate[logo]=*&populate[categoria]=*&populate[imagen_portada]=*`);
+    let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate[logo]=*&populate[categoria]=*&populate[imagen_portada]=*`, fetchOptions);
     let data = await res.json();
     let negocio = data.data?.[0];
     
-    // Plan B: Buscar por documentId
     if (!negocio) {
-      console.warn(`[SEO Debug] Negocio no encontrado por slug, reintentando por documentId: ${slug}`);
-      res = await fetch(`${strapiUrl}/api/negocios?filters[documentId][$eq]=${slug}&populate[logo]=*&populate[categoria]=*&populate[imagen_portada]=*`);
+      res = await fetch(`${strapiUrl}/api/negocios?filters[documentId][$eq]=${slug}&populate[logo]=*&populate[categoria]=*&populate[imagen_portada]=*`, fetchOptions);
       data = await res.json();
       negocio = data.data?.[0];
     }
@@ -51,15 +54,22 @@ export default async function BusinessLayout({ children, params }: { children: R
   const { slug } = await params;
   const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
   
+  const strapiToken = process.env.STRAPI_API_TOKEN;
+  const fetchOptions = {
+    headers: {
+      ...(strapiToken ? { Authorization: `Bearer ${strapiToken}` } : {})
+    },
+    next: { revalidate: 60 }
+  };
+
   let jsonLd = null;
   try {
-    let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate[schedules]=*&populate[categoria]=*&populate[imagen_portada]=*&populate[logo]=*`);
+    let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate[schedules]=*&populate[categoria]=*&populate[imagen_portada]=*&populate[logo]=*`, fetchOptions);
     let data = await res.json();
     let negocio = data.data?.[0];
 
-    // Plan B: Buscar por documentId
     if (!negocio) {
-      res = await fetch(`${strapiUrl}/api/negocios?filters[documentId][$eq]=${slug}&populate[schedules]=*&populate[categoria]=*&populate[imagen_portada]=*&populate[logo]=*`);
+      res = await fetch(`${strapiUrl}/api/negocios?filters[documentId][$eq]=${slug}&populate[schedules]=*&populate[categoria]=*&populate[imagen_portada]=*&populate[logo]=*`, fetchOptions);
       data = await res.json();
       negocio = data.data?.[0];
     }
