@@ -277,13 +277,13 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
             <motion.div 
                initial={{ opacity: 0, scale: 0.8 }}
                animate={{ opacity: 1, scale: 1 }}
-               className="w-32 h-32 md:w-48 md:h-48 bg-background/90 backdrop-blur-2xl p-2 rounded-[2.5rem] shadow-2xl border border-white/10 shrink-0"
+               className="w-32 h-32 md:w-48 md:h-48 bg-white p-4 rounded-[2.5rem] shadow-2xl border border-white/10 shrink-0 flex items-center justify-center overflow-hidden"
             >
               {logoUrl ? (
                 <img 
                   src={getStrapiMedia(logoUrl)!} 
                   alt={negocio.nombre} 
-                  className="w-full h-full rounded-[2rem] object-cover bg-white"
+                  className="w-full h-full object-contain"
                 />
               ) : (
                  <div className="w-full h-full bg-gradient-to-br from-primary to-secondary rounded-[2rem] flex items-center justify-center text-primary-foreground font-bold text-5xl">
