@@ -18,7 +18,7 @@ interface Review {
 }
 
 export default function ReviewSection({ negocioId, initialRating = 0, initialCount = 0 }: { negocioId: string, initialRating?: number, initialCount?: number }) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -47,7 +47,22 @@ export default function ReviewSection({ negocioId, initialRating = 0, initialCou
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session || !newComment.trim()) return;
+    
+    // VALIDACIÓN CRÍTICA
+    const jwt = (session as any)?.jwt;
+    const userId = (session as any)?.user?.id;
+
+    console.log("--- DEBUG ENVÍO RESEÑA ---");
+    console.log("JWT Presente:", !!jwt);
+    console.log("User ID Presente:", !!userId);
+    console.log("Status de Sesión:", status);
+    
+    if (status !== 'authenticated' || !jwt || !userId) {
+      alert("Tu sesión parece haber expirado. Por favor, recarga la página e intenta de nuevo.");
+      return;
+    }
+
+    if (!newComment.trim()) return;
 
     setSubmitting(true);
     try {
@@ -56,17 +71,23 @@ export default function ReviewSection({ negocioId, initialRating = 0, initialCou
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(session as any).jwt}`
+          'Authorization': `Bearer ${jwt}`
         },
         body: JSON.stringify({
           data: {
             rating: newRating,
             comentario: newComment,
             negocio: negocioId,
-            usuario: (session as any).user.id
+            usuario: userId
           }
         })
       });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Error de Strapi:", errorData);
+        throw new Error(errorData.error?.message || "Error en API");
+      }
 
       if (res.ok) {
         setNewComment("");
