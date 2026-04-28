@@ -26,6 +26,13 @@ export default function ReviewSection({ negocioId, initialRating = 0, initialCou
   const [newComment, setNewComment] = useState("");
   const [hoverRating, setHoverRating] = useState(0);
 
+  // EFECTO DE DIAGNÓSTICO
+  useEffect(() => {
+    if (session) {
+      console.log("🔍 [DIAGNÓSTICO SESIÓN FULL]:", session);
+    }
+  }, [session]);
+
   const fetchReviews = async () => {
     try {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
@@ -48,17 +55,13 @@ export default function ReviewSection({ negocioId, initialRating = 0, initialCou
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // VALIDACIÓN CRÍTICA
     const jwt = (session as any)?.jwt;
     const userId = (session as any)?.user?.id;
 
-    console.log("--- DEBUG ENVÍO RESEÑA ---");
-    console.log("JWT Presente:", !!jwt);
-    console.log("User ID Presente:", !!userId);
-    console.log("Status de Sesión:", status);
+    console.log("🚀 [INTENTO DE ENVÍO]:", { jwt: !!jwt, userId, status });
     
-    if (status !== 'authenticated' || !jwt || !userId) {
-      alert("Tu sesión parece haber expirado. Por favor, recarga la página e intenta de nuevo.");
+    if (!jwt || !userId) {
+      alert(`⚠️ ERROR DE SESIÓN:\nStatus: ${status}\nJWT: ${jwt ? 'OK' : 'MISSING'}\nUser: ${userId || 'MISSING'}\n\nPor favor, hacé Logout y Login.`);
       return;
     }
 
@@ -85,7 +88,8 @@ export default function ReviewSection({ negocioId, initialRating = 0, initialCou
 
       if (!res.ok) {
         const errorData = await res.json();
-        console.error("Error de Strapi:", errorData);
+        console.error("❌ ERROR STRAPI:", errorData);
+        alert(`Error de Strapi: ${errorData.error?.message || 'Error desconocido'}`);
         throw new Error(errorData.error?.message || "Error en API");
       }
 
