@@ -48,7 +48,8 @@ async function updateNegocioRating(negocioId: string | number) {
         id: typeof negocioId === 'number' ? negocioId : undefined
       }
     },
-    fields: ['rating']
+    fields: ['rating'],
+    limit: -1 // REGLA KI: Siempre traer todos para cálculos de agregación
   });
 
   const count = reviews.length;
