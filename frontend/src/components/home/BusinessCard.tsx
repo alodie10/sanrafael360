@@ -91,9 +91,31 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
         {/* Contenido */}
         <div className="p-8 pt-12">
 
-          <h3 className="text-2xl font-heading font-bold mb-3 text-white group-hover:text-primary transition-colors duration-300 line-clamp-1">
+          <h3 className="text-2xl font-heading font-bold mb-1 text-white group-hover:text-primary transition-colors duration-300 line-clamp-1">
             {negocio.nombre}
           </h3>
+
+          {/* Rating Stars (Yelp Style) */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star
+                  key={s}
+                  className={cn(
+                    "w-3.5 h-3.5",
+                    s <= (negocio.rating || 0) 
+                      ? "fill-primary text-primary" 
+                      : "fill-white/5 text-white/10"
+                  )}
+                />
+              ))}
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+              {negocio.review_count && negocio.review_count > 0 
+                ? `${negocio.review_count} ${negocio.review_count === 1 ? 'Reseña' : 'Reseñas'}`
+                : "Sin reseñas"}
+            </span>
+          </div>
 
           <p className="text-slate-400 text-sm line-clamp-2 mb-8 leading-relaxed">
             {negocio.descripcion
