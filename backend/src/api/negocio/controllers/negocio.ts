@@ -71,7 +71,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       if (!user) return ctx.unauthorized();
       
       const data = await strapi.service('api::negocio.negocio').getOwnerNegocios(user.id);
-      return data || []; 
+      return { data: data || [] }; 
     } catch (err: any) {
       strapi.log.error(`[Me-Endpoint] Error: ${err.message}`);
       return []; // Resiliencia: Devuelve array vacío en lugar de 500
