@@ -267,6 +267,38 @@ export default {
         strapi.log.error('❌ Error inicializando estadísticas:', err.message);
       }
 
+      // 6. SINCRONIZACIÓN GLOBAL DE RATINGS (A prueba de balas)
+      strapi.log.info('⭐ Iniciando sincronización global de Ratings...');
+      try {
+        const negocios = await strapi.documents('api::negocio.negocio' as any).findMany({
+          fields: ['nombre', 'rating', 'review_count'],
+          populate: ['reviews'],
+          limit: -1
+        });
+
+        for (const neg of negocios) {
+          const reviews = neg.reviews || [];
+          const count = reviews.length;
+          const sum = reviews.reduce((acc: number, curr: any) => acc + (Number(curr.rating) || 0), 0);
+          const average = count > 0 ? parseFloat((sum / count).toFixed(1)) : 0;
+
+          if (Number(neg.rating) !== average || Number(neg.review_count) !== count) {
+            await strapi.documents('api::negocio.negocio' as any).update({
+              documentId: neg.documentId,
+              data: {
+                rating: average,
+                review_count: count
+              } as any,
+              status: 'published'
+            });
+            strapi.log.info(`   ✅ [${neg.nombre}] Sincronizado: ${average} estrellas (${count} reseñas)`);
+          }
+        }
+        strapi.log.info('✨ Sincronización de Ratings finalizada.');
+      } catch (err: any) {
+        strapi.log.error('❌ Error en sincronización de Ratings:', err.message);
+      }
+
     } catch (error) {
       console.error('❌ Error configurando bootstrap:', error);
     }
