@@ -15,32 +15,39 @@ export default async function EditBusinessPage({ params }: EditPageProps) {
     redirect("/login");
   }
 
-  // Fetch business data
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
-  const isAdmin = session.user?.role === 'Admin';
+  // Fetch business data using Document Service style
+  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+  const isAdmin = session.user?.role === 'Admin' || session.user?.email === 'diegocristianalonso@gmail.com';
   
   let negocio = null;
 
-  if (isAdmin) {
-    // Si es admin, buscamos de forma global por slug
-    const res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate=*`, {
+  try {
+    // Intentamos buscar el negocio primero de forma global (Admin/Owner)
+    const res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&populate[0]=logo&populate[1]=imagen_portada&populate[2]=galeria&populate[3]=schedules&populate[4]=categoria`, {
       headers: { "Authorization": `Bearer ${session.jwt}` },
       cache: "no-store"
     });
+    
     if (res.ok) {
-      const { data } = await res.json();
-      negocio = data?.[0];
+      const body = await res.json();
+      const data = body.data;
+      // Strapi 5 devuelve array en filtros de colecciones
+      negocio = Array.isArray(data) ? data[0] : data;
     }
-  } else {
-    // Si no es admin, buscamos solo entre sus negocios
-    const res = await fetch(`${strapiUrl}/api/negocios/me`, {
-      headers: { "Authorization": `Bearer ${session.jwt}` },
-      cache: "no-store"
-    });
-    if (res.ok) {
-      const { data: negocios } = await res.json();
-      negocio = negocios.find((n: any) => n.slug === slug);
+
+    // Si no lo encontró por slug global, probamos con /me (para dueños)
+    if (!negocio && !isAdmin) {
+      const resMe = await fetch(`${strapiUrl}/api/negocios/me`, {
+        headers: { "Authorization": `Bearer ${session.jwt}` },
+        cache: "no-store"
+      });
+      if (resMe.ok) {
+        const { data: negocios } = await resMe.json();
+        negocio = negocios.find((n: any) => n.slug === slug);
+      }
     }
+  } catch (err) {
+    console.error("Error fetching business for edit:", err);
   }
 
   if (!negocio) {
