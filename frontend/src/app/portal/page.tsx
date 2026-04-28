@@ -84,67 +84,69 @@ export default async function PortalPage() {
       </div>
 
       <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">
-        {/* Banner de Admin eliminado para limpieza visual */}
-
-        {/* Error de Sincronización con Strapi */}
-        {(session as any).error && (
-          <div className="mb-12 p-6 bg-red-500/10 border border-red-500/30 rounded-[2rem] flex items-center gap-4 text-red-400 animate-pulse">
-            <AlertCircle className="w-8 h-8 shrink-0" />
-            <div>
-              <h3 className="font-bold text-lg">Error de Sincronización</h3>
-              <p className="text-sm opacity-80">{(session as any).error}</p>
-              <p className="text-[10px] mt-2 uppercase font-black tracking-widest opacity-50">Esto significa que entraste con Google pero Strapi no te reconoce como usuario válido.</p>
-            </div>
+        {/* Admin Access Banner (Solo para Admins) */}
+        {isAdmin && (
+          <div className="mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
+            <Link 
+              href="/portal/admin"
+              className="group flex items-center justify-between p-6 bg-gradient-to-r from-primary/10 to-accent/5 border border-primary/20 rounded-[2.5rem] hover:border-primary/50 transition-all shadow-2xl shadow-primary/5"
+            >
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 bg-primary rounded-3xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+                  <ShieldCheck className="w-8 h-8 text-black" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-serif font-bold text-white">Panel de Control Admin</h2>
+                  <p className="text-primary/50">Gestiona los reclamos pendientes y el soporte de toda la plataforma.</p>
+                </div>
+              </div>
+              <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-primary text-black font-black uppercase tracking-widest text-xs rounded-2xl group-hover:bg-primary/90 transition-colors">
+                Entrar ahora <Zap className="w-4 h-4 fill-black" />
+              </div>
+            </Link>
           </div>
         )}
 
-        {/* Sección de Negocios - Solo para Propietarios */}
-        {!isAdmin && (
-          <>
-            <div className="mb-12">
-              <h2 className="text-4xl font-serif font-bold text-white mb-8 tracking-tight italic">Resumen de Rendimiento</h2>
-              <PortalStats />
-              
-              <h2 className="text-4xl font-serif font-bold text-white mb-8 tracking-tight italic">Mis Negocios</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {negocios.length > 0 ? (
-                  negocios.map((negocio: any) => (
-                    <BusinessPortalCard key={negocio.id} negocio={negocio} />
-                  ))
-                ) : (
-                  <div className="col-span-full bg-slate-900/50 border border-white/5 rounded-[3rem] p-16 md:p-24 text-center">
-                    <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 border border-white/10">
-                      <Building2 className="w-10 h-10 text-zinc-700" />
-                    </div>
-                    <h2 className="text-3xl font-serif font-bold text-white mb-4 italic">No tienes negocios vinculados</h2>
-                    <p className="text-zinc-400 max-w-md mx-auto mb-10 text-lg leading-relaxed">
-                      Para empezar a gestionar tu presencia en <span className="text-white font-bold tracking-tight">SAN RAFAEL 360</span>, debes primero reclamar la propiedad de tu negocio.
-                    </p>
-                    <Link 
-                      href="/negocios"
-                      className="inline-flex items-center gap-3 px-10 py-5 bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-widest rounded-3xl transition-all shadow-2xl shadow-primary/20 active:scale-95"
-                    >
-                      <PlusCircle className="w-6 h-6" /> Buscar mi Negocio
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Historial de Actividad */}
-            <div className="mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
-                  <History className="w-5 h-5 text-primary" />
+        {/* Sección de Negocios y Actividad - Visible para TODOS */}
+        <div className="mb-12">
+          <h2 className="text-4xl font-serif font-bold text-white mb-8 tracking-tight italic">Resumen de Rendimiento</h2>
+          <PortalStats />
+          
+          <h2 className="text-4xl font-serif font-bold text-white mb-8 tracking-tight italic">Mis Negocios</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {negocios.length > 0 ? (
+              negocios.map((negocio: any) => (
+                <BusinessPortalCard key={negocio.id} negocio={negocio} />
+              ))
+            ) : (
+              <div className="col-span-full bg-slate-900/50 border border-white/5 rounded-[3rem] p-16 md:p-24 text-center">
+                <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 border border-white/10">
+                  <Building2 className="w-10 h-10 text-zinc-700" />
                 </div>
-                <h2 className="text-3xl font-serif font-bold text-white tracking-tight italic">Historial de Actividad</h2>
+                <h2 className="text-3xl font-serif font-bold text-white mb-4 italic">No tienes negocios vinculados</h2>
+                <Link 
+                  href="/negocios"
+                  className="inline-flex items-center gap-3 px-10 py-5 bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-widest rounded-3xl transition-all shadow-2xl shadow-primary/20 active:scale-95"
+                >
+                  <PlusCircle className="w-6 h-6" /> Buscar mi Negocio
+                </Link>
               </div>
-              <div className="bg-zinc-950/20 border border-white/5 p-8 rounded-[3rem] backdrop-blur-sm">
-                  <ActivityLogView jwt={session.jwt as string} userId={Number((session as any).user.id)} />
-              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Historial de Actividad */}
+        <div className="mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
+              <History className="w-5 h-5 text-primary" />
             </div>
-          </>
-        )}
+            <h2 className="text-3xl font-serif font-bold text-white tracking-tight italic">Historial de Actividad</h2>
+          </div>
+          <div className="bg-zinc-950/20 border border-white/5 p-8 rounded-[3rem] backdrop-blur-sm">
+              <ActivityLogView jwt={session.jwt as string} userId={Number((session as any).user.id)} />
+          </div>
+        </div>
 
         {/* Soporte y Ayuda */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mt-20">

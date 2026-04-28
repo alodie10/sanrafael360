@@ -252,7 +252,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   
   const isAdmin = (session as any)?.user?.role?.toLowerCase() === 'admin' || (session as any)?.user?.email === 'diegocristianalonso@gmail.com';
   const isOwner = sessionUserId && ownerId && sessionUserId === ownerId;
-  const canManage = isAdmin || isOwner;
+  const canManage = Boolean(isAdmin || isOwner);
 
   // Debug profundo para diagnosticar el botón faltante
   if (session) {
