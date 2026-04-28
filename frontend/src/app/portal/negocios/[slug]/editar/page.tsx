@@ -17,7 +17,7 @@ export default async function EditBusinessPage({ params }: EditPageProps) {
 
   // Fetch business data using Document Service style
   const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
-  const isAdmin = session.user?.role === 'Admin' || session.user?.email === 'diegocristianalonso@gmail.com';
+  const isAdmin = session.user?.role?.toLowerCase() === 'admin' || session.user?.email === 'diegocristianalonso@gmail.com';
   
   let negocio = null;
 

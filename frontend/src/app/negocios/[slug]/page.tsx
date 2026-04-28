@@ -250,7 +250,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   const sessionUserId = String((session as any)?.user?.id || "");
   const ownerId = String(negocio.owner?.id || negocio.owner?.documentId || "");
   
-  const isAdmin = (session as any)?.user?.role === 'Admin';
+  const isAdmin = (session as any)?.user?.role?.toLowerCase() === 'admin' || (session as any)?.user?.email === 'diegocristianalonso@gmail.com';
   const isOwner = sessionUserId && ownerId && sessionUserId === ownerId;
   const canManage = isAdmin || isOwner;
 
