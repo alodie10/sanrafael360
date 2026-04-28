@@ -269,7 +269,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       <Navbar />
 
       {/* Botón de Gestión Proactiva (Solo para Admin o Dueño) */}
-      {canManage && (
+      {canManage && negocio?.slug && (
         <div className="fixed bottom-8 right-8 z-50 animate-in fade-in slide-in-from-bottom-6 duration-700">
           <Link 
             href={`/portal/negocios/${negocio.slug}/editar`}

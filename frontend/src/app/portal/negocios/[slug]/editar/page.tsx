@@ -8,8 +8,10 @@ interface EditPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export default async function EditBusinessPage({ params }: EditPageProps) {
-  const { slug } = await params;
+export default async function EditBusinessPage(props: any) {
+  // Soporte universal para Next.js 14 y 15
+  const params = await props.params;
+  const slug = params?.slug;
   const session: any = await getServerSession(authOptions);
 
   if (!session) {
