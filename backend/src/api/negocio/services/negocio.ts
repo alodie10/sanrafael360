@@ -116,13 +116,23 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       }));
     }
 
-    const updated = await repo.update(id, updateData);
-    strapi.log.info(`[portalUpdate] schedules guardados: ${JSON.stringify(updateData.schedules ?? [])}`);
+    let updated = await repo.update(id, updateData);
+    
+    // Si hay archivos, los subimos y esperamos a que terminen
     if (files) {
-      if (files.logo) await repo.uploadFile(updated.documentId, 'logo', files.logo);
-      if (files.imagen_portada) await repo.uploadFile(updated.documentId, 'imagen_portada', files.imagen_portada);
-      if (files.galeria) await repo.uploadFile(updated.documentId, 'galeria', files.galeria, true);
+      strapi.log.info(`[portalUpdate] Procesando archivos para: ${id}`);
+      const uploadPromises = [];
+      
+      if (files.logo) uploadPromises.push(repo.uploadFile(updated.documentId, 'logo', files.logo));
+      if (files.imagen_portada) uploadPromises.push(repo.uploadFile(updated.documentId, 'imagen_portada', files.imagen_portada));
+      if (files.galeria) uploadPromises.push(repo.uploadFile(updated.documentId, 'galeria', files.galeria, true));
+      
+      await Promise.all(uploadPromises);
+      
+      // Volvemos a obtener el objeto fresco con las nuevas relaciones de media
+      updated = await repo.findById(id, ['logo', 'imagen_portada', 'galeria', 'schedules']);
     }
+
     await repo.publish(id);
 
     // Log Activity

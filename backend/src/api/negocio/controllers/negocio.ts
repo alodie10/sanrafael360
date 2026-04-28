@@ -65,12 +65,18 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     return ctx.send({ success: true, data: stats });
   }),
 
-  me: asyncHandler(async (ctx) => {
-    const user = ctx.state.user;
-    if (!user) return ctx.unauthorized();
-    const data = await strapi.service('api::negocio.negocio').getOwnerNegocios(user.id);
-    return ctx.send({ success: true, data });
-  }),
+  me: async (ctx) => {
+    try {
+      const user = ctx.state.user;
+      if (!user) return ctx.unauthorized();
+      
+      const data = await strapi.service('api::negocio.negocio').getOwnerNegocios(user.id);
+      return data || []; 
+    } catch (err: any) {
+      strapi.log.error(`[Me-Endpoint] Error: ${err.message}`);
+      return []; // Resiliencia: Devuelve array vacío en lugar de 500
+    }
+  },
 
   portalUpdate: asyncHandler(async (ctx) => {
     const { id } = ctx.params;
