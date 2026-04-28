@@ -51,7 +51,13 @@ export default async function EditBusinessPage({ params }: EditPageProps) {
   }
 
   if (!negocio) {
-    redirect("/portal");
+    return (
+      <main className="min-h-screen pt-40 px-4 text-center">
+        <h1 className="text-2xl font-bold text-white mb-4">Negocio no encontrado</h1>
+        <p className="text-zinc-400 mb-8">No pudimos cargar la información de "{slug}". Verifica que el negocio esté publicado.</p>
+        <Link href="/portal" className="text-primary hover:underline">Volver al Portal</Link>
+      </main>
+    );
   }
 
   return (
