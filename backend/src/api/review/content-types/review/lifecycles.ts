@@ -3,10 +3,10 @@ export default {
     const { data } = event.params;
     
     try {
-      if (data.negocio && data.usuario) {
+      if (data.negocio && data.user) {
         // Obtenemos el ID del negocio (puede venir de varias formas en Strapi 5)
         const nId = typeof data.negocio === 'object' ? (data.negocio.documentId || data.negocio.id) : data.negocio;
-        const uId = typeof data.usuario === 'object' ? (data.usuario.documentId || data.usuario.id) : data.usuario;
+        const uId = typeof data.user === 'object' ? (data.user.documentId || data.user.id) : data.user;
 
         if (nId && uId) {
           const negocio = await strapi.documents('api::negocio.negocio' as any).findOne({

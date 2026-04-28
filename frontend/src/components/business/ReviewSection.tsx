@@ -37,7 +37,7 @@ export default function ReviewSection({ negocioId, ownerId, initialRating = 0, i
   const fetchReviews = async () => {
     try {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
-      const res = await fetch(`${strapiUrl}/api/reviews?filters[negocio][documentId][$eq]=${negocioId}&populate=usuario&sort=createdAt:desc`, {
+      const res = await fetch(`${strapiUrl}/api/reviews?filters[negocio][documentId][$eq]=${negocioId}&populate=user&sort=createdAt:desc`, {
         cache: 'no-store'
       });
       const data = await res.json();
@@ -84,7 +84,7 @@ export default function ReviewSection({ negocioId, ownerId, initialRating = 0, i
             rating: newRating,
             comentario: newComment,
             negocio: negocioId,
-            usuario: userId
+            user: userId
           }
         })
       });
@@ -239,7 +239,7 @@ export default function ReviewSection({ negocioId, ownerId, initialRating = 0, i
                       </div>
                       <div>
                         <h4 className="text-sm font-bold text-white">
-                          {review.usuario?.username || "Usuario San Rafael"}
+                          {review.user?.username || "Usuario San Rafael"}
                         </h4>
                         <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">
                           {new Date(review.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}

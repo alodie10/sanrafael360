@@ -21,7 +21,7 @@
       "type": "text",
       "required": true
     },
-    "usuario": {
+    "user": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "plugin::users-permissions.user"
