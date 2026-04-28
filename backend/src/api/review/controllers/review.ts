@@ -6,12 +6,11 @@ export default factories.createCoreController('api::review.review' as any, ({ st
     if (!user) return ctx.unauthorized();
 
     try {
-      const body = ctx.request.body as any;
-      const data = body.data || {};
+      const { data } = (ctx.request.body as any);
       
-      strapi.log.info(`[Review-Create] Intento de creación por usuario ${user.id} para negocio ${data.negocio}`);
+      strapi.log.info(`[Review-Direct] Iniciando creación manual para negocio: ${data.negocio}`);
 
-      // 1. VALIDACIÓN DE SEGURIDAD (EL GUARDIA)
+      // 1. EL GUARDIA (Validación de Dueño)
       if (data.negocio) {
         const negocio = await strapi.documents('api::negocio.negocio' as any).findOne({
           documentId: data.negocio,
@@ -28,24 +27,26 @@ export default factories.createCoreController('api::review.review' as any, ({ st
         }
       }
 
-      // 2. CORRECCIÓN DE LLAVE (Blindaje contra desajuste de esquema)
-      const userIdToLink = user.documentId || user.id;
-      data.autor = userIdToLink;
-      
-      // Eliminamos llaves viejas
-      delete data.usuario;
-      delete data.user;
+      // 2. CREACIÓN POR DOCUMENT SERVICE (By-pass de validación de llaves)
+      // Usamos el Document Service directamente, que es más permisivo y potente
+      const newReview = await strapi.documents('api::review.review' as any).create({
+        data: {
+          rating: Number(data.rating),
+          comentario: data.comentario,
+          negocio: data.negocio,
+          autor: user.id // Forzamos el autor de la sesión
+        },
+        status: 'published' // La publicamos de una vez
+      });
 
-      strapi.log.info(`[Review-Create] Payload final: ${JSON.stringify(data)}`);
+      strapi.log.info(`[Review-Direct] ✅ Reseña creada con éxito: ${newReview.documentId}`);
 
-      // Pasamos el contexto actualizado
-      ctx.request.body.data = data;
-      const response = await super.create(ctx);
-      return response;
+      return { data: newReview };
 
     } catch (err: any) {
-      strapi.log.error(`[Review-Create] ERROR CRÍTICO: ${err.message}`);
-      return ctx.internalServerError(`Error en el servidor: ${err.message}`);
+      strapi.log.error(`[Review-Direct] ❌ FALLO CRÍTICO: ${err.message}`);
+      // Si Strapi sigue diciendo "Invalid key autor", es un problema de DB serio
+      return ctx.internalServerError(`Error de Strapi: ${err.message}`);
     }
   }
 }));
