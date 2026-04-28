@@ -7,6 +7,7 @@ import Navbar from "@/components/layout/Navbar";
 import GoogleMap from "@/components/common/GoogleMap";
 import WebsitePortlet from "@/components/business/WebsitePortlet";
 import BookingWidget from "@/components/business/BookingWidget";
+import ReviewSection from "@/components/business/ReviewSection";
 import { 
   MapPin, 
   Phone, 
@@ -146,7 +147,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
     try {
       setLoading(true);
       // Populate basic info
-      const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[galeria][fields][0]=url&populate[schedules]=*&populate[owner][fields][0]=id";
+      // Populate basic info including ratings
+      const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[logo][fields][0]=url&populate[imagen_portada][fields][1]=url&populate[galeria][fields][0]=url&populate[schedules]=*&populate[owner][fields][0]=id&fields[0]=nombre&fields[1]=descripcion&fields[2]=direccion&fields[3]=telefono&fields[4]=whatsapp&fields[5]=website&fields[6]=instagram&fields[7]=facebook&fields[8]=latitud&fields[9]=longitud&fields[10]=verificado&fields[11]=reclamar_habilitado&fields[12]=reserva_url&fields[13]=reserva_habilitada&fields[14]=rating&fields[15]=review_count";
       const res = await fetchFromStrapi(`negocios?filters[slug][$eq]=${slug}&${populate}`);
       
       let businessData = res.data?.[0];
@@ -328,6 +330,18 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                 {negocio.nombre}
               </h1>
               <div className="flex flex-wrap items-center gap-6 text-slate-300">
+                {/* Yelp Style Rating Header */}
+                <div className="flex items-center gap-3 bg-black/30 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/10 shadow-lg">
+                   <div className="flex items-center gap-0.5">
+                     {[1, 2, 3, 4, 5].map((s) => (
+                       <Star key={s} className={cn("w-3.5 h-3.5", s <= (negocio.rating || 0) ? "fill-primary text-primary" : "text-white/10")} />
+                     ))}
+                   </div>
+                   <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">
+                     {negocio.review_count || 0} Opiniones
+                   </span>
+                </div>
+
                 {businessStatus && (
                    <div className={cn("px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border", businessStatus.color)}>
                      {businessStatus.status}
@@ -599,6 +613,15 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
               </div>
             </div>
           </div>
+        </div>
+
+        {/* REVIEWS SECTION */}
+        <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12">
+           <ReviewSection 
+             negocioId={negocio.documentId} 
+             initialRating={negocio.rating} 
+             initialCount={negocio.review_count} 
+           />
         </div>
       </section>
 
