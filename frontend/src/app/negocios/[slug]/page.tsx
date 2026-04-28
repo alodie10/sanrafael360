@@ -619,6 +619,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12">
            <ReviewSection 
              negocioId={negocio.documentId} 
+             ownerId={negocio.owner?.documentId || negocio.owner?.id}
              initialRating={negocio.rating} 
              initialCount={negocio.review_count} 
            />

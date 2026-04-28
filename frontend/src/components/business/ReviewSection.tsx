@@ -17,7 +17,7 @@ interface Review {
   };
 }
 
-export default function ReviewSection({ negocioId, initialRating = 0, initialCount = 0 }: { negocioId: string, initialRating?: number, initialCount?: number }) {
+export default function ReviewSection({ negocioId, ownerId, initialRating = 0, initialCount = 0 }: { negocioId: string, ownerId?: string, initialRating?: number, initialCount?: number }) {
   const { data: session, status } = useSession();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,11 +140,18 @@ export default function ReviewSection({ negocioId, initialRating = 0, initialCou
         {/* Formulario */}
         <div className="lg:col-span-1">
           {session ? (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-zinc-900/50 border border-white/10 rounded-[2rem] p-8 sticky top-32"
-            >
+            String(session.user?.id) === String(ownerId) ? (
+              <div className="bg-primary/5 border border-primary/20 rounded-[2rem] p-10 text-center">
+                <Settings className="w-12 h-12 text-primary mx-auto mb-4 animate-spin-slow" />
+                <h3 className="text-white font-serif font-bold text-lg mb-2 italic">Eres el administrador</h3>
+                <p className="text-zinc-500 text-sm">Gestionas este perfil, por lo que no puedes dejar reseñas sobre tu propio negocio. ¡Gracias por ser parte de San Rafael 360!</p>
+              </div>
+            ) : (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-zinc-900/50 border border-white/10 rounded-[2rem] p-8 sticky top-32"
+              >
               <h3 className="text-xl font-serif font-bold text-white mb-6">Tu Calificación</h3>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="flex items-center justify-center gap-2 p-4 bg-black/40 rounded-2xl border border-white/5">
@@ -202,6 +209,7 @@ export default function ReviewSection({ negocioId, initialRating = 0, initialCou
                 )}
               </form>
             </motion.div>
+            )
           ) : (
             <div className="bg-zinc-900/30 border border-dashed border-white/10 rounded-[2rem] p-12 text-center">
               <MessageSquare className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
