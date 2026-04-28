@@ -1,12 +1,12 @@
 {
-  "//": "Trigger build v12 - Deep Clean & Soporte Fix",
+  "//": "Trigger build v13 - Schema Fix (autor)",
   "name": "sanrafael360-monorepo",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Repositorio centralizado para San Rafael 360 (Next.js + Strapi)",
   "scripts": {
     "start": "cd backend && npm run start",
     "build": "npm run build:all",
-    "build:all": "cd frontend && npm run build && cd ../backend && npm run build",
+    "build:all": "rm -rf backend/dist backend/.strapi && cd backend && npm install && npm run build && cd ../frontend && npm install && npm run build",
     "info": "echo 'Proyecto San Rafael 360. Desarrollo 100% Remoto.'",
     "test:unit": "cd backend && npm run test:unit",
     "test:integration": "cd backend && npm run test:integration",
