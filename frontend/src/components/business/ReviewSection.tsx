@@ -25,6 +25,7 @@ export default function ReviewSection({ negocioId, initialRating = 0, initialCou
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState("");
   const [hoverRating, setHoverRating] = useState(0);
+  const [showReconnect, setShowReconnect] = useState(false);
 
   // EFECTO DE DIAGNÓSTICO
   useEffect(() => {
@@ -57,11 +58,13 @@ export default function ReviewSection({ negocioId, initialRating = 0, initialCou
     
     const jwt = (session as any)?.jwt;
     const userId = (session as any)?.user?.id;
+    const sessionError = (session as any)?.error;
 
-    console.log("🚀 [INTENTO DE ENVÍO]:", { jwt: !!jwt, userId, status });
+    console.log("🚀 [INTENTO DE ENVÍO]:", { jwt: !!jwt, userId, status, sessionError });
     
     if (!jwt || !userId) {
-      alert(`⚠️ ERROR DE SESIÓN:\nStatus: ${status}\nJWT: ${jwt ? 'OK' : 'MISSING'}\nUser: ${userId || 'MISSING'}\n\nPor favor, hacé Logout y Login.`);
+      alert(`⚠️ ERROR DE SESIÓN:\nStatus: ${status}\nJWT: ${jwt ? 'OK' : 'MISSING'}\nUser: ${userId || 'MISSING'}\nError: ${sessionError || 'Ninguno reportado'}\n\nPor favor, hacé clic en el botón RECONECTAR que apareció abajo.`);
+      setShowReconnect(true);
       return;
     }
 
@@ -184,6 +187,19 @@ export default function ReviewSection({ negocioId, initialRating = 0, initialCou
                     </>
                   )}
                 </button>
+
+                {showReconnect && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const { signOut, signIn } = require("next-auth/react");
+                      signOut({ redirect: false }).then(() => signIn("google"));
+                    }}
+                    className="w-full py-3 bg-red-600 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl animate-bounce shadow-lg shadow-red-500/20"
+                  >
+                    🔄 Reconectar Sesión Ahora
+                  </button>
+                )}
               </form>
             </motion.div>
           ) : (
