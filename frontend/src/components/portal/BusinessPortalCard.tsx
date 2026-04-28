@@ -82,18 +82,12 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
           <span className="truncate">{negocio.categoria?.nombre || "General"}</span>
         </div>
         
-        <div className="mt-auto grid grid-cols-2 gap-4">
+        <div className="mt-auto">
           <Link 
             href={`/negocios/${negocio.slug}`}
-            className="flex items-center justify-center gap-2 px-4 py-4 bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all border border-white/5"
-          >
-            <ExternalLink className="w-4 h-4" /> Perfil
-          </Link>
-          <Link 
-            href={`/portal/negocios/${negocio.slug}/editar`}
             className="flex items-center justify-center gap-2 px-4 py-4 bg-primary hover:bg-primary/90 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/10"
           >
-            Gestionar
+            <ExternalLink className="w-4 h-4" /> Ver Perfil y Gestionar
           </Link>
         </div>
       </div>
