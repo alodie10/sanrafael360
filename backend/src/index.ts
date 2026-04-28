@@ -12,7 +12,7 @@ export default {
         for (const n of negociosReset) {
           await strapi.documents('api::negocio.negocio' as any).update({
             documentId: n.documentId,
-            data: { rating: 0, review_count: 0 },
+            data: { rating: 0, review_count: 0 } as any,
             status: 'published'
           });
         }
