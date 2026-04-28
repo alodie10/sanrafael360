@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MapPin, ArrowRight, Settings } from "lucide-react";
+import { MapPin, ArrowRight, Settings, Star } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
