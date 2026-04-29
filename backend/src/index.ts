@@ -5,22 +5,6 @@ export default {
     try {
       strapi.log.info('🚀 Iniciando configuración de San Rafael 360...');
 
-      // 0. Limpieza de Ratings (Solo una vez para empezar de cero)
-      try {
-        strapi.log.info('🧹 Reseteando contadores de negocios...');
-        const negociosReset = await strapi.documents('api::negocio.negocio' as any).findMany({ limit: -1 });
-        for (const n of negociosReset) {
-          await strapi.documents('api::negocio.negocio' as any).update({
-            documentId: n.documentId,
-            data: { rating: 0, review_count: 0 } as any,
-            status: 'published'
-          });
-        }
-        strapi.log.info('✅ Todos los negocios reseteados a 0.');
-      } catch (e: any) {
-        strapi.log.error('Error en reseteo: ' + e.message);
-      }
-
       // 1. CONFIGURACIÓN AUTOMÁTICA DE PERMISOS (Blindaje de API)
       const roleTypes = ['authenticated', 'residente', 'propietario', 'public'];
       

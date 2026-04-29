@@ -47,7 +47,13 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Middlewar
   {
     name: 'strapi::cors',
     config: {
-      origin: ['*'],
+      origin: [
+        'http://localhost:3000',
+        'http://localhost:8081',
+        'https://sanrafael360.com',
+        'https://www.sanrafael360.com',
+        'https://sanrafael360.vercel.app'
+      ],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
       headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
       keepHeaderOnError: true,
