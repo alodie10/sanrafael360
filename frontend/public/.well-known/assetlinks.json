@@ -2,7 +2,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.sanrafael360.app",
-    "sha256_cert_fingerprints": ["PLACEHOLDER_REPLACE_AFTER_KEYSTORE_GENERATION"]
+    "package_name": "com.sanrafael360.www.twa",
+    "sha256_cert_fingerprints": ["9F:14:F6:5F:DD:91:51:C3:EF:0D:7D:04:BF:EE:21:26:73:38:B0:46:DB:D8:38:93:BA:A1:D3:15:2E:3F:68:6C"]
   }
 }]
