@@ -281,36 +281,43 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         </div>
       )}
 
-      {/* HERO SECTION */}
-      <section className="relative h-[42vh] md:h-[60vh] min-h-[360px] md:min-h-[500px] overflow-hidden">
-        {coverUrl ? (
-          <img 
-            src={getStrapiMedia(coverUrl)!} 
-            alt={negocio.nombre}
-            className="w-full h-full object-cover brightness-50"
-          />
-        ) : (
-          <div className="w-full h-full bg-slate-900" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/30" />
-        
-        <div className="absolute top-[6.5rem] md:top-32 left-4 md:left-8 z-10">
-          <Link 
-            href="/"
-            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span className="text-sm font-bold">Volver</span>
-          </Link>
+      {/* HERO SECTION — Flex layout para evitar overlaps en mobile */}
+      <section className="relative overflow-hidden">
+        {/* Background: imagen de portada */}
+        <div className="absolute inset-0">
+          {coverUrl ? (
+            <img 
+              src={getStrapiMedia(coverUrl)!} 
+              alt={negocio.nombre}
+              className="w-full h-full object-cover brightness-50"
+            />
+          ) : (
+            <div className="w-full h-full bg-slate-900" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-black/40" />
         </div>
 
-        <div className="absolute bottom-0 inset-x-0 p-4 md:p-12 lg:p-16">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end gap-6 md:gap-10">
-            {/* Logo Overlap */}
+        {/* Contenido en flex: Volver arriba, Info abajo */}
+        <div className="relative flex flex-col justify-between min-h-[340px] md:min-h-[560px] pt-20 md:pt-36 pb-6 md:pb-16 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
+          
+          {/* Botón Volver — siempre arriba, nunca pisa el logo */}
+          <div>
+            <Link 
+              href="/"
+              className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/30 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 group"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <span className="text-sm font-bold">Volver</span>
+            </Link>
+          </div>
+
+          {/* Info del negocio — siempre abajo */}
+          <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-10 mt-6">
+            {/* Logo */}
             <motion.div 
                initial={{ opacity: 0, scale: 0.8 }}
                animate={{ opacity: 1, scale: 1 }}
-               className="w-20 h-20 md:w-48 md:h-48 bg-white p-2 md:p-3 rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl border border-white/10 shrink-0 flex items-center justify-center overflow-hidden"
+               className="w-20 h-20 md:w-44 md:h-44 bg-white p-2 md:p-3 rounded-2xl md:rounded-[2.5rem] shadow-2xl border border-white/10 shrink-0 flex items-center justify-center overflow-hidden"
             >
               {logoUrl ? (
                 <img 
@@ -319,13 +326,13 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                   className="w-full h-full object-contain"
                 />
               ) : (
-                 <div className="w-full h-full bg-gradient-to-br from-primary to-secondary rounded-[2rem] flex items-center justify-center text-primary-foreground font-bold text-5xl">
+                 <div className="w-full h-full bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-black font-bold text-4xl">
                     {negocio.nombre.charAt(0)}
                  </div>
               )}
             </motion.div>
 
-            <div className="flex-1 pb-4">
+            <div className="flex-1">
               <h1 className="text-2xl md:text-6xl font-heading font-extrabold text-white mb-2 md:mb-4 tracking-tight text-balance">
                 {negocio.nombre}
               </h1>
@@ -381,8 +388,9 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         </div>
       </section>
 
-      {/* QUICK ACTIONS BAR (Conversión Directa) */}
-      <section className="bg-slate-900/50 border-b border-white/5 py-8 px-4 md:px-8">
+      {/* QUICK ACTIONS BAR — Solo si hay al menos un botón */}
+      {(negocio.whatsapp || negocio.website || negocio.instagram || negocio.facebook) && (
+      <section className="bg-slate-900/50 border-b border-white/5 py-6 px-4 md:px-8">
         <div className="max-w-7xl mx-auto flex flex-wrap justify-center md:justify-start gap-4">
           {negocio.whatsapp && (
             <a 
@@ -430,9 +438,10 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
           )}
         </div>
       </section>
+      )}
 
       {/* CONTENT GRID */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-16">
+      <section className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-8 md:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16 items-start">
           
           {/* Main Column */}
