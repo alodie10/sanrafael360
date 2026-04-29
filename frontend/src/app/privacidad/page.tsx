@@ -1,5 +1,5 @@
 import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+
 
 export const metadata = {
   title: "Política de Privacidad | San Rafael 360",
@@ -57,7 +57,7 @@ export default function PrivacyPolicyPage() {
         </div>
       </main>
 
-      <Footer />
+
     </div>
   );
 }
