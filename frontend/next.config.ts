@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  turbopack: {},   // Silencia la advertencia, pero el build usa webpack (requerido por next-pwa)
   images: {
     remotePatterns: [
       {
