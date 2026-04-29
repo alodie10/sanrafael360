@@ -69,3 +69,39 @@
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
+
+/* ============================================
+   PWA / App Nativa — Estilos de Experiencia
+   ============================================ */
+
+/* Evitar pull-to-refresh del browser que interfiere */
+body {
+  overscroll-behavior-y: none;
+}
+
+/* Feedback táctil nativo (elimina el flash azul de Android) */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Soporte para notch/safe areas (iPhone X+, Android con punch hole) */
+.safe-top    { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+/* Modo Standalone (cuando está instalada como app) */
+@media (display-mode: standalone) {
+  /* Padding extra en el top para cubrir la status bar */
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Ocultar elementos solo visibles en browser */
+  .browser-only {
+    display: none !important;
+  }
+}
+
+/* Scrollbars invisibles pero funcionales */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

@@ -23,8 +23,37 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "San Rafael 360",
-  description: "Directorio Oficial de San Rafael",
+  title: {
+    default: "San Rafael 360 — Descubrí la ciudad",
+    template: "%s | San Rafael 360",
+  },
+  description: "El directorio definitivo de negocios, restaurantes, hoteles y atracciones de San Rafael, Mendoza. Tu guía local completa.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "SR360",
+  },
+  themeColor: "#FFBF00",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: "cover",
+  },
+  openGraph: {
+    title: "San Rafael 360",
+    description: "El directorio definitivo de San Rafael, Mendoza.",
+    url: "https://www.sanrafael360.com",
+    siteName: "San Rafael 360",
+    locale: "es_AR",
+    type: "website",
+  },
+  icons: {
+    apple: "/icons/icon-192.png",
+    icon: "/icons/icon-192.png",
+  },
 };
 
 export default function RootLayout({
