@@ -282,7 +282,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       )}
 
       {/* HERO SECTION */}
-      <section className="relative h-[50vh] md:h-[60vh] min-h-[450px] overflow-hidden">
+      <section className="relative h-[55vh] md:h-[60vh] min-h-[520px] md:min-h-[500px] overflow-hidden">
         {coverUrl ? (
           <img 
             src={getStrapiMedia(coverUrl)!} 
@@ -294,7 +294,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/30" />
         
-        <div className="absolute top-32 left-4 md:left-8 z-10">
+        <div className="absolute top-20 md:top-32 left-4 md:left-8 z-10">
           <Link 
             href="/"
             className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 group"
@@ -310,7 +310,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
             <motion.div 
                initial={{ opacity: 0, scale: 0.8 }}
                animate={{ opacity: 1, scale: 1 }}
-               className="w-32 h-32 md:w-48 md:h-48 bg-white p-2 md:p-3 rounded-[2.5rem] shadow-2xl border border-white/10 shrink-0 flex items-center justify-center overflow-hidden"
+               className="w-20 h-20 md:w-48 md:h-48 bg-white p-2 md:p-3 rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl border border-white/10 shrink-0 flex items-center justify-center overflow-hidden"
             >
               {logoUrl ? (
                 <img 
@@ -326,7 +326,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
             </motion.div>
 
             <div className="flex-1 pb-4">
-              <h1 className="text-4xl md:text-6xl font-heading font-extrabold text-white mb-4 tracking-tight text-balance">
+              <h1 className="text-2xl md:text-6xl font-heading font-extrabold text-white mb-2 md:mb-4 tracking-tight text-balance">
                 {negocio.nombre}
               </h1>
               <div className="flex flex-wrap items-center gap-6 text-slate-300">
