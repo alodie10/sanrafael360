@@ -298,7 +298,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         </div>
 
         {/* Contenido en flex: Volver arriba, Info abajo */}
-        <div className="relative flex flex-col justify-between min-h-[340px] md:min-h-[560px] pt-20 md:pt-36 pb-6 md:pb-16 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
+        <div className="relative flex flex-col justify-between min-h-[340px] md:min-h-[560px] pt-[5.5rem] md:pt-36 pb-6 md:pb-16 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
           
           {/* Botón Volver — siempre arriba, nunca pisa el logo */}
           <div>
