@@ -282,7 +282,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       )}
 
       {/* HERO SECTION */}
-      <section className="relative h-[55vh] md:h-[60vh] min-h-[420px] md:min-h-[500px] overflow-hidden">
+      <section className="relative h-[42vh] md:h-[60vh] min-h-[360px] md:min-h-[500px] overflow-hidden">
         {coverUrl ? (
           <img 
             src={getStrapiMedia(coverUrl)!} 
