@@ -23,6 +23,25 @@ import {
   Settings
 } from "lucide-react";
 import { motion } from "framer-motion";
+
+const MediaRenderer = ({ media, alt, className }: { media: any, alt: string, className?: string }) => {
+  const url = getStrapiMedia(media.url);
+  if (!url) return null;
+  const isVideo = media.mime?.startsWith('video/') || url.match(/\.(mp4|m4v|webm|ogg|mov)$/i);
+  
+  if (isVideo) {
+    return (
+      <video 
+        src={url}
+        className={className}
+        controls
+        playsInline
+        preload="metadata"
+      />
+    );
+  }
+  return <img src={url} alt={alt} className={className} />;
+};
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -456,10 +475,10 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                     animate={{ opacity: 1, x: 0 }}
                     className="aspect-[4/3] rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5"
                   >
-                    <img 
-                      src={getStrapiMedia(negocio.galeria[0].url)!} 
+                    <MediaRenderer 
+                      media={negocio.galeria[0]}
                       alt={negocio.nombre}
-                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                     />
                   </motion.div>
                   <div className="grid grid-rows-2 gap-4">
@@ -471,10 +490,10 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                         transition={{ delay: i * 0.1 }}
                         className="rounded-3xl overflow-hidden shadow-xl border border-white/5"
                       >
-                        <img 
-                          src={getStrapiMedia(img.url)!} 
+                        <MediaRenderer 
+                          media={img}
                           alt={`${negocio.nombre} ${i}`}
-                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                         />
                       </motion.div>
                     ))}
@@ -488,8 +507,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                         whileHover={{ scale: 1.05 }}
                         className="aspect-square rounded-2xl overflow-hidden shadow-lg border border-white/5"
                       >
-                        <img 
-                          src={getStrapiMedia(img.url)!} 
+                        <MediaRenderer 
+                          media={img}
                           alt={`${negocio.nombre} ${i + 3}`}
                           className="w-full h-full object-cover"
                         />
