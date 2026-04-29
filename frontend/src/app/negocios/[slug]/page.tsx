@@ -282,7 +282,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       )}
 
       {/* HERO SECTION */}
-      <section className="relative h-[55vh] md:h-[60vh] min-h-[520px] md:min-h-[500px] overflow-hidden">
+      <section className="relative h-[55vh] md:h-[60vh] min-h-[420px] md:min-h-[500px] overflow-hidden">
         {coverUrl ? (
           <img 
             src={getStrapiMedia(coverUrl)!} 
@@ -294,7 +294,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/30" />
         
-        <div className="absolute top-24 md:top-32 left-4 md:left-8 z-10">
+        <div className="absolute top-[6.5rem] md:top-32 left-4 md:left-8 z-10">
           <Link 
             href="/"
             className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 group"
