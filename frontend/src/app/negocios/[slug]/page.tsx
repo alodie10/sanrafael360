@@ -382,6 +382,11 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                     {negocio.categoria.nombre}
                   </div>
                 )}
+                {negocio.is_premium && (
+                  <div className="px-3 py-1 bg-gradient-to-r from-amber-200 to-amber-500 text-black rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-1 shadow-lg shadow-amber-500/20">
+                    <Star className="w-3 h-3 fill-black" /> Premium
+                  </div>
+                )}
                 {negocio.price_range && (
                   <div className="flex items-center gap-0.5 text-primary/80 font-black text-xs bg-primary/5 px-3 py-1 rounded-full border border-primary/20">
                     {Array.from({ length: 4 }).map((_, i) => {
@@ -407,8 +412,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         </div>
       </section>
 
-      {/* QUICK ACTIONS BAR — Solo si hay al menos un botón */}
-      {(negocio.whatsapp || negocio.website || negocio.instagram || negocio.facebook) && (
+      {/* QUICK ACTIONS BAR — Solo si hay al menos un botón y es PREMIUM */}
+      {negocio.is_premium && (negocio.whatsapp || negocio.website || negocio.instagram || negocio.facebook) && (
       <section className="bg-slate-900/50 border-b border-white/5 py-6 px-4 md:px-8">
         <div className="max-w-7xl mx-auto flex flex-wrap justify-center md:justify-start gap-4">
           {negocio.whatsapp && (
@@ -466,8 +471,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
           {/* Main Column */}
           <div className="lg:col-span-2 space-y-16">
             
-            {/* Gallery (Lugar Destacado) */}
-            {negocio.galeria && negocio.galeria.length > 0 && (
+            {/* Gallery (Exclusivo Premium) */}
+            {negocio.is_premium && negocio.galeria && negocio.galeria.length > 0 && (
               <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <motion.div 

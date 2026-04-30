@@ -172,6 +172,19 @@
       "relation": "oneToMany",
       "target": "api::review.review",
       "mappedBy": "negocio"
+    },
+    "is_premium": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indica si el negocio tiene una suscripción premium activa"
+    },
+    "premium_valid_until": {
+      "type": "datetime",
+      "description": "Fecha de vencimiento de la suscripción premium"
+    },
+    "premium_notes": {
+      "type": "text",
+      "description": "Notas administrativas sobre los pagos (ej: Pago efectivo 15/05)"
     }
   }
 }

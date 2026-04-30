@@ -48,6 +48,12 @@ export interface Negocio {
   reserva_url?: string;
   google_maps_url?: string;
   discovery_verified?: boolean;
+  rating?: number;
+  review_count?: number;
+  price_range?: string;
+  is_premium?: boolean;
+  premium_valid_until?: string;
+  premium_notes?: string;
 }
 
 export interface StrapiResponse<T> {

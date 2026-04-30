@@ -65,12 +65,19 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
             </div>
           )}
 
-          {/* Glass Badge Categoría */}
-          {negocio.categoria && (
-            <div className="absolute top-6 left-6 px-4 py-1.5 bg-black/40 backdrop-blur-md rounded-full text-[10px] font-bold text-white border border-white/20 uppercase tracking-widest z-10 shadow-lg">
-              {negocio.categoria.nombre}
-            </div>
-          )}
+          {/* Glass Badge Categoría & Premium */}
+          <div className="absolute top-6 left-6 flex flex-col items-start gap-2 z-10">
+            {negocio.categoria && (
+              <div className="px-4 py-1.5 bg-black/40 backdrop-blur-md rounded-full text-[10px] font-bold text-white border border-white/20 uppercase tracking-widest shadow-lg">
+                {negocio.categoria.nombre}
+              </div>
+            )}
+            {negocio.is_premium && (
+              <div className="px-3 py-1.5 bg-gradient-to-r from-amber-200 to-amber-500 rounded-full text-[10px] font-black text-black uppercase tracking-widest shadow-lg shadow-amber-500/20 flex items-center gap-1">
+                <Star className="w-2.5 h-2.5 fill-black" /> Premium
+              </div>
+            )}
+          </div>
 
           {/* Logo Overlap Premium */}
           <div className="absolute -bottom-8 right-8 w-20 h-20 md:w-24 md:h-24 bg-white p-3 rounded-[2rem] shadow-2xl border border-white/10 group-hover:scale-110 transition-all duration-500 z-10 group-hover:-translate-y-2 flex items-center justify-center overflow-hidden">
