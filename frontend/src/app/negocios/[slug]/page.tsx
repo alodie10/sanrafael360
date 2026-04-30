@@ -550,7 +550,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
             {negocio.reserva_habilitada && (
               <BookingWidget 
                 reservaUrl={negocio.reserva_url} 
-                whatsapp={negocio.whatsapp}
+                whatsapp={negocio.is_premium ? negocio.whatsapp : undefined}
                 businessName={negocio.nombre}
               />
             )}
