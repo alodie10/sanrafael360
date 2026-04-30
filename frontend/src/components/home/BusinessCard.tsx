@@ -25,6 +25,13 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
   const isAdmin = (session as any)?.user?.role === 'Admin';
   const isOwner = sessionUserId && ownerId && sessionUserId === ownerId;
   const canManage = isAdmin || isOwner;
+  
+  let isValidPremium = negocio.is_premium;
+  if (isValidPremium && negocio.premium_valid_until) {
+    if (new Date() > new Date(negocio.premium_valid_until)) {
+      isValidPremium = false;
+    }
+  }
 
   return (
     <div className="relative h-full group">
@@ -72,7 +79,7 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
                 {negocio.categoria.nombre}
               </div>
             )}
-            {negocio.is_premium && (
+            {isValidPremium && (
               <div className="px-3 py-1.5 bg-gradient-to-r from-amber-200 to-amber-500 rounded-full text-[10px] font-black text-black uppercase tracking-widest shadow-lg shadow-amber-500/20 flex items-center gap-1">
                 <Star className="w-2.5 h-2.5 fill-black" /> Premium
               </div>
