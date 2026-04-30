@@ -343,7 +343,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
             <motion.div 
                initial={{ opacity: 0, scale: 0.8 }}
                animate={{ opacity: 1, scale: 1 }}
-               className="w-20 h-20 md:w-44 md:h-44 bg-white p-2 md:p-3 rounded-2xl md:rounded-[2.5rem] shadow-2xl border border-white/10 shrink-0 flex items-center justify-center overflow-hidden"
+               className="w-20 h-20 md:w-44 md:h-44 bg-slate-900/80 backdrop-blur-xl p-2 md:p-3 rounded-2xl md:rounded-[2.5rem] shadow-2xl border border-white/10 shrink-0 flex items-center justify-center overflow-hidden"
             >
               {logoUrl ? (
                 <img 

@@ -87,7 +87,7 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
           </div>
 
           {/* Logo Overlap Premium */}
-          <div className="absolute -bottom-8 right-8 w-20 h-20 md:w-24 md:h-24 bg-white p-3 rounded-[2rem] shadow-2xl border border-white/10 group-hover:scale-110 transition-all duration-500 z-10 group-hover:-translate-y-2 flex items-center justify-center overflow-hidden">
+          <div className="absolute -bottom-8 right-8 w-20 h-20 md:w-24 md:h-24 bg-slate-900/80 backdrop-blur-xl p-2 rounded-[2rem] shadow-2xl border border-white/10 group-hover:scale-110 transition-all duration-500 z-10 group-hover:-translate-y-2 flex items-center justify-center overflow-hidden">
             {logoUrl ? (
               <img
                 src={getStrapiMedia(logoUrl)!}
