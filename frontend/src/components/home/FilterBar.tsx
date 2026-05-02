@@ -4,7 +4,6 @@ import { LayoutGrid, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Categoria } from "@/types/strapi";
 import { getCategoryIcon } from "@/lib/icons";
-import CategoryDrawer from "./CategoryDrawer";
 
 interface FilterBarProps {
   categorias: Categoria[];
@@ -13,37 +12,35 @@ interface FilterBarProps {
 }
 
 export default function FilterBar({ categorias, selectedCategoryDocId, onSelectCategory }: FilterBarProps) {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Lógica de visualización responsiva (Corte de items)
-  // En móvil mostramos 4, en tablet/PC 7
-  const limit = 7; // Límite base
-  const showMoreInBar = categorias.length > limit;
-  
-  // Usamos clases de CSS para controlar la visibilidad responsiva de los items excedentes
-  const displayCategorias = categorias; 
+  // Límite inicial de categorías a mostrar (para ocupar ~2 filas dependiendo del dispositivo)
+  const limit = 7;
+  const hasMore = categorias.length > limit;
+  const displayCategorias = isExpanded ? categorias : categorias.slice(0, limit);
 
   return (
     <>
       <div className="sticky top-20 z-40 bg-background/90 backdrop-blur-xl border-b border-white/5 py-4 mb-8 transition-all">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           
-          {/* Fila de Iconos Horizontal Scroll (Pills) */}
-          <div className="flex w-full overflow-x-auto gap-3 pb-2 snap-x items-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {/* Fila de Iconos Flex Wrap (Pills) */}
+          <motion.div layout className="flex flex-wrap justify-center gap-2 md:gap-3">
             
             {/* Opción: Ver Todos */}
-            <button
+            <motion.button
+              layout
               onClick={() => onSelectCategory(null)}
               className={cn(
-                "flex items-center gap-2 min-h-[48px] px-5 py-2.5 rounded-full border transition-all shrink-0 snap-start",
+                "flex items-center gap-2 px-4 py-2 rounded-full border transition-all",
                 selectedCategoryDocId === null 
                   ? "bg-primary text-primary-foreground border-primary font-bold shadow-lg shadow-primary/20" 
                   : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white font-medium"
               )}
             >
-              <LayoutGrid className="w-5 h-5" />
-              <span className="text-sm whitespace-nowrap">Todos</span>
-            </button>
+              <LayoutGrid className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="text-xs md:text-sm whitespace-nowrap">Todos</span>
+            </motion.button>
 
             {/* Categorías (Pills) */}
             {displayCategorias.map((cat) => {
@@ -51,44 +48,46 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
               const isActive = selectedCategoryDocId === cat.documentId;
 
               return (
-                <button
+                <motion.button
+                  layout
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
                   key={cat.id}
                   onClick={() => onSelectCategory(cat.documentId)}
                   className={cn(
-                    "flex items-center gap-2 min-h-[48px] px-5 py-2.5 rounded-full border transition-all shrink-0 snap-start",
+                    "flex items-center gap-2 px-4 py-2 rounded-full border transition-all",
                     isActive 
                       ? "bg-primary text-primary-foreground border-primary font-bold shadow-lg shadow-primary/20" 
                       : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white font-medium"
                   )}
                 >
-                  <Icon className={cn("w-5 h-5", isActive ? "text-primary-foreground" : "text-slate-400")} />
-                  <span className="text-sm whitespace-nowrap">
+                  <Icon className={cn("w-4 h-4 md:w-5 md:h-5", isActive ? "text-primary-foreground" : "text-slate-400")} />
+                  <span className="text-xs md:text-sm whitespace-nowrap">
                     {cat.nombre}
                   </span>
-                </button>
+                </motion.button>
               );
             })}
 
-            {/* Botón "+ Ver todas" al final de la fila */}
-            <button
-              onClick={() => setIsDrawerOpen(true)}
-              className="flex items-center gap-2 min-h-[48px] px-5 py-2.5 rounded-full bg-slate-800/50 text-slate-300 border border-slate-700/50 hover:bg-slate-700 hover:text-white transition-all shrink-0 snap-start font-medium"
-            >
-              <span className="text-sm whitespace-nowrap">+ Ver todas</span>
-            </button>
-          </div>
+            {/* Botón "+ Ver todas / Ver menos" */}
+            {hasMore && (
+              <motion.button
+                layout
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/50 text-slate-300 border border-slate-700/50 hover:bg-slate-700 hover:text-white transition-all font-medium"
+              >
+                {isExpanded ? (
+                  <span className="text-xs md:text-sm whitespace-nowrap">- Ver menos</span>
+                ) : (
+                  <span className="text-xs md:text-sm whitespace-nowrap">+ Ver todas ({categorias.length - limit})</span>
+                )}
+              </motion.button>
+            )}
+          </motion.div>
 
         </div>
       </div>
-
-      {/* Drawer compartido */}
-      <CategoryDrawer 
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        categorias={categorias}
-        selectedCategoryDocId={selectedCategoryDocId}
-        onSelectCategory={onSelectCategory}
-      />
     </>
   );
 }
