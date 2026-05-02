@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Outfit, Playfair_Display } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import SessionProvider from "@/components/providers/SessionProvider";
@@ -22,6 +22,15 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#FFBF00",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   title: {
     default: "San Rafael 360 — Descubrí la ciudad",
@@ -33,14 +42,6 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "SR360",
-  },
-  themeColor: "#FFBF00",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    viewportFit: "cover",
   },
   openGraph: {
     title: "San Rafael 360",
