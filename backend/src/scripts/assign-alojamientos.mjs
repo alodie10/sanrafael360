@@ -1,113 +1,59 @@
-/**
- * SCRIPT DE MIGRACIÓN: Asignar subcategorías de Alojamientos
- * Uso: node src/scripts/assign-alojamientos.mjs
- */
+(async () => {
+  const TOKEN = "ed461f9f-39d4-4e5e-92b6-0c009dac1315";
+  const BASE  = "https://sanrafael360-production.up.railway.app";
+  const H     = { "Content-Type": "application/json", Authorization: `Bearer ${TOKEN}` };
 
-const STRAPI_URL = "https://sanrafael360-production.up.railway.app";
+  const CAT = {
+    cabanas:  "o7wan3ifgfj8azjvkiz3u45s",
+    hoteles:  "nfuj457oxzpgcbco4vz178oh",
+    hostels:  "ok842256p6o7icf8lynx8elz",
+    apart:    "qx9108ymmcjqy9v63ra2ccy8",
+    posadas:  "cxznt2brh9nmr7actv2g5097",
+  };
 
-const CATEGORY_IDS = {
-  cabanas:       "o7wan3ifgfj8azjvkiz3u45s",
-  hoteles:       "nfuj457oxzpgcbco4vz178oh",
-  hostels:       "ok842256p6o7icf8lynx8elz",
-  apart_hoteles: "qx9108ymmcjqy9v63ra2ccy8",
-  posadas:       "cxznt2brh9nmr7actv2g5097",
-  alojamientos:  "hutntrprmvs4mushbbq1mshq",
-};
+  const detect = nombre => {
+    const n = nombre.toLowerCase();
+    if (n.includes("hostel"))  return CAT.hostels;
+    if (n.includes("apart"))   return CAT.apart;
+    if (n.includes("posada"))  return CAT.posadas;
+    if (n.includes("caba"))    return CAT.cabanas;   // cabaña / cabañas / cabanas
+    if (n.includes("hotel"))   return CAT.hoteles;
+    return null;
+  };
 
-function detectarCategoria(nombre) {
-  const n = nombre.toLowerCase();
-  if (n.includes("hostel"))                                              return CATEGORY_IDS.hostels;
-  if (n.includes("apart") || n.includes("departamento"))                return CATEGORY_IDS.apart_hoteles;
-  if (n.includes("posada"))                                             return CATEGORY_IDS.posadas;
-  if (n.includes("caba") /* cabaña/cabana/cabañas/cabanas */)           return CATEGORY_IDS.cabanas;
-  if (n.includes("hotel"))                                              return CATEGORY_IDS.hoteles;
-  return null;
-}
-
-async function main() {
-  const adminEmail    = "diegocristianalonso@gmail.com";
-  const adminPassword = "DcaDca_0111#";
-
-  console.log("🔐 Autenticando con Strapi Admin...");
-  const loginRes = await fetch(`${STRAPI_URL}/admin/auth/local`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: adminEmail, password: adminPassword }),
-  });
-  const loginData = await loginRes.json();
-  const token = loginData?.data?.token;
-
-  if (!token) {
-    console.error("❌ Login fallido:", JSON.stringify(loginData));
-    process.exit(1);
-  }
-  console.log("✅ Autenticado.\n");
-
-  // Bajar todos los negocios
-  console.log("📥 Descargando negocios...");
-  let allNegocios = [];
-  let page = 1;
-  let pageCount = 1;
-
+  // 1. Descargar todos los negocios
+  let all = [], p = 1, pc = 1;
   do {
-    const res = await fetch(
-      `${STRAPI_URL}/api/negocios?populate[categoria][fields][0]=nombre&pagination[page]=${page}&pagination[pageSize]=100&sort=nombre:asc`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    const data = await res.json();
-    allNegocios = [...allNegocios, ...(data.data || [])];
-    pageCount = data.meta?.pagination?.pageCount || 1;
-    page++;
-  } while (page <= pageCount);
+    const r = await fetch(`${BASE}/api/negocios?populate[categoria][fields][0]=nombre&pagination[page]=${p}&pagination[pageSize]=100`, { headers: H });
+    const d = await r.json();
+    all = [...all, ...(d.data || [])];
+    pc = d.meta?.pagination?.pageCount || 1;
+    p++;
+    console.log(`Página ${p-1}/${pc} descargada...`);
+  } while (p <= pc);
 
-  console.log(`📊 Total negocios: ${allNegocios.length}`);
+  console.log(`\n📊 Total negocios: ${all.length}`);
 
-  // Filtrar candidatos: sin categoría o con categoría genérica "Alojamientos"
-  const candidatos = allNegocios.filter(n => {
-    const catNombre = (n.categoria?.nombre || "").toLowerCase();
-    return !n.categoria || catNombre === "alojamientos";
-  });
+  // 2. Filtrar candidatos (sin categoría o con categoría padre "Alojamientos")
+  const cands = all.filter(n => !n.categoria || n.categoria.nombre.toLowerCase() === "alojamientos");
+  console.log(`🏠 Candidatos a clasificar: ${cands.length}\n`);
 
-  console.log(`🏠 Candidatos a clasificar: ${candidatos.length}\n`);
+  let ok = 0, skip = [];
+  for (const neg of cands) {
+    const cat = detect(neg.nombre);
+    if (!cat) { skip.push(neg.nombre); continue; }
 
-  let actualizados = 0;
-  let sinClasificar = [];
-
-  for (const negocio of candidatos) {
-    const categoriaDocId = detectarCategoria(negocio.nombre);
-
-    if (!categoriaDocId) {
-      sinClasificar.push(negocio.nombre);
-      continue;
-    }
-
-    const updateRes = await fetch(`${STRAPI_URL}/api/negocios/${negocio.documentId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ data: { categoria: categoriaDocId } }),
+    const catKey = Object.entries(CAT).find(([, id]) => id === cat)?.[0];
+    const r = await fetch(`${BASE}/api/negocios/${neg.documentId}`, {
+      method: "PUT", headers: H,
+      body: JSON.stringify({ data: { categoria: cat } })
     });
-
-    const catKey = Object.entries(CATEGORY_IDS).find(([, id]) => id === categoriaDocId)?.[0];
-
-    if (updateRes.ok) {
-      console.log(`  ✅ "${negocio.nombre}" → ${catKey}`);
-      actualizados++;
-    } else {
-      const err = await updateRes.text();
-      console.error(`  ❌ Error con "${negocio.nombre}": ${err}`);
-    }
+    if (r.ok) { console.log(`✅ ${neg.nombre} → ${catKey}`); ok++; }
+    else       { const e = await r.text(); console.error(`❌ ${neg.nombre}:`, e); }
   }
 
   console.log(`\n🎉 MIGRACIÓN COMPLETADA`);
-  console.log(`   ✅ Actualizados: ${actualizados}`);
-  console.log(`   ⚠️  Sin clasificar automáticamente: ${sinClasificar.length}`);
-  if (sinClasificar.length > 0) {
-    console.log("   Estos necesitan asignación manual:");
-    sinClasificar.forEach(n => console.log(`     - ${n}`));
-  }
-}
-
-main().catch(console.error);
+  console.log(`   ✅ Actualizados: ${ok}`);
+  console.log(`   ⚠️  Sin clasificar: ${skip.length}`);
+  if (skip.length) { console.log("Sin clasificar:"); skip.forEach(n => console.log(" -", n)); }
+})();
