@@ -18,6 +18,7 @@ export interface Categoria {
   id: number;
   documentId: string;
   nombre: string;
+  slug?: string;
   descripcion?: string;
   imagen_portada?: StrapiMedia;
   negocios?: Negocio[];
