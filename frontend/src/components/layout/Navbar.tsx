@@ -9,11 +9,7 @@ import { cn } from "@/lib/utils";
 import Logo from "@/components/common/Logo";
 import { useSession, signOut } from "next-auth/react";
 
-const navLinks = [
-  { name: "Alojamientos", href: "/?cat=alojamientos" },
-  { name: "Gastronomía", href: "/?cat=gastronomia" },
-  { name: "Actividades", href: "/?cat=actividades" },
-];
+const navLinks: { name: string; href: string }[] = [];
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,24 +44,7 @@ export default function Navbar() {
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                pathname === link.href ? "text-primary" : "text-slate-300"
-              )}
-            >
-              {link.name}
-            </Link>
-          ))}
-          
-          <button className="p-2 text-slate-300 hover:text-white transition-colors">
-            <Search className="w-5 h-5" />
-          </button>
 
-          <div className="h-4 w-px bg-white/10 mx-2" />
 
           {session ? (
             <div className="flex items-center gap-5">
@@ -131,21 +110,7 @@ export default function Navbar() {
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-full left-0 right-0 bg-[#000000]/95 backdrop-blur-2xl border-b border-white/5 p-8 md:hidden flex flex-col gap-8 shadow-2xl"
           >
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setIsOpen(false)}
-                className={cn(
-                  "text-xl font-bold transition-colors",
-                  pathname === link.href ? "text-primary" : "text-slate-100"
-                )}
-              >
-                {link.name}
-              </Link>
-            ))}
 
-            <div className="h-px w-full bg-white/5" />
 
             {session ? (
               <>

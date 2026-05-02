@@ -54,8 +54,8 @@ function HomeContent() {
       try {
         setLoading(true);
         
-        // 1. Cargar Categorías
-        const catRes = await fetchFromStrapi("categorias?populate=*&sort=nombre:asc");
+        // 1. Cargar Categorías explícitamente con la relación padre
+        const catRes = await fetchFromStrapi("categorias?populate=*&populate[parent]=*&sort=nombre:asc");
         setCategorias(catRes.data || []);
 
         // 2. Cargar Negocios con Paginación (Strapi limita a 100 por defecto)
@@ -130,7 +130,7 @@ function HomeContent() {
   return (
     <main className="min-h-screen">
       {/* HERO SECTION */}
-      <section className="relative h-[90vh] flex flex-col items-center justify-center text-center px-4">
+      <section className="relative h-[55vh] md:h-[70vh] flex flex-col items-center justify-center text-center px-4">
         <HeroCarousel />
         
         <motion.div 
