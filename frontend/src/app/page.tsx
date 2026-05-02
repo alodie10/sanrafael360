@@ -55,7 +55,7 @@ function HomeContent() {
         setLoading(true);
         
         // 1. Cargar Categorías explícitamente con la relación padre y evitar populate masivos
-        const catRes = await fetchFromStrapi("categorias?fields[0]=nombre&populate[parent][fields][0]=documentId&sort=nombre:asc");
+        const catRes = await fetchFromStrapi("categorias?fields[0]=nombre&fields[1]=slug&populate[parent][fields][0]=documentId&sort=nombre:asc");
         setCategorias(catRes.data || []);
 
         // 2. Cargar Negocios con Paginación (Strapi limita a 100 por defecto)
@@ -64,7 +64,7 @@ function HomeContent() {
         let pageCount = 1;
 
         do {
-          const populate = "populate[categoria]=*&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[owner][fields][0]=id";
+          const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[owner][fields][0]=id";
           const negRes = await fetchFromStrapi(`negocios?${populate}&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=100`);
           if (negRes.data) {
             allNegocios = [...allNegocios, ...negRes.data];
@@ -106,20 +106,22 @@ function HomeContent() {
       bizName.includes(term) || bizDesc.includes(term)
     );
 
-    // Lógica de Subcategorías: Si elegimos "Alojamientos", debe mostrar Cabañas, Hoteles, etc.
-    let validCategoryIds: (string | undefined)[] = [];
+    // Lógica de Subcategorías: Machear por SLUG porque documentId puede omitirse en relaciones anidadas
+    let validCategorySlugs: (string | undefined)[] = [];
     if (selectedCategoryDocId) {
-      validCategoryIds.push(selectedCategoryDocId);
+      const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
+      if (selectedCat) validCategorySlugs.push(selectedCat.slug);
+      
       // Agregar todas las subcategorías que tengan como padre a la seleccionada
       categorias.forEach(c => {
         if (c.parent?.documentId === selectedCategoryDocId) {
-          validCategoryIds.push(c.documentId);
+          validCategorySlugs.push(c.slug);
         }
       });
     }
 
     const matchesCategory = selectedCategoryDocId 
-      ? validCategoryIds.includes(negocio.categoria?.documentId) 
+      ? validCategorySlugs.includes(negocio.categoria?.slug) 
       : true;
 
     return matchesSearch && matchesCategory;
