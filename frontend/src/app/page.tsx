@@ -106,22 +106,22 @@ function HomeContent() {
       bizName.includes(term) || bizDesc.includes(term)
     );
 
-    // Lógica de Subcategorías: Machear por SLUG porque documentId puede omitirse en relaciones anidadas
-    let validCategorySlugs: (string | undefined)[] = [];
+    // Lógica de Subcategorías: Machear por NOMBRE (siempre disponible en la respuesta de Strapi)
+    let validCategoryNames: string[] = [];
     if (selectedCategoryDocId) {
       const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
-      if (selectedCat) validCategorySlugs.push(selectedCat.slug);
+      if (selectedCat) validCategoryNames.push(selectedCat.nombre.toLowerCase());
       
       // Agregar todas las subcategorías que tengan como padre a la seleccionada
       categorias.forEach(c => {
         if (c.parent?.documentId === selectedCategoryDocId) {
-          validCategorySlugs.push(c.slug);
+          validCategoryNames.push(c.nombre.toLowerCase());
         }
       });
     }
 
     const matchesCategory = selectedCategoryDocId 
-      ? validCategorySlugs.includes(negocio.categoria?.slug) 
+      ? validCategoryNames.includes((negocio.categoria?.nombre || "").toLowerCase())
       : true;
 
     return matchesSearch && matchesCategory;

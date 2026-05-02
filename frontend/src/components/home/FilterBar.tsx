@@ -94,17 +94,17 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
             )}
           </motion.div>
 
-          {/* Subcategorías Bar */}
+          {/* Subcategorías Bar - flex-wrap para mobile */}
           {showSubcategories && (
             <motion.div 
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="flex w-full overflow-x-auto gap-2 pt-4 mt-4 border-t border-white/5 snap-x items-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              className="flex flex-wrap gap-2 pt-3 mt-3 border-t border-white/5 items-center justify-center"
             >
               <button
                 onClick={() => onSelectCategory(activeParentId!)}
                 className={cn(
-                  "px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border shrink-0 snap-start",
+                  "px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border",
                   selectedCategoryDocId === activeParentId
                     ? "bg-white text-black border-white shadow-md"
                     : "bg-white/5 text-slate-400 border-transparent hover:bg-white/10 hover:text-white"
@@ -120,7 +120,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
                     key={sub.id}
                     onClick={() => onSelectCategory(sub.documentId)}
                     className={cn(
-                      "px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border shrink-0 snap-start",
+                      "px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border",
                       isSubActive
                         ? "bg-white text-black border-white shadow-md"
                         : "bg-white/5 text-slate-400 border-transparent hover:bg-white/10 hover:text-white"
