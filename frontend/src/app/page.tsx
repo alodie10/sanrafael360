@@ -141,7 +141,7 @@ function HomeContent() {
                 <Search className="w-5 h-5 text-slate-400" />
                 <input 
                   type="text" 
-                  placeholder="¿Qué estás buscando hoy?" 
+                  placeholder="¿Qué buscas? (ej. Cabañas, Restaurantes, Bodegas)" 
                   className="bg-transparent border-none outline-none w-full text-white placeholder:text-slate-400 text-sm md:text-base focus:ring-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -169,33 +169,7 @@ function HomeContent() {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 bg-background">
         
         <AnimatePresence mode="wait">
-          {/* CATEGORIES (Propuesta A corregida: Se ocultan al instante si hay filtros) */}
-          {!isFiltering ? (
-            <motion.div 
-              key="categories-grid"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-20 overflow-hidden"
-              layout
-            >
-              <div className="flex items-center justify-between mb-10">
-                <div className="max-w-xl">
-                  <h2 className="text-3xl md:text-4xl font-serif font-bold text-white mb-2 tracking-tight">Explorar por Categoría</h2>
-                  <p className="text-slate-400 text-sm">Descubre San Rafael según tus intereses y necesidades.</p>
-                </div>
-                <button className="text-primary font-bold flex items-center gap-2 hover:underline group text-sm md:text-base">
-                  Ver todas <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
-              
-              <CategoryGrid 
-                categorias={categorias} 
-                loading={loading} 
-                onSelectCategory={setSelectedCategoryDocId} 
-              />
-            </motion.div>
-          ) : (
+          {isFiltering && (
             <motion.div 
               key="search-stats"
               initial={{ opacity: 0, y: -20 }}

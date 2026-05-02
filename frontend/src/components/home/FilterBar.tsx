@@ -25,28 +25,28 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
 
   return (
     <>
-      <div className="sticky top-20 z-40 bg-background/80 backdrop-blur-xl border-b border-white/5 py-4 mb-8 -mx-4 px-4 md:mx-0 md:px-0 transition-all">
-        <div className="max-w-7xl mx-auto flex flex-col items-center gap-4">
+      <div className="sticky top-20 z-40 bg-background/90 backdrop-blur-xl border-b border-white/5 py-4 mb-8 transition-all">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
           
-          {/* Fila de Iconos Centrada */}
-          <div className="flex flex-wrap justify-center items-center gap-1 md:gap-4">
+          {/* Fila de Iconos Horizontal Scroll (Pills) */}
+          <div className="flex w-full overflow-x-auto gap-3 pb-2 snap-x items-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             
             {/* Opción: Ver Todos */}
             <button
               onClick={() => onSelectCategory(null)}
               className={cn(
-                "flex flex-col items-center gap-1.5 min-w-[65px] md:min-w-[80px] p-2 transition-all group",
+                "flex items-center gap-2 min-h-[48px] px-5 py-2.5 rounded-full border transition-all shrink-0 snap-start",
                 selectedCategoryDocId === null 
-                  ? "text-primary border-b-2 border-primary" 
-                  : "text-slate-500 border-b-2 border-transparent hover:text-slate-200"
+                  ? "bg-primary text-primary-foreground border-primary font-bold shadow-lg shadow-primary/20" 
+                  : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white font-medium"
               )}
             >
-              <LayoutGrid className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
-              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest">Todos</span>
+              <LayoutGrid className="w-5 h-5" />
+              <span className="text-sm whitespace-nowrap">Todos</span>
             </button>
 
-            {/* Categorías Dinámicas (Controlamos visibilidad con CSS para ser 100% responsivos) */}
-            {displayCategorias.map((cat, index) => {
+            {/* Categorías (Pills) */}
+            {displayCategorias.map((cat) => {
               const Icon = getCategoryIcon(cat.nombre);
               const isActive = selectedCategoryDocId === cat.documentId;
 
@@ -55,35 +55,29 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
                   key={cat.id}
                   onClick={() => onSelectCategory(cat.documentId)}
                   className={cn(
-                    "flex flex-col items-center gap-1.5 min-w-[65px] md:min-w-[90px] p-2 transition-all group",
-                    // Responsivo: Ocultar después del 4to en móvil, después del 7mo en tablet
-                    index >= 3 ? "hidden sm:flex" : "flex",
-                    index >= 7 ? "md:hidden lg:flex" : "",
-                    index >= 9 ? "hidden" : "", // Nunca mostrar más de 9 en la barra
+                    "flex items-center gap-2 min-h-[48px] px-5 py-2.5 rounded-full border transition-all shrink-0 snap-start",
                     isActive 
-                      ? "text-primary border-b-2 border-primary" 
-                      : "text-slate-500 border-b-2 border-transparent hover:text-slate-200"
+                      ? "bg-primary text-primary-foreground border-primary font-bold shadow-lg shadow-primary/20" 
+                      : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white font-medium"
                   )}
                 >
-                  <Icon className={cn("w-4 h-4 md:w-5 md:h-5 transition-transform group-hover:scale-110", isActive && "text-primary")} />
-                  <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+                  <Icon className={cn("w-5 h-5", isActive ? "text-primary-foreground" : "text-slate-400")} />
+                  <span className="text-sm whitespace-nowrap">
                     {cat.nombre}
                   </span>
                 </button>
               );
             })}
-          </div>
 
-          {/* Botón "Más" Centrado Debajo (Solo si hay excedente) */}
-          {showMoreInBar && (
+            {/* Botón "+ Ver todas" al final de la fila */}
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/5 hover:border-primary/30 transition-all group"
+              className="flex items-center gap-2 min-h-[48px] px-5 py-2.5 rounded-full bg-slate-800/50 text-slate-300 border border-slate-700/50 hover:bg-slate-700 hover:text-white transition-all shrink-0 snap-start font-medium"
             >
-              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 group-hover:text-primary transition-colors">Ver todas las categorías</span>
-              <ChevronDown className="w-3 h-3 text-zinc-500 group-hover:text-primary group-hover:translate-y-0.5 transition-all" />
+              <span className="text-sm whitespace-nowrap">+ Ver todas</span>
             </button>
-          )}
+          </div>
+
         </div>
       </div>
 
