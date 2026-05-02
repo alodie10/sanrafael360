@@ -54,8 +54,8 @@ function HomeContent() {
       try {
         setLoading(true);
         
-        // 1. Cargar Categorías explícitamente con la relación padre y evitar populate=* masivo
-        const catRes = await fetchFromStrapi("categorias?populate[parent]=*&sort=nombre:asc");
+        // 1. Cargar Categorías explícitamente con la relación padre y evitar populate masivos
+        const catRes = await fetchFromStrapi("categorias?fields[0]=nombre&populate[parent][fields][0]=documentId&sort=nombre:asc");
         setCategorias(catRes.data || []);
 
         // 2. Cargar Negocios con Paginación (Strapi limita a 100 por defecto)
