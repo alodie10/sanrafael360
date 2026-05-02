@@ -21,6 +21,8 @@ export interface Categoria {
   descripcion?: string;
   imagen_portada?: StrapiMedia;
   negocios?: Negocio[];
+  parent?: Categoria;
+  subcategorias?: Categoria[];
 }
 
 export interface Negocio {

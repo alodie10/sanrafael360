@@ -106,8 +106,20 @@ function HomeContent() {
       bizName.includes(term) || bizDesc.includes(term)
     );
 
+    // Lógica de Subcategorías: Si elegimos "Alojamientos", debe mostrar Cabañas, Hoteles, etc.
+    let validCategoryIds: (string | undefined)[] = [];
+    if (selectedCategoryDocId) {
+      validCategoryIds.push(selectedCategoryDocId);
+      // Agregar todas las subcategorías que tengan como padre a la seleccionada
+      categorias.forEach(c => {
+        if (c.parent?.documentId === selectedCategoryDocId) {
+          validCategoryIds.push(c.documentId);
+        }
+      });
+    }
+
     const matchesCategory = selectedCategoryDocId 
-      ? negocio.categoria?.documentId === selectedCategoryDocId 
+      ? validCategoryIds.includes(negocio.categoria?.documentId) 
       : true;
 
     return matchesSearch && matchesCategory;

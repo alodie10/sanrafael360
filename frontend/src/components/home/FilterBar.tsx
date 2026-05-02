@@ -14,10 +14,17 @@ interface FilterBarProps {
 export default function FilterBar({ categorias, selectedCategoryDocId, onSelectCategory }: FilterBarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Límite inicial de categorías a mostrar (para ocupar ~2 filas dependiendo del dispositivo)
+  // Lógica de Categorías Principales y Subcategorías
+  const mainCategorias = categorias.filter(c => !c.parent);
+  const selectedCategory = categorias.find(c => c.documentId === selectedCategoryDocId);
+  const activeParentId = selectedCategory?.parent?.documentId || selectedCategory?.documentId;
+  const subcategorias = categorias.filter(c => c.parent?.documentId === activeParentId);
+  const showSubcategories = subcategorias.length > 0 && selectedCategoryDocId !== null;
+
+  // Límite inicial de categorías principales a mostrar (para ocupar ~2 filas dependiendo del dispositivo)
   const limit = 7;
-  const hasMore = categorias.length > limit;
-  const displayCategorias = isExpanded ? categorias : categorias.slice(0, limit);
+  const hasMore = mainCategorias.length > limit;
+  const displayCategorias = isExpanded ? mainCategorias : mainCategorias.slice(0, limit);
 
   return (
     <>
@@ -45,7 +52,8 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
             {/* Categorías (Pills) */}
             {displayCategorias.map((cat) => {
               const Icon = getCategoryIcon(cat.nombre);
-              const isActive = selectedCategoryDocId === cat.documentId;
+              // La categoría principal se ilumina si está seleccionada directamente, O si una de sus subcategorías está seleccionada.
+              const isActive = activeParentId === cat.documentId;
 
               return (
                 <motion.button
@@ -80,11 +88,50 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
                 {isExpanded ? (
                   <span className="text-xs md:text-sm whitespace-nowrap">- Ver menos</span>
                 ) : (
-                  <span className="text-xs md:text-sm whitespace-nowrap">+ Ver todas ({categorias.length - limit})</span>
+                  <span className="text-xs md:text-sm whitespace-nowrap">+ Ver todas ({mainCategorias.length - limit})</span>
                 )}
               </motion.button>
             )}
           </motion.div>
+
+          {/* Subcategorías Bar */}
+          {showSubcategories && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="flex w-full overflow-x-auto gap-2 pt-4 mt-4 border-t border-white/5 snap-x items-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+              <button
+                onClick={() => onSelectCategory(activeParentId!)}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border shrink-0 snap-start",
+                  selectedCategoryDocId === activeParentId
+                    ? "bg-white text-black border-white shadow-md"
+                    : "bg-white/5 text-slate-400 border-transparent hover:bg-white/10 hover:text-white"
+                )}
+              >
+                Todas
+              </button>
+
+              {subcategorias.map(sub => {
+                const isSubActive = selectedCategoryDocId === sub.documentId;
+                return (
+                  <button
+                    key={sub.id}
+                    onClick={() => onSelectCategory(sub.documentId)}
+                    className={cn(
+                      "px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border shrink-0 snap-start",
+                      isSubActive
+                        ? "bg-white text-black border-white shadow-md"
+                        : "bg-white/5 text-slate-400 border-transparent hover:bg-white/10 hover:text-white"
+                    )}
+                  >
+                    {sub.nombre}
+                  </button>
+                )
+              })}
+            </motion.div>
+          )}
 
         </div>
       </div>
