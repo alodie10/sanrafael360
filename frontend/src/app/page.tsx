@@ -141,7 +141,7 @@ function HomeContent() {
           className="max-w-4xl z-10"
         >
           <h1 className="text-5xl md:text-8xl font-serif text-white leading-tight mb-8">
-            Vive <span className="italic inline-block text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#FFD700] to-primary-foreground pr-20 pb-4">San Rafael</span>
+            Vive <span className="italic inline-block text-transparent bg-clip-text bg-gradient-to-r from-primary via-white to-primary pb-2">San Rafael</span>
           </h1>
           <p className="text-lg md:text-xl text-slate-200 mb-10 max-w-2xl mx-auto text-balance">
             Encuentra las mejores experiencias, gastronomía y alojamiento en el corazón de Mendoza.
@@ -155,8 +155,8 @@ function HomeContent() {
                 <Search className="w-5 h-5 text-slate-400" />
                 <input 
                   type="text" 
-                  placeholder="¿Qué buscas? (ej. Cabañas, Restaurantes, Bodegas)" 
-                  className="bg-transparent border-none outline-none w-full text-white placeholder:text-slate-400 text-sm md:text-base focus:ring-0"
+                  placeholder="¿Qué buscas? (ej. Cabañas, Restaurantes)" 
+                  className="bg-transparent border-none outline-none w-full text-white placeholder:text-white/40 text-sm md:text-base focus:ring-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && scrollToResults()}

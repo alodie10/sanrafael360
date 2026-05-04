@@ -41,8 +41,8 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-full border transition-all",
                 selectedCategoryDocId === null 
-                  ? "bg-primary text-primary-foreground border-primary font-bold shadow-lg shadow-primary/20" 
-                  : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white font-medium"
+                  ? "bg-primary text-black border-primary font-bold shadow-[0_0_15px_rgba(255,191,0,0.3)]" 
+                  : "bg-white/10 text-white/70 border-white/10 hover:bg-white/20 hover:text-white font-medium"
               )}
             >
               <LayoutGrid className="w-4 h-4 md:w-5 md:h-5" />
@@ -66,8 +66,8 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 rounded-full border transition-all",
                     isActive 
-                      ? "bg-primary text-primary-foreground border-primary font-bold shadow-lg shadow-primary/20" 
-                      : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white font-medium"
+                      ? "bg-primary text-black border-primary font-bold shadow-[0_0_15px_rgba(255,191,0,0.3)]" 
+                      : "bg-white/10 text-white/70 border-white/10 hover:bg-white/20 hover:text-white font-medium"
                   )}
                 >
                   <Icon className={cn("w-4 h-4 md:w-5 md:h-5", isActive ? "text-primary-foreground" : "text-slate-400")} />
