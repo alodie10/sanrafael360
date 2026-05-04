@@ -39,7 +39,8 @@ export default function HeroCarousel() {
           />
         </motion.div>
       </AnimatePresence>
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/50" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-black/40 to-background/60" />
+      <div className="absolute inset-0 bg-black/20" /> {/* Capa extra de contraste global */}
     </div>
   );
 }
