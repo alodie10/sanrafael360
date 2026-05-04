@@ -140,8 +140,8 @@ function HomeContent() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl z-10"
         >
-          <h1 className="text-5xl md:text-8xl font-serif text-white leading-tight mb-8 drop-shadow-2xl">
-            Vive <span className="italic inline-block text-primary drop-shadow-[0_4px_15px_rgba(255,191,0,0.6)]">San Rafael</span>
+          <h1 className="text-5xl md:text-8xl font-serif text-white leading-tight mb-8 drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+            Vive <span className="italic inline-block text-primary drop-shadow-[0_4px_20px_rgba(255,191,0,0.8)]">San Rafael</span>
           </h1>
           <p className="text-lg md:text-xl text-slate-200 mb-10 max-w-2xl mx-auto text-balance">
             Encuentra las mejores experiencias, gastronomía y alojamiento en el corazón de Mendoza.

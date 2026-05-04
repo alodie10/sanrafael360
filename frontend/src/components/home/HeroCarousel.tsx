@@ -35,12 +35,12 @@ export default function HeroCarousel() {
           <img
               src={defaultImages[current]}
               alt="San Rafael"
-              className="w-full h-full object-cover brightness-[0.4]"
+              className="w-full h-full object-cover brightness-[0.65] contrast-[1.1]"
           />
         </motion.div>
       </AnimatePresence>
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-black/40 to-background/60" />
-      <div className="absolute inset-0 bg-black/20" /> {/* Capa extra de contraste global */}
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-background/40" />
+      <div className="absolute inset-0 bg-black/10" />
     </div>
   );
 }
