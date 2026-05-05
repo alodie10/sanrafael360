@@ -265,21 +265,22 @@ function HomeContent() {
           />
         </section>
       </div>
-      {/* BOTÓN FLOTANTE: VOLVER AL BUSCADOR */}
+      {/* BOTÓN FLOTANTE: VOLVER AL BUSCADOR (FIXED AL VIEWPORT) */}
       <AnimatePresence>
         {showScrollTop && (
           <motion.div
-            initial={{ opacity: 0, y: 100 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 md:left-auto md:right-8 md:translate-x-0"
+            exit={{ opacity: 0, y: 20 }}
+            style={{ left: '50%', translateX: '-50%' }}
+            className="fixed bottom-6 z-[100] md:left-auto md:right-8 md:translate-x-0"
           >
             <button
               onClick={() => {
                 handleSelectCategory(null);
-                topRef.current?.scrollIntoView({ behavior: "smooth" });
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="flex items-center gap-3 px-6 py-4 bg-background/80 backdrop-blur-xl border border-primary/50 text-white rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.5)] hover:scale-105 active:scale-95 transition-all group"
+              className="flex items-center gap-3 px-6 py-4 bg-background/90 backdrop-blur-2xl border border-primary/50 text-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:scale-105 active:scale-95 transition-all group whitespace-nowrap"
             >
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
                 <ArrowRight className="w-4 h-4 text-primary-foreground -rotate-90 group-hover:-translate-y-1 transition-transform" />
