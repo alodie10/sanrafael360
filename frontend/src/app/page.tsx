@@ -240,11 +240,15 @@ function HomeContent() {
                 </h2>
                 {isFiltering && (
                   <button 
-                    onClick={() => { setSearchQuery(""); setSelectedCategoryDocId(null); }}
+                    onClick={() => { 
+                      setSearchQuery(""); 
+                      setSelectedCategoryDocId(null);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
                     className="flex items-center gap-2 px-4 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-full border border-primary/20 transition-all active:scale-95 animate-in fade-in slide-in-from-left-4"
                   >
                     <ArrowRight className="w-3 h-3 rotate-180" />
-                    Ver todos
+                    Ver todos / Buscar otro
                   </button>
                 )}
               </div>
@@ -254,11 +258,6 @@ function HomeContent() {
                   : "Seleccionamos las mejores opciones locales para que tu estadía en San Rafael sea inolvidable."}
               </p>
             </div>
-            {!isFiltering && (
-              <button className="text-slate-200 hover:text-primary transition-all text-sm font-bold flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 hover:border-primary/50 group">
-                Explorar Guía Completa <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-            )}
           </div>
 
           <BusinessGrid 
