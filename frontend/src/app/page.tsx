@@ -226,12 +226,6 @@ function HomeContent() {
                   </p>
                 </div>
               </div>
-              <button 
-                onClick={() => { setSearchQuery(""); setSelectedCategoryDocId(null); }}
-                className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-xl border border-white/5 transition-all active:scale-95"
-              >
-                Limpiar todos los filtros
-              </button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -240,9 +234,20 @@ function HomeContent() {
         <section className="mt-20 scroll-mt-32" ref={resultsRef}>
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
             <div className="max-w-xl">
-              <h2 className="text-4xl md:text-5xl font-serif font-extrabold text-white mb-4 tracking-tight">
-                {isFiltering ? "Resultados de" : "Comercios"} <span className="text-primary italic font-medium">{isFiltering ? "tu búsqueda" : "Destacados"}</span>
-              </h2>
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <h2 className="text-4xl md:text-5xl font-serif font-extrabold text-white tracking-tight">
+                  {isFiltering ? "Resultados de" : "Comercios"} <span className="text-primary italic font-medium">{isFiltering ? "tu búsqueda" : "Destacados"}</span>
+                </h2>
+                {isFiltering && (
+                  <button 
+                    onClick={() => { setSearchQuery(""); setSelectedCategoryDocId(null); }}
+                    className="flex items-center gap-2 px-4 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-full border border-primary/20 transition-all active:scale-95 animate-in fade-in slide-in-from-left-4"
+                  >
+                    <ArrowRight className="w-3 h-3 rotate-180" />
+                    Ver todos
+                  </button>
+                )}
+              </div>
               <p className="text-slate-400">
                 {selectedCategoryDocId 
                   ? `Explorando lo mejor en ${categorias.find(c => c.documentId === selectedCategoryDocId)?.nombre || "la categoría"} de San Rafael.`
