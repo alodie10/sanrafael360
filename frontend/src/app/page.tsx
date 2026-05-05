@@ -28,6 +28,7 @@ function HomeContent() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
 
   // Estados de Filtrado
   const [searchQuery, setSearchQuery] = useState("");
@@ -100,9 +101,9 @@ function HomeContent() {
     if (categorias.length === 0) return;
 
     const performScroll = () => {
-      // Caso: Reset / Ver Todos (null)
+      // Caso: Reset / Ver Todas (null)
       if (!selectedCategoryDocId) {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        topRef.current?.scrollIntoView({ behavior: "smooth" });
         return;
       }
 
@@ -162,7 +163,7 @@ function HomeContent() {
   const isFiltering = searchQuery.trim().length > 0 || !!selectedCategoryDocId;
 
   return (
-    <main className="min-h-screen">
+    <main ref={topRef} className="min-h-screen">
       {/* HERO SECTION */}
       <section className="relative h-[70vh] md:h-[80vh] flex flex-col items-center justify-center text-center px-4 pt-40 md:pt-0">
         <HeroCarousel />
