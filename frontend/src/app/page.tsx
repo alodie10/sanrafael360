@@ -98,7 +98,8 @@ function HomeContent() {
 
   // Scroll automático inteligente (Mejora UX Mobile)
   useEffect(() => {
-    if (categorias.length === 0) return;
+    // Solo scrollear si hay categorías y HUBO un clic del usuario (selectionCount > 0)
+    if (categorias.length === 0 || selectionCount === 0) return;
 
     const performScroll = () => {
       // Caso: Reset / Ver Todas (null) → foco en el listado de negocios
@@ -229,13 +230,21 @@ function HomeContent() {
                 <h2 className="text-4xl md:text-5xl font-serif font-extrabold text-white tracking-tight">
                   {isFiltering ? "Resultados de" : "Comercios"} <span className="text-primary italic font-medium">{isFiltering ? "tu búsqueda" : "Destacados"}</span>
                 </h2>
-                {isFiltering && (
+                {isFiltering ? (
                   <button 
                     onClick={() => handleSelectCategory(null)}
                     className="flex items-center gap-2 px-4 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-full border border-primary/20 transition-all active:scale-95 animate-in fade-in slide-in-from-left-4"
                   >
                     <ArrowRight className="w-3 h-3 rotate-180" />
-                    Ver todos / Buscar otro
+                    Ver todos
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => topRef.current?.scrollIntoView({ behavior: "smooth" })}
+                    className="flex items-center gap-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 text-white/60 text-xs font-bold rounded-full border border-white/10 transition-all active:scale-95"
+                  >
+                    <ArrowRight className="w-3 h-3 -rotate-90" />
+                    Volver al buscador
                   </button>
                 )}
               </div>
