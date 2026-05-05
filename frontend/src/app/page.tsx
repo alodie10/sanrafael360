@@ -87,27 +87,32 @@ function HomeContent() {
     resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const filterBarRef = useRef<HTMLDivElement>(null);
+
   // Scroll automático inteligente (Mejora UX Mobile)
   useEffect(() => {
+    // Si no hay categoría o las categorías no cargaron, no hacemos nada
     if (!selectedCategoryDocId || categorias.length === 0) return;
 
-    const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
-    if (!selectedCat) return;
+    const performScroll = () => {
+      const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
+      if (!selectedCat) return;
 
-    // Verificar si la categoría seleccionada es un padre que tiene subcategorías
-    const hasSubcategories = categorias.some(c => c.parent?.documentId === selectedCategoryDocId);
-    const isSubcategory = !!selectedCat.parent;
+      const hasSubcategories = categorias.some(c => c.parent?.documentId === selectedCategoryDocId);
+      const isSubcategory = !!selectedCat.parent;
 
-    // Si tiene subcategorías y no es una subcategoría ella misma, hacemos foco en la barra de filtros
-    if (hasSubcategories && !isSubcategory) {
-      const filterBar = document.getElementById('filter-bar');
-      if (filterBar) {
-        filterBar.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (hasSubcategories && !isSubcategory) {
+        // Foco en la barra para ver subcategorías
+        filterBarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        // Foco en resultados
+        scrollToResults();
       }
-    } else {
-      // Si es una subcategoría o una categoría final, vamos directo a los resultados
-      scrollToResults();
-    }
+    };
+
+    // Usamos un pequeño timeout para asegurar que el DOM se haya actualizado (especialmente si aparecieron subcategorías)
+    const timer = setTimeout(performScroll, 100);
+    return () => clearTimeout(timer);
   }, [selectedCategoryDocId, categorias]);
 
   // Lógica de Filtrado Dinámico (Búsqueda Parcial Inteligente y Robusta)
@@ -190,7 +195,7 @@ function HomeContent() {
       </section>
 
       {/* FILTER BAR STICKY */}
-      <div id="filter-bar" className="scroll-mt-24">
+      <div id="filter-bar" ref={filterBarRef} className="scroll-mt-24">
         <FilterBar 
           categorias={categorias} 
           selectedCategoryDocId={selectedCategoryDocId} 
