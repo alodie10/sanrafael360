@@ -38,9 +38,13 @@ function HomeContent() {
   const handleSelectCategory = (id: string | null) => {
     setSelectedCategoryDocId(id);
     if (id === null) {
-      setSearchQuery(""); // Limpieza total cuando se elige "Todas" las categorías
+      setSearchQuery(""); 
+      // Cuando se toca "Todas" en la barra, el usuario quiere ver los resultados
+      scrollToResults();
+    } else {
+      // Para categorías específicas, usamos el contador para el scroll inteligente
+      setSelectionCount(prev => prev + 1);
     }
-    setSelectionCount(prev => prev + 1);
   };
 
   // Sincronizar filtro desde la URL
@@ -98,16 +102,10 @@ function HomeContent() {
 
   // Scroll automático inteligente (Mejora UX Mobile)
   useEffect(() => {
-    // Solo scrollear si hay categorías y HUBO un clic del usuario (selectionCount > 0)
-    if (categorias.length === 0 || selectionCount === 0) return;
+    // Solo scrollear si hay categorías, HUBO un clic (count > 0) y NO es el caso null (que se maneja arriba)
+    if (categorias.length === 0 || selectionCount === 0 || !selectedCategoryDocId) return;
 
     const performScroll = () => {
-      // Caso: Reset / Ver Todas (null) → foco en el listado de negocios
-      if (!selectedCategoryDocId) {
-        scrollToResults();
-        return;
-      }
-
       const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
       if (!selectedCat) return;
 
