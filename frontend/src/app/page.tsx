@@ -101,9 +101,9 @@ function HomeContent() {
     if (categorias.length === 0) return;
 
     const performScroll = () => {
-      // Caso: Reset / Ver Todas (null)
+      // Caso: Reset / Ver Todas (null) → foco en el listado de negocios
       if (!selectedCategoryDocId) {
-        topRef.current?.scrollIntoView({ behavior: "smooth" });
+        scrollToResults();
         return;
       }
 
