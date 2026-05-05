@@ -41,7 +41,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-full border transition-all",
                 selectedCategoryDocId === null 
-                  ? "bg-primary text-black border-primary font-bold shadow-[0_0_20px_rgba(255,191,0,0.4)]" 
+                  ? "bg-white text-black border-white shadow-md" 
                   : "bg-white/15 text-white border-white/10 hover:bg-white/25 font-medium"
               )}
             >

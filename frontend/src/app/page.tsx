@@ -32,6 +32,12 @@ function HomeContent() {
   // Estados de Filtrado
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategoryDocId, setSelectedCategoryDocId] = useState<string | null>(null);
+  const [selectionCount, setSelectionCount] = useState(0);
+
+  const handleSelectCategory = (id: string | null) => {
+    setSelectedCategoryDocId(id);
+    setSelectionCount(prev => prev + 1);
+  };
 
   // Sincronizar filtro desde la URL
   useEffect(() => {
@@ -53,12 +59,9 @@ function HomeContent() {
     const loadData = async () => {
       try {
         setLoading(true);
-        
-        // 1. Cargar Categorías explícitamente con la relación padre y evitar populate masivos
         const catRes = await fetchFromStrapi("categorias?fields[0]=nombre&fields[1]=slug&populate[parent][fields][0]=documentId&sort=nombre:asc");
         setCategorias(catRes.data || []);
 
-        // 2. Cargar Negocios con Paginación (Strapi limita a 100 por defecto)
         let allNegocios: Negocio[] = [];
         let page = 1;
         let pageCount = 1;
@@ -91,34 +94,34 @@ function HomeContent() {
 
   // Scroll automático inteligente (Mejora UX Mobile)
   useEffect(() => {
-    // Si no hay categoría o las categorías no cargaron, no hacemos nada
-    if (!selectedCategoryDocId || categorias.length === 0) return;
+    if (categorias.length === 0) return;
 
     const performScroll = () => {
+      // Caso: Reset / Ver Todos (null)
+      if (!selectedCategoryDocId) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
       const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
       if (!selectedCat) return;
 
       const hasSubcategories = categorias.some(c => c.parent?.documentId === selectedCategoryDocId);
       const isSubcategory = !!selectedCat.parent;
       
-      // Heurística inteligente: Si el usuario ya está scrolleado cerca de la barra de filtros,
-      // asumimos que ya vio las subcategorías y quiere ver los resultados directamente.
       const filterBarTop = filterBarRef.current?.getBoundingClientRect().top || 0;
-      const isAlreadyAtFilters = filterBarTop < 150; // Ya está cerca del tope o scrolleado por debajo
+      const isAlreadyAtFilters = filterBarTop < 150;
 
       if (hasSubcategories && !isSubcategory && !isAlreadyAtFilters) {
-        // Foco en la barra solo si venimos desde arriba (Hero/Buscador)
         filterBarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       } else {
-        // En cualquier otro caso (incluyendo el botón Todas), foco en resultados
         scrollToResults();
       }
     };
 
-    // Usamos un pequeño timeout para asegurar que el DOM se haya actualizado (especialmente si aparecieron subcategorías)
     const timer = setTimeout(performScroll, 100);
     return () => clearTimeout(timer);
-  }, [selectedCategoryDocId, categorias]);
+  }, [selectionCount, categorias]);
 
   // Lógica de Filtrado Dinámico (Búsqueda Parcial Inteligente y Robusta)
   const filteredNegocios = negocios.filter((negocio) => {
@@ -204,7 +207,7 @@ function HomeContent() {
         <FilterBar 
           categorias={categorias} 
           selectedCategoryDocId={selectedCategoryDocId} 
-          onSelectCategory={setSelectedCategoryDocId} 
+          onSelectCategory={handleSelectCategory} 
         />
       </div>
 
@@ -224,11 +227,7 @@ function HomeContent() {
                 </h2>
                 {isFiltering && (
                   <button 
-                    onClick={() => { 
-                      setSearchQuery(""); 
-                      setSelectedCategoryDocId(null);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
+                    onClick={() => handleSelectCategory(null)}
                     className="flex items-center gap-2 px-4 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-full border border-primary/20 transition-all active:scale-95 animate-in fade-in slide-in-from-left-4"
                   >
                     <ArrowRight className="w-3 h-3 rotate-180" />
