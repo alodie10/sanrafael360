@@ -568,13 +568,13 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
               {negocio.reclamar_habilitado && !negocio.owner && (!negocio.estado_reclamo || negocio.estado_reclamo === 'ninguno') && (
                 <div className="mb-10 p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20">
                   <h4 className="text-white font-bold mb-2">¿Gestionas este negocio?</h4>
-                  <p className="text-xs text-blue-200/50 mb-4 leading-relaxed">Toma el control para actualizar fotos, horarios y responder a tus clientes.</p>
+                  <p className="text-xs text-blue-100/80 mb-4 leading-relaxed">Toma el control para actualizar fotos, horarios y responder a tus clientes.</p>
                   <button 
                     onClick={() => {
                       if (!session) router.push(`/registro?claim=${slug}`);
                       else setShowClaimModal(true);
                     }}
-                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all"
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20"
                   >
                     Reclamar Perfil
                   </button>
