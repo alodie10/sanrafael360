@@ -206,28 +206,7 @@ function HomeContent() {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 bg-background">
         
         <AnimatePresence mode="wait">
-          {isFiltering && (
-            <motion.div 
-              key="search-stats"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex flex-col md:flex-row items-center justify-between gap-4 mb-20 p-6 bg-primary/10 rounded-[2rem] border border-primary/20 backdrop-blur-md"
-              layout
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                  <Search className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <div>
-                  <h4 className="text-white font-bold tracking-tight">Resultados de Búsqueda</h4>
-                  <p className="text-slate-400 text-sm">
-                    Mostrando <span className="text-primary font-bold">{filteredNegocios.length}</span> comercios encontrados
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
+          {/* Eliminado bloque redundante de stats */}
         </AnimatePresence>
 
         {/* FEATURED PLACES / SEARCH RESULTS */}
@@ -253,8 +232,8 @@ function HomeContent() {
                 )}
               </div>
               <p className="text-slate-400">
-                {selectedCategoryDocId 
-                  ? `Explorando lo mejor en ${categorias.find(c => c.documentId === selectedCategoryDocId)?.nombre || "la categoría"} de San Rafael.`
+                {isFiltering 
+                  ? `Hemos encontrado ${filteredNegocios.length} opciones para vos en ${selectedCategoryDocId ? categorias.find(c => c.documentId === selectedCategoryDocId)?.nombre : "San Rafael"}.`
                   : "Seleccionamos las mejores opciones locales para que tu estadía en San Rafael sea inolvidable."}
               </p>
             </div>
