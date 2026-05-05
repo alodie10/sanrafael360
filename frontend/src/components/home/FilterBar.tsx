@@ -46,7 +46,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
               )}
             >
               <LayoutGrid className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-xs md:text-sm whitespace-nowrap">Todos</span>
+              <span className="text-xs md:text-sm whitespace-nowrap">Todas</span>
             </motion.button>
 
             {/* Categorías (Pills) */}

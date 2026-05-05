@@ -36,6 +36,9 @@ function HomeContent() {
 
   const handleSelectCategory = (id: string | null) => {
     setSelectedCategoryDocId(id);
+    if (id === null) {
+      setSearchQuery(""); // Limpieza total cuando se elige "Todas" las categorías
+    }
     setSelectionCount(prev => prev + 1);
   };
 
