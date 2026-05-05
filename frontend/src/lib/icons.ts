@@ -11,7 +11,8 @@ import {
   Hotel, 
   Home, 
   Users, 
-  Globe 
+  Globe,
+  Waves
 } from "lucide-react";
 
 /**
@@ -26,9 +27,9 @@ export const iconMap: Record<string, LucideIcon> = {
   "gastron": Utensils,
   "restauran": Utensils,
   "comid": Utensils,
-  "aventura": Mountain,
-  "actividad": Mountain,
-  "turismo": Mountain,
+  "aventura": Waves,
+  "actividad": Waves,
+  "turismo": Waves,
   "bodeg": Wine,
   "vin": Wine,
   "gourmet": ShoppingBasket,
