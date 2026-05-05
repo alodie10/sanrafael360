@@ -53,7 +53,7 @@ export const gradientMap: Record<string, string> = {
   "aloj": "from-indigo-600 to-violet-700",
   "caba": "from-blue-600 to-indigo-700",
   "gastron": "from-orange-500 to-red-600",
-  "turismo": "from-amber-500 to-yellow-600",
+  "turismo": "from-cyan-500 to-blue-600",
   "bodeg": "from-amber-600 to-orange-700",
   "gourmet": "from-rose-500 to-pink-600",
   "apart": "from-blue-600 to-cyan-700",
