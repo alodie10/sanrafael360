@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import { fetchFromStrapi, getStrapiMedia } from "@/lib/strapi";
 import HeroCarousel from "@/components/home/HeroCarousel";
@@ -265,31 +266,40 @@ function HomeContent() {
           />
         </section>
       </div>
-      {/* BOTÓN FLOTANTE: VOLVER AL BUSCADOR (FIXED AL VIEWPORT) */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            style={{ left: '50%', translateX: '-50%' }}
-            className="fixed bottom-6 z-[100] md:left-auto md:right-8 md:translate-x-0"
-          >
-            <button
-              onClick={() => {
-                handleSelectCategory(null);
-                window.scrollTo({ top: 0, behavior: "smooth" });
+      {/* BOTÓN FLOTANTE: VOLVER AL BUSCADOR (PORTAL AL BODY PARA EVITAR INTERFERENCIAS) */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showScrollTop && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              style={{ 
+                position: 'fixed', 
+                bottom: '24px', 
+                left: '50%', 
+                transform: 'translateX(-50%)',
+                zIndex: 9999 
               }}
-              className="flex items-center gap-3 px-6 py-4 bg-background/90 backdrop-blur-2xl border border-primary/50 text-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:scale-105 active:scale-95 transition-all group whitespace-nowrap"
+              className="md:left-auto md:right-8 md:translate-x-0"
             >
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                <ArrowRight className="w-4 h-4 text-primary-foreground -rotate-90 group-hover:-translate-y-1 transition-transform" />
-              </div>
-              <span className="font-bold text-sm tracking-tight pr-2">Volver al buscador</span>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <button
+                onClick={() => {
+                  handleSelectCategory(null);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="flex items-center gap-3 px-6 py-4 bg-background/90 backdrop-blur-2xl border border-primary/50 text-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.6)] hover:scale-105 active:scale-95 transition-all group whitespace-nowrap"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                  <ArrowRight className="w-4 h-4 text-primary-foreground -rotate-90 group-hover:-translate-y-1 transition-transform" />
+                </div>
+                <span className="font-bold text-sm tracking-tight pr-2">Volver al buscador</span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </main>
   );
 }
