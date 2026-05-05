@@ -34,6 +34,7 @@ function HomeContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategoryDocId, setSelectedCategoryDocId] = useState<string | null>(null);
   const [selectionCount, setSelectionCount] = useState(0);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const handleSelectCategory = (id: string | null) => {
     setSelectedCategoryDocId(id);
@@ -46,6 +47,16 @@ function HomeContent() {
       setSelectionCount(prev => prev + 1);
     }
   };
+
+  // Detector de scroll para el botón flotante
+  useEffect(() => {
+    const handleScroll = () => {
+      // Mostrar el botón si pasamos los 600px de scroll
+      setShowScrollTop(window.scrollY > 600);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Sincronizar filtro desde la URL
   useEffect(() => {
@@ -254,6 +265,30 @@ function HomeContent() {
           />
         </section>
       </div>
+      {/* BOTÓN FLOTANTE: VOLVER AL BUSCADOR */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 md:left-auto md:right-8 md:translate-x-0"
+          >
+            <button
+              onClick={() => {
+                handleSelectCategory(null);
+                topRef.current?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="flex items-center gap-3 px-6 py-4 bg-background/80 backdrop-blur-xl border border-primary/50 text-white rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.5)] hover:scale-105 active:scale-95 transition-all group"
+            >
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                <ArrowRight className="w-4 h-4 text-primary-foreground -rotate-90 group-hover:-translate-y-1 transition-transform" />
+              </div>
+              <span className="font-bold text-sm tracking-tight pr-2">Volver al buscador</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
