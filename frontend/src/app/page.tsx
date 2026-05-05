@@ -248,7 +248,7 @@ function HomeContent() {
                   className="flex items-center gap-2 px-4 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-full border border-primary/20 transition-all active:scale-95 animate-in fade-in slide-in-from-left-4"
                 >
                   <ArrowRight className="w-3 h-3 -rotate-90" />
-                  Volver al buscador
+                  Volver
                 </button>
               </div>
               <p className="text-slate-400">
@@ -293,7 +293,7 @@ function HomeContent() {
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
                   <ArrowRight className="w-4 h-4 text-primary-foreground -rotate-90 group-hover:-translate-y-1 transition-transform" />
                 </div>
-                <span className="font-bold text-sm tracking-tight pr-2">Volver al buscador</span>
+                <span className="font-bold text-sm tracking-tight pr-2">Volver</span>
               </button>
             </motion.div>
           )}
