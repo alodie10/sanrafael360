@@ -100,12 +100,17 @@ function HomeContent() {
 
       const hasSubcategories = categorias.some(c => c.parent?.documentId === selectedCategoryDocId);
       const isSubcategory = !!selectedCat.parent;
+      
+      // Heurística inteligente: Si el usuario ya está scrolleado cerca de la barra de filtros,
+      // asumimos que ya vio las subcategorías y quiere ver los resultados directamente.
+      const filterBarTop = filterBarRef.current?.getBoundingClientRect().top || 0;
+      const isAlreadyAtFilters = filterBarTop < 150; // Ya está cerca del tope o scrolleado por debajo
 
-      if (hasSubcategories && !isSubcategory) {
-        // Foco en la barra para ver subcategorías
+      if (hasSubcategories && !isSubcategory && !isAlreadyAtFilters) {
+        // Foco en la barra solo si venimos desde arriba (Hero/Buscador)
         filterBarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       } else {
-        // Foco en resultados
+        // En cualquier otro caso (incluyendo el botón Todas), foco en resultados
         scrollToResults();
       }
     };
