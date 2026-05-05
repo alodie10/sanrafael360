@@ -87,12 +87,28 @@ function HomeContent() {
     resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Scroll automático cuando se cambia de categoría
+  // Scroll automático inteligente (Mejora UX Mobile)
   useEffect(() => {
-    if (selectedCategoryDocId) {
+    if (!selectedCategoryDocId || categorias.length === 0) return;
+
+    const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
+    if (!selectedCat) return;
+
+    // Verificar si la categoría seleccionada es un padre que tiene subcategorías
+    const hasSubcategories = categorias.some(c => c.parent?.documentId === selectedCategoryDocId);
+    const isSubcategory = !!selectedCat.parent;
+
+    // Si tiene subcategorías y no es una subcategoría ella misma, hacemos foco en la barra de filtros
+    if (hasSubcategories && !isSubcategory) {
+      const filterBar = document.getElementById('filter-bar');
+      if (filterBar) {
+        filterBar.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      // Si es una subcategoría o una categoría final, vamos directo a los resultados
       scrollToResults();
     }
-  }, [selectedCategoryDocId]);
+  }, [selectedCategoryDocId, categorias]);
 
   // Lógica de Filtrado Dinámico (Búsqueda Parcial Inteligente y Robusta)
   const filteredNegocios = negocios.filter((negocio) => {
@@ -174,11 +190,13 @@ function HomeContent() {
       </section>
 
       {/* FILTER BAR STICKY */}
-      <FilterBar 
-        categorias={categorias} 
-        selectedCategoryDocId={selectedCategoryDocId} 
-        onSelectCategory={setSelectedCategoryDocId} 
-      />
+      <div id="filter-bar" className="scroll-mt-24">
+        <FilterBar 
+          categorias={categorias} 
+          selectedCategoryDocId={selectedCategoryDocId} 
+          onSelectCategory={setSelectedCategoryDocId} 
+        />
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 bg-background">
         
