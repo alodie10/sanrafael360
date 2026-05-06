@@ -231,8 +231,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                 </div>
              </div>
              
-             {/* El mapa solo se muestra si hay coordenadas */}
-             {negocio.latitud && negocio.longitud && (
+             {/* El mapa es exclusivo Premium — la dirección y botones son para todos */}
+             {isValidPremium && negocio.latitud && negocio.longitud && (
                 <div className="h-48 rounded-[2rem] overflow-hidden border border-white/5 mb-6">
                    <GoogleMap lat={negocio.latitud} lng={negocio.longitud} title={negocio.nombre} />
                 </div>
