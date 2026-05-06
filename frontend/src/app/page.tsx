@@ -67,12 +67,13 @@ function HomeContent() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Sincronizar filtros DESDE la URL al cargar
+  // Sincronizar filtros DESDE la URL al cargar y al navegar (Memoria corregida)
   useEffect(() => {
     const catParam = searchParams.get("cat");
     const queryParam = searchParams.get("q");
 
     if (queryParam) setSearchQuery(queryParam);
+    else setSearchQuery("");
     
     if (catParam && categorias.length > 0) {
       const found = categorias.find(c => 
@@ -83,11 +84,10 @@ function HomeContent() {
       if (found) {
         setSelectedCategoryDocId(found.documentId);
       }
-    } else if (!catParam && !queryParam) {
-      // Si no hay parámetros, no reseteamos forzosamente si ya hay estado local 
-      // (evita loops), pero si es la carga inicial limpia, lo dejamos nulo.
+    } else {
+      setSelectedCategoryDocId(null);
     }
-  }, [categorias]); // Solo dependemos de categorías para validar el docId
+  }, [searchParams, categorias]); // Agregado searchParams para detectar navegación atrás/adelante
 
   // Sincronizar filtros HACIA la URL al cambiar (con debounce para la búsqueda)
   useEffect(() => {
@@ -287,7 +287,7 @@ function HomeContent() {
     return distA - distB;
   });
 
-  const isFiltering = searchQuery.trim().length > 0 || !!selectedCategoryDocId;
+  const isFiltering = searchQuery.trim().length > 0 || selectedCategoryDocId !== null;
 
   return (
     <main ref={topRef} className="min-h-screen">
