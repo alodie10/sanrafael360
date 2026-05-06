@@ -236,12 +236,6 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
               whatsapp={negocio.telefono_whatsapp || negocio.telefono} 
               onTrackClick={trackClick}
             />
-            <ReviewSection 
-              negocioId={negocio.documentId} 
-              ownerId={ownerId} 
-              initialRating={negocio.rating} 
-              initialCount={negocio.review_count} 
-            />
           </div>
 
           <aside className="lg:col-span-1">
@@ -254,6 +248,15 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
               router={router} 
             />
           </aside>
+
+          <div className="lg:col-span-2">
+            <ReviewSection 
+              negocioId={negocio.documentId} 
+              ownerId={ownerId} 
+              initialRating={negocio.rating} 
+              initialCount={negocio.review_count} 
+            />
+          </div>
         </div>
       </section>
 
