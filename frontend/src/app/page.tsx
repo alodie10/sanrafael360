@@ -48,25 +48,20 @@ function HomeContent() {
   const handleSelectCategory = (id: string | null) => {
     setSelectedCategoryDocId(id);
     
-    // Actualización inmediata de la URL para categorías (Etapa 3 - Fix)
     const params = new URLSearchParams(window.location.search);
     if (id) {
       const cat = categorias.find(c => c.documentId === id);
       if (cat) params.set("cat", cat.slug || cat.documentId);
+      setSelectionCount(prev => prev + 1);
     } else {
       params.delete("cat");
-      setSearchQuery(""); // Reset query when clicking "All"
       params.delete("q");
+      setSearchQuery("");
+      scrollToResults();
     }
     
     const queryString = params.toString();
-    router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
-
-    if (id === null) {
-      scrollToResults();
-    } else {
-      setSelectionCount(prev => prev + 1);
-    }
+    router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
   };
 
   // Detector de scroll para el botón flotante
@@ -79,45 +74,45 @@ function HomeContent() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Sincronizar filtros DESDE la URL al cargar y al navegar (Memoria corregida con GUARD)
+  // Sincronizar filtros DESDE la URL al cargar y al navegar (Memoria de hierro)
   useEffect(() => {
-    if (categorias.length === 0) return; // CLAVE: No leer ni resetear hasta tener las categorías
+    if (categorias.length === 0) return;
 
     const catParam = searchParams.get("cat");
     const queryParam = searchParams.get("q");
 
-    if (queryParam) setSearchQuery(queryParam);
+    if (queryParam !== null && queryParam !== searchQuery) {
+      setSearchQuery(queryParam);
+    }
     
     if (catParam) {
       const found = categorias.find(c => 
-        normalizeText(c.nombre).includes(normalizeText(catParam)) || 
         c.documentId === catParam ||
-        c.slug === catParam
+        c.slug === catParam ||
+        normalizeText(c.nombre) === normalizeText(catParam)
       );
-      if (found) {
+      if (found && found.documentId !== selectedCategoryDocId) {
         setSelectedCategoryDocId(found.documentId);
       }
-    } else {
+    } else if (catParam === null && selectedCategoryDocId !== null) {
+      // Solo resetear si la URL explícitamente no tiene categoría
       setSelectedCategoryDocId(null);
     }
   }, [searchParams, categorias]); 
 
   // Sincronizar búsqueda HACIA la URL (solo con debounce para el texto)
   useEffect(() => {
-    if (categorias.length === 0) return; // CLAVE: No escribir en la URL hasta que el sistema esté listo
+    if (categorias.length === 0) return;
 
     const timer = setTimeout(() => {
       const params = new URLSearchParams(window.location.search);
-      if (searchQuery) {
-        params.set("q", searchQuery);
-      } else {
-        params.delete("q");
-      }
+      const currentQ = params.get("q") || "";
       
-      const queryString = params.toString();
-      const currentQuery = window.location.search.replace('?', '');
-      
-      if (queryString !== currentQuery) {
+      if (searchQuery !== currentQ) {
+        if (searchQuery) params.set("q", searchQuery);
+        else params.delete("q");
+        
+        const queryString = params.toString();
         router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
       }
     }, 400);
