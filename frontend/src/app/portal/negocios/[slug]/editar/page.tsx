@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { authOptions, ADMIN_EMAILS } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import EditBusinessForm from "@/components/portal/EditBusinessForm";
 import Link from "next/link";
@@ -20,7 +20,7 @@ export default async function EditBusinessPage(props: any) {
 
   const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
   const userEmail = session.user?.email;
-  const isAdmin = session.user?.role?.toLowerCase() === 'admin' || userEmail === 'diegocristianalonso@gmail.com';
+  const isAdmin = session.user?.role?.toLowerCase() === 'admin' || ADMIN_EMAILS.includes(userEmail || "");
   
   let negocio = null;
   let fetchError = null;

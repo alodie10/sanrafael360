@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { fetchFromStrapi } from "@/lib/strapi";
+import { ADMIN_EMAILS } from "@/lib/auth";
 import Navbar from "@/components/layout/Navbar";
 import BookingWidget from "@/components/business/BookingWidget";
 import ReviewSection from "@/components/business/ReviewSection";
@@ -172,7 +173,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   const businessStatus = getBusinessStatus();
   const sessionUserId = String((session as any)?.user?.id || "");
   const ownerId = String(negocio.owner?.id || negocio.owner?.documentId || "");
-  const isAdmin = (session as any)?.user?.role?.toLowerCase() === 'admin' || (session as any)?.user?.email === 'diegocristianalonso@gmail.com';
+  const isAdmin = (session as any)?.user?.role?.toLowerCase() === 'admin' || ADMIN_EMAILS.includes((session as any)?.user?.email || "");
   const canManage = Boolean(isAdmin || (sessionUserId && ownerId && sessionUserId === ownerId));
   
   let isValidPremium = negocio?.is_premium || false;

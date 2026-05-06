@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { authOptions, ADMIN_EMAILS } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { 
   ShieldCheck, 
@@ -44,7 +44,7 @@ export default async function AdminDashboardPage() {
 
   // Whitelist de Admins
   const userRole = (session as any).user?.role?.toLowerCase();
-  const isAuthorized = userRole === 'admin' || userRole === 'super admin' || session.user?.email === 'diegocristianalonso@gmail.com';
+  const isAuthorized = userRole === 'admin' || userRole === 'super admin' || ADMIN_EMAILS.includes(session.user?.email || "");
 
   if (!isAuthorized) {
     redirect("/portal");

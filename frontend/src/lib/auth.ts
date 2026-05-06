@@ -2,6 +2,8 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 
+export const ADMIN_EMAILS = ['diegocristianalonso@gmail.com', 'mlauralodi@gmail.com'];
+
 export const authOptions: NextAuthOptions = {
   providers: [
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET 
@@ -44,7 +46,7 @@ export const authOptions: NextAuthOptions = {
 
           const data = await res.json();
           if (res.ok && data.user) {
-            const isSovereignAdmin = data.user.email === 'diegocristianalonso@gmail.com';
+            const isSovereignAdmin = ADMIN_EMAILS.includes(data.user.email);
             return {
               id: data.user.id.toString(),
               name: data.user.username,
@@ -78,7 +80,7 @@ export const authOptions: NextAuthOptions = {
             if (data.jwt) {
               token.jwt = data.jwt;
               token.id = data.user.id.toString();
-              const isSovereignAdmin = data.user.email === 'diegocristianalonso@gmail.com';
+              const isSovereignAdmin = ADMIN_EMAILS.includes(data.user.email);
               token.role = isSovereignAdmin ? 'Admin' : 'Authenticated';
             }
           }
