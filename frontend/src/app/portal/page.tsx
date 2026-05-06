@@ -4,32 +4,21 @@ import { redirect } from "next/navigation";
 import {
   Building2, 
   PlusCircle, 
-  MapPin, 
-  ExternalLink, 
-  LayoutDashboard, 
-  CheckCircle2, 
-  Clock,
-  ShieldCheck,
-  Zap,
-  MessageSquare,
   History
 } from "lucide-react";
 import Link from "next/link";
-import { getStrapiMedia } from "@/lib/strapi";
-import SupportForm from "@/components/portal/SupportForm";
 import BusinessPortalCard from "@/components/portal/BusinessPortalCard";
 import ActivityLogView from "@/components/portal/ActivityLogView";
-import Logo from "@/components/common/Logo";
 import PortalStats from "@/components/portal/PortalStats";
-import { cn } from "@/lib/utils";
+import PortalHeader from "@/components/portal/layout/PortalHeader";
+import PortalAdminBanner from "@/components/portal/layout/PortalAdminBanner";
+import PortalSupportSection from "@/components/portal/layout/PortalSupportSection";
 
 async function getNegocios(jwt: string) {
   const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
   try {
     const res = await fetch(`${strapiUrl}/api/negocios/me`, {
-      headers: {
-        Authorization: `Bearer ${jwt}`,
-      },
+      headers: { Authorization: `Bearer ${jwt}` },
       cache: 'no-store'
     });
     if (!res.ok) return [];
@@ -43,73 +32,24 @@ async function getNegocios(jwt: string) {
 
 export default async function PortalPage() {
   const session = await getServerSession(authOptions);
-  console.log(`[PORTAL] Server session:`, session ? `✅ ${session.user?.email}` : "❌ NO SESSION");
-
-  if (!session) {
-    redirect("/login");
-  }
+  if (!session) redirect("/login");
 
   const negocios = await getNegocios(session.jwt as string);
-  const isAdmin = (session as any).user?.role === 'Admin' || ADMIN_EMAILS.includes(session.user?.email?.toLowerCase() || "");
+  const userEmail = session.user?.email?.toLowerCase() || "";
+  const isAdmin = (session as any).user?.role === 'Admin' || ADMIN_EMAILS.includes(userEmail);
 
-  if (isAdmin) {
+  // Si es un admin soberano que por alguna razón llegó aquí, lo mandamos a su panel
+  if (isAdmin && negocios.length === 0) {
     redirect("/portal/admin");
   }
 
   return (
     <div className="min-h-screen bg-black font-sans selection:bg-primary/30 pt-24">
-      {/* Breadcrumb / Sub-header Premium */}
-      <div className="bg-zinc-950/50 border-b border-primary/10 backdrop-blur-xl sticky top-[72px] z-40">
-        <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-gradient-to-br from-primary/80 to-accent rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20">
-              <LayoutDashboard className="w-7 h-7 text-black" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-serif font-bold text-white tracking-tight uppercase">Mi Propiedad</h1>
-              <p className="text-primary/60 text-[10px] font-black uppercase tracking-[0.2em] mt-0.5">Centro de Control • San Rafael 360</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-4 bg-white/5 pl-2 pr-5 py-2 rounded-2xl border border-white/5 hover:border-primary/20 transition-all group">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-zinc-800 to-zinc-900 flex items-center justify-center text-primary font-serif font-bold text-xl border border-white/10 group-hover:border-primary/30 transition-colors">
-                {session.user?.name?.charAt(0) || "U"}
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">Autenticado</p>
-                <p className="text-sm text-white font-bold leading-none mt-0.5">{session.user?.name}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PortalHeader userName={session.user?.name || "Usuario"} />
 
       <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">
-        {/* Admin Access Banner (Solo para Admins) */}
-        {isAdmin && (
-          <div className="mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
-            <Link 
-              href="/portal/admin"
-              className="group flex items-center justify-between p-6 bg-gradient-to-r from-primary/10 to-accent/5 border border-primary/20 rounded-[2.5rem] hover:border-primary/50 transition-all shadow-2xl shadow-primary/5"
-            >
-              <div className="flex items-center gap-6">
-                <div className="w-16 h-16 bg-primary rounded-3xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-                  <ShieldCheck className="w-8 h-8 text-black" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-serif font-bold text-white">Panel de Control Admin</h2>
-                  <p className="text-primary/50">Gestiona los reclamos pendientes y el soporte de toda la plataforma.</p>
-                </div>
-              </div>
-              <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-primary text-black font-black uppercase tracking-widest text-xs rounded-2xl group-hover:bg-primary/90 transition-colors">
-                Entrar ahora <Zap className="w-4 h-4 fill-black" />
-              </div>
-            </Link>
-          </div>
-        )}
+        {isAdmin && <PortalAdminBanner />}
 
-        {/* Sección de Negocios y Actividad - Visible para TODOS */}
         <div className="mb-12">
           <h2 className="text-4xl font-serif font-bold text-white mb-8 tracking-tight italic">Resumen de Rendimiento</h2>
           <PortalStats />
@@ -137,7 +77,6 @@ export default async function PortalPage() {
           </div>
         </div>
 
-        {/* Historial de Actividad */}
         <div className="mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
@@ -150,48 +89,11 @@ export default async function PortalPage() {
           </div>
         </div>
 
-        {/* Soporte y Ayuda */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mt-20">
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <h2 className="text-4xl font-serif font-bold text-white tracking-tight italic">¿Necesitas ayuda adicional?</h2>
-              <p className="text-zinc-400 text-lg leading-relaxed">
-                Si encuentras algún problema técnico o necesitas realizar un cambio en campos protegidos (como el nombre de tu negocio o categoría), envíanos un mensaje.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-8 bg-zinc-950/40 border border-white/5 rounded-[2.5rem] group hover:border-primary/30 transition-all">
-                <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-3">Dudas inmediatas</p>
-                <a 
-                  href={`https://wa.me/5492604000000?text=${encodeURIComponent("Hola! Necesito soporte técnico con mi cuenta de San Rafael 360.")}`} 
-                  target="_blank"
-                  className="text-white font-bold hover:text-primary transition-colors flex items-center gap-3 text-lg"
-                >
-                  <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center border border-green-500/20">
-                    <Zap className="w-5 h-5 text-green-500 fill-green-500" />
-                  </div>
-                  WhatsApp Admin
-                </a>
-              </div>
-              <div className="p-8 bg-zinc-950/40 border border-white/5 rounded-[2.5rem] group hover:border-primary/30 transition-all">
-                <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-3">Estado de atención</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
-                    <Clock className="w-5 h-5 text-primary" />
-                  </div>
-                  <p className="text-white font-bold text-lg">Online</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <SupportForm 
-            jwt={session.jwt as string} 
-            userEmail={session.user?.email || undefined}
-            userName={session.user?.name || undefined}
-          />
-        </div>
+        <PortalSupportSection 
+          jwt={session.jwt as string} 
+          userEmail={session.user?.email || undefined}
+          userName={session.user?.name || undefined}
+        />
       </main>
     </div>
   );

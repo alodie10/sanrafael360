@@ -1,4 +1,5 @@
 import { factories } from '@strapi/strapi';
+import { ADMIN_EMAILS } from '../../../utils/constants';
 
 export default factories.createCoreController('api::actividad.actividad' as any, ({ strapi }) => ({
   async find(ctx) {
@@ -17,7 +18,7 @@ export default factories.createCoreController('api::actividad.actividad' as any,
       });
 
       const userRole = fullUser?.role?.name?.toLowerCase();
-      const isAdmin = userRole === 'admin' || userRole === 'super admin' || fullUser?.email === 'diegocristianalonso@gmail.com';
+      const isAdmin = userRole === 'admin' || userRole === 'super admin' || ADMIN_EMAILS.includes(fullUser?.email?.toLowerCase());
 
       const filters: any = {};
       if (!isAdmin) {

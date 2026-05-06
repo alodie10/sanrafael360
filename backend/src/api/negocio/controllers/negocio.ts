@@ -1,42 +1,32 @@
 import { factories } from '@strapi/strapi';
 import { asyncHandler } from '../../../utils/asyncHandler';
 import { ValidationError } from '../../../utils/errors';
-import { createNegocioRepository } from '../repositories/negocio-repository';
+import { createNegocioRepository, ADMIN_EMAILS } from '../repositories/negocio-repository';
 
 export default factories.createCoreController('api::negocio.negocio', ({ strapi }) => ({
-  // Sobrescribir FIND para incluir el ID del dueño en listados (Home)
   async find(ctx) {
     const { data, meta } = await super.find(ctx);
-    
     if (data && Array.isArray(data)) {
       await Promise.all(data.map(async (item) => {
         const fullItem = await strapi.documents('api::negocio.negocio').findOne({
           documentId: item.documentId,
           populate: ['owner']
         });
-        if (fullItem?.owner) {
-          item.owner = { id: fullItem.owner.id };
-        }
+        if (fullItem?.owner) item.owner = { id: fullItem.owner.id };
       }));
     }
-    
     return { data, meta };
   },
 
-  // Sobrescribir FINDONE para incluir el ID del dueño en el detalle (Perfil)
   async findOne(ctx) {
     const { data, meta } = await super.findOne(ctx);
-    
     if (data) {
       const fullItem = await strapi.documents('api::negocio.negocio').findOne({
         documentId: data.documentId,
         populate: ['owner']
       });
-      if (fullItem?.owner) {
-        data.owner = { id: fullItem.owner.id };
-      }
+      if (fullItem?.owner) data.owner = { id: fullItem.owner.id };
     }
-    
     return { data, meta };
   },
 
@@ -44,54 +34,37 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     const { id } = ctx.params;
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
-
-    let body = ctx.request.body;
+    const body = ctx.request.body;
     const data = typeof body.data === 'string' ? JSON.parse(body.data) : (body.data || body);
-    const files = (ctx.request as any).files;
-
-    const result = await strapi.service('api::negocio.negocio').claimNegocio(id, user, data, files);
+    const result = await strapi.service('api::negocio.negocio').claimNegocio(id, user, data, (ctx.request as any).files);
     return ctx.send({ success: true, data: result });
   }),
 
   getStatsSummary: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
-
-    const isAdmin = user.role?.name?.toLowerCase() === 'admin' || user.email === 'diegocristianalonso@gmail.com';
-    
-    // Si es admin calculamos el total del portal, si no, solo lo suyo
+    const isAdmin = user.role?.name?.toLowerCase() === 'admin' || ADMIN_EMAILS.includes(user.email?.toLowerCase());
     const stats = await strapi.service('api::negocio.negocio').getPortalStats(isAdmin ? undefined : user.id);
-    
     return ctx.send({ success: true, data: stats });
   }),
 
   me: async (ctx) => {
-    try {
-      const user = ctx.state.user;
-      if (!user) return ctx.unauthorized();
-      
-      const data = await strapi.service('api::negocio.negocio').getOwnerNegocios(user.id);
-      return { data: data || [] }; 
-    } catch (err: any) {
-      strapi.log.error(`[Me-Endpoint] Error: ${err.message}`);
-      return []; // Resiliencia: Devuelve array vacío en lugar de 500
-    }
+    const user = ctx.state.user;
+    if (!user) return ctx.unauthorized();
+    const data = await strapi.service('api::negocio.negocio').getOwnerNegocios(user.id);
+    return { data: data || [] }; 
   },
 
   portalUpdate: asyncHandler(async (ctx) => {
     const { id } = ctx.params;
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
-
-    // Obtener usuario completo con rol para validación en el servicio
     const fullUser = await strapi.query('plugin::users-permissions.user').findOne({
       where: { id: user.id },
       populate: ['role']
     });
-
-    let body = ctx.request.body;
+    const body = ctx.request.body;
     const data = typeof body.data === 'string' ? JSON.parse(body.data) : (body.data || body);
-
     const result = await strapi.service('api::negocio.negocio').updatePortal(id, fullUser, data, (ctx.request as any).files);
     return ctx.send({ success: true, data: result });
   }),
@@ -99,33 +72,22 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   adminPendingClaims: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
-
-    // Blindaje de Rol: Aseguramos tener el rol para validar
     const fullUser = await strapi.query('plugin::users-permissions.user').findOne({
       where: { id: user.id },
       populate: ['role']
     });
-
     const userRole = fullUser?.role?.name?.toLowerCase();
-    const isAdmin = userRole === 'admin' || userRole === 'super admin' || fullUser?.email === 'diegocristianalonso@gmail.com';
-    
+    const isAdmin = userRole === 'admin' || userRole === 'super admin' || ADMIN_EMAILS.includes(fullUser?.email?.toLowerCase());
     if (!isAdmin) return ctx.forbidden();
-
     const repo = createNegocioRepository(strapi);
-    const data = await repo.findPendingClaims([
-      'owner', 
-      'logo', 
-      'documentacion_reclamo'
-    ]);
-    
+    const data = await repo.findPendingClaims(['owner', 'logo', 'documentacion_reclamo']);
     return ctx.send({ success: true, data });
   }),
 
   adminResolveClaim: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
     const userRole = user?.role?.name?.toLowerCase();
-    const isAdmin = userRole === 'admin' || userRole === 'super admin' || user?.email === 'diegocristianalonso@gmail.com';
-    
+    const isAdmin = userRole === 'admin' || userRole === 'super admin' || ADMIN_EMAILS.includes(user?.email?.toLowerCase());
     if (!user || !isAdmin) return ctx.forbidden();
     const { id } = ctx.params;
     const { decision, motivo } = ctx.request.body;
@@ -136,71 +98,18 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
 
   resetClaimForTest: asyncHandler(async (ctx) => {
     const { slug } = ctx.params;
-    // Solo permitido en desarrollo o local
-    if (process.env.NODE_ENV === 'production' && ctx.state.user?.email !== 'diegocristianalonso@gmail.com') {
+    if (process.env.NODE_ENV === 'production' && !ADMIN_EMAILS.includes(ctx.state.user?.email?.toLowerCase())) {
        return ctx.forbidden('Solo el admin puede resetear en produccion');
     }
-
-    const data = await strapi.documents('api::negocio.negocio').findMany({
-      filters: { slug },
-      status: 'published'
-    });
-    
-    const negocio = data[0];
-    if (!negocio) throw new ValidationError('Negocio no encontrado');
-
-    await strapi.documents('api::negocio.negocio').update({
-      documentId: negocio.documentId,
-      data: {
-        estado_reclamo: 'ninguno',
-        owner: null,
-        documentacion_reclamo: null,
-        reclamar_habilitado: true,
-        descripcion: null
-      }
-    });
-
-    await strapi.documents('api::negocio.negocio').publish({
-      documentId: negocio.documentId
-    });
-
+    await strapi.service('api::negocio.negocio').resetClaim(slug);
     return ctx.send({ success: true, message: `Reset exitoso para ${slug}` });
   }),
 
   incrementStats: asyncHandler(async (ctx) => {
     const { id } = ctx.params;
     const { type } = ctx.request.body;
-    
-    if (!['view', 'whatsapp', 'website'].includes(type)) {
-      throw new ValidationError('Tipo de estadística inválido');
-    }
-
-    // Buscar el negocio (por documentId o slug)
-    let negocio = await strapi.documents('api::negocio.negocio').findOne({
-      documentId: id,
-    });
-
-    if (!negocio) {
-      const results = await strapi.documents('api::negocio.negocio').findMany({
-        filters: { slug: id },
-      });
-      negocio = results[0];
-    }
-
-    if (!negocio) throw new ValidationError('Negocio no encontrado');
-
-    const field = type === 'view' ? 'views' : type === 'whatsapp' ? 'clicks_whatsapp' : 'clicks_website';
-    const currentValue = Number(negocio[field] || 0);
-
-    // Actualizar campo (Usando Strapi 5 Document Service)
-    const result = await strapi.documents('api::negocio.negocio').update({
-      documentId: negocio.documentId,
-      data: {
-        [field]: currentValue + 1
-      },
-      status: 'published' // <--- CLAVE: Actualiza la versión que ve el público
-    });
-
-    return ctx.send({ success: true, count: result[field] });
+    if (!['view', 'whatsapp', 'website'].includes(type)) throw new ValidationError('Tipo de estadística inválido');
+    const count = await strapi.service('api::negocio.negocio').incrementStats(id, type);
+    return ctx.send({ success: true, count });
   })
 }));

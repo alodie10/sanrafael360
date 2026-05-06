@@ -1,3 +1,4 @@
+import { ADMIN_EMAILS } from '../../../../utils/constants';
 
 export default {
   async afterCreate(event: any) {
@@ -7,8 +8,10 @@ export default {
     try {
       const emailService = strapi.plugin('email').service('email');
       
-      await emailService.send({
-        to: 'diegocristianalonso@gmail.com',
+      // Notificar a todos los admins
+      const sendPromises = ADMIN_EMAILS.map(adminEmail => 
+        emailService.send({
+          to: adminEmail,
         from: 'San Rafael 360 <no-reply@sanrafael360.com>',
         subject: `Soporte SR360: ${result.asunto || 'Nueva Consulta'}`,
         html: `<div style="font-family: sans-serif; padding: 25px; border: 1px solid #f0f0f0; border-radius: 12px; max-width: 600px; margin: auto;">
@@ -25,8 +28,10 @@ export default {
                style="background: #111; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Responder en Strapi</a>
           </div>
         </div>`
-      }).catch((e: any) => strapi.log.error('❌ Error asíncrono en envío de email:', e.message));
+        }).catch((e: any) => strapi.log.error(`❌ Error asíncrono en envío de email a ${adminEmail}:`, e.message))
+      );
       
+      await Promise.all(sendPromises);
       strapi.log.info(`📧 Intento de notificación de soporte procesado para ID: ${result.id}`);
     } catch (err: any) {
       strapi.log.error('❌ Error crítico (pero controlado) en lifecycle de soporte (afterCreate):', err.message);

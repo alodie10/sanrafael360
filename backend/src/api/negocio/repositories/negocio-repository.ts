@@ -1,4 +1,5 @@
 import { Core } from '@strapi/strapi';
+import { ADMIN_EMAILS } from '../../../utils/constants';
 
 export class NegocioRepository {
   private strapi: any;
@@ -112,7 +113,8 @@ export class NegocioRepository {
   }
 
   async sendAdminEmail(subject: string, html: string) {
-    return await this.sendEmail('diegocristianalonso@gmail.com', subject, html);
+    // Enviar a todos los admins definidos
+    return Promise.all(ADMIN_EMAILS.map(email => this.sendEmail(email, subject, html)));
   }
 }
 
