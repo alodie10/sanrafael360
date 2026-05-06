@@ -346,15 +346,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         <div className="relative flex flex-col justify-between min-h-[340px] md:min-h-[560px] pt-[7.5rem] md:pt-36 pb-6 md:pb-16 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
           
           {/* Botón Volver — siempre arriba, nunca pisa el logo */}
-          <div>
-            <Link 
-              href="/"
-              className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/30 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 group"
-            >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-sm font-bold">Volver</span>
-            </Link>
-          </div>
+          {/* Botón Volver eliminado para priorizar el FAB unificado */}
+          <div />
 
           {/* Info del negocio — siempre abajo */}
           <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-10 mt-6">
