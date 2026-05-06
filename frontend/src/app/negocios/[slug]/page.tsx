@@ -17,9 +17,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Settings } from "lucide-react";
 
+import { Negocio } from "@/types/strapi";
+
 export default function BusinessDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const [negocio, setNegocio] = useState<any | null>(null);
+  const [negocio, setNegocio] = useState<Negocio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -96,7 +98,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
     }
   }, [negocio?.documentId, slug]);
 
-  const trackClick = async (type: 'whatsapp' | 'website') => {
+  const trackClick = async (type: 'whatsapp' | 'website' | 'view') => {
     if (!negocio?.documentId) return;
     try {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
@@ -111,7 +113,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   };
 
   const handleClaimSubmit = async () => {
-    if (!session) return;
+    if (!session || !negocio) return;
     setIsClaiming(true);
     try {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
@@ -208,7 +210,12 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                 dangerouslySetInnerHTML={{ __html: negocio.descripcion || "Descubrí la mejor atención y calidad." }} 
               />
             </div>
-            <BookingWidget businessName={negocio.nombre} whatsappNumber={negocio.telefono_whatsapp || negocio.telefono} />
+            <BookingWidget 
+              businessName={negocio.nombre} 
+              reservaUrl={negocio.reserva_url}
+              whatsapp={negocio.telefono_whatsapp || negocio.telefono} 
+              onTrackClick={trackClick}
+            />
             <ReviewSection 
               negocioId={negocio.documentId} 
               ownerId={ownerId} 

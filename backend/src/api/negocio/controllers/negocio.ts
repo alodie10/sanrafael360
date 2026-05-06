@@ -1,7 +1,8 @@
 import { factories } from '@strapi/strapi';
 import { asyncHandler } from '../../../utils/asyncHandler';
 import { ValidationError } from '../../../utils/errors';
-import { createNegocioRepository, ADMIN_EMAILS } from '../repositories/negocio-repository';
+import { createNegocioRepository } from '../repositories/negocio-repository';
+import { ADMIN_EMAILS } from '../../../utils/constants';
 
 export default factories.createCoreController('api::negocio.negocio', ({ strapi }) => ({
   async find(ctx) {

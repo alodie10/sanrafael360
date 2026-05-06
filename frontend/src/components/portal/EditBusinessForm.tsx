@@ -64,17 +64,17 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     else if (type === 'cover') setCoverFile(files[0]);
     else if (type === 'gallery') {
       const newFiles = Array.from(files);
-      setNewGalleryFiles(prev => [...prev, ...newFiles]);
+      setNewGalleryFiles((prev: File[]) => [...prev, ...newFiles]);
     }
   };
 
   const removeExistingPhoto = (id: number) => {
-    setExistingGallery(prev => prev.filter((p: any) => p.id !== id));
-    setRemovedGalleryIds(prev => [...prev, id]);
+    setExistingGallery((prev: any[]) => prev.filter((p: any) => p.id !== id));
+    setRemovedGalleryIds((prev: number[]) => [...prev, id]);
   };
 
   const removeNewPhoto = (index: number) => {
-    setNewGalleryFiles(prev => prev.filter((_, i) => i !== index));
+    setNewGalleryFiles((prev: File[]) => prev.filter((_, i) => i !== index));
   };
 
   const onAddressSelect = (formattedAddress: string, lat: number, lng: number) => {

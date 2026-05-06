@@ -125,7 +125,7 @@ export default function BusinessSidebar({
                 ) : (
                   <div className="space-y-1.5">
                     {["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].map(day => {
-                      const daySched = negocio.schedules.find((s: any) => s.day === day);
+                      const daySched = negocio.schedules?.find((s: any) => s.day === day);
                       return (
                         <div key={day} className="flex justify-between text-[10px]">
                           <span className="text-slate-500">{day}</span>

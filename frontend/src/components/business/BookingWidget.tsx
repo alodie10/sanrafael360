@@ -7,12 +7,9 @@ interface BookingWidgetProps {
   reservaUrl?: string;
   whatsapp?: string;
   businessName: string;
+  onTrackClick?: (type: 'whatsapp' | 'website' | 'view') => void;
 }
 
-/**
- * Valida si una URL es sintácticamente correcta y tiene un protocolo web.
- * Binario estricto: cualquier URL malformada o vacía retorna false.
- */
 function isValidUrl(url?: string): boolean {
   if (!url || url.trim() === "") return false;
   try {
@@ -23,13 +20,12 @@ function isValidUrl(url?: string): boolean {
   }
 }
 
-export default function BookingWidget({ reservaUrl, whatsapp, businessName }: BookingWidgetProps) {
+export default function BookingWidget({ reservaUrl, whatsapp, businessName, onTrackClick }: BookingWidgetProps) {
   const validReservaUrl = isValidUrl(reservaUrl) ? reservaUrl : undefined;
   const validWhatsapp = whatsapp && whatsapp.replace(/\D/g, "").length >= 10
     ? whatsapp
     : undefined;
 
-  // Silencio visual: si no hay ningún destino válido, no renderizar nada
   if (!validReservaUrl && !validWhatsapp) return null;
 
   return (
@@ -37,7 +33,6 @@ export default function BookingWidget({ reservaUrl, whatsapp, businessName }: Bo
       <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 blur-[120px] -z-10 group-hover:bg-primary/30 transition-all duration-1000" />
       
       <div className="flex flex-col gap-8">
-        {/* Icon & Message */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 shrink-0 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
@@ -60,13 +55,12 @@ export default function BookingWidget({ reservaUrl, whatsapp, businessName }: Bo
           </div>
         </div>
 
-        {/* Action Button */}
         <div className="w-full shrink-0">
           {validReservaUrl ? (
             <motion.a 
                href={validReservaUrl}
                target="_blank"
-               onClick={() => trackClick('website')}
+               onClick={() => onTrackClick?.('website')}
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}
                className="w-full bg-primary text-primary-foreground px-6 py-4 rounded-2xl font-extrabold text-base flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 hover:bg-primary/90 transition-all"
@@ -78,7 +72,7 @@ export default function BookingWidget({ reservaUrl, whatsapp, businessName }: Bo
             <motion.a 
                href={`https://wa.me/${validWhatsapp?.replace(/\D/g,'')}?text=${encodeURIComponent(`¡Hola! Vi tu negocio "${businessName}" en sanrafael360.com y quería consultar por una cita.`)}`}
                target="_blank"
-               onClick={() => trackClick('whatsapp')}
+               onClick={() => onTrackClick?.('whatsapp')}
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}
                className="w-full bg-green-500 text-white px-6 py-4 rounded-2xl font-extrabold text-base flex items-center justify-center gap-3 shadow-2xl shadow-green-500/30 hover:bg-green-600 transition-all"

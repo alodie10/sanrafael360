@@ -239,7 +239,7 @@ export default function ReviewSection({ negocioId, ownerId, initialRating = 0, i
                       </div>
                       <div>
                         <h4 className="text-sm font-bold text-white">
-                          {review.autor?.username || "Usuario San Rafael"}
+                          {review.usuario?.username || "Usuario San Rafael"}
                         </h4>
                         <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">
                           {new Date(review.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}

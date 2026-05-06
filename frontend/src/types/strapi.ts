@@ -57,6 +57,11 @@ export interface Negocio {
   is_premium?: boolean;
   premium_valid_until?: string;
   premium_notes?: string;
+  owner?: { id: number | string; documentId?: string; email?: string };
+  schedules?: any[];
+  telefono_whatsapp?: string;
+  reclamar_habilitado?: boolean;
+  estado_reclamo?: string;
 }
 
 export interface StrapiResponse<T> {

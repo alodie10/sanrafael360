@@ -1,5 +1,6 @@
 import { factories } from '@strapi/strapi';
-import { createNegocioRepository, ADMIN_EMAILS } from '../repositories/negocio-repository';
+import { createNegocioRepository } from '../repositories/negocio-repository';
+import { ADMIN_EMAILS } from '../../../utils/constants';
 import { NotFoundError, ValidationError, ForbiddenError } from '../../../utils/errors';
 import { logActivity } from '../../../utils/strapi-utils';
 import { getAdminClaimEmail, getOwnerResolutionEmail } from './templates/email-templates';
@@ -103,7 +104,14 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     }
 
     if (negocio.owner?.id) {
-      await logActivity(strapi, isApproved ? 'success' : 'error', isApproved ? 'Reclamo Aprobado' : 'Reclamo Rechazado', id, { id: negocio.owner.id });
+      await logActivity(
+        strapi, 
+        isApproved ? 'success' : 'error', 
+        isApproved ? 'Reclamo Aprobado' : 'Reclamo Rechazado', 
+        `El reclamo fue ${isApproved ? 'aprobado' : 'rechazado'}${motivo ? ': ' + motivo : ''}`,
+        id, 
+        { id: negocio.owner.id }
+      );
     }
 
     return { id, decision };
