@@ -219,6 +219,33 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       <section className="py-12 md:py-20 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
           <div className="lg:col-span-2 space-y-12 md:space-y-20">
+            {/* INFO MÓVIL: Ubicación y Contacto al principio para el Turista */}
+            <div className="lg:hidden space-y-6">
+              <div className="bg-slate-900/40 backdrop-blur-xl rounded-[3rem] p-8 border border-primary/20 shadow-2xl">
+                 <div className="flex items-start gap-4 mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center text-primary shrink-0 border border-primary/20">
+                       <MapPin className="w-6 h-6" />
+                    </div>
+                    <div>
+                       <p className="text-lg text-white font-bold leading-tight">{negocio.direccion || "San Rafael, Mendoza"}</p>
+                       <p className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-black mt-1">Ubicación Confirmada</p>
+                    </div>
+                 </div>
+                 
+                 {isValidPremium && negocio.latitud && negocio.longitud && (
+                    <div className="h-56 rounded-[2rem] overflow-hidden border border-white/10 mb-6 shadow-inner">
+                       <GoogleMap lat={negocio.latitud} lng={negocio.longitud} title={negocio.nombre} />
+                    </div>
+                 )}
+                 
+                 {negocio.telefono && (
+                    <a href={`tel:${negocio.telefono}`} className="flex items-center justify-center gap-3 w-full py-5 bg-white text-black rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-white/5 active:scale-95 transition-all">
+                       <Phone className="w-4 h-4" /> Llamar al Negocio
+                    </a>
+                 )}
+              </div>
+            </div>
+
             {/* Gallery — RESTAURADA (ETAPA 4) */}
             <BusinessGallery negocio={negocio} isValidPremium={isValidPremium} />
 
