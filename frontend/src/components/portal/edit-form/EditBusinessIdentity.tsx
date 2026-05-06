@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Search, CheckCircle2, AlertCircle, X } from "lucide-react";
+import { MapPin, Search, CheckCircle2, AlertCircle, X, ShieldCheck } from "lucide-react";
 import AddressAutocomplete from "../AddressAutocomplete";
 import GoogleMap from "@/components/common/GoogleMap";
 
