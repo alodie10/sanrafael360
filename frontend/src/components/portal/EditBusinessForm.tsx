@@ -164,10 +164,10 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       };
 
       formData.append("data", JSON.stringify(payload));
-      if (logoFile) formData.append("files.logo", logoFile);
-      if (coverFile) formData.append("files.imagen_portada", coverFile);
+      if (logoFile) formData.append("logo", logoFile);
+      if (coverFile) formData.append("imagen_portada", coverFile);
       if (newGalleryFiles.length > 0) {
-        newGalleryFiles.forEach(file => formData.append("files.galeria", file));
+        newGalleryFiles.forEach(file => formData.append("galeria", file));
       }
 
       const res = await fetch(`${strapiUrl}/api/negocios/${negocio.documentId}/portal-update`, {

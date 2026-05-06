@@ -83,11 +83,29 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     
     if (files) {
       const uploadPromises = [];
-      if (files.logo) uploadPromises.push(repo.uploadFile(updated.documentId, 'logo', files.logo));
-      if (files.imagen_portada) uploadPromises.push(repo.uploadFile(updated.documentId, 'imagen_portada', files.imagen_portada));
-      if (files.galeria) uploadPromises.push(repo.uploadFile(updated.documentId, 'galeria', files.galeria, true));
-      await Promise.all(uploadPromises);
-      updated = await repo.findById(id, ['logo', 'imagen_portada', 'galeria', 'schedules']);
+      // Soportar tanto "logo" como "files.logo" para flexibilidad
+      const logo = files.logo || files['files.logo'];
+      const cover = files.imagen_portada || files['files.imagen_portada'];
+      const galeria = files.galeria || files['files.galeria'];
+
+      if (logo) {
+        strapi.log.info(`[PortalUpdate] Subiendo logo para ${negocio.nombre}`);
+        uploadPromises.push(repo.uploadFile(updated.documentId, 'logo', logo));
+      }
+      if (cover) {
+        strapi.log.info(`[PortalUpdate] Subiendo portada para ${negocio.nombre}`);
+        uploadPromises.push(repo.uploadFile(updated.documentId, 'imagen_portada', cover));
+      }
+      if (galeria) {
+        strapi.log.info(`[PortalUpdate] Subiendo galería para ${negocio.nombre}`);
+        uploadPromises.push(repo.uploadFile(updated.documentId, 'galeria', galeria, true));
+      }
+      
+      if (uploadPromises.length > 0) {
+        await Promise.all(uploadPromises);
+        // Recargar con los nuevos IDs de medios
+        updated = await repo.findById(id, ['logo', 'imagen_portada', 'galeria', 'schedules']);
+      }
     }
 
     await repo.publish(id);
