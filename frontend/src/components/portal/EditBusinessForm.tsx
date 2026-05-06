@@ -204,75 +204,71 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         onSave={handleSave}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        <div className="lg:col-span-2 space-y-12">
-          <EditBusinessIdentity 
-            nombre={nombre}
-            setNombre={setNombre}
-            direccion={direccion}
-            latitud={latitud}
-            longitud={longitud}
-            onAddressSelect={onAddressSelect}
-            setLatitud={setLatitud}
-            setLongitud={setLongitud}
-            isSyncing={isSyncing}
-            syncUsed={syncUsed}
-            syncSummary={syncSummary}
-            handleGoogleSync={handleGoogleSync}
-            cancelSync={cancelSync}
-          />
+      <div className="max-w-4xl mx-auto space-y-12">
+        <EditBusinessIdentity 
+          nombre={nombre}
+          setNombre={setNombre}
+          direccion={direccion}
+          latitud={latitud}
+          longitud={longitud}
+          onAddressSelect={onAddressSelect}
+          setLatitud={setLatitud}
+          setLongitud={setLongitud}
+          isSyncing={isSyncing}
+          syncUsed={syncUsed}
+          syncSummary={syncSummary}
+          handleGoogleSync={handleGoogleSync}
+          cancelSync={cancelSync}
+        />
 
-          <EditBusinessSocial 
-            descripcion={descripcion}
-            setDescripcion={setDescripcion}
-            telefono={telefono}
-            setTelefono={setTelefono}
-            whatsapp={whatsapp}
-            setWhatsapp={setWhatsapp}
-            website={website}
-            setWebsite={setWebsite}
-            facebook={facebook}
-            setFacebook={setFacebook}
-            instagram={instagram}
-            setInstagram={setInstagram}
-          />
+        <EditBusinessVisualIdentity 
+          logo={negocio.logo}
+          logoFile={logoFile}
+          cover={negocio.imagen_portada}
+          coverFile={coverFile}
+          setLogoFile={setLogoFile}
+          setCoverFile={setCoverFile}
+          handleFileChange={handleFileChange}
+        />
 
-          <EditBusinessGallery 
-            existingGallery={existingGallery}
-            newGalleryFiles={newGalleryFiles}
-            removeExistingPhoto={removeExistingPhoto}
-            removeNewPhoto={removeNewPhoto}
-            handleFileChange={handleFileChange}
-          />
-        </div>
+        <EditBusinessSocial 
+          descripcion={descripcion}
+          setDescripcion={setDescripcion}
+          telefono={telefono}
+          setTelefono={setTelefono}
+          whatsapp={whatsapp}
+          setWhatsapp={setWhatsapp}
+          website={website}
+          setWebsite={setWebsite}
+          facebook={facebook}
+          setFacebook={setFacebook}
+          instagram={instagram}
+          setInstagram={setInstagram}
+        />
 
-        <div className="space-y-12">
-          <EditBusinessVisualIdentity 
-            logo={negocio.logo}
-            logoFile={logoFile}
-            cover={negocio.imagen_portada}
-            coverFile={coverFile}
-            setLogoFile={setLogoFile}
-            setCoverFile={setCoverFile}
-            handleFileChange={handleFileChange}
-          />
+        <EditBusinessGallery 
+          existingGallery={existingGallery}
+          newGalleryFiles={newGalleryFiles}
+          removeExistingPhoto={removeExistingPhoto}
+          removeNewPhoto={removeNewPhoto}
+          handleFileChange={handleFileChange}
+        />
 
-          <EditBusinessReservations 
-            priceRange={priceRange}
-            setPriceRange={setPriceRange}
-            reservaHabilitada={reservaHabilitada}
-            setReservaHabilitada={setReservaHabilitada}
-            reservaUrl={reservaUrl}
-            setReservaUrl={setReservaUrl}
-          />
+        <EditBusinessReservations 
+          priceRange={priceRange}
+          setPriceRange={setPriceRange}
+          reservaHabilitada={reservaHabilitada}
+          setReservaHabilitada={setReservaHabilitada}
+          reservaUrl={reservaUrl}
+          setReservaUrl={setReservaUrl}
+        />
 
-          <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-               <Clock className="w-6 h-6 text-blue-400" />
-               Horarios de Atención
-            </h2>
-            <ScheduleEditor schedules={schedules} onChange={setSchedules} />
-          </div>
+        <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
+          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+             <Clock className="w-6 h-6 text-blue-400" />
+             Horarios de Atención
+          </h2>
+          <ScheduleEditor schedules={schedules} onChange={setSchedules} />
         </div>
       </div>
     </div>
