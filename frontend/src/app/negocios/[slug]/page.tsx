@@ -214,40 +214,49 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         negocio={negocio} 
         isValidPremium={isValidPremium} 
         onTrackClick={trackClick} 
-      />
+            <section className="py-6 md:py-20 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
+        {/* INFO MÓVIL: Ubicación y Contacto al principio para el Turista (Visible para TODOS) */}
+        <div className="lg:hidden mb-8">
+          <div className="bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] p-7 border border-white/10 shadow-2xl">
+             <div className="flex items-start gap-4 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-black shrink-0 shadow-lg shadow-primary/20">
+                   <MapPin className="w-6 h-6" />
+                </div>
+                <div>
+                   <p className="text-lg text-white font-bold leading-tight">{negocio.direccion || "San Rafael, Mendoza"}</p>
+                   <p className="text-[10px] text-primary uppercase tracking-[0.2em] font-black mt-1">Ubicación del Negocio</p>
+                </div>
+             </div>
+             
+             {/* El mapa solo se muestra si hay coordenadas */}
+             {negocio.latitud && negocio.longitud && (
+                <div className="h-48 rounded-[2rem] overflow-hidden border border-white/5 mb-6">
+                   <GoogleMap lat={negocio.latitud} lng={negocio.longitud} title={negocio.nombre} />
+                </div>
+             )}
+             
+             <div className="grid grid-cols-2 gap-3">
+                {negocio.telefono && (
+                  <a href={`tel:${negocio.telefono}`} className="flex items-center justify-center gap-2 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">
+                     <Phone className="w-4 h-4 text-primary" /> Llamar
+                  </a>
+                )}
+                <a 
+                  href={negocio.google_maps_url || `https://www.google.com/maps/search/?api=1&query=${negocio.latitud},${negocio.longitud}`}
+                  target="_blank"
+                  className="flex items-center justify-center gap-2 py-4 bg-primary rounded-2xl text-black text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+                >
+                   <ExternalLink className="w-4 h-4" /> Ver Maps
+                </a>
+             </div>
+          </div>
+        </div>
 
-      <section className="py-12 md:py-20 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
           <div className="lg:col-span-2 space-y-12 md:space-y-20">
-            {/* INFO MÓVIL: Ubicación y Contacto al principio para el Turista */}
-            <div className="lg:hidden space-y-6">
-              <div className="bg-slate-900/40 backdrop-blur-xl rounded-[3rem] p-8 border border-primary/20 shadow-2xl">
-                 <div className="flex items-start gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center text-primary shrink-0 border border-primary/20">
-                       <MapPin className="w-6 h-6" />
-                    </div>
-                    <div>
-                       <p className="text-lg text-white font-bold leading-tight">{negocio.direccion || "San Rafael, Mendoza"}</p>
-                       <p className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-black mt-1">Ubicación Confirmada</p>
-                    </div>
-                 </div>
-                 
-                 {isValidPremium && negocio.latitud && negocio.longitud && (
-                    <div className="h-56 rounded-[2rem] overflow-hidden border border-white/10 mb-6 shadow-inner">
-                       <GoogleMap lat={negocio.latitud} lng={negocio.longitud} title={negocio.nombre} />
-                    </div>
-                 )}
-                 
-                 {negocio.telefono && (
-                    <a href={`tel:${negocio.telefono}`} className="flex items-center justify-center gap-3 w-full py-5 bg-white text-black rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-white/5 active:scale-95 transition-all">
-                       <Phone className="w-4 h-4" /> Llamar al Negocio
-                    </a>
-                 )}
-              </div>
-            </div>
-
             {/* Gallery — RESTAURADA (ETAPA 4) */}
             <BusinessGallery negocio={negocio} isValidPremium={isValidPremium} />
+
 
             <div className="prose prose-invert max-w-none">
               <h3 className="text-3xl font-serif font-bold text-white mb-6 italic">Sobre el <span className="text-primary">negocio</span></h3>
