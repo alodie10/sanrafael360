@@ -8,7 +8,7 @@ import HeroCarousel from "@/components/home/HeroCarousel";
 import BusinessGrid from "@/components/home/BusinessGrid";
 import CategoryGrid from "@/components/home/CategoryGrid";
 import FilterBar from "@/components/home/FilterBar";
-import { Search, MapPin, Star, ArrowRight } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, Mic, MicOff, Navigation } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Negocio, Categoria } from "@/types/strapi";
@@ -36,6 +36,10 @@ function HomeContent() {
   const [selectedCategoryDocId, setSelectedCategoryDocId] = useState<string | null>(null);
   const [selectionCount, setSelectionCount] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  
+  // Estados Etapa 2
+  const [isListening, setIsListening] = useState(false);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
 
   const handleSelectCategory = (id: string | null) => {
     setSelectedCategoryDocId(id);
@@ -108,6 +112,62 @@ function HomeContent() {
 
   const scrollToResults = () => {
     resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // --- LÓGICA ETAPA 2: VOZ Y UBICACIÓN ---
+  
+  const handleVoiceSearch = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Tu navegador no soporta búsqueda por voz.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-AR';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchQuery(transcript);
+      scrollToResults();
+    };
+
+    recognition.start();
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocalización no soportada");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        });
+        scrollToResults();
+      },
+      (err) => console.error("Error obteniendo ubicación:", err)
+    );
+  };
+
+  // Haversine formula para distancia
+  const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radio Tierra en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
   };
 
   const filterBarRef = useRef<HTMLDivElement>(null);
@@ -187,6 +247,14 @@ function HomeContent() {
     return matchesSearch && matchesBarCategory;
   });
 
+  // Ordenar por cercanía si tenemos la ubicación del usuario
+  const sortedNegocios = [...filteredNegocios].sort((a, b) => {
+    if (!userLocation || !a.latitud || !a.longitud || !b.latitud || !b.longitud) return 0;
+    const distA = getDistance(userLocation.lat, userLocation.lng, a.latitud, a.longitud);
+    const distB = getDistance(userLocation.lat, userLocation.lng, b.latitud, b.longitud);
+    return distA - distB;
+  });
+
   const isFiltering = searchQuery.trim().length > 0 || !!selectedCategoryDocId;
 
   return (
@@ -207,7 +275,7 @@ function HomeContent() {
             Encuentra las mejores experiencias, gastronomía y alojamiento en el corazón de Mendoza.
           </p>
 
-          {/* Search Bar Premium */}
+          {/* Search Bar Premium con Voz y Ubicación */}
           <div className="relative max-w-2xl mx-auto group">
             <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
             <div className="relative flex items-center bg-background/60 backdrop-blur-2xl border border-white/20 p-2 rounded-full shadow-2xl">
@@ -215,19 +283,41 @@ function HomeContent() {
                 <Search className="w-5 h-5 text-slate-400" />
                 <input 
                   type="text" 
-                  placeholder="¿Qué buscas? (ej. Cabañas, Restaurantes)" 
+                  placeholder={isListening ? "Escuchando..." : "¿Qué buscas? (ej. Cabañas, Bodegas)"}
                   className="bg-transparent border-none outline-none w-full text-white placeholder:text-white/40 text-sm md:text-base focus:ring-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && scrollToResults()}
                 />
               </div>
-              <button 
-                onClick={scrollToResults}
-                className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold text-sm md:text-base transition-all hover:scale-105 active:scale-95 shadow-lg"
-              >
-                Explorar
-              </button>
+              <div className="flex items-center gap-1 pr-2">
+                <button 
+                  onClick={handleVoiceSearch}
+                  className={cn(
+                    "p-2 rounded-full transition-all",
+                    isListening ? "bg-primary text-black animate-pulse" : "text-slate-400 hover:text-white hover:bg-white/10"
+                  )}
+                  title="Buscar por voz"
+                >
+                  {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                </button>
+                <button 
+                  onClick={handleGetLocation}
+                  className={cn(
+                    "p-2 rounded-full transition-all",
+                    userLocation ? "bg-primary/20 text-primary border border-primary/30" : "text-slate-400 hover:text-white hover:bg-white/10"
+                  )}
+                  title="Cerca de mí"
+                >
+                  <Navigation className="w-5 h-5" />
+                </button>
+                <button 
+                  onClick={scrollToResults}
+                  className="bg-primary text-primary-foreground ml-2 px-6 py-3 rounded-full font-bold text-sm md:text-base transition-all hover:scale-105 active:scale-95 shadow-lg"
+                >
+                  Explorar
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -276,9 +366,9 @@ function HomeContent() {
           </div>
 
           <BusinessGrid 
-            negocios={filteredNegocios} 
+            negocios={sortedNegocios} 
             loading={loading} 
-            onClearFilters={() => { setSearchQuery(""); setSelectedCategoryDocId(null); }}
+            onClearFilters={() => { setSearchQuery(""); setSelectedCategoryDocId(null); setUserLocation(null); }}
           />
         </section>
       </div>
