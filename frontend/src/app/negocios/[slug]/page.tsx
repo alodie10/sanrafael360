@@ -214,7 +214,9 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
         negocio={negocio} 
         isValidPremium={isValidPremium} 
         onTrackClick={trackClick} 
-            <section className="py-6 md:py-20 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
+      />
+
+      <section className="py-6 md:py-20 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
         {/* INFO MÓVIL: Ubicación y Contacto al principio para el Turista (Visible para TODOS) */}
         <div className="lg:hidden mb-8">
           <div className="bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] p-7 border border-white/10 shadow-2xl">

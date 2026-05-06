@@ -30,6 +30,7 @@ export default function BusinessSidebar({
   };
 
   return (
+    <div className="space-y-8">
       {/* Info Card Principal */}
       <div className="bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
         <h3 className="text-xl font-bold text-white mb-6">Ubicación y Contacto</h3>
