@@ -7,6 +7,7 @@ import BookingWidget from "@/components/business/BookingWidget";
 import ReviewSection from "@/components/business/ReviewSection";
 import BusinessHero from "@/components/business/BusinessHero";
 import BusinessSidebar from "@/components/business/BusinessSidebar";
+import BusinessActions from "@/components/business/BusinessActions";
 import NavigationFAB from "@/components/layout/NavigationFAB";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -75,6 +76,37 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
     loadBusinessData();
     window.scrollTo(0, 0);
   }, [slug]);
+
+  useEffect(() => {
+    if (negocio?.documentId || slug) {
+      const targetId = negocio?.documentId || slug;
+      const incrementView = async () => {
+        try {
+          const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+          await fetch(`${strapiUrl}/api/negocios/${targetId}/stats`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'view' })
+          });
+        } catch (e) {}
+      };
+      incrementView();
+    }
+  }, [negocio?.documentId, slug]);
+
+  const trackClick = async (type: 'whatsapp' | 'website') => {
+    if (!negocio?.documentId) return;
+    try {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+      await fetch(`${strapiUrl}/api/negocios/${negocio.documentId}/stats`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type })
+      });
+    } catch (e) {
+      console.error(`Error tracking ${type} click:`, e);
+    }
+  };
 
   const handleClaimSubmit = async () => {
     if (!session) return;
@@ -163,6 +195,12 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       <NavigationFAB isVisible={showScrollTop} type="back" onClick={() => router.back()} />
 
       <BusinessHero negocio={negocio} businessStatus={businessStatus} />
+
+      <BusinessActions 
+        negocio={negocio} 
+        isValidPremium={isValidPremium} 
+        onTrackClick={trackClick} 
+      />
 
       <section className="py-12 md:py-20 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
