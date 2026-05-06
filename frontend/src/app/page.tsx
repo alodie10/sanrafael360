@@ -13,6 +13,7 @@ import { Search, MapPin, Star, ArrowRight, Mic, MicOff, Navigation } from "lucid
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Negocio, Categoria } from "@/types/strapi";
+import { useRouter, usePathname } from "next/navigation";
 
 // Helper para normalizar texto (quitar acentos, etc.)
 const normalizeText = (str: string) => {
@@ -25,6 +26,8 @@ const normalizeText = (str: string) => {
 
 // Componente intermedio para manejar Suspense
 function HomeContent() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [negocios, setNegocios] = useState<Negocio[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -64,21 +67,49 @@ function HomeContent() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Sincronizar filtro desde la URL
+  // Sincronizar filtros DESDE la URL al cargar
   useEffect(() => {
     const catParam = searchParams.get("cat");
+    const queryParam = searchParams.get("q");
+
+    if (queryParam) setSearchQuery(queryParam);
+    
     if (catParam && categorias.length > 0) {
       const found = categorias.find(c => 
         normalizeText(c.nombre).includes(normalizeText(catParam)) || 
-        c.documentId === catParam
+        c.documentId === catParam ||
+        c.slug === catParam
       );
       if (found) {
         setSelectedCategoryDocId(found.documentId);
       }
-    } else if (!catParam) {
-      setSelectedCategoryDocId(null);
+    } else if (!catParam && !queryParam) {
+      // Si no hay parámetros, no reseteamos forzosamente si ya hay estado local 
+      // (evita loops), pero si es la carga inicial limpia, lo dejamos nulo.
     }
-  }, [searchParams, categorias]);
+  }, [categorias]); // Solo dependemos de categorías para validar el docId
+
+  // Sincronizar filtros HACIA la URL al cambiar (con debounce para la búsqueda)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (searchQuery) params.set("q", searchQuery);
+      if (selectedCategoryDocId) {
+        const cat = categorias.find(c => c.documentId === selectedCategoryDocId);
+        if (cat) params.set("cat", cat.slug || cat.documentId);
+      }
+      
+      const queryString = params.toString();
+      const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+      
+      // Solo actualizamos si la URL cambió para evitar loops de renderizado
+      if (window.location.search !== `?${queryString}` && (window.location.search !== "" || queryString !== "")) {
+        router.replace(newUrl, { scroll: false });
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedCategoryDocId, pathname, router, categorias]);
 
   useEffect(() => {
     const loadData = async () => {
