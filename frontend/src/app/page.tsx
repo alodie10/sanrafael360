@@ -47,12 +47,24 @@ function HomeContent() {
 
   const handleSelectCategory = (id: string | null) => {
     setSelectedCategoryDocId(id);
+    
+    // Actualización inmediata de la URL para categorías (Etapa 3 - Fix)
+    const params = new URLSearchParams(window.location.search);
+    if (id) {
+      const cat = categorias.find(c => c.documentId === id);
+      if (cat) params.set("cat", cat.slug || cat.documentId);
+    } else {
+      params.delete("cat");
+      setSearchQuery(""); // Reset query when clicking "All"
+      params.delete("q");
+    }
+    
+    const queryString = params.toString();
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+
     if (id === null) {
-      setSearchQuery(""); 
-      // Cuando se toca "Todas" en la barra, el usuario quiere ver los resultados
       scrollToResults();
     } else {
-      // Para categorías específicas, usamos el contador para el scroll inteligente
       setSelectionCount(prev => prev + 1);
     }
   };
@@ -89,27 +101,26 @@ function HomeContent() {
     }
   }, [searchParams, categorias]); // Agregado searchParams para detectar navegación atrás/adelante
 
-  // Sincronizar filtros HACIA la URL al cambiar (con debounce para la búsqueda)
+  // Sincronizar búsqueda HACIA la URL (solo con debounce para el texto)
   useEffect(() => {
     const timer = setTimeout(() => {
-      const params = new URLSearchParams();
-      if (searchQuery) params.set("q", searchQuery);
-      if (selectedCategoryDocId) {
-        const cat = categorias.find(c => c.documentId === selectedCategoryDocId);
-        if (cat) params.set("cat", cat.slug || cat.documentId);
+      const params = new URLSearchParams(window.location.search);
+      if (searchQuery) {
+        params.set("q", searchQuery);
+      } else {
+        params.delete("q");
       }
       
       const queryString = params.toString();
-      const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+      const currentQuery = window.location.search.replace('?', '');
       
-      // Solo actualizamos si la URL cambió para evitar loops de renderizado
-      if (window.location.search !== `?${queryString}` && (window.location.search !== "" || queryString !== "")) {
-        router.replace(newUrl, { scroll: false });
+      if (queryString !== currentQuery) {
+        router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
       }
-    }, 500);
+    }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedCategoryDocId, pathname, router, categorias]);
+  }, [searchQuery, pathname, router]);
 
   useEffect(() => {
     const loadData = async () => {
