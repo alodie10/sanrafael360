@@ -277,7 +277,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
             />
           </div>
 
-          <aside className="lg:col-span-1">
+          <aside className="hidden lg:block lg:col-span-1">
             <BusinessSidebar 
               negocio={negocio} 
               isValidPremium={isValidPremium} 
