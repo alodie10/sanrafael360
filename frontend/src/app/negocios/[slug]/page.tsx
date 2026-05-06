@@ -8,6 +8,7 @@ import ReviewSection from "@/components/business/ReviewSection";
 import BusinessHero from "@/components/business/BusinessHero";
 import BusinessSidebar from "@/components/business/BusinessSidebar";
 import BusinessActions from "@/components/business/BusinessActions";
+import BusinessGallery from "@/components/business/BusinessGallery";
 import NavigationFAB from "@/components/layout/NavigationFAB";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -183,15 +184,6 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
     <main className="min-h-screen bg-background pb-20">
       <Navbar />
 
-      {canManage && (
-        <div className="fixed bottom-24 right-8 z-50 animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <Link href={`/portal/negocios/${negocio.slug}/editar`} className="flex items-center gap-3 bg-white text-black px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl hover:scale-110 active:scale-95 transition-all border-2 border-primary">
-            <Settings className="w-5 h-5" />
-            <span>Gestionar</span>
-          </Link>
-        </div>
-      )}
-
       <NavigationFAB isVisible={showScrollTop} type="back" onClick={() => router.back()} />
 
       <BusinessHero negocio={negocio} businessStatus={businessStatus} />
@@ -205,6 +197,9 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       <section className="py-12 md:py-20 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
           <div className="lg:col-span-2 space-y-12 md:space-y-20">
+            {/* Gallery — RESTAURADA (ETAPA 4) */}
+            <BusinessGallery negocio={negocio} isValidPremium={isValidPremium} />
+
             <div className="prose prose-invert max-w-none">
               <h3 className="text-3xl font-serif font-bold text-white mb-6 italic">Sobre el <span className="text-primary">negocio</span></h3>
               <div 
