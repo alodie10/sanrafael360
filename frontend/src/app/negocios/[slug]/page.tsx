@@ -8,6 +8,7 @@ import GoogleMap from "@/components/common/GoogleMap";
 import WebsitePortlet from "@/components/business/WebsitePortlet";
 import BookingWidget from "@/components/business/BookingWidget";
 import ReviewSection from "@/components/business/ReviewSection";
+import NavigationFAB from "@/components/layout/NavigationFAB";
 import { 
   MapPin, 
   Phone, 
@@ -63,6 +64,17 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   const [claimErrorMessage, setClaimErrorMessage] = useState<string | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const autoClaim = searchParams.get("auto_claim");
+  
+  // Etapa 3: Scroll detection para el FAB
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     if (autoClaim === "1" && session?.user && negocio) {
@@ -294,18 +306,25 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
     <main className="min-h-screen bg-background pb-20">
       <Navbar />
 
-      {/* Botón de Gestión Proactiva (Solo para Admin o Dueño) */}
+      {/* Botón de Gestión Proactiva (Solo para Admin o Dueño) - Ajustado para no chocar */}
       {canManage && negocio?.slug && (
-        <div className="fixed bottom-8 right-8 z-50 animate-in fade-in slide-in-from-bottom-6 duration-700">
+        <div className="fixed bottom-24 right-8 z-50 animate-in fade-in slide-in-from-bottom-6 duration-700">
           <Link 
             href={`/portal/negocios/${negocio.slug}/editar`}
-            className="flex items-center gap-3 bg-primary text-black px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-xs md:text-sm shadow-[0_10px_40px_rgba(255,191,0,0.4)] hover:scale-110 active:scale-95 transition-all group border-2 border-black/10"
+            className="flex items-center gap-3 bg-white text-black px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-xs md:text-sm shadow-2xl hover:scale-110 active:scale-95 transition-all group border-2 border-primary"
           >
             <Settings className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
-            <span>Gestionar Perfil</span>
+            <span>Gestionar</span>
           </Link>
         </div>
       )}
+
+      {/* SISTEMA DE NAVEGACIÓN UNIFICADO (ETAPA 3) */}
+      <NavigationFAB 
+        isVisible={showScrollTop}
+        type="back"
+        onClick={() => router.back()}
+      />
 
       {/* HERO SECTION — Flex layout para evitar overlaps en mobile */}
       <section className="relative overflow-hidden">
