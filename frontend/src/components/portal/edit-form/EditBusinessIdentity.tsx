@@ -18,6 +18,10 @@ interface EditBusinessIdentityProps {
   syncSummary: any;
   handleGoogleSync: () => void;
   cancelSync: () => void;
+  isAdmin?: boolean;
+  categoria?: string;
+  setCategoria?: (val: string) => void;
+  categories?: any[];
 }
 
 export default function EditBusinessIdentity({
@@ -33,7 +37,11 @@ export default function EditBusinessIdentity({
   syncUsed,
   syncSummary,
   handleGoogleSync,
-  cancelSync
+  cancelSync,
+  isAdmin,
+  categoria,
+  setCategoria,
+  categories
 }: EditBusinessIdentityProps) {
   return (
     <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
@@ -133,6 +141,32 @@ export default function EditBusinessIdentity({
                   Limpiar Mapa
                 </button>
               </div>
+            </div>
+          )}
+          {isAdmin && categories && setCategoria && (
+            <div className="space-y-2 pt-6 mt-6 border-t border-white/5">
+              <label className="text-xs font-bold text-primary uppercase tracking-widest flex items-center gap-2 mb-1">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Categoría del Negocio (Solo Master Admins)
+              </label>
+              <div className="relative">
+                <select 
+                  value={categoria}
+                  onChange={(e) => setCategoria(e.target.value)}
+                  className="w-full px-5 py-4 bg-slate-800 border border-white/10 rounded-2xl text-white text-base focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none cursor-pointer"
+                >
+                  <option value="">Seleccionar Categoría...</option>
+                  {categories.map((cat: any) => (
+                    <option key={cat.id} value={cat.documentId}>{cat.nombre}</option>
+                  ))}
+                </select>
+                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                  <Search className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-2 ml-1 italic">
+                Cambiar la categoría moverá este negocio a la nueva sección del sitio público.
+              </p>
             </div>
           )}
         </div>

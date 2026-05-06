@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Clock } from "lucide-react";
+import { Clock, ShieldCheck } from "lucide-react";
+import { ADMIN_EMAILS } from "@/lib/auth";
 
 // Sub-components extracted for optimization
 import EditBusinessHeader from "./edit-form/EditBusinessHeader";
@@ -37,6 +38,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [reservaHabilitada, setReservaHabilitada] = useState(negocio.reserva_habilitada ?? false);
   const [reservaUrl, setReservaUrl] = useState(negocio.reserva_url || "");
   const [schedules, setSchedules] = useState(negocio.schedules || []);
+  const [categoria, setCategoria] = useState(negocio.categoria?.documentId || negocio.categoria?.id || "");
+  const [categories, setCategories] = useState<any[]>([]);
   
   // Files
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -53,7 +56,24 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const isAdmin = ADMIN_EMAILS.includes(session.user?.email?.toLowerCase() || "");
   const syncAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (isAdmin) {
+      const fetchCategories = async () => {
+        try {
+          const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+          const res = await fetch(`${strapiUrl}/api/categorias?sort=nombre:asc`);
+          const data = await res.json();
+          setCategories(data.data || []);
+        } catch (e) {
+          console.error("Error fetching categories:", e);
+        }
+      };
+      fetchCategories();
+    }
+  }, [isAdmin]);
 
   // Handlers
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover' | 'gallery') => {
@@ -160,6 +180,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         reserva_habilitada: reservaHabilitada,
         reserva_url: reservaUrl,
         schedules,
+        categoria: isAdmin ? categoria : undefined,
         trigger_discovery: false
       };
 
@@ -219,6 +240,10 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
           syncSummary={syncSummary}
           handleGoogleSync={handleGoogleSync}
           cancelSync={cancelSync}
+          isAdmin={isAdmin}
+          categoria={categoria}
+          setCategoria={setCategoria}
+          categories={categories}
         />
 
         <EditBusinessVisualIdentity 
