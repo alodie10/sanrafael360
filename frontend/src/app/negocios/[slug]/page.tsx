@@ -227,7 +227,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
               </div>
               <div>
                 <p className="text-white font-bold text-sm">¿Gestionás este negocio?</p>
-                <p className="text-slate-300 text-xs leading-tight">Tomá el control para actualizar fotos, horarios y responder reseñas.</p>
+                <p className="text-white text-xs leading-tight">Tomá el control total de tu negocio en el portal: Fotos, Videos, Reseñas, Horarios, Whatsapp, Botón de Redes sociales, y más.</p>
               </div>
             </div>
             <button
