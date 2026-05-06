@@ -56,48 +56,9 @@ export default function AddressAutocomplete({
       language: "es",
     });
 
-    loader.load().then(async (google) => {
+    loader.load().then((google) => {
       if (!isMounted || !inputRef.current) return;
 
-      // ── Try PlaceAutocompleteElement (new 2025 Web Component) ──────────────
-      try {
-        // importLibrary is available when using the new bootstrap approach.
-        // With the weekly Loader it may or may not expose this method.
-        const placesLib: any = await (google.maps as any).importLibrary?.("places");
-        if (placesLib?.PlaceAutocompleteElement) {
-          // The web component must be attached to a DOM container, not the input.
-          // We insert it right after the hidden input.
-          const container = inputRef.current.parentElement;
-          if (!container) throw new Error("no container");
-
-          const acEl = new placesLib.PlaceAutocompleteElement({
-            componentRestrictions: { country: "ar" },
-            types: ["address"],
-          }) as HTMLElement;
-
-          // Hide our placeholder input and show the web component
-          inputRef.current.style.display = "none";
-          container.appendChild(acEl);
-
-          acEl.addEventListener("gmp-placeselect", async (event: any) => {
-            const place = event.place;
-            await place.fetchFields({ fields: ["formattedAddress", "location"] });
-            const lat = place.location?.lat() ?? 0;
-            const lng = place.location?.lng() ?? 0;
-            const address = place.formattedAddress ?? "";
-            setInputValue(address);
-            callbackRef.current(address, lat, lng);
-          });
-
-          setIsLoaded(true);
-          return;
-        }
-      } catch {
-        // importLibrary not supported or PlaceAutocompleteElement unavailable — use classic
-      }
-
-      // ── Fallback: classic google.maps.places.Autocomplete ─────────────────
-      // This still works perfectly (advisory warning only, no breakage until further notice).
       const autocomplete = new google.maps.places.Autocomplete(inputRef.current!, {
         componentRestrictions: { country: "ar" },
         types: ["address"],

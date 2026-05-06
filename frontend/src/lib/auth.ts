@@ -46,7 +46,7 @@ export const authOptions: NextAuthOptions = {
 
           const data = await res.json();
           if (res.ok && data.user) {
-            const isSovereignAdmin = ADMIN_EMAILS.includes(data.user.email);
+            const isSovereignAdmin = ADMIN_EMAILS.includes(data.user.email?.toLowerCase());
             return {
               id: data.user.id.toString(),
               name: data.user.username,
@@ -80,7 +80,7 @@ export const authOptions: NextAuthOptions = {
             if (data.jwt) {
               token.jwt = data.jwt;
               token.id = data.user.id.toString();
-              const isSovereignAdmin = ADMIN_EMAILS.includes(data.user.email);
+              const isSovereignAdmin = ADMIN_EMAILS.includes(data.user.email?.toLowerCase());
               token.role = isSovereignAdmin ? 'Admin' : 'Authenticated';
             }
           }

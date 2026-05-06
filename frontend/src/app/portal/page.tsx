@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { authOptions, ADMIN_EMAILS } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import {
   Building2, 
@@ -50,7 +50,7 @@ export default async function PortalPage() {
   }
 
   const negocios = await getNegocios(session.jwt as string);
-  const isAdmin = (session as any).user?.role === 'Admin';
+  const isAdmin = (session as any).user?.role === 'Admin' || ADMIN_EMAILS.includes(session.user?.email?.toLowerCase() || "");
 
   if (isAdmin) {
     redirect("/portal/admin");

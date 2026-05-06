@@ -20,7 +20,7 @@ export default async function EditBusinessPage(props: any) {
 
   const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
   const userEmail = session.user?.email;
-  const isAdmin = session.user?.role?.toLowerCase() === 'admin' || ADMIN_EMAILS.includes(userEmail || "");
+  const isAdmin = session.user?.role?.toLowerCase() === 'admin' || ADMIN_EMAILS.includes(userEmail?.toLowerCase() || "");
   
   let negocio = null;
   let fetchError = null;
