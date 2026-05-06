@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const defaultImages = [
@@ -13,13 +13,37 @@ const defaultImages = [
 
 export default function HeroCarousel() {
   const [current, setCurrent] = useState(0);
+  const failedImages = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % defaultImages.length);
+      setCurrent((prev) => {
+        // Buscar la siguiente imagen que no haya fallado
+        let next = (prev + 1) % defaultImages.length;
+        let attempts = 0;
+        while (failedImages.current.has(defaultImages[next]) && attempts < defaultImages.length) {
+          next = (next + 1) % defaultImages.length;
+          attempts++;
+        }
+        return next;
+      });
     }, 8000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleImageError = (src: string) => {
+    failedImages.current.add(src);
+    // Avanzar a la siguiente imagen si la actual falla
+    setCurrent((prev) => {
+      let next = (prev + 1) % defaultImages.length;
+      let attempts = 0;
+      while (failedImages.current.has(defaultImages[next]) && attempts < defaultImages.length) {
+        next = (next + 1) % defaultImages.length;
+        attempts++;
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="absolute inset-0 overflow-hidden -z-10">
@@ -36,6 +60,7 @@ export default function HeroCarousel() {
               src={defaultImages[current]}
               alt="San Rafael"
               className="w-full h-full object-cover brightness-[0.65] contrast-[1.1]"
+              onError={() => handleImageError(defaultImages[current])}
           />
         </motion.div>
       </AnimatePresence>
