@@ -608,24 +608,43 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                   </div>
                 )}
 
-                {/* Map */}
+                {/* Map — RESTRINGIDO A PREMIUM (ETAPA 4) */}
                 <div className="pt-4">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">Cómo llegar</h4>
-                    <a 
-                      href={negocio.google_maps_url || `https://www.google.com/maps/search/?api=1&query=${negocio.latitud},${negocio.longitud}`} 
-                      target="_blank"
-                      className="text-primary text-[10px] font-black uppercase hover:underline flex items-center gap-1"
-                    >
-                      Maps <ExternalLink className="w-3 h-3" />
-                    </a>
+                    {isValidPremium && (
+                      <a 
+                        href={negocio.google_maps_url || `https://www.google.com/maps/search/?api=1&query=${negocio.latitud},${negocio.longitud}`} 
+                        target="_blank"
+                        className="text-primary text-[10px] font-black uppercase hover:underline flex items-center gap-1"
+                      >
+                        Maps <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
                   </div>
-                  <div className="h-56 rounded-3xl overflow-hidden border border-white/5">
-                    {negocio.latitud && negocio.longitud ? (
-                      <GoogleMap lat={negocio.latitud} lng={negocio.longitud} title={negocio.nombre} />
+                  <div className="h-56 rounded-3xl overflow-hidden border border-white/10 relative">
+                    {isValidPremium ? (
+                      negocio.latitud && negocio.longitud ? (
+                        <GoogleMap lat={negocio.latitud} lng={negocio.longitud} title={negocio.nombre} />
+                      ) : (
+                        <div className="w-full h-full bg-slate-800 flex items-center justify-center p-6 text-center text-xs text-slate-500 italic">
+                          Ubicación no disponible
+                        </div>
+                      )
                     ) : (
-                      <div className="w-full h-full bg-slate-800 flex items-center justify-center p-6 text-center text-xs text-slate-500 italic">
-                        Ubicación no disponible
+                      <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
+                        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #FFBF00 1px, transparent 0)', backgroundSize: '16px 16px' }}></div>
+                        <MapPin className="w-8 h-8 text-primary/20 mb-3" />
+                        <h5 className="text-[10px] font-black text-white uppercase tracking-widest mb-1">Mapa Premium</h5>
+                        <p className="text-[9px] text-slate-500 mb-4 leading-tight px-4">
+                          La ubicación exacta es exclusiva para miembros destacados.
+                        </p>
+                        <Link 
+                          href={session ? `/portal/negocios/${negocio.slug}/editar` : `/registro?claim=${negocio.slug}`}
+                          className="bg-primary/10 text-primary border border-primary/20 px-4 py-2 rounded-xl text-[9px] font-black uppercase hover:bg-primary/20 transition-all"
+                        >
+                          Activar Mapa
+                        </Link>
                       </div>
                     )}
                   </div>
