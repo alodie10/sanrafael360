@@ -155,21 +155,40 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
   );
 
   const getBusinessStatus = () => {
-    if (!negocio.schedules || negocio.schedules.length === 0) return null;
-    const days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-    const now = new Date();
-    const todaySchedule = negocio.schedules.find((s: any) => s.day === days[now.getDay()]);
-    if (!todaySchedule || todaySchedule.is_closed) return { status: "Cerrado", color: "text-red-500 bg-red-500/10 border-red-500/20" };
-    
-    const parseTime = (t: string) => { const [h, m] = t.split(":"); return parseInt(h) * 60 + parseInt(m); };
-    const cur = now.getHours() * 60 + now.getMinutes();
-    const open = parseTime(todaySchedule.opening_time);
-    const close = parseTime(todaySchedule.closing_time);
-    const isOpen = close < open ? (cur >= open || cur <= close) : (cur >= open && cur <= close);
-    
-    return isOpen 
-      ? { status: "Abierto ahora", color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" }
-      : { status: "Cerrado", color: "text-red-500 bg-red-500/10 border-red-500/20" };
+    try {
+      if (!negocio.schedules || !Array.isArray(negocio.schedules) || negocio.schedules.length === 0) return null;
+      
+      const days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+      const now = new Date();
+      const todaySchedule = negocio.schedules.find((s: any) => s.day === days[now.getDay()]);
+      
+      if (!todaySchedule || todaySchedule.is_closed || !todaySchedule.opening_time || !todaySchedule.closing_time) {
+        return { status: "Cerrado", color: "text-red-500 bg-red-500/10 border-red-500/20" };
+      }
+      
+      const parseTime = (t: string) => { 
+        if (!t || typeof t !== 'string') return 0;
+        const parts = t.split(":");
+        if (parts.length < 2) return 0;
+        return parseInt(parts[0]) * 60 + parseInt(parts[1]); 
+      };
+
+      const cur = now.getHours() * 60 + now.getMinutes();
+      const open = parseTime(todaySchedule.opening_time);
+      const close = parseTime(todaySchedule.closing_time);
+      
+      // Manejo de horarios que cruzan la medianoche (ej: 20:00 a 02:00)
+      const isOpen = close < open 
+        ? (cur >= open || cur <= close) 
+        : (cur >= open && cur <= close);
+      
+      return isOpen 
+        ? { status: "Abierto ahora", color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" }
+        : { status: "Cerrado", color: "text-red-500 bg-red-500/10 border-red-500/20" };
+    } catch (e) {
+      console.error("Error calculating business status:", e);
+      return null;
+    }
   };
 
   const businessStatus = getBusinessStatus();
@@ -213,6 +232,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
             <BookingWidget 
               businessName={negocio.nombre} 
               reservaUrl={negocio.reserva_url}
+              reservaHabilitada={negocio.reserva_habilitada}
               whatsapp={negocio.telefono_whatsapp || negocio.telefono} 
               onTrackClick={trackClick}
             />

@@ -7,6 +7,7 @@ interface BookingWidgetProps {
   reservaUrl?: string;
   whatsapp?: string;
   businessName: string;
+  reservaHabilitada?: boolean;
   onTrackClick?: (type: 'whatsapp' | 'website' | 'view') => void;
 }
 
@@ -20,7 +21,10 @@ function isValidUrl(url?: string): boolean {
   }
 }
 
-export default function BookingWidget({ reservaUrl, whatsapp, businessName, onTrackClick }: BookingWidgetProps) {
+export default function BookingWidget({ reservaUrl, whatsapp, businessName, reservaHabilitada, onTrackClick }: BookingWidgetProps) {
+  // Si las reservas están explícitamente desactivadas, no mostramos nada
+  if (reservaHabilitada === false) return null;
+
   const validReservaUrl = isValidUrl(reservaUrl) ? reservaUrl : undefined;
   const validWhatsapp = whatsapp && whatsapp.replace(/\D/g, "").length >= 10
     ? whatsapp

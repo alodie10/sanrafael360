@@ -73,9 +73,9 @@ export default function PortalStats() {
         console.log("Stats recibidas:", stats);
 
         setData({
-          views: stats.views,
-          leads: stats.clicks_whatsapp,
-          clicks: stats.clicks_website,
+          views: stats.views || 0,
+          leads: stats.clicks_whatsapp || 0,
+          clicks: stats.clicks_website || 0,
           score: stats.totalNegocios > 0 ? 85 : 0,
           loading: false
         });
