@@ -227,7 +227,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
               </div>
               <div>
                 <p className="text-white font-bold text-sm">¿Gestionás este negocio?</p>
-                <p className="text-blue-200/60 text-xs leading-tight">Tomá el control para actualizar fotos, horarios y responder reseñas.</p>
+                <p className="text-slate-300 text-xs leading-tight">Tomá el control para actualizar fotos, horarios y responder reseñas.</p>
               </div>
             </div>
             <button
@@ -264,7 +264,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
              
              <div className="grid grid-cols-2 gap-3">
                 {negocio.telefono && (
-                  <a href={`tel:${negocio.telefono}`} className="flex items-center justify-center gap-2 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">
+                  <a href={`tel:${negocio.telefono}`} className="flex items-center justify-center gap-2 py-4 bg-white/15 border border-white/30 rounded-2xl text-white text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">
                      <Phone className="w-4 h-4 text-primary" /> Llamar
                   </a>
                 )}
@@ -288,7 +288,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
             <div className="prose prose-invert max-w-none">
               <h3 className="text-3xl font-serif font-bold text-white mb-6 italic">Sobre el <span className="text-primary">negocio</span></h3>
               <div 
-                className="text-slate-300 text-lg leading-relaxed space-y-6" 
+                className="text-slate-100 text-lg leading-relaxed space-y-6" 
                 dangerouslySetInnerHTML={{ __html: negocio.descripcion || "Descubrí la mejor atención y calidad." }} 
               />
             </div>

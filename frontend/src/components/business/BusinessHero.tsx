@@ -76,7 +76,7 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
               )}
 
               {negocio.categoria && (
-                 <div className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-white/5 border border-white/10">
+                 <div className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-white/20 border border-white/30 text-white">
                    {negocio.categoria.nombre}
                  </div>
               )}
