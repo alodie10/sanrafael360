@@ -138,37 +138,53 @@ function HomeContent() {
     return () => clearTimeout(timer);
   }, [selectionCount, categorias]);
 
-  // Lógica de Filtrado Dinámico (Búsqueda Parcial Inteligente y Robusta)
+  // Lógica de Filtrado Dinámico (Búsqueda Universal Nativa - Etapa 1)
   const filteredNegocios = negocios.filter((negocio) => {
     const normalizedQuery = normalizeText(searchQuery);
-    const searchTerms = normalizedQuery.split(/\s+/).filter(t => t.length > 0);
-    
-    const bizName = normalizeText(negocio.nombre);
-    const bizDesc = normalizeText(negocio.descripcion || "");
-
-    const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => 
-      bizName.includes(term) || bizDesc.includes(term)
-    );
-
-    // Lógica de Subcategorías: Machear por NOMBRE (siempre disponible en la respuesta de Strapi)
-    let validCategoryNames: string[] = [];
-    if (selectedCategoryDocId) {
-      const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
-      if (selectedCat) validCategoryNames.push(selectedCat.nombre.toLowerCase());
+    if (normalizedQuery.length === 0) {
+      // Si no hay búsqueda de texto, solo aplicamos el filtro de categoría (si existe)
+      if (!selectedCategoryDocId) return true;
       
-      // Agregar todas las subcategorías que tengan como padre a la seleccionada
+      const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
+      const bizCatName = (negocio.categoria?.nombre || "").toLowerCase();
+      
+      let validCategoryNames = [selectedCat?.nombre.toLowerCase()];
       categorias.forEach(c => {
         if (c.parent?.documentId === selectedCategoryDocId) {
           validCategoryNames.push(c.nombre.toLowerCase());
         }
       });
+      return validCategoryNames.includes(bizCatName);
     }
 
-    const matchesCategory = selectedCategoryDocId 
-      ? validCategoryNames.includes((negocio.categoria?.nombre || "").toLowerCase())
-      : true;
+    // Si hay búsqueda de texto, buscamos en Nombre, Descripción Y Categoría
+    const searchTerms = normalizedQuery.split(/\s+/).filter(t => t.length > 0);
+    
+    const bizName = normalizeText(negocio.nombre);
+    const bizDesc = normalizeText(negocio.descripcion || "");
+    const bizCat = normalizeText(negocio.categoria?.nombre || "");
 
-    return matchesSearch && matchesCategory;
+    const matchesSearch = searchTerms.every(term => 
+      bizName.includes(term) || 
+      bizDesc.includes(term) || 
+      bizCat.includes(term)
+    );
+
+    // Si además hay una categoría seleccionada en la barra, aplicamos esa restricción extra
+    let matchesBarCategory = true;
+    if (selectedCategoryDocId) {
+      const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
+      const bizCatName = (negocio.categoria?.nombre || "").toLowerCase();
+      let validCategoryNames = [selectedCat?.nombre.toLowerCase()];
+      categorias.forEach(c => {
+        if (c.parent?.documentId === selectedCategoryDocId) {
+          validCategoryNames.push(c.nombre.toLowerCase());
+        }
+      });
+      matchesBarCategory = validCategoryNames.includes(bizCatName);
+    }
+
+    return matchesSearch && matchesBarCategory;
   });
 
   const isFiltering = searchQuery.trim().length > 0 || !!selectedCategoryDocId;
