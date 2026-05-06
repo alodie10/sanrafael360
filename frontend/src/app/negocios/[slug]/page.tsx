@@ -11,11 +11,12 @@ import BusinessSidebar from "@/components/business/BusinessSidebar";
 import BusinessActions from "@/components/business/BusinessActions";
 import BusinessGallery from "@/components/business/BusinessGallery";
 import NavigationFAB from "@/components/layout/NavigationFAB";
+import GoogleMap from "@/components/common/GoogleMap";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Settings } from "lucide-react";
+import { Settings, MapPin, Phone, ExternalLink } from "lucide-react";
 
 import { Negocio } from "@/types/strapi";
 
