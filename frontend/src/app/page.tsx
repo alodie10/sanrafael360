@@ -275,22 +275,22 @@ function HomeContent() {
             Encuentra las mejores experiencias, gastronomía y alojamiento en el corazón de Mendoza.
           </p>
 
-          {/* Search Bar Premium con Voz y Ubicación */}
+          {/* Search Bar Premium con Voz y Ubicación (Refinado) */}
           <div className="relative max-w-2xl mx-auto group">
             <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-            <div className="relative flex items-center bg-background/60 backdrop-blur-2xl border border-white/20 p-2 rounded-full shadow-2xl">
-              <div className="flex-1 flex items-center px-4 gap-3">
-                <Search className="w-5 h-5 text-slate-400" />
+            <div className="relative flex items-center bg-background/60 backdrop-blur-2xl border border-white/20 p-1.5 md:p-2 rounded-full shadow-2xl">
+              <div className="flex-1 flex items-center px-3 md:px-4 gap-2 md:gap-3 min-w-0">
+                <Search className="w-4 h-4 md:w-5 md:h-5 text-slate-400 shrink-0" />
                 <input 
                   type="text" 
-                  placeholder={isListening ? "Escuchando..." : "¿Qué buscas? (ej. Cabañas, Bodegas)"}
-                  className="bg-transparent border-none outline-none w-full text-white placeholder:text-white/40 text-sm md:text-base focus:ring-0"
+                  placeholder={isListening ? "Escuchando..." : "¿Qué buscas?"}
+                  className="bg-transparent border-none outline-none w-full text-white placeholder:text-white/40 text-sm md:text-base focus:ring-0 truncate"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && scrollToResults()}
                 />
               </div>
-              <div className="flex items-center gap-1 pr-2">
+              <div className="flex items-center gap-0.5 md:gap-1 pr-1">
                 <button 
                   onClick={handleVoiceSearch}
                   className={cn(
@@ -299,7 +299,7 @@ function HomeContent() {
                   )}
                   title="Buscar por voz"
                 >
-                  {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  {isListening ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
                 </button>
                 <button 
                   onClick={handleGetLocation}
@@ -309,13 +309,14 @@ function HomeContent() {
                   )}
                   title="Cerca de mí"
                 >
-                  <Navigation className="w-5 h-5" />
+                  <MapPin className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
                 <button 
                   onClick={scrollToResults}
-                  className="bg-primary text-primary-foreground ml-2 px-6 py-3 rounded-full font-bold text-sm md:text-base transition-all hover:scale-105 active:scale-95 shadow-lg"
+                  className="bg-primary text-primary-foreground ml-1 p-3 md:px-6 md:py-3 rounded-full font-bold transition-all hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center"
                 >
-                  Explorar
+                  <span className="hidden md:inline mr-2 text-sm md:text-base">Explorar</span>
+                  <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
             </div>
