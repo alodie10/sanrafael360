@@ -89,20 +89,14 @@ export default function BusinessSidebar({
                   </div>
                 )
               ) : (
-                <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
-                  <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #FFBF00 1px, transparent 0)', backgroundSize: '16px 16px' }}></div>
-                  <MapPin className="w-8 h-8 text-primary/20 mb-3" />
-                  <h5 className="text-[10px] font-black text-white uppercase tracking-widest mb-1">Mapa Premium</h5>
-                  <p className="text-[9px] text-slate-500 mb-4 leading-tight px-4">
-                    La ubicación exacta es exclusiva para miembros destacados.
-                  </p>
-                  <Link 
-                    href={session ? `/portal/negocios/${negocio.slug}/editar` : `/registro?claim=${slug}`}
-                    className="bg-primary/10 text-primary border border-primary/20 px-4 py-2 rounded-xl text-[9px] font-black uppercase hover:bg-primary/20 transition-all"
-                  >
-                    Activar Mapa
-                  </Link>
-                </div>
+                  <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
+                    <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #FFBF00 1px, transparent 0)', backgroundSize: '16px 16px' }}></div>
+                    <MapPin className="w-8 h-8 text-primary/20 mb-3" />
+                    <h5 className="text-[10px] font-black text-white uppercase tracking-widest mb-1">Mapa Premium</h5>
+                    <p className="text-[9px] text-slate-500 leading-tight px-4 italic">
+                      La ubicación exacta es exclusiva para miembros destacados.
+                    </p>
+                  </div>
               )}
             </div>
           </div>
@@ -115,7 +109,7 @@ export default function BusinessSidebar({
             </div>
           </div>
 
-          {/* Horarios (RF-07) */}
+          {/* Horarios (RF-07) — RESTRINGIDO A PREMIUM (ETAPA 4) */}
           {(negocio.horarios_texto || (negocio.schedules && negocio.schedules.length > 0)) && (
             <div className="pt-6 border-t border-white/5">
               <div className="flex items-center gap-3 mb-4 text-primary">
@@ -123,23 +117,31 @@ export default function BusinessSidebar({
                 <span className="text-xs font-black uppercase tracking-widest">Horarios</span>
               </div>
               
-              {negocio.horarios_texto ? (
-                <p className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed">
-                  {sanitizeText(negocio.horarios_texto)}
-                </p>
+              {isValidPremium ? (
+                negocio.horarios_texto ? (
+                  <p className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed">
+                    {sanitizeText(negocio.horarios_texto)}
+                  </p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].map(day => {
+                      const daySched = negocio.schedules.find((s: any) => s.day === day);
+                      return (
+                        <div key={day} className="flex justify-between text-[10px]">
+                          <span className="text-slate-500">{day}</span>
+                          <span className={cn("font-bold", daySched?.is_closed ? "text-red-400" : "text-slate-300")}>
+                            {daySched?.is_closed ? "Cerrado" : `${daySched?.opening_time?.slice(0,5)} - ${daySched?.closing_time?.slice(0,5)}`}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )
               ) : (
-                <div className="space-y-1.5">
-                  {["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].map(day => {
-                    const daySched = negocio.schedules.find((s: any) => s.day === day);
-                    return (
-                      <div key={day} className="flex justify-between text-[10px]">
-                        <span className="text-slate-500">{day}</span>
-                        <span className={cn("font-bold", daySched?.is_closed ? "text-red-400" : "text-slate-300")}>
-                          {daySched?.is_closed ? "Cerrado" : `${daySched?.opening_time?.slice(0,5)} - ${daySched?.closing_time?.slice(0,5)}`}
-                        </span>
-                      </div>
-                    );
-                  })}
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
+                  <p className="text-[10px] text-slate-500 italic leading-tight">
+                    Horarios de atención exclusivos para miembros destacados.
+                  </p>
                 </div>
               )}
             </div>
