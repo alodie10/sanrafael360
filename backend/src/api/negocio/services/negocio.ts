@@ -44,11 +44,22 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     const negocio = await repo.findById(id, ['owner']);
     if (!negocio) throw new NotFoundError('Negocio');
 
-    const userRole = user.role?.name?.toLowerCase();
-    const isAdmin = userRole === 'admin' || userRole === 'super admin' || ADMIN_EMAILS.includes(user.email?.toLowerCase());
+    const roleName = user.role?.name?.toLowerCase();
+    const roleType = user.role?.type?.toLowerCase();
+    const userEmail = user.email?.toLowerCase();
+    
+    const isAdmin = roleName === 'admin' || 
+                    roleName === 'super admin' || 
+                    roleType === 'admin' || 
+                    roleType === 'superadmin' || 
+                    ADMIN_EMAILS.includes(userEmail);
+
     const isOwner = negocio.owner?.id === user.id;
 
-    if (!isOwner && !isAdmin) throw new ForbiddenError('No tienes permisos para editar este negocio');
+    if (!isOwner && !isAdmin) {
+      strapi.log.warn(`[Forbidden] User ${userEmail} (Role: ${roleType}) denied access to ${negocio.nombre}`);
+      throw new ForbiddenError('No tienes permisos para editar este negocio');
+    }
 
     const forbiddenFields = ['owner', 'slug', 'documentId', 'id', 'estado_reclamo', 'publishedAt'];
     const updateData = { ...data };

@@ -23,7 +23,7 @@ export default function EditBusinessVisualIdentity({
   handleFileChange
 }: EditBusinessVisualIdentityProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 gap-8">
       {/* Logo */}
       <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
