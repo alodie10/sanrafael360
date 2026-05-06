@@ -218,6 +218,30 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
       />
 
       <section className="py-6 md:py-20 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
+        {/* RECLAMAR PERFIL — Visible para todos en todo dispositivo, arriba del contenido */}
+        {negocio.reclamar_habilitado && !negocio.owner && (!negocio.estado_reclamo || negocio.estado_reclamo === 'ninguno') && (
+          <div className="mb-8 p-5 rounded-[2rem] bg-blue-500/10 border border-blue-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl shadow-blue-900/10">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center shrink-0">
+                <Settings className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <p className="text-white font-bold text-sm">¿Gestionás este negocio?</p>
+                <p className="text-blue-200/60 text-xs leading-tight">Tomá el control para actualizar fotos, horarios y responder reseñas.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                if (!session) router.push(`/registro?claim=${slug}`);
+                else setShowClaimModal(true);
+              }}
+              className="shrink-0 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-[10px] rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-900/30 w-full sm:w-auto text-center"
+            >
+              Reclamar Perfil
+            </button>
+          </div>
+        )}
+
         {/* INFO MÓVIL: Ubicación y Contacto al principio para el Turista (Visible para TODOS) */}
         <div className="lg:hidden mb-8">
           <div className="bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] p-7 border border-white/10 shadow-2xl">

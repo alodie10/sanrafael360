@@ -131,23 +131,6 @@ export default function BusinessSidebar({
           )}
         </div>
       </div>
-
-      {/* Botón de Reclamo (Al final) */}
-      {negocio.reclamar_habilitado && !negocio.owner && (!negocio.estado_reclamo || negocio.estado_reclamo === 'ninguno') && (
-        <div className="p-6 rounded-3xl bg-blue-500/10 border border-blue-500/20 shadow-xl shadow-blue-900/10 opacity-60 hover:opacity-100 transition-opacity">
-          <h4 className="text-white font-bold mb-2 text-sm italic">¿Gestionas este negocio?</h4>
-          <p className="text-[10px] text-blue-100/60 mb-4 leading-relaxed">Toma el control para actualizar fotos, horarios y responder a tus clientes.</p>
-          <button 
-            onClick={() => {
-              if (!session) router.push(`/registro?claim=${slug}`);
-              else setShowClaimModal(true);
-            }}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20 active:scale-95 text-xs uppercase tracking-widest"
-          >
-            Reclamar Perfil
-          </button>
-        </div>
-      )}
     </div>
   );
 }
