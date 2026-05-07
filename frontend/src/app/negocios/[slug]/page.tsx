@@ -226,8 +226,8 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
                 <Settings className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-white font-bold text-sm">¿Gestionás este negocio?</p>
-                <p className="text-white text-xs leading-tight">Tomá el control total de tu negocio en el portal: Fotos, Videos, Reseñas, Horarios, Whatsapp, Botón de Redes sociales, y más.</p>
+                <p className="text-white font-bold text-base">¿Gestionás este negocio?</p>
+                <p className="text-slate-200 text-xs leading-tight">Tomá el control total de tu negocio en el portal: Fotos, Videos, Reseñas, Horarios, Whatsapp, Botón de Redes sociales, y más.</p>
               </div>
             </div>
             <button
@@ -288,7 +288,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ slug:
             <div className="prose prose-invert max-w-none">
               <h3 className="text-3xl font-serif font-bold text-white mb-6 italic">Sobre el <span className="text-primary">negocio</span></h3>
               <div 
-                className="text-slate-100 text-lg leading-relaxed space-y-6" 
+                className="text-slate-200 text-lg leading-relaxed space-y-6" 
                 dangerouslySetInnerHTML={{ __html: negocio.descripcion || "Descubrí la mejor atención y calidad." }} 
               />
             </div>
