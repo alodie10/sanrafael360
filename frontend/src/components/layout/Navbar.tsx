@@ -176,7 +176,9 @@ function NavbarInner() {
         <div className="flex items-center justify-between px-4 md:px-8 h-16 md:h-20">
           <div className="flex items-center gap-2">
             <Logo onClick={handleResetAll} className="hover:scale-105 transition-transform" />
-            <span className="text-[10px] text-white/20 font-mono mt-4 hidden md:block">v.1.1-dev</span>
+            <span className="text-[10px] text-white/20 font-mono mt-4 hidden md:block">
+              {process.env.NEXT_PUBLIC_APP_VERSION || "v.1.0"}
+            </span>
           </div>
           <div className="hidden md:flex items-center gap-6">
             {!session ? (
