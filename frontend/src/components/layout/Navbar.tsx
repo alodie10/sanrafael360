@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,7 +25,7 @@ const localidades = [
 // Cuántas categorías se muestran inline antes de "Más ▾"
 const VISIBLE_CAT_LIMIT = 6;
 
-export default function Navbar() {
+function NavbarInner() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -501,5 +501,15 @@ export default function Navbar() {
         )}
       </AnimatePresence>
     </nav>
+  );
+}
+
+// Wrapper exportado: Suspense es OBLIGATORIO porque NavbarInner usa useSearchParams()
+// Sin esto, Next.js falla al prerender /404 y /_not-found.
+export default function Navbar() {
+  return (
+    <Suspense fallback={<div className="fixed top-0 left-0 right-0 z-50 h-[52px] bg-black/80 backdrop-blur-xl border-b border-white/5" />}>
+      <NavbarInner />
+    </Suspense>
   );
 }
