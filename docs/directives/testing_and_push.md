@@ -17,10 +17,12 @@ El agente NUNCA lanza Playwright headed para verificar un cambio. Sigue la pirá
 - `actionTimeout: 5000`.
 - Prohibido: `page.waitForTimeout(X)` — usar `waitForSelector` o `waitForResponse`.
 
-## 🚀 Protocolo de Push (OBLIGATORIO)
-- **Bloqueo Preventivo**: El agente **NUNCA** debe hacer `git push` sin build exitoso.
-- **Validación Local**: 
-  1. `npx tsc --noEmit` SÍ funciona en el sandbox.
-  2. `npm run build` (Next.js completo) **DEBE ser ejecutado por el USUARIO** en su terminal local.
-- **Flujo Correcto**: Agente hace commit → pide al usuario que ejecute `npm run build` → si pasa, usuario ejecuta `git push`.
-- **Pre-push hook**: Existe en `.git/hooks/pre-push` para bloquear el push si el build falla.
+## 🚀 Protocolo de Despliegue (OBLIGATORIO)
+
+- **Aislamiento**: Todo el desarrollo se realiza en la rama `develop`.
+- **Inmutabilidad**: La rama `master` es de SÓLO LECTURA para el desarrollo diario. Prohibido hacer push directo.
+- **Flujo de Promoción (Dev-to-Prod)**:
+  1. Validar visualmente en `localhost:3000`.
+  2. Ejecutar `npm run build` localmente (Usuario).
+  3. Ejecutar `./promote.sh` (Esto fusiona develop con master y pushea a Railway).
+- **Rollback**: En caso de error en Prod, Railway CLI permite revertir a la imagen anterior mientras se corrige en `develop`.

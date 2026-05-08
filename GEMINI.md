@@ -6,7 +6,8 @@ Este archivo es el punto de entrada para las directivas del proyecto. Para optim
 - [🏗️ Arquitectura y Desarrollo](file:///Users/diego/Documents/GitHub/sanrafael360/docs/directives/arch_and_dev.md): Comandos, paths y autonomía.
 - [🛡️ Seguridad y Contenido](file:///Users/diego/Documents/GitHub/sanrafael360/docs/directives/security_and_content.md): CORS, CSP y Strapi Document Service.
 - [🎨 Diseño y UX](file:///Users/diego/Documents/GitHub/sanrafael360/docs/directives/design_and_ux.md): Filosofía "Avaro & Premium" y Mobile First.
-- [🧪 Testing y Push](file:///Users/diego/Documents/GitHub/sanrafael360/docs/directives/testing_and_push.md): Pirámide de verificación y protocolos de Git.
+- [🧪 Testing y Push](file:///Users/diego/Documents/GitHub/sanrafael360/docs/directives/testing_and_push.md): Protocolos de Git, ramas y Script de Promoción (Dev-to-Prod).
+- [⚙️ Infraestructura Local](file:///Users/diego/Documents/GitHub/sanrafael360/docs/directives/arch_and_dev.md): Configuración de .env y lanzadores locales.
 - [📅 Backlog Técnico](file:///Users/diego/Documents/GitHub/sanrafael360/docs/directives/backlog.md): Tareas de mantenimiento a largo plazo.
 
 ---
