@@ -33,17 +33,25 @@ function NavbarInner() {
 
   const activeCatParam = searchParams.get("cat");
 
-  // --- Google Places Autocomplete ---
+  // --- Google Places Autocomplete (CON RESTRICCIÓN LOCAL) ---
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey || !locationInputRef.current) return;
     const loader = new Loader({ apiKey, version: "weekly", libraries: ["places"], language: "es" });
+    
     loader.load().then((google) => {
+      // Coordenadas de San Rafael, Mendoza
+      const sanRafaelCenter = { lat: -34.6177, lng: -68.3301 };
+      
       const autocomplete = new google.maps.places.Autocomplete(locationInputRef.current!, {
         componentRestrictions: { country: "ar" },
         types: ["(cities)"],
         fields: ["formatted_address"],
+        // Restricción de radio de ~50km alrededor de San Rafael
+        locationBias: { center: sanRafaelCenter, radius: 50000 },
+        strictBounds: false // Usamos bias para permitir flexibilidad pero priorizar local
       });
+
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
         if (place.formatted_address) setLocalidad(place.formatted_address);
@@ -104,20 +112,16 @@ function NavbarInner() {
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    
     if (searchQuery.trim()) {
       params.set("q", searchQuery.trim());
       if (localidad.trim() && localidad !== "San Rafael, Mendoza") {
         params.set("l", localidad.trim());
       }
     } else {
-      // Si la búsqueda está vacía, reseteamos ubicación también
       setLocalidad("San Rafael, Mendoza");
     }
-    
     const currentCat = searchParams.get("cat");
     if (currentCat) params.set("cat", currentCat);
-
     router.push(`/?${params.toString()}`);
     setIsOpen(false);
   };
@@ -130,6 +134,9 @@ function NavbarInner() {
   };
 
   const handleCatSelect = (docId: string | null) => {
+    // Siempre reseteamos la localidad a San Rafael al cambiar de categoría
+    setLocalidad("San Rafael, Mendoza");
+
     if (!docId) {
       handleResetAll();
       return;
@@ -141,9 +148,8 @@ function NavbarInner() {
     
     const currentQ = searchParams.get("q");
     if (currentQ) params.set("q", currentQ);
-    const currentL = searchParams.get("l") || localidad;
-    if (currentL && currentL !== "San Rafael, Mendoza") params.set("l", currentL);
-
+    
+    // Al seleccionar categoría, ignoramos la localidad previa por pedido del usuario
     router.push(`/?${params.toString()}`, { scroll: false });
     setActiveDropdown(null);
     setIsOpen(false);
@@ -173,7 +179,6 @@ function NavbarInner() {
           {(isHome || scrolled) && (
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-black/40 backdrop-blur-md border-t border-white/5 pb-6">
               <div className="px-4 pt-4 flex flex-col gap-6">
-                {/* Search Bar Split */}
                 <div className="flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl overflow-hidden max-w-4xl w-full mx-auto shadow-2xl">
                   {/* Qué buscas */}
                   <div className="flex-1 flex items-center gap-3 px-5 py-4 border-b md:border-b-0 md:border-r border-white/10 relative group">
@@ -183,16 +188,12 @@ function NavbarInner() {
                       placeholder="¿Qué buscas?" 
                       value={searchQuery} 
                       onChange={(e) => setSearchQuery(e.target.value)} 
+                      onFocus={() => setLocalidad("San Rafael, Mendoza")} // Reset al hacer foco por pedido del usuario
                       onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
                       className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
                     />
                     {searchQuery && (
-                      <button 
-                        onClick={() => { setSearchQuery(""); setLocalidad("San Rafael, Mendoza"); }}
-                        className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      <button onClick={() => { setSearchQuery(""); setLocalidad("San Rafael, Mendoza"); }} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
                     )}
                   </div>
 
@@ -209,12 +210,9 @@ function NavbarInner() {
                       className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium" 
                     />
                   </div>
-
-                  {/* Botón Buscar */}
                   <button onClick={handleSearch} className="bg-[#9B1C1C] hover:bg-red-700 text-white px-10 py-4 md:py-0 font-black uppercase tracking-widest transition-all active:scale-95">BUSCAR</button>
                 </div>
 
-                {/* Categories Row */}
                 <div ref={dropdownRef} className="flex items-center justify-center flex-wrap gap-x-6 gap-y-3 max-w-6xl mx-auto">
                   {loadingCats ? (
                     <div className="flex items-center gap-2 text-slate-500 py-2"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-xs font-bold uppercase">Cargando...</span></div>
