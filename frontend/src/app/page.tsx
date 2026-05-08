@@ -108,7 +108,9 @@ function HomeContent() {
   useEffect(() => {
     const q = searchParams.get("q");
     const cat = searchParams.get("cat");
-    if (q || cat) {
+    const l = searchParams.get("l");
+    
+    if (q || cat || l) {
       // Pequeño timeout para asegurar que el DOM se haya actualizado si hay cambios de layout
       const timer = setTimeout(scrollToResults, 300);
       return () => clearTimeout(timer);
@@ -323,27 +325,48 @@ function HomeContent() {
       matchesBarCategory = validCategoryNames.includes(bizCatName);
     }
 
+    // Filtro por localidad (dirección)
+    let matchesLocation = true;
+    if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
+      const normalizedLoc = normalizeText(localidadQuery);
+      // Extraemos términos significativos (ignoramos códigos postales y palabras cortas)
+      const locTerms = normalizedLoc.split(/[\s,]+/).filter(t => 
+        t.length > 2 && !/^\d+$/.test(t) && !/^[A-Z]\d+/.test(t.toUpperCase())
+      );
+      
+      if (locTerms.length > 0) {
+        const bizAddress = normalizeText(negocio.direccion || "");
+        // El negocio debe coincidir con al menos uno de los términos principales (ej: "Cuadro" o "Benegas")
+        matchesLocation = locTerms.some(term => bizAddress.includes(term));
+      }
+    }
+
+    // Si además hay una categoría seleccionada en la barra, aplicamos esa restricción extra
+    let matchesBarCategory = true;
+    if (selectedCategoryDocId) {
+      const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
+      const bizCatName = (negocio.categoria?.nombre || "").toLowerCase();
+      let validCategoryNames = [selectedCat?.nombre.toLowerCase()];
+      categorias.forEach(c => {
+        if (c.parent?.documentId === selectedCategoryDocId) {
+          validCategoryNames.push(c.nombre.toLowerCase());
+        }
+      });
+      matchesBarCategory = validCategoryNames.includes(bizCatName);
+    }
+
     return matchesSearch && matchesLocation && matchesBarCategory;
   });
 
-  // Re-aplicar el filtro de localidad incluso si no hay búsqueda de texto
-  const finalFiltered = filteredNegocios.filter(negocio => {
-    if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
-      const mainLocTerm = normalizeText(localidadQuery).split(",")[0].trim();
-      return normalizeText(negocio.direccion || "").includes(mainLocTerm);
-    }
-    return true;
-  });
-
-  // Ordenar por cercanía si tenemos la ubicación del usuario
-  const sortedNegocios = [...finalFiltered].sort((a, b) => {
+  // El filtro final ya está unificado arriba
+  const sortedNegocios = [...filteredNegocios].sort((a, b) => {
     if (!userLocation || !a.latitud || !a.longitud || !b.latitud || !b.longitud) return 0;
     const distA = getDistance(userLocation.lat, userLocation.lng, a.latitud, a.longitud);
     const distB = getDistance(userLocation.lat, userLocation.lng, b.latitud, b.longitud);
     return distA - distB;
   });
 
-  const isFiltering = searchQuery.trim().length > 0 || selectedCategoryDocId !== null;
+  const isFiltering = searchQuery.trim().length > 0 || selectedCategoryDocId !== null || (localidadQuery !== "" && localidadQuery !== "San Rafael, Mendoza");
 
   return (
     <main ref={topRef} className="min-h-screen">
@@ -386,7 +409,7 @@ function HomeContent() {
             <div className="max-w-xl">
               <div className="flex flex-wrap items-center gap-3 mb-4">
                 <h2 className="text-4xl md:text-5xl font-serif font-extrabold text-white tracking-tight">
-                  {isFiltering ? "Resultados de" : "Comercios"} <span className="text-primary italic font-medium">{isFiltering ? "tu búsqueda" : "Destacados"}</span>
+                  Comercios <span className="text-primary italic font-medium">{isFiltering ? "Encontrados" : "Destacados"}</span>
                 </h2>
               </div>
               <p className="text-slate-400">
