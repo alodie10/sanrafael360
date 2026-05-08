@@ -330,7 +330,7 @@ function HomeContent() {
   return (
     <main ref={topRef} className="min-h-screen">
       {/* HERO SECTION — la search bar vive ahora en el Navbar */}
-      <section className="relative h-[50vh] md:h-[60vh] flex flex-col items-center justify-center text-center px-4 pt-20 md:pt-24">
+      <section className="relative h-[55vh] md:h-[65vh] flex flex-col items-center justify-center text-center px-4 pt-48 md:pt-56">
         <HeroCarousel />
         
         <motion.div 

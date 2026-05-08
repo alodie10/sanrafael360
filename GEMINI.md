@@ -31,6 +31,9 @@ Este archivo proporciona el contexto crítico para que cualquier agente de IA (G
   - **En Mac (actual)**: Se encuentran en `/Users/diego/.nvm/versions/node/v20.20.2/bin`. Mapear `export PATH="/Users/diego/.nvm/versions/node/v20.20.2/bin:$PATH"`.
   - Si los comandos directos fallan, el agente debe buscar los binarios en rutas comunes y actualizar su contexto de ejecución.
 - **Zero-Trust Verification (CRÍTICO)**: Railway utiliza Zero Downtime Deployments. **NUNCA** asumas que un push se aplicó solo porque la API `/api/categorias` responde (eso medirá el despliegue viejo). Antes de declarar un éxito al usuario, el agente DEBE confirmar que el despliegue finalizó de construir (vía Railway web o CLI si el servicio está enlazado correctamente) Y debe advertir claramente qué partes puede probar automatizadamente y cuáles requieren que el usuario inicie sesión (ej: Content Manager).
+- **Filosofía de Diseño "Avaro & Premium" (CRÍTICO)**: La pantalla es un recurso finito. El agente debe evitar desperdiciar espacio con márgenes o rellenos exagerados. 
+  - Cada espacio en blanco debe estar justificado estéticamente; si no aporta valor, debe reducirse. 
+  - Priorizar que el contenido relevante sea visible con el mínimo scroll posible (especialmente en móviles).
 - **Protocolo de Push (OBLIGATORIO)**: El agente **NUNCA** debe hacer `git push` sin build exitoso. **PUNTO CIEGO CONOCIDO**: el entorno sandbox del agente **NO tiene acceso completo a internet** (no puede resolver `fonts.googleapis.com`, no puede bindear puertos). Por esto:
   1. `npx tsc --noEmit` SÍ funciona en el sandbox — úsalo para validar TypeScript.
   2. `npm run build` (Next.js completo) **DEBE ser ejecutado por el USUARIO en su terminal local**, no por el agente.
