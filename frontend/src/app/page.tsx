@@ -350,8 +350,8 @@ function HomeContent() {
           {/* Eliminado bloque redundante de stats */}
         </AnimatePresence>
 
-        {/* FEATURED PLACES / SEARCH RESULTS — Espacio extra en móvil para compensar el Navbar expandido */}
-        <section className="mt-44 md:mt-12 scroll-mt-64" ref={resultsRef}>
+        {/* FEATURED PLACES / SEARCH RESULTS — Espacio optimizado ahora que el Navbar es más delgado */}
+        <section className="mt-12 md:mt-12 scroll-mt-48" ref={resultsRef}>
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
             <div className="max-w-xl">
               <div className="flex flex-wrap items-center gap-3 mb-4">
