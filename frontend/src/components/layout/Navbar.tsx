@@ -115,14 +115,21 @@ function NavbarInner() {
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    if (searchQuery.trim()) params.set("q", searchQuery.trim());
+    
+    // Al presionar BUSCAR, siempre hacemos búsqueda global (limpiamos categoría previa)
+    if (searchQuery.trim()) {
+      params.set("q", searchQuery.trim());
+    }
+
     if (localidad.trim() && localidad !== "San Rafael, Mendoza") {
       params.set("l", localidad.trim());
-    } else if (!searchQuery.trim() && !searchParams.get("cat")) {
+    } else if (!searchQuery.trim()) {
       setLocalidad("San Rafael, Mendoza");
     }
-    const currentCat = searchParams.get("cat");
-    if (currentCat) params.set("cat", currentCat);
+    
+    // IMPORTANTE: Al usar el botón buscar, NO incluimos la categoría anterior
+    // para evitar el error de buscar "cabaña" dentro de "bodegas"
+    
     const qs = params.toString();
     router.push(qs ? `/?${qs}` : "/");
     setIsOpen(false);
@@ -144,8 +151,11 @@ function NavbarInner() {
     const params = new URLSearchParams();
     const cat = categorias.find((c) => c.documentId === docId);
     params.set("cat", cat?.slug || docId);
+    
+    // Al elegir categoría, mantenemos la búsqueda de texto si existía
     const currentQ = searchParams.get("q");
     if (currentQ) params.set("q", currentQ);
+
     router.push(`/?${params.toString()}`, { scroll: false });
     setActiveDropdown(null);
     setIsOpen(false);
@@ -155,7 +165,6 @@ function NavbarInner() {
 
   const handleSearchInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.select();
-    // Reset de localidad por pedido del usuario al volver a la barra de búsqueda
     setLocalidad("San Rafael, Mendoza");
   };
 
@@ -228,7 +237,6 @@ function NavbarInner() {
                     <div className="flex items-center gap-2 text-slate-500 py-2"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-xs font-bold uppercase">Cargando...</span></div>
                   ) : (
                     <>
-                      {/* Eliminado el botón 'Todas' por pedido del usuario */}
                       {mainCategorias.map((cat) => {
                         const subCats = getSubcategories(cat.documentId);
                         const isOpen = activeDropdown === cat.documentId;
