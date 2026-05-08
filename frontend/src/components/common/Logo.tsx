@@ -5,11 +5,16 @@ import { cn } from "@/lib/utils";
 interface LogoProps {
   className?: string;
   showText?: boolean;
+  onClick?: () => void;
 }
 
-export default function Logo({ className, showText = true }: LogoProps) {
+export default function Logo({ className, showText = true, onClick }: LogoProps) {
   return (
-    <Link href="/" className={cn("flex items-center gap-4 transition-all hover:opacity-90 active:scale-95 group", className)}>
+    <Link 
+      href="/" 
+      onClick={onClick}
+      className={cn("flex items-center gap-4 transition-all hover:opacity-90 active:scale-95 group", className)}
+    >
       <div className="relative w-14 h-14 md:w-16 md:h-16 overflow-hidden rounded-xl border border-primary/20 shadow-2xl shadow-black/40 group-hover:border-primary/50 transition-colors">
         <Image
           src="/logo-silver-monumental.png"

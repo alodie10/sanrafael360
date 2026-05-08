@@ -174,9 +174,7 @@ function NavbarInner() {
       <div className="max-w-7xl mx-auto flex flex-col">
         {/* Superior */}
         <div className="flex items-center justify-between px-4 md:px-8 h-16 md:h-20">
-          <Link href="/" onClick={handleResetAll} className="hover:scale-105 transition-transform">
-            <Logo />
-          </Link>
+          <Logo onClick={handleResetAll} className="hover:scale-105 transition-transform" />
           <div className="hidden md:flex items-center gap-6">
             <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">Vende aquí</Link>
           </div>
