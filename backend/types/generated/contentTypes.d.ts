@@ -497,8 +497,13 @@ export interface ApiCategoriaCategoria extends Struct.CollectionTypeSchema {
     nombre: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
+    parent: Schema.Attribute.Relation<'manyToOne', 'api::categoria.categoria'>;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'nombre'> & Schema.Attribute.Required;
+    subcategorias: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::categoria.categoria'
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -559,6 +564,8 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
       'manyToOne',
       'api::categoria.categoria'
     >;
+    clicks_website: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    clicks_whatsapp: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -579,6 +586,7 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     horarios_texto: Schema.Attribute.String;
     imagen_portada: Schema.Attribute.Media<'images'>;
     instagram: Schema.Attribute.String;
+    is_premium: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     latitud: Schema.Attribute.Float;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -593,15 +601,20 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
       'oneToOne',
       'plugin::users-permissions.user'
     >;
+    premium_notes: Schema.Attribute.Text;
+    premium_valid_until: Schema.Attribute.DateTime;
     price_range: Schema.Attribute.Enumeration<
       ['Economico', 'Moderado', 'Medio-Alto', 'Alto']
     >;
     publishedAt: Schema.Attribute.DateTime;
+    rating: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
     reclamar_habilitado: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     reserva_habilitada: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<true>;
     reserva_url: Schema.Attribute.String;
+    review_count: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    reviews: Schema.Attribute.Relation<'oneToMany', 'api::review.review'>;
     schedules: Schema.Attribute.Component<'shared.schedule', true>;
     slug: Schema.Attribute.UID<'nombre'> & Schema.Attribute.Required;
     telefono: Schema.Attribute.String;
@@ -611,8 +624,52 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     verificado: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    views: Schema.Attribute.BigInteger & Schema.Attribute.DefaultTo<'0'>;
     website: Schema.Attribute.String;
     whatsapp: Schema.Attribute.String;
+  };
+}
+
+export interface ApiReviewReview extends Struct.CollectionTypeSchema {
+  collectionName: 'reviews';
+  info: {
+    description: 'Rese\u00F1as de usuarios para los negocios';
+    displayName: 'Review';
+    pluralName: 'reviews';
+    singularName: 'review';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    autor: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    comentario: Schema.Attribute.Text & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::review.review'
+    > &
+      Schema.Attribute.Private;
+    negocio: Schema.Attribute.Relation<'manyToOne', 'api::negocio.negocio'>;
+    publishedAt: Schema.Attribute.DateTime;
+    rating: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 5;
+          min: 1;
+        },
+        number
+      >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -1171,6 +1228,7 @@ declare module '@strapi/strapi' {
       'api::categoria.categoria': ApiCategoriaCategoria;
       'api::lead.lead': ApiLeadLead;
       'api::negocio.negocio': ApiNegocioNegocio;
+      'api::review.review': ApiReviewReview;
       'api::soporte.soporte': ApiSoporteSoporte;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
