@@ -32,7 +32,6 @@ function NavbarInner() {
   const { data: session } = useSession();
 
   const activeCatParam = searchParams.get("cat");
-  const activeLocParam = searchParams.get("l");
 
   // --- Google Places Autocomplete ---
   useEffect(() => {
@@ -70,7 +69,6 @@ function NavbarInner() {
     if (searchParams.get("l")) {
       setLocalidad(searchParams.get("l") || "San Rafael, Mendoza");
     } else if (!searchParams.get("cat") && !searchParams.get("q")) {
-      // Reset a San Rafael si no hay filtros activos
       setLocalidad("San Rafael, Mendoza");
     }
   }, [searchParams]);
@@ -106,8 +104,16 @@ function NavbarInner() {
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    if (searchQuery.trim()) params.set("q", searchQuery.trim());
-    if (localidad.trim() && localidad !== "San Rafael, Mendoza") params.set("l", localidad.trim());
+    
+    if (searchQuery.trim()) {
+      params.set("q", searchQuery.trim());
+      if (localidad.trim() && localidad !== "San Rafael, Mendoza") {
+        params.set("l", localidad.trim());
+      }
+    } else {
+      // Si la búsqueda está vacía, reseteamos ubicación también
+      setLocalidad("San Rafael, Mendoza");
+    }
     
     const currentCat = searchParams.get("cat");
     if (currentCat) params.set("cat", currentCat);
@@ -116,21 +122,27 @@ function NavbarInner() {
     setIsOpen(false);
   };
 
+  const handleResetAll = () => {
+    setSearchQuery("");
+    setLocalidad("San Rafael, Mendoza");
+    router.push("/");
+    setIsOpen(false);
+  };
+
   const handleCatSelect = (docId: string | null) => {
-    const params = new URLSearchParams();
-    if (docId) {
-      const cat = categorias.find((c) => c.documentId === docId);
-      params.set("cat", cat?.slug || docId);
-      
-      // Mantener localidad y búsqueda si estamos filtrando por categoría
-      const currentQ = searchParams.get("q");
-      if (currentQ) params.set("q", currentQ);
-      const currentL = searchParams.get("l") || localidad;
-      if (currentL && currentL !== "San Rafael, Mendoza") params.set("l", currentL);
-    } else {
-      // Si eligen "Todas", reseteamos localidad a San Rafael Mendoza
-      setLocalidad("San Rafael, Mendoza");
+    if (!docId) {
+      handleResetAll();
+      return;
     }
+
+    const params = new URLSearchParams();
+    const cat = categorias.find((c) => c.documentId === docId);
+    params.set("cat", cat?.slug || docId);
+    
+    const currentQ = searchParams.get("q");
+    if (currentQ) params.set("q", currentQ);
+    const currentL = searchParams.get("l") || localidad;
+    if (currentL && currentL !== "San Rafael, Mendoza") params.set("l", currentL);
 
     router.push(`/?${params.toString()}`, { scroll: false });
     setActiveDropdown(null);
@@ -145,28 +157,60 @@ function NavbarInner() {
       scrolled ? "bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl" : "bg-transparent border-b border-transparent"
     )}>
       <div className="max-w-7xl mx-auto flex flex-col">
+        {/* Superior */}
         <div className="flex items-center justify-between px-4 md:px-8 h-16 md:h-20">
-          <Logo />
+          <Link href="/" onClick={handleResetAll} className="hover:scale-105 transition-transform">
+            <Logo />
+          </Link>
           <div className="hidden md:flex items-center gap-6">
             <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">Vende aquí</Link>
           </div>
           <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white"><Menu className="w-8 h-8" /></button>
         </div>
 
+        {/* Barra de búsqueda y categorías */}
         <AnimatePresence>
           {(isHome || scrolled) && (
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-black/40 backdrop-blur-md border-t border-white/5 pb-6">
               <div className="px-4 pt-4 flex flex-col gap-6">
                 {/* Search Bar Split */}
                 <div className="flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl overflow-hidden max-w-4xl w-full mx-auto shadow-2xl">
-                  <div className="flex-1 flex items-center gap-3 px-5 py-4 border-b md:border-b-0 md:border-r border-white/10">
+                  {/* Qué buscas */}
+                  <div className="flex-1 flex items-center gap-3 px-5 py-4 border-b md:border-b-0 md:border-r border-white/10 relative group">
                     <Search className="w-5 h-5 text-slate-500" />
-                    <input type="text" placeholder="¿Qué buscas?" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium" />
+                    <input 
+                      type="text" 
+                      placeholder="¿Qué buscas?" 
+                      value={searchQuery} 
+                      onChange={(e) => setSearchQuery(e.target.value)} 
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
+                      className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
+                    />
+                    {searchQuery && (
+                      <button 
+                        onClick={() => { setSearchQuery(""); setLocalidad("San Rafael, Mendoza"); }}
+                        className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
-                  <div className="flex-1 flex items-center gap-3 px-5 py-4">
+
+                  {/* Dónde */}
+                  <div className="flex-1 flex items-center gap-3 px-5 py-4 relative">
                     <MapPin className="w-5 h-5 text-slate-500" />
-                    <input ref={locationInputRef} type="text" placeholder="Localidad" value={localidad} onChange={(e) => setLocalidad(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium" />
+                    <input 
+                      ref={locationInputRef} 
+                      type="text" 
+                      placeholder="Localidad" 
+                      value={localidad} 
+                      onChange={(e) => setLocalidad(e.target.value)} 
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
+                      className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium" 
+                    />
                   </div>
+
+                  {/* Botón Buscar */}
                   <button onClick={handleSearch} className="bg-[#9B1C1C] hover:bg-red-700 text-white px-10 py-4 md:py-0 font-black uppercase tracking-widest transition-all active:scale-95">BUSCAR</button>
                 </div>
 
@@ -208,6 +252,22 @@ function NavbarInner() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div initial={{ opacity: 0, x: "100%" }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: "100%" }} className="fixed inset-0 bg-black z-[200] flex flex-col p-8">
+            <div className="flex justify-between items-center mb-12">
+              <Logo />
+              <button onClick={() => setIsOpen(false)}><X className="w-10 h-10 text-white" /></button>
+            </div>
+            <div className="flex flex-col gap-8">
+               <Link href="/contacto" onClick={() => setIsOpen(false)} className="text-3xl font-black italic text-primary">Vende aquí</Link>
+               <Link href="/" onClick={() => setIsOpen(false)} className="text-3xl font-black italic text-white">Explorar</Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }
