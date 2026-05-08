@@ -329,22 +329,10 @@ function HomeContent() {
 
   return (
     <main ref={topRef} className="min-h-screen">
-      {/* HERO SECTION — la search bar vive ahora en el Navbar */}
-      <section className="relative h-[55vh] md:h-[65vh] flex flex-col items-center justify-center text-center px-4 pt-48 md:pt-56">
+      {/* HERO SECTION — Banner Panorámico sin texto para máxima limpieza */}
+      <section className="relative h-[25vh] md:h-[35vh] flex flex-col items-center justify-center text-center px-4">
         <HeroCarousel />
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl z-10"
-        >
-          <h1 className="text-4xl md:text-7xl font-serif text-white leading-tight mb-4 drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
-            Vive <span className="italic inline-block text-primary drop-shadow-[0_4px_20px_rgba(255,191,0,0.8)]">San Rafael</span>
-          </h1>
-          <p className="text-lg md:text-xl text-slate-200 font-medium max-w-2xl mx-auto drop-shadow-md">
-            Encuentra las mejores experiencias, gastronomía y alojamiento en el corazón de Mendoza.
-          </p>
-        </motion.div>
+        {/* El contenido de texto se eliminó para priorizar la visibilidad de los comercios */}
       </section>
 
       {/* FILTER BAR STICKY — subcategorías y estado de filtrado */}
