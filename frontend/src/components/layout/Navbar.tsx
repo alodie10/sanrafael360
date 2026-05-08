@@ -12,6 +12,7 @@ import { Categoria } from "@/types/strapi";
 import { getCategoryIcon } from "@/lib/icons";
 import { fetchFromStrapi } from "@/lib/strapi";
 import { Loader } from "@googlemaps/js-api-loader";
+import CategoryDrawer from "@/components/home/CategoryDrawer";
 
 function NavbarInner() {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,6 +23,7 @@ function NavbarInner() {
   const [localidad, setLocalidad] = useState("San Rafael, Mendoza");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isPlacesLoaded, setIsPlacesLoaded] = useState(false);
+  const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
@@ -32,6 +34,7 @@ function NavbarInner() {
   const { data: session } = useSession();
 
   const activeCatParam = searchParams.get("cat");
+  const selectedCategoryDocId = categorias.find(c => c.slug === activeCatParam || c.documentId === activeCatParam)?.documentId || null;
 
   // --- Google Places Autocomplete ---
   useEffect(() => {
@@ -161,103 +164,133 @@ function NavbarInner() {
   };
 
   return (
-    <nav className={cn(
-      "fixed left-0 right-0 z-[100] transition-all duration-500",
-      scrolled ? "bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl" : "bg-transparent border-b border-transparent"
-    )}>
-      <div className="max-w-7xl mx-auto flex flex-col">
-        {/* Superior */}
-        <div className="flex items-center justify-between px-4 md:px-8 h-16 md:h-20">
-          <Link href="/" onClick={handleResetAll} className="hover:scale-105 transition-transform">
-            <Logo />
-          </Link>
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">Vende aquí</Link>
+    <>
+      <nav className={cn(
+        "fixed left-0 right-0 z-[100] transition-all duration-500",
+        scrolled ? "bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl" : "bg-transparent border-b border-transparent"
+      )}>
+        <div className="max-w-7xl mx-auto flex flex-col">
+          {/* Superior */}
+          <div className="flex items-center justify-between px-4 md:px-8 h-16 md:h-20">
+            <Link href="/" onClick={handleResetAll} className="hover:scale-105 transition-transform">
+              <Logo />
+            </Link>
+            <div className="hidden md:flex items-center gap-6">
+              <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">Vende aquí</Link>
+            </div>
+            <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white"><Menu className="w-8 h-8" /></button>
           </div>
-          <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white"><Menu className="w-8 h-8" /></button>
+
+          {/* Barra de búsqueda y categorías */}
+          <AnimatePresence>
+            {(isHome || scrolled) && (
+              <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-black/40 backdrop-blur-md border-t border-white/5 pb-6">
+                <div className="px-4 pt-4 flex flex-col gap-4">
+                  <div className="flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl overflow-hidden max-w-4xl w-full mx-auto shadow-2xl">
+                    {/* Qué buscas */}
+                    <div className="flex-1 flex items-center gap-3 px-5 py-4 border-b md:border-b-0 md:border-r border-white/10 relative group">
+                      <Search className="w-5 h-5 text-slate-500" />
+                      <input 
+                        type="text" 
+                        placeholder="¿Qué buscas?" 
+                        value={searchQuery} 
+                        onChange={(e) => setSearchQuery(e.target.value)} 
+                        onFocus={handleSearchInputFocus}
+                        onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
+                        className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
+                      />
+                      {searchQuery && (
+                        <button onClick={() => setSearchQuery("")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
+                      )}
+                    </div>
+
+                    {/* Dónde */}
+                    <div className="flex-1 flex items-center gap-3 px-5 py-4 relative group">
+                      <MapPin className="w-5 h-5 text-slate-500" />
+                      <input 
+                        ref={locationInputRef} 
+                        type="text" 
+                        placeholder="Localidad" 
+                        value={localidad} 
+                        onChange={(e) => setLocalidad(e.target.value)} 
+                        onFocus={handleLocationInputFocus}
+                        onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
+                        className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
+                      />
+                      {localidad !== "San Rafael, Mendoza" && (
+                        <button onClick={() => setLocalidad("San Rafael, Mendoza")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
+                      )}
+                    </div>
+                    <button onClick={handleSearch} className="bg-[#9B1C1C] hover:bg-red-700 text-white px-10 py-4 md:py-0 font-black uppercase tracking-widest transition-all active:scale-95">BUSCAR</button>
+                  </div>
+
+                  {/* CATEGORÍAS — Desktop: Fila Horizontal | Móvil: Botón de Drawer */}
+                  <div className="w-full max-w-6xl mx-auto">
+                    {/* Versión PC: Barra horizontal */}
+                    <div ref={dropdownRef} className="hidden md:flex items-center justify-center flex-wrap gap-x-6 gap-y-3">
+                      {loadingCats ? (
+                        <div className="flex items-center gap-2 text-slate-500 py-2"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-xs font-bold uppercase">Cargando...</span></div>
+                      ) : (
+                        <>
+                          {mainCategorias.map((cat) => {
+                            const subCats = getSubcategories(cat.documentId);
+                            const isOpen = activeDropdown === cat.documentId;
+                            const isActive = activeCatParam === cat.slug || activeCatParam === cat.documentId;
+                            return (
+                              <div key={cat.id} className="relative">
+                                <button onClick={() => subCats.length ? setActiveDropdown(isOpen ? null : cat.documentId) : handleCatSelect(cat.documentId)} className={cn("flex items-center gap-1.5 text-[13px] font-bold py-1 border-b-2 transition-all", isActive ? "text-primary border-primary" : "text-slate-400 border-transparent hover:text-white")}>
+                                  {cat.nombre} {subCats.length > 0 && <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", isOpen && "rotate-180")} />}
+                                </button>
+                                <AnimatePresence>
+                                  {isOpen && (
+                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full left-0 mt-3 min-w-[240px] bg-zinc-950 border border-white/10 rounded-xl shadow-2xl z-[200] p-2">
+                                      <button onClick={() => handleCatSelect(cat.documentId)} className="w-full text-left px-4 py-3 text-[13px] font-black text-primary hover:bg-white/5 rounded-lg mb-1">Ver todo en {cat.nombre}</button>
+                                      <div className="h-px bg-white/5 my-1" />
+                                      {subCats.map(sub => (
+                                        <button key={sub.id} onClick={() => handleCatSelect(sub.documentId)} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">{sub.nombre}</button>
+                                      ))}
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
+                    </div>
+
+                    {/* Versión Celular: Botón de Explorar */}
+                    <div className="md:hidden flex justify-center">
+                      <button 
+                        onClick={() => setIsCategoryDrawerOpen(true)}
+                        className="flex items-center gap-3 px-8 py-3 bg-white/5 border border-white/10 rounded-full text-slate-300 hover:text-white transition-all active:scale-95"
+                      >
+                        <LayoutGrid className="w-5 h-5 text-primary" />
+                        <span className="text-sm font-black uppercase tracking-widest">Explorar Categorías</span>
+                        {selectedCategoryDocId && (
+                          <div className="ml-2 px-2 py-0.5 bg-primary text-black text-[10px] font-bold rounded-md">
+                            1 FILTRO
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+      </nav>
 
-        {/* Barra de búsqueda y categorías */}
-        <AnimatePresence>
-          {(isHome || scrolled) && (
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-black/40 backdrop-blur-md border-t border-white/5 pb-6">
-              <div className="px-4 pt-4 flex flex-col gap-6">
-                {/* FILA 1: BUSCADOR */}
-                <div className="flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl overflow-hidden max-w-4xl w-full mx-auto shadow-2xl">
-                  <div className="flex-1 flex items-center gap-3 px-5 py-4 border-b md:border-b-0 md:border-r border-white/10 relative group">
-                    <Search className="w-5 h-5 text-slate-500" />
-                    <input 
-                      type="text" 
-                      placeholder="¿Qué buscas?" 
-                      value={searchQuery} 
-                      onChange={(e) => setSearchQuery(e.target.value)} 
-                      onFocus={handleSearchInputFocus}
-                      onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
-                      className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
-                    />
-                    {searchQuery && (
-                      <button onClick={() => setSearchQuery("")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
-                    )}
-                  </div>
-                  <div className="flex-1 flex items-center gap-3 px-5 py-4 relative group">
-                    <MapPin className="w-5 h-5 text-slate-500" />
-                    <input 
-                      ref={locationInputRef} 
-                      type="text" 
-                      placeholder="Localidad" 
-                      value={localidad} 
-                      onChange={(e) => setLocalidad(e.target.value)} 
-                      onFocus={handleLocationInputFocus}
-                      onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
-                      className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
-                    />
-                    {localidad !== "San Rafael, Mendoza" && (
-                      <button onClick={() => setLocalidad("San Rafael, Mendoza")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
-                    )}
-                  </div>
-                  <button onClick={handleSearch} className="bg-[#9B1C1C] hover:bg-red-700 text-white px-10 py-4 md:py-0 font-black uppercase tracking-widest transition-all active:scale-95">BUSCAR</button>
-                </div>
-
-                {/* FILA 2: CATEGORÍAS (SCROLL HORIZONTAL) */}
-                <div className="w-full overflow-x-auto no-scrollbar pb-2">
-                  <div ref={dropdownRef} className="flex items-center md:justify-center min-w-max gap-x-8 px-4">
-                    {loadingCats ? (
-                      <div className="flex items-center gap-2 text-slate-500 py-2"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-xs font-bold uppercase">Cargando...</span></div>
-                    ) : (
-                      <>
-                        {mainCategorias.map((cat) => {
-                          const subCats = getSubcategories(cat.documentId);
-                          const isOpen = activeDropdown === cat.documentId;
-                          const isActive = activeCatParam === cat.slug || activeCatParam === cat.documentId;
-                          return (
-                            <div key={cat.id} className="relative">
-                              <button onClick={() => subCats.length ? setActiveDropdown(isOpen ? null : cat.documentId) : handleCatSelect(cat.documentId)} className={cn("flex items-center gap-1.5 text-[13px] font-black py-1 border-b-2 whitespace-nowrap transition-all uppercase tracking-wider", isActive ? "text-primary border-primary" : "text-slate-400 border-transparent hover:text-white")}>
-                                {cat.nombre} {subCats.length > 0 && <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", isOpen && "rotate-180")} />}
-                              </button>
-                              <AnimatePresence>
-                                {isOpen && (
-                                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full left-0 mt-3 min-w-[240px] bg-zinc-950 border border-white/10 rounded-xl shadow-2xl z-[200] p-2">
-                                    <button onClick={() => handleCatSelect(cat.documentId)} className="w-full text-left px-4 py-3 text-[13px] font-black text-primary hover:bg-white/5 rounded-lg mb-1">Ver todo en {cat.nombre}</button>
-                                    <div className="h-px bg-white/5 my-1" />
-                                    {subCats.map(sub => (
-                                      <button key={sub.id} onClick={() => handleCatSelect(sub.documentId)} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors whitespace-nowrap">{sub.nombre}</button>
-                                    ))}
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
-                          );
-                        })}
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </nav>
+      {/* Drawer de Categorías Móvil */}
+      <CategoryDrawer 
+        isOpen={isCategoryDrawerOpen}
+        onClose={() => setIsCategoryDrawerOpen(false)}
+        categorias={categorias}
+        selectedCategoryDocId={selectedCategoryDocId}
+        onSelectCategory={handleCatSelect}
+      />
+    </>
   );
 }
 
