@@ -330,7 +330,7 @@ function HomeContent() {
   return (
     <main ref={topRef} className="min-h-screen">
       {/* HERO SECTION — la search bar vive ahora en el Navbar */}
-      <section className="relative h-[65vh] md:h-[75vh] flex flex-col items-center justify-center text-center px-4 pt-32 md:pt-28">
+      <section className="relative h-[50vh] md:h-[60vh] flex flex-col items-center justify-center text-center px-4 pt-20 md:pt-24">
         <HeroCarousel />
         
         <motion.div 
@@ -338,10 +338,10 @@ function HomeContent() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl z-10"
         >
-          <h1 className="text-5xl md:text-8xl font-serif text-white leading-tight mb-6 drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+          <h1 className="text-4xl md:text-7xl font-serif text-white leading-tight mb-4 drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
             Vive <span className="italic inline-block text-primary drop-shadow-[0_4px_20px_rgba(255,191,0,0.8)]">San Rafael</span>
           </h1>
-          <p className="text-lg md:text-xl text-slate-200 max-w-2xl mx-auto text-balance">
+          <p className="text-lg md:text-xl text-slate-200 font-medium max-w-2xl mx-auto drop-shadow-md">
             Encuentra las mejores experiencias, gastronomía y alojamiento en el corazón de Mendoza.
           </p>
         </motion.div>
@@ -356,14 +356,14 @@ function HomeContent() {
         />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 bg-background">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 bg-background">
         
         <AnimatePresence mode="wait">
           {/* Eliminado bloque redundante de stats */}
         </AnimatePresence>
 
         {/* FEATURED PLACES / SEARCH RESULTS */}
-        <section className="mt-20 scroll-mt-32" ref={resultsRef}>
+        <section className="mt-8 scroll-mt-32" ref={resultsRef}>
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
             <div className="max-w-xl">
               <div className="flex flex-wrap items-center gap-3 mb-4">
