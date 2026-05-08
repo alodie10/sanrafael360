@@ -76,8 +76,19 @@ function HomeContent() {
     if (categorias.length === 0) return;
 
     const catParam = searchParams.get("cat");
-    } else if (locParam === null && localidadQuery !== "") {
-      setLocalidadQuery("");
+    const qParam = searchParams.get("q");
+    const lParam = searchParams.get("l");
+
+    if (qParam !== null) {
+      setSearchQuery(qParam);
+    } else {
+      setSearchQuery("");
+    }
+
+    if (lParam !== null) {
+      setLocalidadQuery(lParam);
+    } else {
+      setLocalidadQuery("San Rafael, Mendoza");
     }
     
     if (catParam) {
@@ -90,7 +101,6 @@ function HomeContent() {
         setSelectedCategoryDocId(found.documentId);
       }
     } else if (catParam === null && selectedCategoryDocId !== null) {
-      // Solo resetear si la URL explícitamente no tiene categoría
       setSelectedCategoryDocId(null);
     }
   }, [searchParams, categorias]); 
@@ -263,37 +273,20 @@ function HomeContent() {
 
   // Lógica de Filtrado Dinámico (Búsqueda Universal Nativa - Etapa 1)
   const filteredNegocios = negocios.filter((negocio) => {
+    // 1. Filtro de Búsqueda (Texto)
     const normalizedQuery = normalizeText(searchQuery);
-    if (normalizedQuery.length === 0) {
-      // Si no hay búsqueda de texto, solo aplicamos el filtro de categoría (si existe)
-      if (!selectedCategoryDocId) return true;
-      
-      const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
-      const bizCatName = (negocio.categoria?.nombre || "").toLowerCase();
-      
-      let validCategoryNames = [selectedCat?.nombre.toLowerCase()];
-      categorias.forEach(c => {
-        if (c.parent?.documentId === selectedCategoryDocId) {
-          validCategoryNames.push(c.nombre.toLowerCase());
-        }
-      });
-      return validCategoryNames.includes(bizCatName);
+    let matchesSearch = true;
+    if (normalizedQuery.length > 0) {
+      const searchTerms = normalizedQuery.split(/\s+/).filter(t => t.length > 0);
+      const bizName = normalizeText(negocio.nombre);
+      const bizDesc = normalizeText(negocio.descripcion || "");
+      const bizCat = normalizeText(negocio.categoria?.nombre || "");
+      matchesSearch = searchTerms.every(term => 
+        bizName.includes(term) || bizDesc.includes(term) || bizCat.includes(term)
+      );
     }
 
-    // Si hay búsqueda de texto, buscamos en Nombre, Descripción Y Categoría
-    const searchTerms = normalizedQuery.split(/\s+/).filter(t => t.length > 0);
-    
-    const bizName = normalizeText(negocio.nombre);
-    const bizDesc = normalizeText(negocio.descripcion || "");
-    const bizCat = normalizeText(negocio.categoria?.nombre || "");
-
-    const matchesSearch = searchTerms.every(term => 
-      bizName.includes(term) || 
-      bizDesc.includes(term) || 
-      bizCat.includes(term)
-    );
-
-    // Filtro por localidad (dirección) mejorado (Etapa CP Fix)
+    // 2. Filtro de Localidad (Dirección)
     let matchesLocation = true;
     if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
       const normalizedLoc = normalizeText(localidadQuery);
@@ -307,7 +300,7 @@ function HomeContent() {
       }
     }
 
-    // Filtro por categoría seleccionada
+    // 3. Filtro de Categoría de la barra
     let matchesBarCategory = true;
     if (selectedCategoryDocId) {
       const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
