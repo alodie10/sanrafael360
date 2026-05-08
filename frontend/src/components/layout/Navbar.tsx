@@ -33,30 +33,33 @@ function NavbarInner() {
 
   const activeCatParam = searchParams.get("cat");
 
-  // --- Google Places Autocomplete (CON RESTRICCIÓN ESTRICTA) ---
+  // --- Google Places Autocomplete (RESTRICCIÓN DEFINITIVA) ---
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey || !locationInputRef.current) return;
     const loader = new Loader({ apiKey, version: "weekly", libraries: ["places"], language: "es" });
     
     loader.load().then((google) => {
-      const sanRafaelCenter = { lat: -34.6177, lng: -68.3301 };
+      // Definimos un área rectangular (Bounds) que cubra el sur de Mendoza
+      // Esto es mucho más efectivo que el radio circular para Google
+      const southMendozaBounds = new google.maps.LatLngBounds(
+        new google.maps.LatLng(-36.5, -70.5), // Suroeste (Malargüe sur)
+        new google.maps.LatLng(-33.5, -66.5)  // Noreste (Cerca de San Luis border)
+      );
       
       const autocomplete = new google.maps.places.Autocomplete(locationInputRef.current!, {
         componentRestrictions: { country: "ar" },
         types: ["(cities)"],
-        fields: ["formatted_address"],
-        // RESTRICCIÓN ESTRICTA a 200km a la redonda (incluye Malargüe y Alvear)
-        locationRestriction: {
-          center: sanRafaelCenter,
-          radius: 200000,
-        },
-        strictBounds: true
+        fields: ["formatted_address", "geometry"],
+        bounds: southMendozaBounds,
+        strictBounds: true // OBLIGA a Google a no salirse de los límites
       });
 
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
-        if (place.formatted_address) setLocalidad(place.formatted_address);
+        if (place.formatted_address) {
+          setLocalidad(place.formatted_address);
+        }
       });
       setIsPlacesLoaded(true);
     }).catch(() => {});
@@ -114,9 +117,14 @@ function NavbarInner() {
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    if (searchQuery.trim()) params.set("q", searchQuery.trim());
-    if (localidad.trim() && localidad !== "San Rafael, Mendoza") params.set("l", localidad.trim());
-    
+    if (searchQuery.trim()) {
+      params.set("q", searchQuery.trim());
+      if (localidad.trim() && localidad !== "San Rafael, Mendoza") {
+        params.set("l", localidad.trim());
+      }
+    } else {
+      setLocalidad("San Rafael, Mendoza");
+    }
     const currentCat = searchParams.get("cat");
     if (currentCat) params.set("cat", currentCat);
     router.push(`/?${params.toString()}`);
@@ -131,6 +139,7 @@ function NavbarInner() {
   };
 
   const handleCatSelect = (docId: string | null) => {
+    setLocalidad("San Rafael, Mendoza");
     if (!docId) {
       handleResetAll();
       return;
@@ -138,12 +147,8 @@ function NavbarInner() {
     const params = new URLSearchParams();
     const cat = categorias.find((c) => c.documentId === docId);
     params.set("cat", cat?.slug || docId);
-    
     const currentQ = searchParams.get("q");
     if (currentQ) params.set("q", currentQ);
-    const currentL = searchParams.get("l");
-    if (currentL) params.set("l", currentL);
-
     router.push(`/?${params.toString()}`, { scroll: false });
     setActiveDropdown(null);
     setIsOpen(false);
@@ -151,7 +156,6 @@ function NavbarInner() {
 
   const isHome = pathname === "/";
 
-  // Función para seleccionar todo el texto al hacer clic
   const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.select();
   };
@@ -192,7 +196,7 @@ function NavbarInner() {
                       className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
                     />
                     {searchQuery && (
-                      <button onClick={() => setSearchQuery("")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
+                      <button onClick={() => { setSearchQuery(""); setLocalidad("San Rafael, Mendoza"); }} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
                     )}
                   </div>
 
