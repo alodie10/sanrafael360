@@ -24,15 +24,26 @@ export default function CategoryDrawer({
 }: CategoryDrawerProps) {
   const [view, setView] = useState<{ type: 'main' | 'sub', parentId: string | null }>({ type: 'main', parentId: null });
 
-  const mainCategorias = categorias.filter((c) => {
-    if (!c.parent) return true;
-    if (typeof c.parent === 'object' && !(c.parent as any).documentId) return true;
-    return false;
-  });
+  // Función robusta para encontrar subcategorías
+  const getSubcategories = (parentId: string) => {
+    return categorias.filter(c => {
+      const p = c.parent;
+      if (!p) return false;
+      
+      // Strapi 5 puede devolver el parent de varias formas según el nivel de población
+      const pDocId = (p as any).documentId || (p as any).data?.documentId || (p as any).data?.attributes?.documentId;
+      return pDocId === parentId;
+    });
+  };
 
-  const getSubcategories = (parentId: string) => categorias.filter(c => {
-    const pId = c.parent?.documentId || (c.parent as any)?.data?.documentId;
-    return pId === parentId;
+  const mainCategorias = categorias.filter((c) => {
+    // Es principal si no tiene padre
+    if (!c.parent) return true;
+    
+    // O si el padre no tiene documentId (significa que el campo existe pero está vacío)
+    const p = c.parent as any;
+    const pDocId = p.documentId || p.data?.documentId;
+    return !pDocId;
   });
 
   const handleCategoryClick = (cat: Categoria) => {
@@ -95,7 +106,7 @@ export default function CategoryDrawer({
                       "w-full flex items-center justify-between p-4 rounded-xl transition-all border",
                       selectedCategoryDocId === null 
                         ? "bg-primary text-black border-primary shadow-[0_0_20px_rgba(255,191,0,0.2)]" 
-                        : "bg-white/5 text-zinc-400 border-transparent hover:text-white"
+                        : "bg-white/5 text-zinc-400 border-transparent hover:border-white/10 hover:text-white"
                     )}
                   >
                     <div className="flex items-center gap-4">
