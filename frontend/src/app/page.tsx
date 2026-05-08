@@ -76,15 +76,6 @@ function HomeContent() {
     if (categorias.length === 0) return;
 
     const catParam = searchParams.get("cat");
-    const queryParam = searchParams.get("q");
-    const locParam = searchParams.get("l");
-
-    if (queryParam !== null && queryParam !== searchQuery) {
-      setSearchQuery(queryParam);
-    }
-
-    if (locParam !== null && locParam !== localidadQuery) {
-      setLocalidadQuery(locParam);
     } else if (locParam === null && localidadQuery !== "") {
       setLocalidadQuery("");
     }
