@@ -182,10 +182,14 @@ function NavbarInner() {
             </Link>
             <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">Vende aquí</Link>
           </div>
-          <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white flex items-center gap-2">
-            <User className="w-6 h-6 text-primary" />
-            <Menu className="w-8 h-8" />
-          </button>
+          <div className="flex items-center gap-4 md:hidden">
+            <Link href="/login" className="text-white p-1">
+              <User className="w-7 h-7 text-primary" />
+            </Link>
+            <button onClick={() => setIsOpen(!isOpen)} className="text-white">
+              <Menu className="w-8 h-8" />
+            </button>
+          </div>
         </div>
 
         {/* Barra de búsqueda y categorías */}
