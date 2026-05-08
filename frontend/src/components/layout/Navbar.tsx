@@ -232,7 +232,7 @@ function NavbarInner() {
                   <button onClick={handleSearch} className="bg-[#9B1C1C] hover:bg-red-700 text-white px-10 py-4 md:py-0 font-black uppercase tracking-widest transition-all active:scale-95">BUSCAR</button>
                 </div>
 
-                <div ref={dropdownRef} className="flex items-center md:justify-center flex-nowrap overflow-x-auto gap-x-6 gap-y-3 max-w-6xl mx-auto no-scrollbar px-2">
+                <div ref={dropdownRef} className="flex items-center md:justify-center !flex-nowrap overflow-x-auto gap-x-6 w-full max-w-6xl mx-auto no-scrollbar px-4 py-2">
                   {loadingCats ? (
                     <div className="flex items-center gap-2 text-slate-500 py-2"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-xs font-bold uppercase">Cargando...</span></div>
                   ) : (
