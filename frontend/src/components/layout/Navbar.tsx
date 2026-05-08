@@ -176,16 +176,32 @@ function NavbarInner() {
         <div className="flex items-center justify-between px-4 md:px-8 h-16 md:h-20">
           <Logo onClick={handleResetAll} className="hover:scale-105 transition-transform" />
           <div className="hidden md:flex items-center gap-6">
-            <Link href="/login" className="text-white/70 hover:text-white text-sm font-bold transition-colors flex items-center gap-2">
-              <User className="w-4 h-4 text-primary" />
-              Ingresar
-            </Link>
+            {!session ? (
+              <Link href="/login" className="text-white/70 hover:text-white text-sm font-bold transition-colors flex items-center gap-2">
+                <User className="w-4 h-4 text-primary" />
+                Ingresar
+              </Link>
+            ) : (
+              <button 
+                onClick={() => signOut()}
+                className="text-white/70 hover:text-white text-sm font-bold transition-colors flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4 text-rose-500" />
+                Salir
+              </button>
+            )}
             <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">Vende aquí</Link>
           </div>
           <div className="flex items-center gap-4 md:hidden">
-            <Link href="/login" className="text-white p-1">
-              <User className="w-7 h-7 text-primary" />
-            </Link>
+            {!session ? (
+              <Link href="/login" className="text-white p-1">
+                <User className="w-7 h-7 text-primary" />
+              </Link>
+            ) : (
+              <button onClick={() => signOut()} className="text-white p-1">
+                <LogOut className="w-7 h-7 text-rose-500" />
+              </button>
+            )}
             <button onClick={() => setIsOpen(!isOpen)} className="text-white">
               <Menu className="w-8 h-8" />
             </button>
