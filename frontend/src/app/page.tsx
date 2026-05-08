@@ -289,14 +289,20 @@ function HomeContent() {
     // 2. Filtro de Localidad (Dirección)
     let matchesLocation = true;
     if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
-      const normalizedLoc = normalizeText(localidadQuery);
-      const locTerms = normalizedLoc.split(/[\s,]+/).filter(t => 
-        t.length > 2 && !/^\d+$/.test(t) && !/^[A-Z]\d+/.test(t.toUpperCase())
+      const normalizedLoc = normalizeText(localidadQuery.split(',')[0]); // Solo el distrito
+      const locTerms = normalizedLoc.split(/\s+/).filter(t => 
+        t.length > 2 && 
+        !["mendoza", "argentina", "rafael"].includes(t) &&
+        !/^\d+$/.test(t)
       );
       
       if (locTerms.length > 0) {
         const bizAddress = normalizeText(negocio.direccion || "");
-        matchesLocation = locTerms.some(term => bizAddress.includes(term));
+        const bizLoc = normalizeText(negocio.localidad || "");
+        // Ahora usamos every: debe coincidir con todos los términos del distrito (ej: Rama Y Caida)
+        matchesLocation = locTerms.every(term => 
+          bizAddress.includes(term) || bizLoc.includes(term)
+        );
       }
     }
 
