@@ -33,23 +33,25 @@ function NavbarInner() {
 
   const activeCatParam = searchParams.get("cat");
 
-  // --- Google Places Autocomplete (CON RESTRICCIÓN LOCAL) ---
+  // --- Google Places Autocomplete (CON RESTRICCIÓN ESTRICTA) ---
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey || !locationInputRef.current) return;
     const loader = new Loader({ apiKey, version: "weekly", libraries: ["places"], language: "es" });
     
     loader.load().then((google) => {
-      // Coordenadas de San Rafael, Mendoza
       const sanRafaelCenter = { lat: -34.6177, lng: -68.3301 };
       
       const autocomplete = new google.maps.places.Autocomplete(locationInputRef.current!, {
         componentRestrictions: { country: "ar" },
         types: ["(cities)"],
         fields: ["formatted_address"],
-        // Restricción de radio de ~50km alrededor de San Rafael
-        locationBias: { center: sanRafaelCenter, radius: 50000 },
-        strictBounds: false // Usamos bias para permitir flexibilidad pero priorizar local
+        // RESTRICCIÓN ESTRICTA a 200km a la redonda (incluye Malargüe y Alvear)
+        locationRestriction: {
+          center: sanRafaelCenter,
+          radius: 200000,
+        },
+        strictBounds: true
       });
 
       autocomplete.addListener("place_changed", () => {
@@ -112,14 +114,9 @@ function NavbarInner() {
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    if (searchQuery.trim()) {
-      params.set("q", searchQuery.trim());
-      if (localidad.trim() && localidad !== "San Rafael, Mendoza") {
-        params.set("l", localidad.trim());
-      }
-    } else {
-      setLocalidad("San Rafael, Mendoza");
-    }
+    if (searchQuery.trim()) params.set("q", searchQuery.trim());
+    if (localidad.trim() && localidad !== "San Rafael, Mendoza") params.set("l", localidad.trim());
+    
     const currentCat = searchParams.get("cat");
     if (currentCat) params.set("cat", currentCat);
     router.push(`/?${params.toString()}`);
@@ -134,28 +131,30 @@ function NavbarInner() {
   };
 
   const handleCatSelect = (docId: string | null) => {
-    // Siempre reseteamos la localidad a San Rafael al cambiar de categoría
-    setLocalidad("San Rafael, Mendoza");
-
     if (!docId) {
       handleResetAll();
       return;
     }
-
     const params = new URLSearchParams();
     const cat = categorias.find((c) => c.documentId === docId);
     params.set("cat", cat?.slug || docId);
     
     const currentQ = searchParams.get("q");
     if (currentQ) params.set("q", currentQ);
-    
-    // Al seleccionar categoría, ignoramos la localidad previa por pedido del usuario
+    const currentL = searchParams.get("l");
+    if (currentL) params.set("l", currentL);
+
     router.push(`/?${params.toString()}`, { scroll: false });
     setActiveDropdown(null);
     setIsOpen(false);
   };
 
   const isHome = pathname === "/";
+
+  // Función para seleccionar todo el texto al hacer clic
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.select();
+  };
 
   return (
     <nav className={cn(
@@ -188,17 +187,17 @@ function NavbarInner() {
                       placeholder="¿Qué buscas?" 
                       value={searchQuery} 
                       onChange={(e) => setSearchQuery(e.target.value)} 
-                      onFocus={() => setLocalidad("San Rafael, Mendoza")} // Reset al hacer foco por pedido del usuario
+                      onFocus={handleInputFocus}
                       onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
                       className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
                     />
                     {searchQuery && (
-                      <button onClick={() => { setSearchQuery(""); setLocalidad("San Rafael, Mendoza"); }} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
+                      <button onClick={() => setSearchQuery("")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
                     )}
                   </div>
 
                   {/* Dónde */}
-                  <div className="flex-1 flex items-center gap-3 px-5 py-4 relative">
+                  <div className="flex-1 flex items-center gap-3 px-5 py-4 relative group">
                     <MapPin className="w-5 h-5 text-slate-500" />
                     <input 
                       ref={locationInputRef} 
@@ -206,9 +205,13 @@ function NavbarInner() {
                       placeholder="Localidad" 
                       value={localidad} 
                       onChange={(e) => setLocalidad(e.target.value)} 
+                      onFocus={handleInputFocus}
                       onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
-                      className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium" 
+                      className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
                     />
+                    {localidad !== "San Rafael, Mendoza" && (
+                      <button onClick={() => setLocalidad("San Rafael, Mendoza")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
+                    )}
                   </div>
                   <button onClick={handleSearch} className="bg-[#9B1C1C] hover:bg-red-700 text-white px-10 py-4 md:py-0 font-black uppercase tracking-widest transition-all active:scale-95">BUSCAR</button>
                 </div>
@@ -250,22 +253,6 @@ function NavbarInner() {
           )}
         </AnimatePresence>
       </div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div initial={{ opacity: 0, x: "100%" }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: "100%" }} className="fixed inset-0 bg-black z-[200] flex flex-col p-8">
-            <div className="flex justify-between items-center mb-12">
-              <Logo />
-              <button onClick={() => setIsOpen(false)}><X className="w-10 h-10 text-white" /></button>
-            </div>
-            <div className="flex flex-col gap-8">
-               <Link href="/contacto" onClick={() => setIsOpen(false)} className="text-3xl font-black italic text-primary">Vende aquí</Link>
-               <Link href="/" onClick={() => setIsOpen(false)} className="text-3xl font-black italic text-white">Explorar</Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </nav>
   );
 }
