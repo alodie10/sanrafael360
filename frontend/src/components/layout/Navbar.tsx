@@ -174,7 +174,10 @@ function NavbarInner() {
       <div className="max-w-7xl mx-auto flex flex-col">
         {/* Superior */}
         <div className="flex items-center justify-between px-4 md:px-8 h-16 md:h-20">
-          <Logo onClick={handleResetAll} className="hover:scale-105 transition-transform" />
+          <div className="flex items-center gap-2">
+            <Logo onClick={handleResetAll} className="hover:scale-105 transition-transform" />
+            <span className="text-[10px] text-white/20 font-mono mt-4 hidden md:block">v.1.1-dev</span>
+          </div>
           <div className="hidden md:flex items-center gap-6">
             {!session ? (
               <Link href="/login" className="text-white/70 hover:text-white text-sm font-bold transition-colors flex items-center gap-2">

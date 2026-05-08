@@ -65,6 +65,11 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     const updateData = { ...data };
     forbiddenFields.forEach(f => delete updateData[f]);
 
+    // Limpieza de categoría para evitar Invalid relations
+    if (!updateData.categoria || updateData.categoria === "" || updateData.categoria === "undefined") {
+      delete updateData.categoria;
+    }
+
     // Cleanup schedules IDs
     if (updateData.schedules && Array.isArray(updateData.schedules)) {
       updateData.schedules = updateData.schedules.map(({ id, ...rest }: any) => rest);
