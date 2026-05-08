@@ -33,26 +33,26 @@ function NavbarInner() {
 
   const activeCatParam = searchParams.get("cat");
 
-  // --- Google Places Autocomplete (RESTRICCIÓN DEFINITIVA) ---
+  // --- Google Places Autocomplete (RESTRICCIÓN AJUSTADA) ---
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey || !locationInputRef.current) return;
     const loader = new Loader({ apiKey, version: "weekly", libraries: ["places"], language: "es" });
     
     loader.load().then((google) => {
-      // Definimos un área rectangular (Bounds) que cubra el sur de Mendoza
-      // Esto es mucho más efectivo que el radio circular para Google
+      // Ajustamos los límites para centrarnos más en el Sur de Mendoza y evitar La Pampa
       const southMendozaBounds = new google.maps.LatLngBounds(
-        new google.maps.LatLng(-36.5, -70.5), // Suroeste (Malargüe sur)
-        new google.maps.LatLng(-33.5, -66.5)  // Noreste (Cerca de San Luis border)
+        new google.maps.LatLng(-36.2, -70.3), // Suroeste
+        new google.maps.LatLng(-33.8, -67.2)  // Noreste (Evitamos llegar tan al este para no tocar La Pampa)
       );
       
       const autocomplete = new google.maps.places.Autocomplete(locationInputRef.current!, {
         componentRestrictions: { country: "ar" },
-        types: ["(cities)"],
+        // QUITAMOS la restricción de (cities) para permitir distritos como Cuadro Benegas o Las Paredes
+        types: [], 
         fields: ["formatted_address", "geometry"],
         bounds: southMendozaBounds,
-        strictBounds: true // OBLIGA a Google a no salirse de los límites
+        strictBounds: true 
       });
 
       autocomplete.addListener("place_changed", () => {
@@ -117,17 +117,25 @@ function NavbarInner() {
 
   const handleSearch = () => {
     const params = new URLSearchParams();
+    
+    // Solo agregamos búsqueda si hay texto
     if (searchQuery.trim()) {
       params.set("q", searchQuery.trim());
-      if (localidad.trim() && localidad !== "San Rafael, Mendoza") {
-        params.set("l", localidad.trim());
-      }
-    } else {
+    }
+
+    // Agregamos localidad siempre que sea distinta a la base o si hay búsqueda activa
+    if (localidad.trim() && localidad !== "San Rafael, Mendoza") {
+      params.set("l", localidad.trim());
+    } else if (!searchQuery.trim() && !searchParams.get("cat")) {
+      // Solo reseteamos si realmente no hay nada
       setLocalidad("San Rafael, Mendoza");
     }
+    
     const currentCat = searchParams.get("cat");
     if (currentCat) params.set("cat", currentCat);
-    router.push(`/?${params.toString()}`);
+
+    const qs = params.toString();
+    router.push(qs ? `/?${qs}` : "/");
     setIsOpen(false);
   };
 
@@ -196,7 +204,7 @@ function NavbarInner() {
                       className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
                     />
                     {searchQuery && (
-                      <button onClick={() => { setSearchQuery(""); setLocalidad("San Rafael, Mendoza"); }} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
+                      <button onClick={() => { setSearchQuery(""); }} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
                     )}
                   </div>
 
