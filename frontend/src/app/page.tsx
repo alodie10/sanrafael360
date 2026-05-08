@@ -33,6 +33,7 @@ function HomeContent() {
 
   // Estados de Filtrado
   const [searchQuery, setSearchQuery] = useState("");
+  const [localidadQuery, setLocalidadQuery] = useState("");
   const [selectedCategoryDocId, setSelectedCategoryDocId] = useState<string | null>(null);
   const [selectionCount, setSelectionCount] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -76,9 +77,16 @@ function HomeContent() {
 
     const catParam = searchParams.get("cat");
     const queryParam = searchParams.get("q");
+    const locParam = searchParams.get("l");
 
     if (queryParam !== null && queryParam !== searchQuery) {
       setSearchQuery(queryParam);
+    }
+
+    if (locParam !== null && locParam !== localidadQuery) {
+      setLocalidadQuery(locParam);
+    } else if (locParam === null && localidadQuery !== "") {
+      setLocalidadQuery("");
     }
     
     if (catParam) {
@@ -114,18 +122,32 @@ function HomeContent() {
     const timer = setTimeout(() => {
       const params = new URLSearchParams(window.location.search);
       const currentQ = params.get("q") || "";
+      const currentL = params.get("l") || "";
       
+      let changed = false;
       if (searchQuery !== currentQ) {
         if (searchQuery) params.set("q", searchQuery);
         else params.delete("q");
-        
+        changed = true;
+      }
+
+      if (localidadQuery !== currentL) {
+        if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
+          params.set("l", localidadQuery);
+        } else {
+          params.delete("l");
+        }
+        changed = true;
+      }
+      
+      if (changed) {
         const queryString = params.toString();
         router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
       }
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, pathname, router, categorias]);
+  }, [searchQuery, localidadQuery, pathname, router, categorias]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -278,6 +300,15 @@ function HomeContent() {
       bizCat.includes(term)
     );
 
+    // Filtro por localidad (dirección)
+    let matchesLocation = true;
+    if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
+      const normalizedLoc = normalizeText(localidadQuery);
+      // Solo tomamos la primera parte de la dirección (antes de la coma) para ser más flexibles
+      const mainLocTerm = normalizedLoc.split(",")[0].trim();
+      matchesLocation = normalizeText(negocio.direccion || "").includes(mainLocTerm);
+    }
+
     // Si además hay una categoría seleccionada en la barra, aplicamos esa restricción extra
     let matchesBarCategory = true;
     if (selectedCategoryDocId) {
@@ -292,11 +323,20 @@ function HomeContent() {
       matchesBarCategory = validCategoryNames.includes(bizCatName);
     }
 
-    return matchesSearch && matchesBarCategory;
+    return matchesSearch && matchesLocation && matchesBarCategory;
+  });
+
+  // Re-aplicar el filtro de localidad incluso si no hay búsqueda de texto
+  const finalFiltered = filteredNegocios.filter(negocio => {
+    if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
+      const mainLocTerm = normalizeText(localidadQuery).split(",")[0].trim();
+      return normalizeText(negocio.direccion || "").includes(mainLocTerm);
+    }
+    return true;
   });
 
   // Ordenar por cercanía si tenemos la ubicación del usuario
-  const sortedNegocios = [...filteredNegocios].sort((a, b) => {
+  const sortedNegocios = [...finalFiltered].sort((a, b) => {
     if (!userLocation || !a.latitud || !a.longitud || !b.latitud || !b.longitud) return 0;
     const distA = getDistance(userLocation.lat, userLocation.lng, a.latitud, a.longitud);
     const distB = getDistance(userLocation.lat, userLocation.lng, b.latitud, b.longitud);

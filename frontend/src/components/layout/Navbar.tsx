@@ -32,6 +32,7 @@ function NavbarInner() {
   const { data: session } = useSession();
 
   const activeCatParam = searchParams.get("cat");
+  const activeLocParam = searchParams.get("l");
 
   // --- Google Places Autocomplete ---
   useEffect(() => {
@@ -63,9 +64,15 @@ function NavbarInner() {
       .catch(() => setLoadingCats(false));
   }, []);
 
-  // --- Sincronizar query desde URL ---
+  // --- Sincronizar query y localidad desde URL ---
   useEffect(() => {
     setSearchQuery(searchParams.get("q") || "");
+    if (searchParams.get("l")) {
+      setLocalidad(searchParams.get("l") || "San Rafael, Mendoza");
+    } else if (!searchParams.get("cat") && !searchParams.get("q")) {
+      // Reset a San Rafael si no hay filtros activos
+      setLocalidad("San Rafael, Mendoza");
+    }
   }, [searchParams]);
 
   // --- Scroll listener ---
@@ -86,10 +93,8 @@ function NavbarInner() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Lógica mejorada para Strapi 5: una categoría es principal si no tiene parent o si parent es null/undefined
   const mainCategorias = categorias.filter((c) => {
     if (!c.parent) return true;
-    // Si Strapi 5 devuelve parent como objeto pero sin data real
     if (typeof c.parent === 'object' && !(c.parent as any).documentId) return true;
     return false;
   });
@@ -102,8 +107,11 @@ function NavbarInner() {
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.set("q", searchQuery.trim());
+    if (localidad.trim() && localidad !== "San Rafael, Mendoza") params.set("l", localidad.trim());
+    
     const currentCat = searchParams.get("cat");
     if (currentCat) params.set("cat", currentCat);
+
     router.push(`/?${params.toString()}`);
     setIsOpen(false);
   };
@@ -113,9 +121,17 @@ function NavbarInner() {
     if (docId) {
       const cat = categorias.find((c) => c.documentId === docId);
       params.set("cat", cat?.slug || docId);
+      
+      // Mantener localidad y búsqueda si estamos filtrando por categoría
+      const currentQ = searchParams.get("q");
+      if (currentQ) params.set("q", currentQ);
+      const currentL = searchParams.get("l") || localidad;
+      if (currentL && currentL !== "San Rafael, Mendoza") params.set("l", currentL);
+    } else {
+      // Si eligen "Todas", reseteamos localidad a San Rafael Mendoza
+      setLocalidad("San Rafael, Mendoza");
     }
-    const currentQ = searchParams.get("q");
-    if (currentQ) params.set("q", currentQ);
+
     router.push(`/?${params.toString()}`, { scroll: false });
     setActiveDropdown(null);
     setIsOpen(false);
@@ -129,106 +145,54 @@ function NavbarInner() {
       scrolled ? "bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl" : "bg-transparent border-b border-transparent"
     )}>
       <div className="max-w-7xl mx-auto flex flex-col">
-        {/* Superior */}
         <div className="flex items-center justify-between px-4 md:px-8 h-16 md:h-20">
           <Logo />
           <div className="hidden md:flex items-center gap-6">
-            <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all">Vende aquí</Link>
+            <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">Vende aquí</Link>
           </div>
           <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white"><Menu className="w-8 h-8" /></button>
         </div>
 
-        {/* Barra de búsqueda y categorías */}
         <AnimatePresence>
           {(isHome || scrolled) && (
-            <motion.div 
-              initial={{ opacity: 0, y: -20 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              exit={{ opacity: 0, y: -20 }}
-              className="bg-black/40 backdrop-blur-md border-t border-white/5 pb-6"
-            >
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-black/40 backdrop-blur-md border-t border-white/5 pb-6">
               <div className="px-4 pt-4 flex flex-col gap-6">
                 {/* Search Bar Split */}
                 <div className="flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl overflow-hidden max-w-4xl w-full mx-auto shadow-2xl">
                   <div className="flex-1 flex items-center gap-3 px-5 py-4 border-b md:border-b-0 md:border-r border-white/10">
                     <Search className="w-5 h-5 text-slate-500" />
-                    <input 
-                      type="text" 
-                      placeholder="¿Qué buscas?" 
-                      value={searchQuery} 
-                      onChange={(e) => setSearchQuery(e.target.value)} 
-                      onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
-                      className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium" 
-                    />
+                    <input type="text" placeholder="¿Qué buscas?" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium" />
                   </div>
                   <div className="flex-1 flex items-center gap-3 px-5 py-4">
                     <MapPin className="w-5 h-5 text-slate-500" />
-                    <input 
-                      ref={locationInputRef} 
-                      type="text" 
-                      placeholder="Localidad" 
-                      value={localidad} 
-                      onChange={(e) => setLocalidad(e.target.value)} 
-                      className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium" 
-                    />
+                    <input ref={locationInputRef} type="text" placeholder="Localidad" value={localidad} onChange={(e) => setLocalidad(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium" />
                   </div>
-                  <button onClick={handleSearch} className="bg-[#9B1C1C] hover:bg-red-700 text-white px-10 py-4 md:py-0 font-black uppercase tracking-widest transition-all active:scale-95">
-                    BUSCAR
-                  </button>
+                  <button onClick={handleSearch} className="bg-[#9B1C1C] hover:bg-red-700 text-white px-10 py-4 md:py-0 font-black uppercase tracking-widest transition-all active:scale-95">BUSCAR</button>
                 </div>
 
                 {/* Categories Row */}
                 <div ref={dropdownRef} className="flex items-center justify-center flex-wrap gap-x-6 gap-y-3 max-w-6xl mx-auto">
                   {loadingCats ? (
-                    <div className="flex items-center gap-2 text-slate-500 py-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="text-xs font-bold uppercase tracking-widest">Cargando categorías...</span>
-                    </div>
+                    <div className="flex items-center gap-2 text-slate-500 py-2"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-xs font-bold uppercase">Cargando...</span></div>
                   ) : (
                     <>
-                      <button 
-                        onClick={() => handleCatSelect(null)} 
-                        className={cn(
-                          "text-[13px] font-bold py-1 transition-all border-b-2", 
-                          !activeCatParam ? "text-primary border-primary" : "text-slate-400 border-transparent hover:text-white"
-                        )}
-                      >
-                        Todas
-                      </button>
-                      
+                      <button onClick={() => handleCatSelect(null)} className={cn("text-[13px] font-bold py-1 border-b-2", !activeCatParam ? "text-primary border-primary" : "text-slate-400 border-transparent hover:text-white")}>Todas</button>
                       {mainCategorias.map((cat) => {
                         const subCats = getSubcategories(cat.documentId);
                         const isOpen = activeDropdown === cat.documentId;
                         const isActive = activeCatParam === cat.slug || activeCatParam === cat.documentId;
-
                         return (
                           <div key={cat.id} className="relative">
-                            <button 
-                              onClick={() => subCats.length ? setActiveDropdown(isOpen ? null : cat.documentId) : handleCatSelect(cat.documentId)} 
-                              className={cn(
-                                "flex items-center gap-1.5 text-[13px] font-bold py-1 transition-all border-b-2", 
-                                isActive ? "text-primary border-primary" : "text-slate-400 border-transparent hover:text-white"
-                              )}
-                            >
+                            <button onClick={() => subCats.length ? setActiveDropdown(isOpen ? null : cat.documentId) : handleCatSelect(cat.documentId)} className={cn("flex items-center gap-1.5 text-[13px] font-bold py-1 border-b-2", isActive ? "text-primary border-primary" : "text-slate-400 border-transparent hover:text-white")}>
                               {cat.nombre} {subCats.length > 0 && <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", isOpen && "rotate-180")} />}
                             </button>
-
                             <AnimatePresence>
                               {isOpen && (
-                                <motion.div 
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: 10 }}
-                                  className="absolute top-full left-0 mt-3 min-w-[240px] bg-zinc-950 border border-white/10 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[200] p-2"
-                                >
-                                  <button onClick={() => handleCatSelect(cat.documentId)} className="w-full text-left px-4 py-3 text-[13px] font-black text-primary hover:bg-white/5 rounded-lg mb-1">
-                                    Ver todo en {cat.nombre}
-                                  </button>
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full left-0 mt-3 min-w-[240px] bg-zinc-950 border border-white/10 rounded-xl shadow-2xl z-[200] p-2">
+                                  <button onClick={() => handleCatSelect(cat.documentId)} className="w-full text-left px-4 py-3 text-[13px] font-black text-primary hover:bg-white/5 rounded-lg mb-1">Ver todo en {cat.nombre}</button>
                                   <div className="h-px bg-white/5 my-1" />
                                   {subCats.map(sub => (
-                                    <button key={sub.id} onClick={() => handleCatSelect(sub.documentId)} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-                                      {sub.nombre}
-                                    </button>
+                                    <button key={sub.id} onClick={() => handleCatSelect(sub.documentId)} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">{sub.nombre}</button>
                                   ))}
                                 </motion.div>
                               )}
@@ -244,30 +208,10 @@ function NavbarInner() {
           )}
         </AnimatePresence>
       </div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div initial={{ opacity: 0, x: "100%" }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: "100%" }} className="fixed inset-0 bg-black z-[200] flex flex-col p-8">
-            <div className="flex justify-between items-center mb-12">
-              <Logo />
-              <button onClick={() => setIsOpen(false)}><X className="w-10 h-10 text-white" /></button>
-            </div>
-            <div className="flex flex-col gap-8">
-               <Link href="/contacto" onClick={() => setIsOpen(false)} className="text-3xl font-black italic text-primary">Vende aquí</Link>
-               <Link href="/" onClick={() => setIsOpen(false)} className="text-3xl font-black italic text-white">Explorar</Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </nav>
   );
 }
 
 export default function Navbar() {
-  return (
-    <Suspense fallback={<div className="h-16 md:h-20 bg-black w-full fixed top-0 z-50 border-b border-white/5 shadow-2xl" />}>
-      <NavbarInner />
-    </Suspense>
-  );
+  return <Suspense fallback={<div className="h-16 md:h-20 bg-black w-full fixed top-0 z-50 border-b border-white/5 shadow-2xl" />}><NavbarInner /></Suspense>;
 }
