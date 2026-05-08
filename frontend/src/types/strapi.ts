@@ -62,6 +62,7 @@ export interface Negocio {
   telefono_whatsapp?: string;
   reclamar_habilitado?: boolean;
   estado_reclamo?: string;
+  reserva_habilitada?: boolean;
 }
 
 export interface StrapiResponse<T> {

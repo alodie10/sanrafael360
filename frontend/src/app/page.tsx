@@ -302,46 +302,21 @@ function HomeContent() {
       bizCat.includes(term)
     );
 
-    // Filtro por localidad (dirección)
+    // Filtro por localidad (dirección) mejorado (Etapa CP Fix)
     let matchesLocation = true;
     if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
       const normalizedLoc = normalizeText(localidadQuery);
-      // Solo tomamos la primera parte de la dirección (antes de la coma) para ser más flexibles
-      const mainLocTerm = normalizedLoc.split(",")[0].trim();
-      matchesLocation = normalizeText(negocio.direccion || "").includes(mainLocTerm);
-    }
-
-    // Si además hay una categoría seleccionada en la barra, aplicamos esa restricción extra
-    let matchesBarCategory = true;
-    if (selectedCategoryDocId) {
-      const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
-      const bizCatName = (negocio.categoria?.nombre || "").toLowerCase();
-      let validCategoryNames = [selectedCat?.nombre.toLowerCase()];
-      categorias.forEach(c => {
-        if (c.parent?.documentId === selectedCategoryDocId) {
-          validCategoryNames.push(c.nombre.toLowerCase());
-        }
-      });
-      matchesBarCategory = validCategoryNames.includes(bizCatName);
-    }
-
-    // Filtro por localidad (dirección)
-    let matchesLocation = true;
-    if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
-      const normalizedLoc = normalizeText(localidadQuery);
-      // Extraemos términos significativos (ignoramos códigos postales y palabras cortas)
       const locTerms = normalizedLoc.split(/[\s,]+/).filter(t => 
         t.length > 2 && !/^\d+$/.test(t) && !/^[A-Z]\d+/.test(t.toUpperCase())
       );
       
       if (locTerms.length > 0) {
         const bizAddress = normalizeText(negocio.direccion || "");
-        // El negocio debe coincidir con al menos uno de los términos principales (ej: "Cuadro" o "Benegas")
         matchesLocation = locTerms.some(term => bizAddress.includes(term));
       }
     }
 
-    // Si además hay una categoría seleccionada en la barra, aplicamos esa restricción extra
+    // Filtro por categoría seleccionada
     let matchesBarCategory = true;
     if (selectedCategoryDocId) {
       const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
