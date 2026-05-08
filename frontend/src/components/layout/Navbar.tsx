@@ -4,38 +4,26 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Plus, Search, User, LogOut, MapPin, ChevronDown, LayoutGrid } from "lucide-react";
+import { Menu, X, Plus, Search, User, LogOut, MapPin, ChevronDown, LayoutGrid, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/common/Logo";
 import { useSession, signOut } from "next-auth/react";
 import { Categoria } from "@/types/strapi";
 import { getCategoryIcon } from "@/lib/icons";
 import { fetchFromStrapi } from "@/lib/strapi";
-
-// ─── Localidades de San Rafael ────────────────────────────────────────────────
-const localidades = [
-  "San Rafael",
-  "Villa 25 de Mayo",
-  "General Alvear",
-  "Monte Comán",
-  "Rama Caída",
-  "El Sosneado",
-];
-
-// Cuántas categorías se muestran inline antes de "Más ▾"
-const VISIBLE_CAT_LIMIT = 6;
+import { Loader } from "@googlemaps/js-api-loader";
 
 function NavbarInner() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [localidad, setLocalidad] = useState("San Rafael");
-  const [showLocalidades, setShowLocalidades] = useState(false);
-  const [showMas, setShowMas] = useState(false);
+  const [localidad, setLocalidad] = useState("San Rafael, Mendoza");
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [isPlacesLoaded, setIsPlacesLoaded] = useState(false);
 
-  const localidadRef = useRef<HTMLDivElement>(null);
-  const masRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -46,21 +34,48 @@ function NavbarInner() {
     !!session &&
     (userRole === "Admin" || userRole === "Propietario" || userRole === "Authenticated");
 
-  // Categoría activa desde la URL
   const activeCatParam = searchParams.get("cat");
-  const selectedCategoryDocId = activeCatParam;
 
-  // ─── Cargar categorías principales ─────────────────────────────────────────
+  // ─── Google Places Autocomplete ─────────────────────────────────────────────
   useEffect(() => {
-    fetchFromStrapi("categorias?fields[0]=nombre&fields[1]=slug&populate[parent][fields][0]=documentId&sort=nombre:asc")
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey || !locationInputRef.current) return;
+
+    const loader = new Loader({
+      apiKey,
+      version: "weekly",
+      libraries: ["places"],
+      language: "es",
+    });
+
+    loader.load().then((google) => {
+      const autocomplete = new google.maps.places.Autocomplete(locationInputRef.current!, {
+        componentRestrictions: { country: "ar" },
+        types: ["(cities)"],
+        fields: ["formatted_address"],
+      });
+
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place.formatted_address) {
+          setLocalidad(place.formatted_address);
+        }
+      });
+      setIsPlacesLoaded(true);
+    }).catch(e => console.error("Places load error", e));
+  }, []);
+
+  // ─── Cargar categorías ──────────────────────────────────────────────────────
+  useEffect(() => {
+    // Traemos todas las categorías para construir la jerarquía localmente
+    fetchFromStrapi("categorias?fields[0]=nombre&fields[1]=slug&populate[parent][fields][0]=documentId&sort=nombre:asc&pagination[pageSize]=100")
       .then((res) => setCategorias(res.data || []))
-      .catch(() => {/* silencioso */});
+      .catch(() => {});
   }, []);
 
   // ─── Sincronizar query desde URL ────────────────────────────────────────────
   useEffect(() => {
-    const q = searchParams.get("q") || "";
-    setSearchQuery(q);
+    setSearchQuery(searchParams.get("q") || "");
   }, [searchParams]);
 
   // ─── Scroll listener ────────────────────────────────────────────────────────
@@ -70,41 +85,29 @@ function NavbarInner() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ─── Cerrar dropdowns al clic fuera ─────────────────────────────────────────
+  // ─── Cerrar dropdowns ───────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (localidadRef.current && !localidadRef.current.contains(e.target as Node)) {
-        setShowLocalidades(false);
-      }
-      if (masRef.current && !masRef.current.contains(e.target as Node)) {
-        setShowMas(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setActiveDropdown(null);
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ─── Solo categorías principales ────────────────────────────────────────────
+  // ─── Jerarquía de Categorías ────────────────────────────────────────────────
   const mainCategorias = categorias.filter((c) => !c.parent);
-  const visibleCats = mainCategorias.slice(0, VISIBLE_CAT_LIMIT);
-  const overflowCats = mainCategorias.slice(VISIBLE_CAT_LIMIT);
-  const hasOverflow = overflowCats.length > 0;
+  const getSubcategories = (parentId: string) => categorias.filter(c => c.parent?.documentId === parentId);
 
-  // ─── Handlers ──────────────────────────────────────────────────────────────
   const handleSearch = () => {
     const params = new URLSearchParams(window.location.search);
-    if (searchQuery.trim()) {
-      params.set("q", searchQuery.trim());
-    } else {
-      params.delete("q");
-    }
+    if (searchQuery.trim()) params.set("q", searchQuery.trim());
+    else params.delete("q");
+    
     const qs = params.toString();
     router.push(qs ? `/?${qs}` : "/");
     setIsOpen(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleSearch();
   };
 
   const handleCatSelect = (docId: string | null) => {
@@ -118,11 +121,10 @@ function NavbarInner() {
     }
     const qs = params.toString();
     router.push(qs ? `/?${qs}` : "/", { scroll: false });
-    setShowMas(false);
+    setActiveDropdown(null);
     setIsOpen(false);
   };
 
-  // ─── ¿Estamos en la home? (barra de búsqueda solo allí) ────────────────────
   const isHome = pathname === "/";
 
   return (
@@ -131,372 +133,210 @@ function NavbarInner() {
         "fixed left-0 right-0 z-50 transition-all duration-500",
         hasMasterBar ? "top-10" : "top-0",
         scrolled
-          ? "bg-black/98 backdrop-blur-2xl border-b border-white/8 shadow-[0_8px_32px_rgba(0,0,0,0.9)]"
-          : "bg-black/80 backdrop-blur-xl border-b border-white/5"
+          ? "bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl"
+          : "bg-transparent border-b border-transparent"
       )}
     >
-      {/* ════════════════════════════════════════════════════
-          FILA 1: Logo + Acciones de usuario
-      ════════════════════════════════════════════════════ */}
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 md:px-8 py-3">
-        {/* Logo */}
-        <Logo />
+      <div className="max-w-7xl mx-auto flex flex-col">
+        {/* Header Superior */}
+        <div className="flex items-center justify-between px-4 md:px-8 h-16 md:h-20">
+          <Logo />
 
-        {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-5">
-          {session ? (
-            <div className="flex items-center gap-4">
-              <Link
-                href="/portal"
-                className="flex items-center gap-2 text-slate-300 hover:text-white transition-all text-sm font-semibold group"
-              >
-                <User className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                Portal
-              </Link>
-              <button
-                onClick={() => signOut()}
-                className="text-slate-500 hover:text-red-400 transition-colors"
-                title="Cerrar Sesión"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <Link
-              href={`/login?callbackUrl=${pathname}`}
-              className="text-sm font-semibold text-slate-400 hover:text-white transition-colors"
-            >
-              Entrar
-            </Link>
-          )}
-
-          <Link
-            href="/contacto"
-            className="flex items-center gap-2 bg-primary text-black px-5 py-2.5 rounded-full font-bold text-sm active:scale-95 transition-all shadow-[0_0_20px_rgba(255,191,0,0.25)] hover:shadow-[0_0_30px_rgba(255,191,0,0.4)]"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            Vende aquí
-          </Link>
-        </div>
-
-        {/* Mobile Toggle */}
-        <div className="flex md:hidden items-center gap-4">
-          {session ? (
-            <Link href="/portal" className="text-primary">
-              <User className="w-6 h-6" />
-            </Link>
-          ) : (
-            <Link
-              href={`/login?callbackUrl=${pathname}`}
-              className="text-slate-300 text-xs font-bold uppercase tracking-wider"
-            >
-              Entrar
-            </Link>
-          )}
-          <button onClick={() => setIsOpen(!isOpen)} className="text-white p-1">
-            {isOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
-          </button>
-        </div>
-      </div>
-
-      {/* ════════════════════════════════════════════════════
-          FILA 2: Split Search Bar + Nav Categorías (solo home)
-      ════════════════════════════════════════════════════ */}
-      {isHome && (
-        <div className="border-t border-white/[0.04] px-4 md:px-8 pb-3 pt-2">
-          <div className="max-w-7xl mx-auto flex flex-col gap-2">
-
-            {/* ── Split Search Bar ── */}
-            <div
-              id="navbar-split-search"
-              className="flex items-stretch rounded-xl overflow-hidden border border-gray-800 bg-white/[0.06] backdrop-blur-xl max-w-3xl w-full mx-auto shadow-[0_2px_20px_rgba(0,0,0,0.5)]"
-            >
-              {/* Campo izquierdo */}
-              <div className="flex-1 flex items-center gap-3 px-4 py-2.5 min-w-0">
-                <Search className="w-4 h-4 text-gray-500 shrink-0" />
-                <input
-                  type="text"
-                  id="navbar-search-input"
-                  placeholder="¿Qué buscas en San Rafael?"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="bg-transparent border-none outline-none w-full text-white placeholder:text-gray-600 text-sm focus:ring-0 truncate"
-                />
-              </div>
-
-              {/* Divisor */}
-              <div className="w-px bg-gray-800 my-2 shrink-0" />
-
-              {/* Campo derecho: Localidad */}
-              <div ref={localidadRef} className="relative shrink-0">
-                <button
-                  id="navbar-localidad-btn"
-                  onClick={() => setShowLocalidades(!showLocalidades)}
-                  className="flex items-center gap-2 px-4 py-2.5 h-full text-gray-500 hover:text-gray-200 transition-colors text-sm whitespace-nowrap"
-                >
-                  <MapPin className="w-4 h-4 shrink-0" />
-                  <span className="hidden sm:inline">{localidad}</span>
-                  <ChevronDown
-                    className={cn(
-                      "w-3 h-3 transition-transform duration-200 shrink-0",
-                      showLocalidades && "rotate-180"
-                    )}
-                  />
-                </button>
-
-                <AnimatePresence>
-                  {showLocalidades && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                      transition={{ duration: 0.14 }}
-                      className="absolute top-full right-0 mt-2 min-w-[190px] bg-[#0a0a0a]/98 backdrop-blur-2xl border border-gray-800 rounded-xl shadow-2xl overflow-hidden z-50"
-                    >
-                      {localidades.map((loc) => (
-                        <button
-                          key={loc}
-                          onClick={() => { setLocalidad(loc); setShowLocalidades(false); }}
-                          className={cn(
-                            "w-full text-left px-4 py-2.5 text-sm transition-colors",
-                            localidad === loc
-                              ? "text-white bg-white/10 font-semibold"
-                              : "text-gray-400 hover:text-white hover:bg-white/5"
-                          )}
-                        >
-                          {loc}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Botón Buscar — Carmesí oscuro */}
-              <button
-                id="navbar-search-btn"
-                onClick={handleSearch}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#9B1C1C] hover:bg-[#7F1D1D] active:bg-[#6B1A1A] text-white font-bold text-sm transition-colors shrink-0"
-              >
-                <Search className="w-4 h-4" />
-                <span className="hidden sm:inline">Buscar</span>
-              </button>
-            </div>
-
-            {/* ── Nav de Categorías ── */}
-            {mainCategorias.length > 0 && (
-              <div
-                id="navbar-categories"
-                className="flex items-center flex-nowrap overflow-hidden gap-0.5 max-w-3xl mx-auto w-full"
-              >
-                {/* "Todas" */}
-                <button
-                  id="navbar-cat-all"
-                  onClick={() => handleCatSelect(null)}
-                  className={cn(
-                    "flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap shrink-0",
-                    !activeCatParam
-                      ? "text-black bg-white"
-                      : "text-gray-400 hover:text-gray-200"
-                  )}
-                >
-                  <LayoutGrid className="w-3 h-3 shrink-0" />
-                  <span>Todas</span>
-                  <ChevronDown className="w-2.5 h-2.5 opacity-30 shrink-0" />
-                </button>
-
-                {/* Categorías visibles */}
-                {visibleCats.map((cat) => {
-                  const Icon = getCategoryIcon(cat.nombre);
-                  const isActive = selectedCategoryDocId === cat.documentId || selectedCategoryDocId === cat.slug;
-                  return (
-                    <button
-                      key={cat.id}
-                      id={`navbar-cat-${cat.documentId}`}
-                      onClick={() => handleCatSelect(cat.documentId)}
-                      className={cn(
-                        "flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap shrink-0",
-                        isActive
-                          ? "text-black bg-primary"
-                          : "text-gray-400 hover:text-gray-200"
-                      )}
-                    >
-                      <Icon className="w-3 h-3 shrink-0" />
-                      <span>{cat.nombre}</span>
-                      <ChevronDown className="w-2.5 h-2.5 opacity-30 shrink-0" />
-                    </button>
-                  );
-                })}
-
-                {/* Botón "Más ▾" */}
-                {hasOverflow && (
-                  <div ref={masRef} className="relative shrink-0">
-                    <button
-                      id="navbar-mas-btn"
-                      onClick={() => setShowMas(!showMas)}
-                      className={cn(
-                        "flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap",
-                        showMas
-                          ? "text-white bg-white/10"
-                          : "text-gray-500 hover:text-gray-200"
-                      )}
-                    >
-                      <span>Más</span>
-                      <ChevronDown
-                        className={cn(
-                          "w-2.5 h-2.5 transition-transform duration-200",
-                          showMas && "rotate-180"
-                        )}
-                      />
-                    </button>
-
-                    <AnimatePresence>
-                      {showMas && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                          transition={{ duration: 0.14 }}
-                          className="absolute top-full left-0 mt-2 min-w-[210px] bg-[#0a0a0a]/98 backdrop-blur-2xl border border-gray-800 rounded-xl shadow-2xl overflow-hidden z-50"
-                        >
-                          {overflowCats.map((cat) => {
-                            const Icon = getCategoryIcon(cat.nombre);
-                            const isActive =
-                              selectedCategoryDocId === cat.documentId ||
-                              selectedCategoryDocId === cat.slug;
-                            return (
-                              <button
-                                key={cat.id}
-                                onClick={() => handleCatSelect(cat.documentId)}
-                                className={cn(
-                                  "w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors",
-                                  isActive
-                                    ? "text-primary bg-primary/10 font-semibold"
-                                    : "text-gray-300 hover:text-white hover:bg-white/5"
-                                )}
-                              >
-                                <Icon className="w-4 h-4 shrink-0" />
-                                {cat.nombre}
-                              </button>
-                            );
-                          })}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════
-          MOBILE MENU
-      ════════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 right-0 bg-black/98 backdrop-blur-2xl border-b border-white/5 p-6 md:hidden flex flex-col gap-5 shadow-2xl"
-          >
-            {/* Mobile Search */}
-            <div className="flex items-stretch rounded-xl overflow-hidden border border-gray-800 bg-white/[0.06]">
-              <div className="flex-1 flex items-center gap-2 px-4 py-3">
-                <Search className="w-4 h-4 text-gray-600 shrink-0" />
-                <input
-                  type="text"
-                  placeholder="¿Qué buscas?"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="bg-transparent border-none outline-none flex-1 text-white placeholder:text-gray-600 text-sm focus:ring-0"
-                />
-              </div>
-              <button
-                onClick={handleSearch}
-                className="px-4 py-3 bg-[#9B1C1C] text-white"
-              >
-                <Search className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Mobile Categories */}
-            {mainCategorias.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  onClick={() => handleCatSelect(null)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium",
-                    !activeCatParam ? "bg-white text-black" : "bg-white/10 text-gray-300"
-                  )}
-                >
-                  <LayoutGrid className="w-3 h-3" />
-                  Todas
-                </button>
-                {mainCategorias.map((cat) => {
-                  const Icon = getCategoryIcon(cat.nombre);
-                  const isActive =
-                    selectedCategoryDocId === cat.documentId ||
-                    selectedCategoryDocId === cat.slug;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => handleCatSelect(cat.documentId)}
-                      className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium",
-                        isActive ? "bg-primary text-black" : "bg-white/10 text-gray-300"
-                      )}
-                    >
-                      <Icon className="w-3 h-3" />
-                      {cat.nombre}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className="h-px bg-white/5" />
-
+          <div className="hidden md:flex items-center gap-6">
             {session ? (
-              <>
-                <Link
-                  href="/portal"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 text-lg font-bold text-primary"
-                >
-                  <User className="w-5 h-5" />
-                  Mi Portal
+              <div className="flex items-center gap-4">
+                <Link href="/portal" className="text-slate-300 hover:text-white transition-all text-sm font-bold flex items-center gap-2 group">
+                  <User className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  Portal
                 </Link>
-                <button
-                  onClick={() => { setIsOpen(false); signOut(); }}
-                  className="flex items-center gap-3 text-lg font-bold text-red-500"
-                >
-                  <LogOut className="w-5 h-5" />
-                  Cerrar Sesión
+                <button onClick={() => signOut()} className="text-slate-500 hover:text-red-400 transition-colors">
+                  <LogOut className="w-4 h-4" />
                 </button>
-              </>
+              </div>
             ) : (
-              <Link
-                href="/login"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 text-lg font-bold text-white"
-              >
-                <User className="w-5 h-5" />
-                Iniciar Sesión
+              <Link href={`/login?callbackUrl=${pathname}`} className="text-sm font-bold text-slate-300 hover:text-white transition-colors">
+                Entrar
               </Link>
             )}
 
             <Link
               href="/contacto"
-              onClick={() => setIsOpen(false)}
-              className="bg-primary text-black py-4 rounded-2xl text-center font-bold text-lg"
+              className="flex items-center gap-2 bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]"
             >
-              Vende con nosotros
+              <Plus className="w-4 h-4 stroke-[3]" />
+              Vende aquí
             </Link>
+          </div>
+
+          <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white">
+            {isOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
+          </button>
+        </div>
+
+        {/* 2. Barra de Búsqueda Split y Categorías (Yelp Style) */}
+        <AnimatePresence>
+          {(isHome || scrolled) && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden bg-black/20 backdrop-blur-md border-t border-white/5"
+            >
+              <div className="px-4 py-4 flex flex-col gap-5">
+                
+                {/* Search Bar Group */}
+                <div className="flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl md:rounded-lg overflow-hidden shadow-2xl max-w-4xl w-full mx-auto">
+                  {/* Query Field */}
+                  <div className="flex-1 flex items-center gap-3 px-5 py-3.5 border-b md:border-b-0 md:border-r border-white/10">
+                    <Search className="w-5 h-5 text-slate-500 shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="¿Qué buscas en San Rafael?"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                      className="bg-transparent border-none outline-none w-full text-white placeholder:text-slate-600 text-sm md:text-base font-medium focus:ring-0"
+                    />
+                  </div>
+                  
+                  {/* Location Field with Autocomplete */}
+                  <div className="flex-1 flex items-center gap-3 px-5 py-3.5 min-w-0">
+                    <MapPin className="w-5 h-5 text-slate-500 shrink-0" />
+                    <input
+                      ref={locationInputRef}
+                      type="text"
+                      placeholder="Localidad"
+                      value={localidad}
+                      onChange={(e) => setLocalidad(e.target.value)}
+                      className="bg-transparent border-none outline-none w-full text-white placeholder:text-slate-600 text-sm md:text-base font-medium focus:ring-0 truncate"
+                    />
+                    {!isPlacesLoaded && <Loader2 className="w-4 h-4 text-slate-500 animate-spin" />}
+                  </div>
+
+                  {/* Search Button (Crimson Red) */}
+                  <button
+                    onClick={handleSearch}
+                    className="bg-[#9B1C1C] hover:bg-[#B91C1C] text-white px-10 py-4 md:py-0 font-black text-sm uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <Search className="w-5 h-5 stroke-[3]" />
+                    <span>Buscar</span>
+                  </button>
+                </div>
+
+                {/* Categories Row (Yelp Style Subcategories Dropdown) */}
+                <div ref={dropdownRef} className="flex items-center justify-center flex-wrap gap-x-2 gap-y-2 md:gap-x-6 max-w-6xl mx-auto">
+                  <button
+                    onClick={() => handleCatSelect(null)}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] font-bold transition-all",
+                      !activeCatParam ? "text-white border-b-2 border-primary" : "text-slate-400 hover:text-white"
+                    )}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                    Todas
+                  </button>
+
+                  {mainCategorias.map((cat) => {
+                    const Icon = getCategoryIcon(cat.nombre);
+                    const subCats = getSubcategories(cat.documentId);
+                    const hasSubs = subCats.length > 0;
+                    const isActive = activeCatParam === cat.documentId || activeCatParam === cat.slug;
+                    const isOpen = activeDropdown === cat.documentId;
+
+                    return (
+                      <div key={cat.id} className="relative group/cat">
+                        <button
+                          onClick={() => {
+                            if (hasSubs) setActiveDropdown(isOpen ? null : cat.documentId);
+                            else handleCatSelect(cat.documentId);
+                          }}
+                          className={cn(
+                            "flex items-center gap-2 px-1 py-1.5 text-[13px] font-bold transition-all whitespace-nowrap",
+                            isActive ? "text-white border-b-2 border-primary" : "text-slate-400 hover:text-white"
+                          )}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {cat.nombre}
+                          {hasSubs && <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", isOpen && "rotate-180")} />}
+                        </button>
+
+                        {/* Subcategories Dropdown */}
+                        <AnimatePresence>
+                          {isOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 10 }}
+                              className="absolute top-full left-0 mt-2 min-w-[220px] bg-zinc-950/98 backdrop-blur-3xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100]"
+                            >
+                              <div className="p-2 flex flex-col">
+                                <button
+                                  onClick={() => handleCatSelect(cat.documentId)}
+                                  className="w-full text-left px-4 py-2.5 text-[13px] font-black text-primary hover:bg-white/5 rounded-lg transition-colors mb-1"
+                                >
+                                  Ver todo en {cat.nombre}
+                                </button>
+                                <div className="h-px bg-white/5 my-1" />
+                                {subCats.map(sub => (
+                                  <button
+                                    key={sub.id}
+                                    onClick={() => handleCatSelect(sub.documentId)}
+                                    className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                  >
+                                    {sub.nombre}
+                                  </button>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Mobile Menu Fullscreen */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            className="fixed inset-0 bg-black z-[200] flex flex-col p-8"
+          >
+            <div className="flex justify-between items-center mb-12">
+              <Logo />
+              <button onClick={() => setIsOpen(false)}><X className="w-10 h-10 text-white" /></button>
+            </div>
+            
+            <div className="flex flex-col gap-8">
+               <div className="flex flex-col gap-4">
+                  <p className="text-slate-500 text-xs font-black uppercase tracking-widest mb-2">Portal</p>
+                  {session ? (
+                    <>
+                      <Link href="/portal" onClick={() => setIsOpen(false)} className="text-3xl font-black italic text-white hover:text-primary transition-colors">Mi Panel</Link>
+                      <button onClick={() => { signOut(); setIsOpen(false); }} className="text-3xl font-black italic text-red-500 text-left">Cerrar Sesión</button>
+                    </>
+                  ) : (
+                    <Link href="/login" onClick={() => setIsOpen(false)} className="text-3xl font-black italic text-white hover:text-primary transition-colors">Iniciar Sesión</Link>
+                  )}
+               </div>
+
+               <div className="flex flex-col gap-4">
+                  <p className="text-slate-500 text-xs font-black uppercase tracking-widest mb-2">Navegación</p>
+                  <Link href="/contacto" onClick={() => setIsOpen(false)} className="text-3xl font-black italic text-primary hover:text-white transition-colors">Vende con nosotros</Link>
+                  <Link href="/" onClick={() => setIsOpen(false)} className="text-3xl font-black italic text-white hover:text-primary transition-colors">Explorar</Link>
+               </div>
+            </div>
+
+            <div className="mt-auto pt-8 border-t border-white/10">
+              <p className="text-slate-600 text-xs uppercase tracking-[0.3em] font-bold">San Rafael 360 • Mendoza</p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -504,11 +344,9 @@ function NavbarInner() {
   );
 }
 
-// Wrapper exportado: Suspense es OBLIGATORIO porque NavbarInner usa useSearchParams()
-// Sin esto, Next.js falla al prerender /404 y /_not-found.
 export default function Navbar() {
   return (
-    <Suspense fallback={<div className="fixed top-0 left-0 right-0 z-50 h-[52px] bg-black/80 backdrop-blur-xl border-b border-white/5" />}>
+    <Suspense fallback={<div className="h-16 md:h-20 bg-black w-full fixed top-0 z-50 border-b border-white/5" />}>
       <NavbarInner />
     </Suspense>
   );

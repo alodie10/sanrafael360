@@ -96,6 +96,17 @@ function HomeContent() {
     }
   }, [searchParams, categorias]); 
 
+  // Auto-scroll a resultados cuando cambian los filtros (vía Navbar u otros)
+  useEffect(() => {
+    const q = searchParams.get("q");
+    const cat = searchParams.get("cat");
+    if (q || cat) {
+      // Pequeño timeout para asegurar que el DOM se haya actualizado si hay cambios de layout
+      const timer = setTimeout(scrollToResults, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Sincronizar búsqueda HACIA la URL (solo con debounce para el texto)
   useEffect(() => {
     if (categorias.length === 0) return;

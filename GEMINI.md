@@ -31,7 +31,13 @@ Este archivo proporciona el contexto crítico para que cualquier agente de IA (G
   - **En Mac (actual)**: Se encuentran en `/Users/diego/.nvm/versions/node/v20.20.2/bin`. Mapear `export PATH="/Users/diego/.nvm/versions/node/v20.20.2/bin:$PATH"`.
   - Si los comandos directos fallan, el agente debe buscar los binarios en rutas comunes y actualizar su contexto de ejecución.
 - **Zero-Trust Verification (CRÍTICO)**: Railway utiliza Zero Downtime Deployments. **NUNCA** asumas que un push se aplicó solo porque la API `/api/categorias` responde (eso medirá el despliegue viejo). Antes de declarar un éxito al usuario, el agente DEBE confirmar que el despliegue finalizó de construir (vía Railway web o CLI si el servicio está enlazado correctamente) Y debe advertir claramente qué partes puede probar automatizadamente y cuáles requieren que el usuario inicie sesión (ej: Content Manager).
-- **Protocolo de Push (OBLIGATORIO)**: El agente **NUNCA** debe hacer `git push` sin haber ejecutado localmente `npm run build` en el directorio afectado (`backend` o `frontend`). Esto evita que fallos de compilación de TypeScript lleguen a la infraestructura.
+- **Protocolo de Push (OBLIGATORIO)**: El agente **NUNCA** debe hacer `git push` sin build exitoso. **PUNTO CIEGO CONOCIDO**: el entorno sandbox del agente **NO tiene acceso completo a internet** (no puede resolver `fonts.googleapis.com`, no puede bindear puertos). Por esto:
+  1. `npx tsc --noEmit` SÍ funciona en el sandbox — úsalo para validar TypeScript.
+  2. `npm run build` (Next.js completo) **DEBE ser ejecutado por el USUARIO en su terminal local**, no por el agente.
+  3. Si el build del agente falla por `ENOTFOUND fonts.googleapis.com` o `EPERM listen`, eso es una limitación de red del sandbox — NO indica que el código esté mal. Pero tampoco es suficiente para declarar que el build pasa.
+  4. **Flujo correcto**: Agente hace commit → pide al usuario que ejecute `npm run build` → si pasa, usuario ejecuta `git push` (o el pre-push hook lo valida automáticamente).
+  5. **Pre-push hook instalado** en `.git/hooks/pre-push` — bloquea automáticamente cualquier push si `npm run build` falla. Esto protege producción incluso si el agente olvida pedir validación.
+
 
 ---
 
