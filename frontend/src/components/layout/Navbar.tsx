@@ -33,22 +33,20 @@ function NavbarInner() {
 
   const activeCatParam = searchParams.get("cat");
 
-  // --- Google Places Autocomplete (RESTRICCIÓN AJUSTADA) ---
+  // --- Google Places Autocomplete (RESTRICCIÓN DEFINITIVA) ---
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey || !locationInputRef.current) return;
     const loader = new Loader({ apiKey, version: "weekly", libraries: ["places"], language: "es" });
     
     loader.load().then((google) => {
-      // Ajustamos los límites para centrarnos más en el Sur de Mendoza y evitar La Pampa
       const southMendozaBounds = new google.maps.LatLngBounds(
-        new google.maps.LatLng(-36.2, -70.3), // Suroeste
-        new google.maps.LatLng(-33.8, -67.2)  // Noreste (Evitamos llegar tan al este para no tocar La Pampa)
+        new google.maps.LatLng(-36.2, -70.3),
+        new google.maps.LatLng(-33.8, -67.2)
       );
       
       const autocomplete = new google.maps.places.Autocomplete(locationInputRef.current!, {
         componentRestrictions: { country: "ar" },
-        // QUITAMOS la restricción de (cities) para permitir distritos como Cuadro Benegas o Las Paredes
         types: [], 
         fields: ["formatted_address", "geometry"],
         bounds: southMendozaBounds,
@@ -117,23 +115,14 @@ function NavbarInner() {
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    
-    // Solo agregamos búsqueda si hay texto
-    if (searchQuery.trim()) {
-      params.set("q", searchQuery.trim());
-    }
-
-    // Agregamos localidad siempre que sea distinta a la base o si hay búsqueda activa
+    if (searchQuery.trim()) params.set("q", searchQuery.trim());
     if (localidad.trim() && localidad !== "San Rafael, Mendoza") {
       params.set("l", localidad.trim());
     } else if (!searchQuery.trim() && !searchParams.get("cat")) {
-      // Solo reseteamos si realmente no hay nada
       setLocalidad("San Rafael, Mendoza");
     }
-    
     const currentCat = searchParams.get("cat");
     if (currentCat) params.set("cat", currentCat);
-
     const qs = params.toString();
     router.push(qs ? `/?${qs}` : "/");
     setIsOpen(false);
@@ -164,7 +153,13 @@ function NavbarInner() {
 
   const isHome = pathname === "/";
 
-  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleSearchInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.select();
+    // Reset de localidad por pedido del usuario al volver a la barra de búsqueda
+    setLocalidad("San Rafael, Mendoza");
+  };
+
+  const handleLocationInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.select();
   };
 
@@ -199,12 +194,12 @@ function NavbarInner() {
                       placeholder="¿Qué buscas?" 
                       value={searchQuery} 
                       onChange={(e) => setSearchQuery(e.target.value)} 
-                      onFocus={handleInputFocus}
+                      onFocus={handleSearchInputFocus}
                       onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
                       className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
                     />
                     {searchQuery && (
-                      <button onClick={() => { setSearchQuery(""); }} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
+                      <button onClick={() => setSearchQuery("")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
                     )}
                   </div>
 
@@ -217,7 +212,7 @@ function NavbarInner() {
                       placeholder="Localidad" 
                       value={localidad} 
                       onChange={(e) => setLocalidad(e.target.value)} 
-                      onFocus={handleInputFocus}
+                      onFocus={handleLocationInputFocus}
                       onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
                       className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
                     />
@@ -233,7 +228,7 @@ function NavbarInner() {
                     <div className="flex items-center gap-2 text-slate-500 py-2"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-xs font-bold uppercase">Cargando...</span></div>
                   ) : (
                     <>
-                      <button onClick={() => handleCatSelect(null)} className={cn("text-[13px] font-bold py-1 border-b-2", !activeCatParam ? "text-primary border-primary" : "text-slate-400 border-transparent hover:text-white")}>Todas</button>
+                      {/* Eliminado el botón 'Todas' por pedido del usuario */}
                       {mainCategorias.map((cat) => {
                         const subCats = getSubcategories(cat.documentId);
                         const isOpen = activeDropdown === cat.documentId;
