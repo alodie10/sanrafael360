@@ -56,7 +56,13 @@ function NavbarInner() {
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
         if (place.formatted_address) {
-          setLocalidad(place.formatted_address);
+          // Limpiamos la basura técnica (códigos postales, rutas) del texto que ve el usuario
+          let clean = place.formatted_address.split(',')[0]; 
+          clean = clean.replace(/M560\d/g, '') // Elimina M5600, M5603...
+                       .replace(/RN\d+/g, '')  // Elimina RN143...
+                       .replace(/RP\d+/g, '')  // Elimina RP173...
+                       .trim();
+          setLocalidad(clean || place.formatted_address.split(',')[0]);
         }
       });
       setIsPlacesLoaded(true);

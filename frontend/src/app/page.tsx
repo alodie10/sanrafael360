@@ -292,14 +292,15 @@ function HomeContent() {
       const normalizedLoc = normalizeText(localidadQuery.split(',')[0]); // Solo el distrito
       const locTerms = normalizedLoc.split(/\s+/).filter(t => 
         t.length > 2 && 
-        !["mendoza", "argentina", "rafael"].includes(t) &&
+        !["mendoza", "argentina", "rafael", "rn143", "rp173", "m5600", "m5603"].includes(t) &&
+        !/^[a-z]\d+/.test(t) && // Excluye códigos tipo M5600
         !/^\d+$/.test(t)
       );
       
       if (locTerms.length > 0) {
         const bizAddress = normalizeText(negocio.direccion || "");
         const bizLoc = normalizeText(negocio.localidad || "");
-        // Ahora usamos every: debe coincidir con todos los términos del distrito (ej: Rama Y Caida)
+        // Ahora usamos every: debe coincidir con todos los términos del distrito (ej: Valle Y Grande)
         matchesLocation = locTerms.every(term => 
           bizAddress.includes(term) || bizLoc.includes(term)
         );
