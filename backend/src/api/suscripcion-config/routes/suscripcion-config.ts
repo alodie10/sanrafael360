@@ -1,1 +1,3 @@
-import { factories } from '@strapi/strapi';\nexport default factories.createCoreRouter('api::suscripcion-config.suscripcion-config');
+import { factories } from '@strapi/strapi';
+
+export default factories.createCoreRouter('api::suscripcion-config.suscripcion-config');

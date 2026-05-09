@@ -13,12 +13,7 @@ interface BusinessPortalCardProps {
 }
 
 export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  // Verificamos si el premium está activo o expirado
-  const premiumExpired = negocio.is_premium && negocio.premium_valid_until && new Date(negocio.premium_valid_until) < new Date();
-  const isPremiumActive = negocio.is_premium && !premiumExpired;
-  const needsSubscription = !negocio.is_premium || premiumExpired;
+  const [planType, setPlanType] = useState<'Mensual' | 'Semestral'>('Mensual');
 
   const handleSubscribe = async () => {
     setIsProcessing(true);
@@ -29,7 +24,7 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           negocioId: negocio.documentId,
-          planType: 'Mensual' 
+          planType: planType 
         })
       });
 
@@ -134,16 +129,40 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
           <span className="truncate">{negocio.categoria?.nombre || "General"}</span>
         </div>
         
-        <div className="mt-auto space-y-3">
+        <div className="mt-auto space-y-4">
           {needsSubscription && (
-            <button 
-              onClick={handleSubscribe}
-              disabled={isProcessing}
-              className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl disabled:opacity-50"
-            >
-              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4 text-primary" />}
-              {premiumExpired ? 'Renovar Premium' : 'Mejorar a Premium'}
-            </button>
+            <div className="space-y-4">
+              {/* Selector de Plan */}
+              <div className="grid grid-cols-2 gap-2 p-1.5 bg-black/40 rounded-2xl border border-white/5 backdrop-blur-sm">
+                <button 
+                  onClick={() => setPlanType('Mensual')}
+                  className={cn(
+                    "py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                    planType === 'Mensual' ? "bg-white text-black shadow-lg" : "text-zinc-500 hover:text-white"
+                  )}
+                >
+                  Mensual
+                </button>
+                <button 
+                  onClick={() => setPlanType('Semestral')}
+                  className={cn(
+                    "py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                    planType === 'Semestral' ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20" : "text-zinc-500 hover:text-white"
+                  )}
+                >
+                  Semestral
+                </button>
+              </div>
+
+              <button 
+                onClick={handleSubscribe}
+                disabled={isProcessing}
+                className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-primary hover:bg-primary/90 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/20 disabled:opacity-50"
+              >
+                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                {premiumExpired ? `Renovar Plan ${planType}` : `Suscribirme Plan ${planType}`}
+              </button>
+            </div>
           )}
 
           <div className="grid grid-cols-2 gap-3">

@@ -1,1 +1,3 @@
-import { factories } from '@strapi/strapi';\nexport default factories.createCoreService('api::suscripcion-config.suscripcion-config');
+import { factories } from '@strapi/strapi';
+
+export default factories.createCoreService('api::suscripcion-config.suscripcion-config');
