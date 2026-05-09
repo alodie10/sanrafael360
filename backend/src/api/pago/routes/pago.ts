@@ -5,8 +5,17 @@ export default {
       path: '/pagos/create-preference',
       handler: 'pago.createPreference',
       config: {
+        auth: false,
         policies: [],
         middlewares: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/pagos/simulate-success',
+      handler: 'pago.simulateSuccess',
+      config: {
+        auth: false,
       },
     },
     {

@@ -21,20 +21,40 @@ export default factories.createCoreController('api::pago.pago', ({ strapi }) => 
   },
 
   /**
+   * Endpoint especial para SIMULAR un éxito de pago en LOCAL
+   */
+  async simulateSuccess(ctx) {
+    try {
+      const { externalReference } = ctx.request.body;
+      if (!externalReference) return ctx.badRequest('externalReference requerido');
+      
+      const result = await strapi.service('api::pago.pago').handlePaymentSuccess(externalReference, 'SIMULATED_PAYMENT_123');
+      return ctx.send(result);
+    } catch (err: any) {
+      return ctx.internalServerError(err.message);
+    }
+  },
+
+  /**
    * Recibe notificaciones de Mercado Pago (Webhook)
    */
   async webhook(ctx) {
     try {
       const { query } = ctx;
-      const topic = query.topic || query.type;
-      const id = query.id || ctx.request.body.data?.id;
+      // Mercado Pago envía el ID del pago en la notificación
+      const paymentId = query.id || ctx.request.body.data?.id;
+      const type = query.type || ctx.request.body.type;
 
-      strapi.log.info(`[MP Webhook] Notificación recibida: ${topic} ID: ${id}`);
+      if (type === 'payment' && paymentId) {
+        strapi.log.info(`[MP Webhook] Procesando pago ID: ${paymentId}`);
+        // Aquí llamaríamos a MP para validar el pago y obtener el external_reference
+        // En una etapa avanzada, implementaríamos la validación real con el SDK
+      }
 
       return ctx.send({ received: true });
     } catch (err: any) {
       strapi.log.error(err);
-      return ctx.send({ received: true }); // Siempre devolvemos 200 a MP para evitar reintentos infinitos
+      return ctx.send({ received: true });
     }
   }
 }));
