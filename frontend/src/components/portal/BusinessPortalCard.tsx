@@ -193,10 +193,10 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
                 <div className="flex items-center gap-2">
                   {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
                   <span className="text-[10px] font-black uppercase tracking-widest">
-                    {premiumExpired ? `Renovar Plan ${planType}` : `Suscribirme Plan ${planType}`}
+                    {isMounted ? (premiumExpired ? `Renovar Plan ${planType}` : `Suscribirme Plan ${planType}`) : 'Cargando plan...'}
                   </span>
                 </div>
-                <span className="text-xs font-black">$ {currentPrice.toLocaleString()} ARS</span>
+                {isMounted && <span className="text-xs font-black">$ {currentPrice.toLocaleString()} ARS</span>}
               </button>
             </div>
           )}
