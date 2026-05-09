@@ -40,7 +40,7 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
         throw new Error(result.error || "No se pudo generar el link de pago");
       }
     } catch (err: any) {
-      console.error(err);
+      console.error("DEBUG: Error completo al suscribir:", err);
       toast.error("Error al conectar con Mercado Pago");
     } finally {
       setIsProcessing(false);

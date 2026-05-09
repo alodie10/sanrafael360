@@ -6,8 +6,11 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
    * Genera una preferencia de pago en Mercado Pago
    */
   async createPreference(negocioId: string, planType: string = 'Mensual') {
+    strapi.log.info(`[MP] Iniciando preferencia para NegocioID: ${negocioId}, Plan: ${planType}`);
     const accessToken = process.env.MP_ACCESS_TOKEN;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const appUrl = "http://localhost:3000"; // Forzamos local para el test
+    
+    strapi.log.info(`[MP] Usando URL de retorno: ${appUrl}`);
     
     if (!accessToken) {
       throw new Error('Mercado Pago Access Token no configurado');
@@ -24,39 +27,49 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
 
     const amount = planType === 'Anual' ? 10000 : 1200;
 
-    const result = await preference.create({
-      body: {
-        items: [
-          {
-            id: negocio.documentId,
-            title: `Suscripción Premium San Rafael 360 - ${negocio.nombre}`,
-            quantity: 1,
-            unit_price: amount,
-            currency_id: 'ARS',
+    try {
+      const result = await preference.create({
+        body: {
+          items: [
+            {
+              id: negocio.documentId,
+              title: `Suscripción Premium San Rafael 360 - ${negocio.nombre}`,
+              quantity: 1,
+              unit_price: amount,
+              currency_id: 'ARS',
+            },
+          ],
+          back_urls: {
+            success: `${appUrl}/portal?payment=success`,
+            failure: `${appUrl}/portal?payment=failure`,
+            pending: `${appUrl}/portal?payment=pending`,
           },
-        ],
-        back_urls: {
-          success: `${appUrl}/portal?payment=success`,
-          failure: `${appUrl}/portal?payment=failure`,
-          pending: `${appUrl}/portal?payment=pending`,
+          auto_return: 'approved',
+          external_reference: negocio.documentId,
         },
-        auto_return: 'approved',
-        external_reference: negocio.documentId,
-      },
-    });
+      });
 
-    await strapi.documents('api::pago.pago').create({
-      data: {
-        monto: amount,
-        estado: 'pendiente',
-        mp_preference_id: result.id,
-        negocio: negocio.id,
-        external_reference: negocio.documentId,
-        publishedAt: new Date(),
+      strapi.log.info(`[MP] Preferencia creada con éxito: ${result.id}`);
+      
+      await strapi.documents('api::pago.pago').create({
+        data: {
+          monto: amount,
+          estado: 'pendiente',
+          mp_preference_id: result.id,
+          negocio: negocio.id,
+          external_reference: negocio.documentId,
+          publishedAt: new Date(),
+        }
+      });
+
+      return result;
+    } catch (error: any) {
+      strapi.log.error(`[MP Error] Falló al crear preferencia: ${error.message}`);
+      if (error.body) {
+        strapi.log.error(`[MP Error Detail] ${JSON.stringify(error.body)}`);
       }
-    });
-
-    return result;
+      throw error;
+    }
   },
 
   /**
