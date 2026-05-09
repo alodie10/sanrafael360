@@ -41,20 +41,20 @@ export default factories.createCoreController('api::pago.pago', ({ strapi }) => 
   async webhook(ctx) {
     try {
       const { query } = ctx;
-      // Mercado Pago envía el ID del pago en la notificación
       const paymentId = query.id || ctx.request.body.data?.id;
       const type = query.type || ctx.request.body.type;
 
       if (type === 'payment' && paymentId) {
-        strapi.log.info(`[MP Webhook] Procesando pago ID: ${paymentId}`);
-        // Aquí llamaríamos a MP para validar el pago y obtener el external_reference
-        // En una etapa avanzada, implementaríamos la validación real con el SDK
+        strapi.log.info(`[MP Webhook] Recibido pago ID: ${paymentId}. Validando...`);
+        
+        // Llamamos al servicio para que hable con MP y actualice el negocio
+        await strapi.service('api::pago.pago').processPaymentNotification(paymentId);
       }
 
       return ctx.send({ received: true });
     } catch (err: any) {
-      strapi.log.error(err);
-      return ctx.send({ received: true });
+      strapi.log.error(`[MP Webhook Error] ${err.message}`);
+      return ctx.send({ received: true }); // MP exige un 200/OK siempre
     }
   }
 }));

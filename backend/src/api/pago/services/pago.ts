@@ -127,5 +127,32 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
 
     strapi.log.info(`[PagoSuccess] Negocio ${negocio.nombre} ahora es PREMIUM hasta ${validUntil.toLocaleDateString()}`);
     return { success: true, negocio: negocio.nombre };
+  },
+
+  /**
+   * Consulta a MP por un pago específico y lo procesa
+   */
+  async processPaymentNotification(paymentId: string) {
+    const accessToken = process.env.MP_ACCESS_TOKEN;
+    if (!accessToken) throw new Error('MP_ACCESS_TOKEN no configurado');
+
+    const client = new MercadoPagoConfig({ accessToken });
+    const payment = new Payment(client);
+
+    try {
+      const data = await payment.get({ id: paymentId });
+      
+      if (data.status === 'approved') {
+        const externalReference = data.external_reference;
+        if (externalReference) {
+          strapi.log.info(`[MP Service] Pago ${paymentId} APROBADO. Activando negocio...`);
+          await this.handlePaymentSuccess(externalReference, paymentId.toString());
+        }
+      } else {
+        strapi.log.info(`[MP Service] Pago ${paymentId} tiene estado: ${data.status}. No se activa nada.`);
+      }
+    } catch (error: any) {
+      strapi.log.error(`[MP Service Error] Error al consultar pago ${paymentId}: ${error.message}`);
+    }
   }
 }));
