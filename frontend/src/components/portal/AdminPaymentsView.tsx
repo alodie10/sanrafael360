@@ -31,8 +31,8 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
     const fetchData = async () => {
       try {
         const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-        // Buscamos negocios con sus dueños y pagos - Aumentamos el límite para ver todos
-        const res = await fetch(`${strapiUrl}/api/negocios?populate[owner]=true&populate[pagos]=true&pagination[limit]=1000`, {
+        // IMPORTANTE: Agregamos publicationState=preview para ver negocios que están en borrador
+        const res = await fetch(`${strapiUrl}/api/negocios?populate[owner]=true&populate[pagos]=true&pagination[limit]=1000&publicationState=preview`, {
           headers: { Authorization: `Bearer ${jwt}` }
         });
         const json = await res.json();
@@ -48,29 +48,30 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
 
   // Lógica de filtrado y ordenamiento avanzada
   const processedData = useMemo(() => {
+    const searchLower = searchTerm.toLowerCase().trim();
+
     let filtered = data.filter(item => {
-      // Búsqueda Robusta (Strapi 5 puede tener datos directos o en .attributes)
-      const name = item.nombre || item.attributes?.nombre || "";
-      const email = item.owner?.email || item.attributes?.owner?.email || "";
+      // Acceso seguro a datos (Strapi 5 a veces anida en attributes)
+      const attr = item.attributes || item;
+      const name = attr.nombre || "";
+      const email = attr.owner?.email || attr.owner?.data?.attributes?.email || "";
       
-      const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = name.toLowerCase().includes(searchLower) || 
+                           email.toLowerCase().includes(searchLower);
       
-      if (!matchesSearch) return false;
+      if (!matchesSearch && searchTerm !== "") return false;
 
       const now = new Date();
-      // La fecha puede estar directa o en attributes
-      const rawValidUntil = item.premium_valid_until || item.attributes?.premium_valid_until;
+      const rawValidUntil = attr.premium_valid_until;
       const validUntil = rawValidUntil ? new Date(rawValidUntil) : null;
       
-      // Un negocio está "Vencido" si tiene fecha de vencimiento y esa fecha ya pasó, 
-      // o si explícitamente era premium y ahora no lo es (pero tiene fecha vieja)
+      const isPremium = attr.is_premium === true;
       const isExpired = validUntil && validUntil < now;
-      const isExpiringSoon = validUntil && 
+      const isExpiringSoon = isPremium && validUntil && 
                              (validUntil.getTime() - now.getTime()) < (7 * 24 * 60 * 60 * 1000) && 
                              validUntil > now;
 
-      if (filterType === 'premium') return (item.is_premium || item.attributes?.is_premium) && !isExpired;
+      if (filterType === 'premium') return isPremium && !isExpired;
       if (filterType === 'expired') return isExpired;
       if (filterType === 'expiring') return isExpiringSoon;
       
