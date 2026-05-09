@@ -49,7 +49,7 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
             pending: `${appUrl}/portal?payment=pending`,
           },
           auto_return: 'approved',
-          notification_url: `${backendUrl}/api/pago/webhook`,
+          notification_url: `${backendUrl}/api/pagos/webhook`,
           external_reference: negocio.documentId,
         },
       });
