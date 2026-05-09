@@ -28,5 +28,15 @@ export default {
         middlewares: [],
       },
     },
+    {
+      method: 'POST',
+      path: '/pago/webhook',
+      handler: 'pago.webhook',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };
