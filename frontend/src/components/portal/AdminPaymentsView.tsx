@@ -42,11 +42,17 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
         }
 
         // Filtros de estado en servidor
-        const now = new Date().toISOString();
+        const now = new Date();
+        const nowISO = now.toISOString();
+        const nextWeekISO = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
         if (filterType === 'premium') {
-          query += `&filters[is_premium][$eq]=true&filters[premium_valid_until][$gt]=${now}`;
+          query += `&filters[is_premium][$eq]=true&filters[premium_valid_until][$gt]=${nowISO}`;
         } else if (filterType === 'expired') {
-          query += `&filters[premium_valid_until][$lt]=${now}`;
+          query += `&filters[premium_valid_until][$lt]=${nowISO}`;
+        } else if (filterType === 'expiring') {
+          // Vencen entre hoy y dentro de 7 días
+          query += `&filters[premium_valid_until][$gt]=${nowISO}&filters[premium_valid_until][$lt]=${nextWeekISO}`;
         }
 
         const res = await fetch(`${strapiUrl}${query}`, {
