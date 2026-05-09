@@ -7,8 +7,8 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
    */
   async createPreference(negocioId: string, planType: string = 'Mensual') {
     strapi.log.info(`[MP] Iniciando preferencia para NegocioID: ${negocioId}, Plan: ${planType}`);
-    const accessToken = process.env.MP_ACCESS_TOKEN;
-    const appUrl = "http://localhost:3000"; // Forzamos local para el test
+    const accessToken = "APP_USR-2643477758657161-050910-08d07f563344d3cb9a2e63447de91190-3387439373";
+    const appUrl = "http://127.0.0.1:3000"; 
     
     strapi.log.info(`[MP] Usando URL de retorno: ${appUrl}`);
     
