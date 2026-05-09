@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Building2, MapPin, ExternalLink, Crown, CreditCard, Loader2, Settings } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
