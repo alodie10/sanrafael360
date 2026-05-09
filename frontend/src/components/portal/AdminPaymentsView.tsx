@@ -157,6 +157,11 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-black/40 border border-white/10 rounded-2xl py-3.5 pl-14 pr-6 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-primary/40 transition-all"
           />
+          {searchTerm && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] text-zinc-500 font-bold uppercase tracking-widest bg-black/60 px-2 py-1 rounded-md">
+              {processedData.length} resultados
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2 p-1 bg-black/20 rounded-2xl border border-white/5">
