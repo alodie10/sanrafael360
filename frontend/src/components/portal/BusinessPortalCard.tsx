@@ -14,6 +14,12 @@ interface BusinessPortalCardProps {
 
 export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps) {
   const [planType, setPlanType] = useState<'Mensual' | 'Semestral'>('Mensual');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Verificamos si el premium está activo o expirado
+  const premiumExpired = negocio.is_premium && negocio.premium_valid_until && new Date(negocio.premium_valid_until) < new Date();
+  const isPremiumActive = negocio.is_premium && !premiumExpired;
+  const needsSubscription = !negocio.is_premium || premiumExpired;
 
   const handleSubscribe = async () => {
     setIsProcessing(true);
