@@ -16,9 +16,11 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
   const [planType, setPlanType] = useState<'Mensual' | 'Semestral'>('Mensual');
   const [isProcessing, setIsProcessing] = useState(false);
   const [prices, setPrices] = useState<{ mensual: number, semestral: number } | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Cargamos los precios al montar el componente
   useEffect(() => {
+    setIsMounted(true);
     const fetchPrices = async () => {
       try {
         const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
