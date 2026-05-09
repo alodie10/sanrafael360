@@ -1,7 +1,7 @@
 {
   "//": "Trigger build v13 - Schema Fix (autor)",
   "name": "sanrafael360-monorepo",
-  "version": "1.0.4",
+  "version": "1.2.0",
   "description": "Repositorio centralizado para San Rafael 360 (Next.js + Strapi)",
   "scripts": {
     "start": "cd backend && npm run start",

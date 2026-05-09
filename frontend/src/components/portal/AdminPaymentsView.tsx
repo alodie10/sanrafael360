@@ -12,8 +12,15 @@ import {
   Search,
   ChevronRight
 } from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+// Formateo nativo para evitar dependencias extra
+const formatDate = (dateString: string) => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+};
 
 import { useMemo } from "react";
 
@@ -227,11 +234,11 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 text-xs text-slate-300">
                           <Calendar className="w-3 h-3 text-slate-500" />
-                          {format(new Date(negocio.createdAt), 'dd MMM yy', { locale: es })}
+                          {formatDate(negocio.createdAt)}
                         </div>
                         <div className="flex items-center gap-2 text-[10px] text-slate-500 uppercase tracking-tighter">
                           <Clock className="w-3 h-3" />
-                          In: {negocio.owner?.updatedAt ? format(new Date(negocio.owner.updatedAt), 'dd/MM HH:mm') : '---'}
+                          In: {negocio.owner?.updatedAt ? formatDate(negocio.owner.updatedAt) : '---'}
                         </div>
                       </div>
                     </td>
@@ -242,7 +249,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
                             {isExpired ? 'Expirado' : isExpiringSoon ? 'Vence pronto' : 'Activo'}
                           </div>
                           <div className="text-xs text-white">
-                            {negocio.premium_valid_until ? format(new Date(negocio.premium_valid_until), 'dd/MM/yy') : 'Sin fecha'}
+                            {negocio.premium_valid_until ? formatDate(negocio.premium_valid_until) : 'Sin fecha'}
                           </div>
                         </div>
                       ) : (
