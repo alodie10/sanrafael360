@@ -99,17 +99,15 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
     pending: data.reduce((acc, curr) => acc + (curr.pagos?.filter((p: any) => p.estado === 'pendiente').length || 0), 0)
   };
 
-  if (loading) return (
-    <div className="flex flex-col items-center justify-center py-20 gap-4">
-      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      <p className="text-slate-400 animate-pulse font-serif italic">Analizando base de suscriptores...</p>
-    </div>
-  );
-
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header & Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+        {loading && (
+          <div className="absolute -top-4 left-0 right-0 h-1 bg-primary/20 overflow-hidden rounded-full">
+            <div className="h-full bg-primary animate-progress-buffer w-1/3 rounded-full" />
+          </div>
+        )}
         <div className="bg-slate-900/50 border border-white/5 p-6 rounded-[2rem] backdrop-blur-xl group hover:border-primary/30 transition-all">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-primary/10 rounded-2xl group-hover:bg-primary/20 transition-colors">
