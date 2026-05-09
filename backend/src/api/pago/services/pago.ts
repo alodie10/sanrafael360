@@ -39,12 +39,14 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
               currency_id: 'ARS',
             },
           ],
+          /* 
           back_urls: {
             success: `${appUrl}/portal?payment=success`,
             failure: `${appUrl}/portal?payment=failure`,
             pending: `${appUrl}/portal?payment=pending`,
           },
           auto_return: 'approved',
+          */
           external_reference: negocio.documentId,
         },
       });

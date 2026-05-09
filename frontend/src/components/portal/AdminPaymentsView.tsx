@@ -16,10 +16,10 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 interface AdminPaymentsViewProps {
-  session: any;
+  jwt: string;
 }
 
-export default function AdminPaymentsView({ session }: AdminPaymentsViewProps) {
+export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,7 +30,7 @@ export default function AdminPaymentsView({ session }: AdminPaymentsViewProps) {
         const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
         // Buscamos negocios con sus dueños y pagos
         const res = await fetch(`${strapiUrl}/api/negocios?populate[owner]=true&populate[pagos]=true&sort=createdAt:desc`, {
-          headers: { Authorization: `Bearer ${session.jwt}` }
+          headers: { Authorization: `Bearer ${jwt}` }
         });
         const json = await res.json();
         setData(json.data || []);
@@ -41,7 +41,7 @@ export default function AdminPaymentsView({ session }: AdminPaymentsViewProps) {
       }
     };
     fetchData();
-  }, [session.jwt]);
+  }, [jwt]);
 
   const filteredData = data.filter(item => 
     item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
