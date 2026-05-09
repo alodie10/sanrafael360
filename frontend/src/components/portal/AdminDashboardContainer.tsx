@@ -22,11 +22,13 @@ import AdminSupportInbox from "./AdminSupportInbox";
 import AdminLeadsInbox from "./AdminLeadsInbox";
 import AdminDiscoveryTool from "./AdminDiscoveryTool";
 import ActivityLogView from "./ActivityLogView";
+import AdminPaymentsView from "./AdminPaymentsView";
 import PortalStats from "./PortalStats";
 import AdminTopRanking from "./AdminTopRanking";
+import { CreditCard } from "lucide-react";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
-  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats'>('stats');
+  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats' | 'payments'>('stats');
   const [claims, setClaims] = useState(initialClaims);
   const [supportCount, setSupportCount] = useState(0);
   const [leadsCount, setLeadsCount] = useState(0);
@@ -140,6 +142,16 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
             </button>
 
             <button 
+              onClick={() => setActiveTab('payments')}
+              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'payments' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+            >
+              <div className="flex items-center gap-3">
+                <CreditCard className="w-4 h-4" /> 
+                <span>Suscripciones y Pagos</span>
+              </div>
+            </button>
+
+            <button 
               onClick={() => setActiveTab('leads')}
               className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'leads' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
             >
@@ -229,6 +241,13 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Directorio Global (Curación Proactiva)</h2>
                 <AdminDiscoveryTool jwt={session.jwt as string} />
+              </div>
+            )}
+
+            {activeTab === 'payments' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Suscripciones y Pagos</h2>
+                <AdminPaymentsView jwt={session.jwt as string} />
               </div>
             )}
 
