@@ -181,7 +181,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         reserva_url: reservaUrl,
         schedules,
         categoria: isAdmin ? categoria : undefined,
-        trigger_discovery: false
+        trigger_discovery: false,
+        galeria: existingGallery.map((img: any) => img.id)
       };
 
       formData.append("data", JSON.stringify(payload));
