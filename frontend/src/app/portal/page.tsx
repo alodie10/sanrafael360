@@ -21,12 +21,8 @@ async function getNegocios(jwt: string) {
       headers: { Authorization: `Bearer ${jwt}` },
       cache: 'no-store'
     });
-    if (!res.ok) {
-      console.error("❌ [Portal] /api/negocios/me respondió:", res.status);
-      return [];
-    }
+    if (!res.ok) return [];
     const data = await res.json();
-    console.log("✅ [Portal] Negocios recibidos:", JSON.stringify(data));
     return data.data || [];
   } catch (e) {
     console.error("❌ Error fetching negocios:", e);

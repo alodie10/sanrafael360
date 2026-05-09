@@ -52,9 +52,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   me: async (ctx) => {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
-    strapi.log.info(`[Portal/me] Buscando negocios para user.id=${user.id} (${user.email})`);
     const data = await strapi.service('api::negocio.negocio').getOwnerNegocios(user.id);
-    strapi.log.info(`[Portal/me] Resultado: ${JSON.stringify(data?.length)} negocios encontrados`);
     return { data: data || [] }; 
   },
 
