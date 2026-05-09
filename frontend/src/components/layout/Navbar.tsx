@@ -177,7 +177,7 @@ function NavbarInner() {
           <div className="flex items-center gap-2">
             <Logo onClick={handleResetAll} className="hover:scale-105 transition-transform" />
             <span className="text-[10px] text-white/20 font-mono mt-4 hidden md:block">
-              {process.env.NEXT_PUBLIC_APP_VERSION || "v.1.2"}
+              {process.env.NEXT_PUBLIC_APP_VERSION || "v.1.1"}
             </span>
           </div>
           <div className="hidden md:flex items-center gap-6">
