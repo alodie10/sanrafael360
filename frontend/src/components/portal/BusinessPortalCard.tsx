@@ -15,6 +15,11 @@ interface BusinessPortalCardProps {
 export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Verificamos si el premium está activo o expirado
+  const premiumExpired = negocio.is_premium && negocio.premium_valid_until && new Date(negocio.premium_valid_until) < new Date();
+  const isPremiumActive = negocio.is_premium && !premiumExpired;
+  const needsSubscription = !negocio.is_premium || premiumExpired;
+
   const handleSubscribe = async () => {
     setIsProcessing(true);
     try {
@@ -49,12 +54,12 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
       whileHover={{ y: -5 }}
       className={cn(
         "group relative bg-zinc-900/20 border rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:shadow-2xl backdrop-blur-md flex flex-col h-full",
-        negocio.is_premium ? "border-amber-500/40 shadow-amber-500/5" : "border-white/5 hover:border-primary/40"
+        isPremiumActive ? "border-amber-500/40 shadow-amber-500/5" : "border-white/5 hover:border-primary/40"
       )}
     >
       <div className={cn(
         "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
-        negocio.is_premium ? "bg-gradient-to-br from-amber-500/10 via-transparent to-transparent" : "bg-gradient-to-br from-primary/5 via-transparent to-transparent"
+        isPremiumActive ? "bg-gradient-to-br from-amber-500/10 via-transparent to-transparent" : "bg-gradient-to-br from-primary/5 via-transparent to-transparent"
       )} />
       
       <div className="relative h-56 bg-zinc-800 overflow-hidden">
@@ -72,10 +77,16 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
         
         <div className="absolute top-6 right-6 z-10 flex flex-col gap-2 items-end">
-          {negocio.is_premium && (
+          {isPremiumActive && (
             <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 shadow-xl backdrop-blur-xl">
               <Crown className="w-3.5 h-3.5" />
               <span className="text-[10px] font-black uppercase tracking-widest">Socio Elite</span>
+            </div>
+          )}
+          {premiumExpired && (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 shadow-xl backdrop-blur-xl">
+              <Crown className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Premium Vencido</span>
             </div>
           )}
           
@@ -124,14 +135,14 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
         </div>
         
         <div className="mt-auto space-y-3">
-          {!negocio.is_premium && (
+          {needsSubscription && (
             <button 
               onClick={handleSubscribe}
               disabled={isProcessing}
               className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl disabled:opacity-50"
             >
               {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4 text-primary" />}
-              Mejorar a Premium
+              {premiumExpired ? 'Renovar Premium' : 'Mejorar a Premium'}
             </button>
           )}
 
