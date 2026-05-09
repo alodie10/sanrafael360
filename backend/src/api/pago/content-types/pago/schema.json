@@ -1,0 +1,53 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pagos",
+  "info": {
+    "singularName": "pago",
+    "pluralName": "pagos",
+    "displayName": "Pago",
+    "description": "Registro de transacciones de Mercado Pago"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "monto": {
+      "type": "decimal",
+      "required": true
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": [
+        "pendiente",
+        "aprobado",
+        "rechazado",
+        "cancelado"
+      ],
+      "default": "pendiente"
+    },
+    "mp_preference_id": {
+      "type": "string",
+      "description": "ID de la preferencia de Mercado Pago"
+    },
+    "mp_payment_id": {
+      "type": "string",
+      "description": "ID de la transacción final de Mercado Pago"
+    },
+    "fecha_pago": {
+      "type": "datetime"
+    },
+    "negocio": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::negocio.negocio"
+    },
+    "detalles_mp": {
+      "type": "json",
+      "description": "Carga completa del webhook para auditoría"
+    },
+    "external_reference": {
+      "type": "string",
+      "description": "Referencia interna para conciliación"
+    }
+  }
+}

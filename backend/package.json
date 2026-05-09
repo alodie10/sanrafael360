@@ -24,16 +24,17 @@
     "@strapi/plugin-users-permissions": "5.40.0",
     "@strapi/provider-upload-cloudinary": "5.40.0",
     "@strapi/strapi": "5.40.0",
-    "strapi-provider-email-resend": "latest",
     "better-sqlite3": "12.6.2",
     "cloudinary": "^2.5.1",
     "esbuild": "^0.20.0",
+    "mercadopago": "^2.12.0",
     "pg": "^8.11.0",
+    "playwright": "^1.48.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0",
-    "styled-components": "^6.0.0",
-    "playwright": "^1.48.0"
+    "strapi-provider-email-resend": "latest",
+    "styled-components": "^6.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",

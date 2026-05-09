@@ -602,6 +602,7 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
       'plugin::users-permissions.user'
     >;
     premium_notes: Schema.Attribute.Text;
+    premium_since: Schema.Attribute.DateTime;
     premium_valid_until: Schema.Attribute.DateTime;
     price_range: Schema.Attribute.Enumeration<
       ['Economico', 'Moderado', 'Medio-Alto', 'Alto']
@@ -627,6 +628,42 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     views: Schema.Attribute.BigInteger & Schema.Attribute.DefaultTo<'0'>;
     website: Schema.Attribute.String;
     whatsapp: Schema.Attribute.String;
+  };
+}
+
+export interface ApiPagoPago extends Struct.CollectionTypeSchema {
+  collectionName: 'pagos';
+  info: {
+    description: 'Registro de transacciones de Mercado Pago';
+    displayName: 'Pago';
+    pluralName: 'pagos';
+    singularName: 'pago';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    detalles_mp: Schema.Attribute.JSON;
+    estado: Schema.Attribute.Enumeration<
+      ['pendiente', 'aprobado', 'rechazado', 'cancelado']
+    > &
+      Schema.Attribute.DefaultTo<'pendiente'>;
+    external_reference: Schema.Attribute.String;
+    fecha_pago: Schema.Attribute.DateTime;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::pago.pago'> &
+      Schema.Attribute.Private;
+    monto: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    mp_payment_id: Schema.Attribute.String;
+    mp_preference_id: Schema.Attribute.String;
+    negocio: Schema.Attribute.Relation<'manyToOne', 'api::negocio.negocio'>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -1228,6 +1265,7 @@ declare module '@strapi/strapi' {
       'api::categoria.categoria': ApiCategoriaCategoria;
       'api::lead.lead': ApiLeadLead;
       'api::negocio.negocio': ApiNegocioNegocio;
+      'api::pago.pago': ApiPagoPago;
       'api::review.review': ApiReviewReview;
       'api::soporte.soporte': ApiSoporteSoporte;
       'plugin::content-releases.release': PluginContentReleasesRelease;

@@ -178,6 +178,10 @@
       "default": false,
       "description": "Indica si el negocio tiene una suscripción premium activa"
     },
+    "premium_since": {
+      "type": "datetime",
+      "description": "Fecha de inicio original de la suscripción premium"
+    },
     "premium_valid_until": {
       "type": "datetime",
       "description": "Fecha de vencimiento de la suscripción premium"
