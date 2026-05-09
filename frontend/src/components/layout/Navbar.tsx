@@ -37,7 +37,7 @@ function NavbarInner() {
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey || !locationInputRef.current) return;
-    const loader = new Loader({ apiKey, version: "weekly", libraries: ["places"], language: "es" });
+    const loader = new Loader({ apiKey, version: "weekly", libraries: ["places", "marker", "maps"], language: "es" });
     
     loader.load().then((google) => {
       const southMendozaBounds = new google.maps.LatLngBounds(
