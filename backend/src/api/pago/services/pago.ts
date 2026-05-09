@@ -7,13 +7,14 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
    */
   async createPreference(negocioId: string, planType: string = 'Mensual') {
     strapi.log.info(`[MP] Iniciando preferencia para NegocioID: ${negocioId}, Plan: ${planType}`);
-    const accessToken = "APP_USR-2643477758657161-050910-08d07f563344d3cb9a2e63447de91190-3387439373";
-    const appUrl = "http://127.0.0.1:3000"; 
+    const accessToken = process.env.MP_ACCESS_TOKEN;
+    const appUrl = process.env.FRONTEND_URL || "https://sanrafael360-production.up.railway.app";
+    const backendUrl = process.env.BACKEND_URL || "https://sanrafael360-production.up.railway.app";
     
     strapi.log.info(`[MP] Usando URL de retorno: ${appUrl}`);
     
     if (!accessToken) {
-      throw new Error('Mercado Pago Access Token no configurado');
+      throw new Error('Mercado Pago Access Token no configurado en variables de entorno (MP_ACCESS_TOKEN)');
     }
 
     const client = new MercadoPagoConfig({ accessToken });
@@ -39,14 +40,13 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
               currency_id: 'ARS',
             },
           ],
-          /* 
           back_urls: {
             success: `${appUrl}/portal?payment=success`,
             failure: `${appUrl}/portal?payment=failure`,
             pending: `${appUrl}/portal?payment=pending`,
           },
           auto_return: 'approved',
-          */
+          notification_url: `${backendUrl}/api/pago/webhook`,
           external_reference: negocio.documentId,
         },
       });
