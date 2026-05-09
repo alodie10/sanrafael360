@@ -49,44 +49,46 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
   // Lógica de filtrado y ordenamiento avanzada
   const processedData = useMemo(() => {
     let filtered = data.filter(item => {
-      const name = item.nombre || "";
-      const email = item.owner?.email || "";
+      // Búsqueda Robusta (Strapi 5 puede tener datos directos o en .attributes)
+      const name = item.nombre || item.attributes?.nombre || "";
+      const email = item.owner?.email || item.attributes?.owner?.email || "";
+      
       const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                            email.toLowerCase().includes(searchTerm.toLowerCase());
       
       if (!matchesSearch) return false;
 
       const now = new Date();
-      const validUntil = item.premium_valid_until ? new Date(item.premium_valid_until) : null;
-      const isExpired = item.is_premium && validUntil && validUntil < now;
-      const isExpiringSoon = item.is_premium && validUntil && 
+      // La fecha puede estar directa o en attributes
+      const rawValidUntil = item.premium_valid_until || item.attributes?.premium_valid_until;
+      const validUntil = rawValidUntil ? new Date(rawValidUntil) : null;
+      
+      // Un negocio está "Vencido" si tiene fecha de vencimiento y esa fecha ya pasó, 
+      // o si explícitamente era premium y ahora no lo es (pero tiene fecha vieja)
+      const isExpired = validUntil && validUntil < now;
+      const isExpiringSoon = validUntil && 
                              (validUntil.getTime() - now.getTime()) < (7 * 24 * 60 * 60 * 1000) && 
                              validUntil > now;
 
-      if (filterType === 'premium') return item.is_premium && !isExpired;
+      if (filterType === 'premium') return (item.is_premium || item.attributes?.is_premium) && !isExpired;
       if (filterType === 'expired') return isExpired;
       if (filterType === 'expiring') return isExpiringSoon;
       
       return true;
     });
 
-    // Ordenamiento Prioritario:
-    // 1. Dueño + Premium Activo
-    // 2. Dueño Básico
-    // 3. Resto (Directorio sin dueño)
+    // Ordenamiento Prioritario
     return filtered.sort((a, b) => {
-      // Prioridad 1: Tiene dueño vs No tiene dueño
-      if (a.owner && !b.owner) return -1;
-      if (!a.owner && b.owner) return 1;
-      
-      // Prioridad 2: Dentro de los que tienen dueño, Premium primero
-      if (a.owner && b.owner) {
-        if (a.is_premium && !b.is_premium) return -1;
-        if (!a.is_premium && b.is_premium) return 1;
-      }
+      const aOwner = a.owner || a.attributes?.owner;
+      const bOwner = b.owner || b.attributes?.owner;
+      const aPremium = a.is_premium || a.attributes?.is_premium;
+      const bPremium = b.is_premium || b.attributes?.is_premium;
 
-      // Prioridad 3: Orden alfabético o por fecha de creación
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (aOwner && !bOwner) return -1;
+      if (!aOwner && bOwner) return 1;
+      if (aPremium && !bPremium) return -1;
+      if (!aPremium && bPremium) return 1;
+      return 0;
     });
   }, [data, searchTerm, filterType]);
 
