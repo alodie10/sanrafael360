@@ -24,7 +24,9 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
     const fetchPrices = async () => {
       try {
         const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-        const res = await fetch(`${strapiUrl}/api/suscripcion-config`);
+        const res = await fetch(`${strapiUrl}/api/suscripcion-config`, {
+          cache: 'no-store'
+        });
         const json = await res.json();
         if (json.data) {
           setPrices({
