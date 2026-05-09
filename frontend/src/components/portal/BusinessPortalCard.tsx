@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { Building2, MapPin, ExternalLink, Crown, CreditCard, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getStrapiMedia } from "@/lib/strapi";
