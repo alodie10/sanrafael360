@@ -52,7 +52,6 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
         negocio.is_premium ? "border-amber-500/40 shadow-amber-500/5" : "border-white/5 hover:border-primary/40"
       )}
     >
-      {/* Glass Glow effect */}
       <div className={cn(
         "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
         negocio.is_premium ? "bg-gradient-to-br from-amber-500/10 via-transparent to-transparent" : "bg-gradient-to-br from-primary/5 via-transparent to-transparent"
@@ -72,7 +71,6 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
         
-        {/* Status Badge Floating */}
         <div className="absolute top-6 right-6 z-10 flex flex-col gap-2 items-end">
           {negocio.is_premium && (
             <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 shadow-xl backdrop-blur-xl">
@@ -101,7 +99,6 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
           </div>
         </div>
 
-        {/* Logo Overlap */}
         <div className="absolute -bottom-6 left-8 w-16 h-16 bg-zinc-900 border border-white/10 rounded-2xl p-1 shadow-2xl group-hover:-translate-y-2 transition-transform duration-500">
           {negocio.logo ? (
             <img 

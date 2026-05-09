@@ -1,6 +1,7 @@
 "use client";
 
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Globe } from "lucide-react";
+import Link from "next/link";
 
 interface PortalHeaderProps {
   userName: string;
@@ -21,6 +22,13 @@ export default function PortalHeader({ userName }: PortalHeaderProps) {
         </div>
         
         <div className="flex items-center gap-4">
+          <Link 
+            href="/"
+            className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+          >
+            <Globe className="w-4 h-4 text-primary" /> Ver Directorio Público
+          </Link>
+
           <div className="flex items-center gap-4 bg-white/5 pl-2 pr-5 py-2 rounded-2xl border border-white/5 hover:border-primary/20 transition-all group">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-zinc-800 to-zinc-900 flex items-center justify-center text-primary font-serif font-bold text-xl border border-white/10 group-hover:border-primary/30 transition-colors">
               {userName.charAt(0) || "U"}
