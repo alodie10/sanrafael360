@@ -29,13 +29,31 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-        // IMPORTANTE: Agregamos publicationState=preview para ver negocios que están en borrador
-        const res = await fetch(`${strapiUrl}/api/negocios?populate[owner]=true&populate[pagos]=true&pagination[limit]=1000&publicationState=preview`, {
+        
+        // Construimos la URL con filtros de servidor para que busque en TODA la base
+        let query = `/api/negocios?populate[owner]=true&populate[pagos]=true&pagination[pageSize]=1000&publicationState=preview`;
+        
+        // Si hay búsqueda, la mandamos al servidor con $containsi (insensible a mayúsculas)
+        if (searchTerm) {
+          query += `&filters[$or][0][nombre][$containsi]=${encodeURIComponent(searchTerm)}&filters[$or][1][owner][email][$containsi]=${encodeURIComponent(searchTerm)}`;
+        }
+
+        // Filtros de estado en servidor
+        const now = new Date().toISOString();
+        if (filterType === 'premium') {
+          query += `&filters[is_premium][$eq]=true&filters[premium_valid_until][$gt]=${now}`;
+        } else if (filterType === 'expired') {
+          query += `&filters[premium_valid_until][$lt]=${now}`;
+        }
+
+        const res = await fetch(`${strapiUrl}${query}`, {
           headers: { Authorization: `Bearer ${jwt}` }
         });
         const json = await res.json();
+        console.log(`DEBUG: Strapi devolvió ${json.data?.length || 0} negocios de un total de ${json.meta?.pagination?.total || 0}`);
         setData(json.data || []);
       } catch (err) {
         console.error("Error fetching admin payments data:", err);
@@ -43,43 +61,15 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
         setLoading(false);
       }
     };
-    fetchData();
-  }, [jwt]);
 
-  // Lógica de filtrado y ordenamiento avanzada
+    // Debounce simple para no saturar el servidor mientras escribís
+    const timer = setTimeout(() => fetchData(), 300);
+    return () => clearTimeout(timer);
+  }, [jwt, searchTerm, filterType]);
+
+  // Ya no filtramos localmente, usamos la data que viene del server
   const processedData = useMemo(() => {
-    const searchLower = searchTerm.toLowerCase().trim();
-
-    let filtered = data.filter(item => {
-      // Acceso seguro a datos (Strapi 5 a veces anida en attributes)
-      const attr = item.attributes || item;
-      const name = attr.nombre || "";
-      const email = attr.owner?.email || attr.owner?.data?.attributes?.email || "";
-      
-      const matchesSearch = name.toLowerCase().includes(searchLower) || 
-                           email.toLowerCase().includes(searchLower);
-      
-      if (!matchesSearch && searchTerm !== "") return false;
-
-      const now = new Date();
-      const rawValidUntil = attr.premium_valid_until;
-      const validUntil = rawValidUntil ? new Date(rawValidUntil) : null;
-      
-      const isPremium = attr.is_premium === true;
-      const isExpired = validUntil && validUntil < now;
-      const isExpiringSoon = isPremium && validUntil && 
-                             (validUntil.getTime() - now.getTime()) < (7 * 24 * 60 * 60 * 1000) && 
-                             validUntil > now;
-
-      if (filterType === 'premium') return isPremium && !isExpired;
-      if (filterType === 'expired') return isExpired;
-      if (filterType === 'expiring') return isExpiringSoon;
-      
-      return true;
-    });
-
-    // Ordenamiento Prioritario
-    return filtered.sort((a, b) => {
+    return [...data].sort((a, b) => {
       const aOwner = a.owner || a.attributes?.owner;
       const bOwner = b.owner || b.attributes?.owner;
       const aPremium = a.is_premium || a.attributes?.is_premium;
@@ -91,7 +81,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
       if (!aPremium && bPremium) return 1;
       return 0;
     });
-  }, [data, searchTerm, filterType]);
+  }, [data]);
 
   const stats = {
     total: data.reduce((acc, curr) => acc + (curr.pagos?.filter((p: any) => p.estado === 'aprobado').reduce((sum: number, p: any) => sum + p.monto, 0) || 0), 0),

@@ -118,10 +118,14 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     syncAbortRef.current = new AbortController();
 
     try {
-      const res = await fetch("/api/discovery/places-sync", {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const res = await fetch(`${strapiUrl}/api/discovery/google`, {
         method: "POST",
-        body: JSON.stringify({ businessName: nombre }),
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.jwt}`
+        },
+        body: JSON.stringify({ name: nombre }),
         signal: syncAbortRef.current.signal
       });
 
