@@ -133,7 +133,7 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
     // 4. Actualizamos el registro del pago
     if (pagoPendiente.length > 0) {
       await strapi.documents('api::pago.pago').update({
-        documentId: pagos[0].documentId,
+        documentId: pagoPendiente[0].documentId,
         data: {
           estado: 'aprobado',
           mp_payment_id: paymentId,
