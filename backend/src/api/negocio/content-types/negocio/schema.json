@@ -189,6 +189,12 @@
     "premium_notes": {
       "type": "text",
       "description": "Notas administrativas sobre los pagos (ej: Pago efectivo 15/05)"
+    },
+    "pagos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::pago.pago",
+      "mappedBy": "negocio"
     }
   }
 }

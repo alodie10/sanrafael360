@@ -601,6 +601,7 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
       'oneToOne',
       'plugin::users-permissions.user'
     >;
+    pagos: Schema.Attribute.Relation<'oneToMany', 'api::pago.pago'>;
     premium_notes: Schema.Attribute.Text;
     premium_since: Schema.Attribute.DateTime;
     premium_valid_until: Schema.Attribute.DateTime;

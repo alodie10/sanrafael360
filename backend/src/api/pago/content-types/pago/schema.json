@@ -39,7 +39,8 @@
     "negocio": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::negocio.negocio"
+      "target": "api::negocio.negocio",
+      "inversedBy": "pagos"
     },
     "detalles_mp": {
       "type": "json",
