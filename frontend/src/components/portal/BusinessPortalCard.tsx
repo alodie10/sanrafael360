@@ -1,25 +1,61 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Building2, MapPin, ExternalLink } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getStrapiMedia } from "@/lib/strapi";
+import { toast } from "sonner";
 
 interface BusinessPortalCardProps {
   negocio: any;
 }
 
 export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps) {
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleSubscribe = async () => {
+    setIsProcessing(true);
+    try {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const res = await fetch(`${strapiUrl}/api/pagos/create-preference`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          negocioId: negocio.documentId,
+          planType: 'Mensual' 
+        })
+      });
+
+      const result = await res.json();
+      if (result.success && result.data?.init_point) {
+        window.location.href = result.data.init_point;
+      } else {
+        throw new Error(result.error || "No se pudo generar el link de pago");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Error al conectar con Mercado Pago");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -5 }}
-      className="group relative bg-zinc-900/20 border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-primary/40 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 backdrop-blur-md flex flex-col h-full"
+      className={cn(
+        "group relative bg-zinc-900/20 border rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:shadow-2xl backdrop-blur-md flex flex-col h-full",
+        negocio.is_premium ? "border-amber-500/40 shadow-amber-500/5" : "border-white/5 hover:border-primary/40"
+      )}
     >
       {/* Glass Glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <div className={cn(
+        "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
+        negocio.is_premium ? "bg-gradient-to-br from-amber-500/10 via-transparent to-transparent" : "bg-gradient-to-br from-primary/5 via-transparent to-transparent"
+      )} />
       
       <div className="relative h-56 bg-zinc-800 overflow-hidden">
         {negocio.imagen_portada ? (
@@ -36,7 +72,14 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
         
         {/* Status Badge Floating */}
-        <div className="absolute top-6 right-6 z-10">
+        <div className="absolute top-6 right-6 z-10 flex flex-col gap-2 items-end">
+          {negocio.is_premium && (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 shadow-xl backdrop-blur-xl">
+              <Crown className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Socio Elite</span>
+            </div>
+          )}
+          
           <div className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-xl shadow-2xl",
             negocio.estado_reclamo === 'aprobado' 
@@ -82,7 +125,18 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
           <span className="truncate">{negocio.categoria?.nombre || "General"}</span>
         </div>
         
-        <div className="mt-auto">
+        <div className="mt-auto space-y-3">
+          {!negocio.is_premium && (
+            <button 
+              onClick={handleSubscribe}
+              disabled={isProcessing}
+              className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl disabled:opacity-50"
+            >
+              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4 text-primary" />}
+              Mejorar a Premium
+            </button>
+          )}
+
           <Link 
             href={`/negocios/${negocio.slug}`}
             className="flex items-center justify-center gap-2 px-4 py-4 bg-primary hover:bg-primary/90 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/10"
