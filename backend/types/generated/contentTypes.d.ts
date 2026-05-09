@@ -751,6 +751,47 @@ export interface ApiSoporteSoporte extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiSuscripcionConfigSuscripcionConfig
+  extends Struct.SingleTypeSchema {
+  collectionName: 'suscripcion_configs';
+  info: {
+    description: 'Precios y duraciones de los planes';
+    displayName: 'Configuraci\u00F3n de Suscripci\u00F3n';
+    pluralName: 'suscripcion-configs';
+    singularName: 'suscripcion-config';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dias_mensual: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<30>;
+    dias_semestral: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<180>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::suscripcion-config.suscripcion-config'
+    > &
+      Schema.Attribute.Private;
+    precio_mensual: Schema.Attribute.Decimal &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<1200>;
+    precio_semestral: Schema.Attribute.Decimal &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<50000>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface PluginContentReleasesRelease
   extends Struct.CollectionTypeSchema {
   collectionName: 'strapi_releases';
@@ -1269,6 +1310,7 @@ declare module '@strapi/strapi' {
       'api::pago.pago': ApiPagoPago;
       'api::review.review': ApiReviewReview;
       'api::soporte.soporte': ApiSoporteSoporte;
+      'api::suscripcion-config.suscripcion-config': ApiSuscripcionConfigSuscripcionConfig;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

@@ -1,0 +1,36 @@
+{
+  "kind": "singleType",
+  "collectionName": "suscripcion_configs",
+  "info": {
+    "singularName": "suscripcion-config",
+    "pluralName": "suscripcion-configs",
+    "displayName": "Configuración de Suscripción",
+    "description": "Precios y duraciones de los planes"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "precio_mensual": {
+      "type": "decimal",
+      "default": 1200,
+      "required": true
+    },
+    "precio_semestral": {
+      "type": "decimal",
+      "default": 50000,
+      "required": true
+    },
+    "dias_mensual": {
+      "type": "integer",
+      "default": 30,
+      "required": true
+    },
+    "dias_semestral": {
+      "type": "integer",
+      "default": 180,
+      "required": true
+    }
+  }
+}

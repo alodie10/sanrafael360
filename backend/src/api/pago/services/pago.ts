@@ -29,7 +29,11 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
 
     if (!negocio) throw new Error('Negocio no encontrado');
 
-    const amount = planType === 'Anual' ? 10000 : 1200;
+    // 1. Obtener configuración de precios
+    const config = await strapi.documents('api::suscripcion-config.suscripcion-config').findFirst();
+    const amount = planType === 'Semestral' 
+      ? (config?.precio_semestral || 50000) 
+      : (config?.precio_mensual || 1200);
 
     try {
       const result = await preference.create({
@@ -37,7 +41,7 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
           items: [
             {
               id: negocio.documentId,
-              title: `Suscripción Premium San Rafael 360 - ${negocio.nombre}`,
+              title: `Suscripción Premium San Rafael 360 - ${planType} - ${negocio.nombre}`,
               quantity: 1,
               unit_price: amount,
               currency_id: 'ARS',
@@ -51,10 +55,13 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
           auto_return: 'approved',
           notification_url: `${backendUrl}/api/pagos/webhook`,
           external_reference: negocio.documentId,
+          metadata: {
+            plan_type: planType
+          }
         },
       });
 
-      strapi.log.info(`[MP] Preferencia creada con éxito: ${result.id}`);
+      strapi.log.info(`[MP] Preferencia creada (${planType}): ${result.id} por $${amount}`);
       
       await strapi.documents('api::pago.pago').create({
         data: {
@@ -92,12 +99,27 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
       return;
     }
 
-    // 1. Calculamos fechas (30 días de premium)
+    // 1. Obtener configuración para ver cuántos días sumar
+    const config = await strapi.documents('api::suscripcion-config.suscripcion-config').findFirst();
+    
+    // Buscamos el pago para ver qué plan era
+    const pagoPendiente = await strapi.documents('api::pago.pago').findMany({
+      filters: { external_reference: externalReference, estado: 'pendiente' },
+      sort: 'createdAt:desc',
+      limit: 1
+    });
+
+    const isSemestral = pagoPendiente[0]?.monto >= (config?.precio_semestral || 50000);
+    const diasSumar = isSemestral 
+      ? (config?.dias_semestral || 180) 
+      : (config?.dias_mensual || 30);
+
+    // 2. Calculamos fechas
     const now = new Date();
     const validUntil = new Date();
-    validUntil.setDate(now.getDate() + 30);
+    validUntil.setDate(now.getDate() + diasSumar);
 
-    // 2. Actualizamos el negocio a Premium
+    // 3. Actualizamos el negocio a Premium
     await strapi.documents('api::negocio.negocio').update({
       documentId: externalReference,
       data: {
@@ -108,14 +130,8 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
       }
     });
 
-    // 3. Actualizamos el registro del pago
-    const pagos = await strapi.documents('api::pago.pago').findMany({
-      filters: { external_reference: externalReference, estado: 'pendiente' },
-      sort: 'createdAt:desc',
-      limit: 1
-    });
-
-    if (pagos.length > 0) {
+    // 4. Actualizamos el registro del pago
+    if (pagoPendiente.length > 0) {
       await strapi.documents('api::pago.pago').update({
         documentId: pagos[0].documentId,
         data: {
