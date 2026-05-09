@@ -29,11 +29,25 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
 
     if (!negocio) throw new Error('Negocio no encontrado');
 
-    // 1. Obtener configuración de precios
+    // 1. Obtener configuración de precios y modo prueba
     const config = await strapi.documents('api::suscripcion-config.suscripcion-config').findFirst();
+    const isTestMode = config?.modo_prueba || false;
     const amount = planType === 'Semestral' 
       ? (config?.precio_semestral || 50000) 
       : (config?.precio_mensual || 1200);
+
+    // 2. Si estamos en modo prueba, simulamos el éxito de inmediato
+    if (isTestMode) {
+      strapi.log.info(`[MP SIMULATION] Modo prueba activo. Simulando éxito para ${negocio.nombre}`);
+      
+      // Activamos el negocio directamente (como si el webhook hubiera llegado)
+      await this.handlePaymentSuccess(negocio.documentId, 'SIMULATED_PAYMENT_' + Date.now());
+      
+      return {
+        id: 'simulated_id',
+        init_point: `${appUrl}/portal?payment=success&simulated=true`
+      };
+    }
 
     try {
       const result = await preference.create({

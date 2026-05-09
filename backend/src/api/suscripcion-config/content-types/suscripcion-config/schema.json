@@ -31,6 +31,10 @@
       "type": "integer",
       "default": 180,
       "required": true
+    },
+    "modo_prueba": {
+      "type": "boolean",
+      "default": false
     }
   }
 }

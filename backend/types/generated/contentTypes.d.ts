@@ -779,6 +779,7 @@ export interface ApiSuscripcionConfigSuscripcionConfig
       'api::suscripcion-config.suscripcion-config'
     > &
       Schema.Attribute.Private;
+    modo_prueba: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     precio_mensual: Schema.Attribute.Decimal &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<1200>;
