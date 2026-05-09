@@ -15,11 +15,34 @@ interface BusinessPortalCardProps {
 export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps) {
   const [planType, setPlanType] = useState<'Mensual' | 'Semestral'>('Mensual');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [prices, setPrices] = useState<{ mensual: number, semestral: number } | null>(null);
+
+  // Cargamos los precios al montar el componente
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+        const res = await fetch(`${strapiUrl}/api/suscripcion-config`);
+        const json = await res.json();
+        if (json.data) {
+          setPrices({
+            mensual: json.data.precio_mensual,
+            semestral: json.data.precio_semestral
+          });
+        }
+      } catch (err) {
+        console.error("Error cargando precios:", err);
+      }
+    };
+    fetchPrices();
+  }, []);
 
   // Verificamos si el premium está activo o expirado
   const premiumExpired = negocio.is_premium && negocio.premium_valid_until && new Date(negocio.premium_valid_until) < new Date();
   const isPremiumActive = negocio.is_premium && !premiumExpired;
   const needsSubscription = !negocio.is_premium || premiumExpired;
+
+  const currentPrice = planType === 'Mensual' ? (prices?.mensual || 1200) : (prices?.semestral || 50000);
 
   const handleSubscribe = async () => {
     setIsProcessing(true);
@@ -163,10 +186,15 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
               <button 
                 onClick={handleSubscribe}
                 disabled={isProcessing}
-                className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-primary hover:bg-primary/90 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/20 disabled:opacity-50"
+                className="w-full flex flex-col items-center justify-center gap-1 px-4 py-4 bg-primary hover:bg-primary/90 text-black rounded-2xl transition-all shadow-xl shadow-primary/20 disabled:opacity-50"
               >
-                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                {premiumExpired ? `Renovar Plan ${planType}` : `Suscribirme Plan ${planType}`}
+                <div className="flex items-center gap-2">
+                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                  <span className="text-[10px] font-black uppercase tracking-widest">
+                    {premiumExpired ? `Renovar Plan ${planType}` : `Suscribirme Plan ${planType}`}
+                  </span>
+                </div>
+                <span className="text-xs font-black">$ {currentPrice.toLocaleString()} ARS</span>
               </button>
             </div>
           )}
