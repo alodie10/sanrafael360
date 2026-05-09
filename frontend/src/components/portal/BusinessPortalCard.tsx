@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Building2, MapPin, ExternalLink, Crown, CreditCard, Loader2 } from "lucide-react";
+import { Building2, MapPin, ExternalLink, Crown, CreditCard, Loader2, Settings } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getStrapiMedia } from "@/lib/strapi";
@@ -146,12 +146,22 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
             </button>
           )}
 
-          <Link 
-            href={`/negocios/${negocio.slug}`}
-            className="flex items-center justify-center gap-2 px-4 py-4 bg-primary hover:bg-primary/90 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/10"
-          >
-            <ExternalLink className="w-4 h-4" /> Ver Perfil y Gestionar
-          </Link>
+          <div className="grid grid-cols-2 gap-3">
+            <Link 
+              href={`/portal/negocios/${negocio.slug}/editar`}
+              className="flex items-center justify-center gap-2 px-4 py-4 bg-primary hover:bg-primary/90 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/20"
+            >
+              <Settings className="w-4 h-4" /> Gestionar
+            </Link>
+            
+            <Link 
+              href={`/negocios/${negocio.slug}`}
+              target="_blank"
+              className="flex items-center justify-center gap-2 px-4 py-4 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all"
+            >
+              <ExternalLink className="w-4 h-4 text-primary" /> Ver Web
+            </Link>
+          </div>
         </div>
       </div>
     </motion.div>
