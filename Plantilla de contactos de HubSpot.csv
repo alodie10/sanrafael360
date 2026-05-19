@@ -1,0 +1,26 @@
+Nombre,Apellidos,Dirección de correo,Número de teléfono,Ciudad,Etapa del ciclo de vida,Propietario del contacto,Sabor de helado favorito
+Rebekah,Wang (Sample Contact),rwang@redelivery.co.uk,815-245-4413,Cambridge,Subscriber,name@company.com,Vanilla
+Kerry,Summers (Sample Contact),ksummers@morningstar.com,482-7768,New York City,Lead,name@company.com,Chocolate
+Santiago,Bourgault (Sample Contact),bourgault@sanctuary.it,482-7768,New York City,Opportunity,name@company.com,Coffee
+Sean,Garcia (Sample Contact),sean.garcia@komscore.fr,714-767-1517,Paris,Customer,name@company.com,Mint Chocolate Chip
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+"ELIMINA LAS INSTRUCCIONES DE ABAJO BORRANDO LAS LÍNEAS 11 Y SIGUIENTES ANTES DE CARGAR ESTE ARCHIVO A HUBSPOT.",,,,,,,
+,,,,,,,
+"Cómo usar esta plantilla...",,,,,,,
+,,,,,,,
+"Puedes reemplazar los datos de contacto de arriba con los tuyos o subir esta plantilla tal como está con los datos de muestra proporcionados",,,,,,,
+,,,,,,,
+"Lo que debes saber:",,,,,,,
+,"1. Esta plantilla incluye algunas propiedades de contacto predeterminadas de HubSpot (que se ven en los encabezados de las columnas). Puedes eliminar o agregar más propiedades a este archivo para importarlas. Abajo puedes consultar más información sobre las propiedades de contacto.",,,,,,
+,"2. Esta plantilla incluye un ejemplo de propiedad de contacto personalizada: "Sabor de helado favorito". Puedes crear esta propiedad personalizada, o generar una propia, en HubSpot más adelante durante la importación.",,,,,,
+,"3. Hay algunos valores de propiedad predeterminados que no se pueden cambiar, como "etapa del ciclo de vida". Estos valores específicos coinciden con la configuración del CRM de HubSpot. Abajo puedes consultar más información al respecto.",,,,,,
+,,,,,,,
+"Artículos de conocimiento útiles:",,,,,,,
+,"1. Preparación de un archivo para la importación: https://knowledge.hubspot.com/es/crm-setup/set-up-your-import-file",,,,,,
+,"2. Propiedades de contacto predeterminadas de HubSpot: https://knowledge.hubspot.com/es/contacts/hubspots-default-contact-properties",,,,,,
+,"3. Cómo eliminar registros de contacto de muestra más adelante en HubSpot: https://knowledge.hubspot.com/es/contacts/delete-crm-records",,,,,,
+,"4. Acerca de las etapas del ciclo de vida de HubSpot: https://knowledge.hubspot.com/es/contacts/use-lifecycle-stages",,,,,,
