@@ -75,21 +75,34 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
                  </div>
               )}
 
-              {negocio.categoria && (
-                 <div className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-white/20 border border-white/30 text-white">
-                   {negocio.categoria.nombre}
-                 </div>
-              )}
+              {(() => {
+                // Deduplicar: si algún atributo ya cubre la categoría, no mostrar categoría por separado
+                const categoriaNombre = negocio.categoria?.nombre?.toLowerCase().trim();
+                const atributosFiltrados = (negocio.atributos || []).filter(
+                  (attr) => attr.nombre?.toLowerCase().trim() !== categoriaNombre
+                );
+                const categoriaYaCubierta = atributosFiltrados.length < (negocio.atributos || []).length;
 
-              {negocio.atributos && negocio.atributos.length > 0 && (
-                 <div className="flex gap-2 flex-wrap">
-                   {negocio.atributos.map((attr) => (
-                     <div key={attr.documentId} className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-white/10 border border-white/20 text-slate-200">
-                       {attr.nombre}
-                     </div>
-                   ))}
-                 </div>
-              )}
+                return (
+                  <>
+                    {negocio.categoria && !categoriaYaCubierta && (
+                      <div className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-white/20 border border-white/30 text-white">
+                        {negocio.categoria.nombre}
+                      </div>
+                    )}
+                    {negocio.atributos && negocio.atributos.length > 0 && (
+                      <div className="flex gap-2 flex-wrap">
+                        {/* Si la categoría ya está cubierta, mostramos todos los atributos. Si no, los filtrados */}
+                        {(categoriaYaCubierta ? negocio.atributos : atributosFiltrados).map((attr) => (
+                          <div key={attr.documentId} className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-white/10 border border-white/20 text-slate-200">
+                            {attr.nombre}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
