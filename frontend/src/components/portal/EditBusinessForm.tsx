@@ -308,6 +308,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
           atributosSeleccionados={atributosSeleccionados}
           setAtributosSeleccionados={setAtributosSeleccionados}
           availableAtributos={availableAtributos}
+          setAvailableAtributos={setAvailableAtributos}
+          session={session}
         />
 
         <EditBusinessReservations 
