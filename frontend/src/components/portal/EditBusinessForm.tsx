@@ -11,6 +11,7 @@ import EditBusinessHeader from "./edit-form/EditBusinessHeader";
 import EditBusinessIdentity from "./edit-form/EditBusinessIdentity";
 import EditBusinessSocial from "./edit-form/EditBusinessSocial";
 import EditBusinessReservations from "./edit-form/EditBusinessReservations";
+import EditBusinessAttributes from "./edit-form/EditBusinessAttributes";
 import EditBusinessGallery from "./edit-form/EditBusinessGallery";
 import EditBusinessVisualIdentity from "./edit-form/EditBusinessVisualIdentity";
 import ScheduleEditor from "./ScheduleEditor";
@@ -40,6 +41,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [schedules, setSchedules] = useState(negocio.schedules || []);
   const [categoria, setCategoria] = useState(negocio.categoria?.documentId || negocio.categoria?.id || "");
   const [categories, setCategories] = useState<any[]>([]);
+  const [atributosSeleccionados, setAtributosSeleccionados] = useState<string[]>(negocio.atributos?.map((a: any) => a.documentId) || []);
+  const [availableAtributos, setAvailableAtributos] = useState<any[]>([]);
   
   // Files
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -74,6 +77,22 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       fetchCategories();
     }
   }, [isAdmin]);
+
+  useEffect(() => {
+    const fetchAtributos = async () => {
+      try {
+        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+        const res = await fetch(`${strapiUrl}/api/atributos?sort=nombre:asc&pagination[pageSize]=100`, {
+          headers: { "Authorization": `Bearer ${session.jwt}` }
+        });
+        const data = await res.json();
+        setAvailableAtributos(data.data || []);
+      } catch (e) {
+        console.error("Error fetching atributos:", e);
+      }
+    };
+    fetchAtributos();
+  }, []);
 
   // Handlers
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover' | 'gallery') => {
@@ -185,6 +204,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         reserva_url: reservaUrl,
         schedules,
         categoria: isAdmin ? categoria : undefined,
+        atributos: atributosSeleccionados,
         trigger_discovery: false,
         galeria: existingGallery.map((img: any) => img.id)
       };
@@ -282,6 +302,12 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
           removeExistingPhoto={removeExistingPhoto}
           removeNewPhoto={removeNewPhoto}
           handleFileChange={handleFileChange}
+        />
+
+        <EditBusinessAttributes
+          atributosSeleccionados={atributosSeleccionados}
+          setAtributosSeleccionados={setAtributosSeleccionados}
+          availableAtributos={availableAtributos}
         />
 
         <EditBusinessReservations 
