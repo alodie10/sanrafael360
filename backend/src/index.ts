@@ -23,7 +23,10 @@ export default {
             'api::negocio.negocio.claim',
             'api::review.review.find',
             'api::review.review.findOne',
-            'api::review.review.create' // Permiso vital para reseñas
+            'api::review.review.create', // Permiso vital para reseñas
+            'api::atributo.atributo.find',
+            'api::atributo.atributo.findOne',
+            'api::atributo.atributo.create'
           ];
 
           for (const action of actions) {
