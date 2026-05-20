@@ -195,6 +195,12 @@
       "relation": "oneToMany",
       "target": "api::pago.pago",
       "mappedBy": "negocio"
+    },
+    "atributos": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::atributo.atributo",
+      "inversedBy": "negocios"
     }
   }
 }

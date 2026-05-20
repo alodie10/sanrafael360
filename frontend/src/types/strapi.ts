@@ -24,6 +24,13 @@ export interface Categoria {
   negocios?: Negocio[];
   parent?: Categoria;
   subcategorias?: Categoria[];
+export interface Atributo {
+  id: number;
+  documentId: string;
+  nombre: string;
+  slug?: string;
+  tipo?: string;
+  icono?: string;
 }
 
 export interface Negocio {
@@ -46,6 +53,7 @@ export interface Negocio {
   imagen_portada?: StrapiMedia;
   galeria?: StrapiMedia[];
   categoria?: Categoria;
+  atributos?: Atributo[];
   destacado?: boolean;
   horarios?: string;
   reserva_url?: string;

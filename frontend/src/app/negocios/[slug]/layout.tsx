@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
   
   try {
-    const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[schedules]=*";
+    const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[schedules]=*";
     let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&${populate}`, fetchOptions);
     let data = await res.json();
     let negocio = data.data?.[0];
@@ -77,7 +77,7 @@ export default async function BusinessLayout({ children, params }: { children: R
 
   let jsonLd = null;
   try {
-    const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[schedules]=*";
+    const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[schedules]=*";
     let res = await fetch(`${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&${populate}`, fetchOptions);
     let data = await res.json();
     let negocio = data.data?.[0];

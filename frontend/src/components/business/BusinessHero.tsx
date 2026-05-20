@@ -80,6 +80,16 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
                    {negocio.categoria.nombre}
                  </div>
               )}
+
+              {negocio.atributos && negocio.atributos.length > 0 && (
+                 <div className="flex gap-2 flex-wrap">
+                   {negocio.atributos.map((attr) => (
+                     <div key={attr.documentId} className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-white/10 border border-white/20 text-slate-200">
+                       {attr.nombre}
+                     </div>
+                   ))}
+                 </div>
+              )}
             </div>
           </div>
         </div>

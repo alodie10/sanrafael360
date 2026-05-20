@@ -96,6 +96,71 @@ export default {
         strapi.log.error('❌ Error en sincronización de Ratings:', err.message);
       }
 
+      // 4. MIGRACIÓN SILENCIOSA: Categorías -> Atributos
+      strapi.log.info('🏷️ Iniciando migración de categorías a atributos...');
+      try {
+        const categorias = await strapi.documents('api::categoria.categoria' as any).findMany({ limit: -1 });
+        const mapCategoriaToAtributo = new Map();
+        
+        for (const cat of categorias) {
+          const existentes = await strapi.documents('api::atributo.atributo' as any).findMany({
+            filters: { slug: cat.slug },
+            limit: 1
+          });
+          
+          let atributoId;
+          if (existentes && existentes.length > 0) {
+            atributoId = existentes[0].documentId;
+          } else {
+            const nuevo = await strapi.documents('api::atributo.atributo' as any).create({
+              data: {
+                nombre: cat.nombre,
+                slug: cat.slug,
+                tipo: 'tag',
+                icono: cat.icono || null
+              } as any,
+              status: 'published'
+            });
+            atributoId = nuevo.documentId;
+            strapi.log.info(`   ✅ Creado nuevo atributo: ${cat.nombre}`);
+          }
+          mapCategoriaToAtributo.set(cat.documentId, atributoId);
+          mapCategoriaToAtributo.set(cat.id, atributoId);
+        }
+
+        const negocios = await strapi.documents('api::negocio.negocio' as any).findMany({
+          populate: ['categoria', 'atributos'],
+          limit: -1
+        });
+
+        let actualizados = 0;
+        for (const neg of negocios) {
+          if (neg.categoria) {
+            const catId = neg.categoria.documentId || neg.categoria.id;
+            const atributoId = mapCategoriaToAtributo.get(catId);
+            
+            if (atributoId) {
+              const atributosActuales = neg.atributos || [];
+              const idsActuales = atributosActuales.map((a: any) => a.documentId || a.id);
+              
+              if (!idsActuales.includes(atributoId)) {
+                await strapi.documents('api::negocio.negocio' as any).update({
+                  documentId: neg.documentId,
+                  data: {
+                    atributos: [...atributosActuales.map((a:any) => a.documentId), atributoId]
+                  } as any,
+                  status: 'published'
+                });
+                actualizados++;
+              }
+            }
+          }
+        }
+        strapi.log.info(`✨ Migración de atributos finalizada. Negocios actualizados: ${actualizados}`);
+      } catch (err: any) {
+        strapi.log.error('❌ Error en migración de Atributos:', err.message);
+      }
+
     } catch (error) {
       strapi.log.error('❌ Error general en bootstrap:', error);
     }

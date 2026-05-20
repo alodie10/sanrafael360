@@ -469,6 +469,44 @@ export interface ApiActividadActividad extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAtributoAtributo extends Struct.CollectionTypeSchema {
+  collectionName: 'atributos';
+  info: {
+    description: 'Tags, facilidades y caracter\u00EDsticas de los negocios';
+    displayName: 'Atributo';
+    pluralName: 'atributos';
+    singularName: 'atributo';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    icono: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::atributo.atributo'
+    > &
+      Schema.Attribute.Private;
+    negocios: Schema.Attribute.Relation<'manyToMany', 'api::negocio.negocio'>;
+    nombre: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'nombre'> & Schema.Attribute.Required;
+    tipo: Schema.Attribute.Enumeration<
+      ['tag', 'facilidad', 'ambiente', 'servicio', 'otro']
+    > &
+      Schema.Attribute.DefaultTo<'tag'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCategoriaCategoria extends Struct.CollectionTypeSchema {
   collectionName: 'categorias';
   info: {
@@ -560,6 +598,10 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    atributos: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::atributo.atributo'
+    >;
     categoria: Schema.Attribute.Relation<
       'manyToOne',
       'api::categoria.categoria'
@@ -1305,6 +1347,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::actividad.actividad': ApiActividadActividad;
+      'api::atributo.atributo': ApiAtributoAtributo;
       'api::categoria.categoria': ApiCategoriaCategoria;
       'api::lead.lead': ApiLeadLead;
       'api::negocio.negocio': ApiNegocioNegocio;

@@ -131,11 +131,27 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
             </span>
           </div>
 
-          <p className="text-slate-400 text-sm line-clamp-2 mb-8 leading-relaxed">
+          <p className="text-slate-400 text-sm line-clamp-2 mb-6 leading-relaxed">
             {negocio.descripcion
               ? negocio.descripcion.replace(/<[^>]*>?/gm, "")
               : "Descubre experiencias únicas en el corazón de San Rafael, Mendoza."}
           </p>
+
+          {/* Tags / Atributos */}
+          {negocio.atributos && negocio.atributos.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-6">
+              {negocio.atributos.slice(0, 3).map((attr) => (
+                <span key={attr.documentId} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-md text-[9px] font-bold text-slate-300 uppercase tracking-wider">
+                  {attr.nombre}
+                </span>
+              ))}
+              {negocio.atributos.length > 3 && (
+                <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-md text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                  +{negocio.atributos.length - 3}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Footer */}
           <div className="flex items-center justify-between border-t border-white/10 pt-6">

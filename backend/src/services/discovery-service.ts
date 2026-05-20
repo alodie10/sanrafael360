@@ -166,6 +166,25 @@ function periodsToSchedules(periods: any[]): PlacesSchedule[] {
 
 export class DiscoveryService {
 
+  /**
+   * Cleans and normalizes decoded text to fix typical UTF-8 corruption
+   */
+  private sanitizeText(text: string): string {
+    if (!text) return '';
+    let clean = text;
+    try {
+      // Intentar decodificar corrupción común de UTF-8 a Latin1
+      clean = Buffer.from(clean, 'latin1').toString('utf8');
+    } catch(e) {}
+    
+    return clean
+      .replace(/SÃ¡bado|SÃ;bado|Sã¡bado/gi, 'Sábado')
+      .replace(/MiÃ©rcoles|Miã©rcoles/gi, 'Miércoles')
+      .replace(/Ocultar horarios.*/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   // ─── Places API Strategy ────────────────────────────────────────────────────
 
   private async fetchDetails(placeId: string, apiKey: string): Promise<any> {
