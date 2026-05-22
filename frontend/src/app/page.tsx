@@ -281,8 +281,9 @@ function HomeContent() {
       const bizName = normalizeText(negocio.nombre);
       const bizDesc = normalizeText(negocio.descripcion || "");
       const bizCat = normalizeText(negocio.categoria?.nombre || "");
+      const bizAttrs = (negocio.atributos || []).map((a: { nombre: string }) => normalizeText(a.nombre)).join(" ");
       matchesSearch = searchTerms.every(term => 
-        bizName.includes(term) || bizDesc.includes(term) || bizCat.includes(term)
+        bizName.includes(term) || bizDesc.includes(term) || bizCat.includes(term) || bizAttrs.includes(term)
       );
     }
 
