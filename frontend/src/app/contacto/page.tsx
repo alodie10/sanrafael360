@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, CheckCircle2, Plus, Loader2, AlertCircle } from "lucide-react";
+import { MapPin, CheckCircle2, Plus, Loader2, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { STRAPI_URL } from "@/lib/strapi";
 
@@ -107,18 +107,13 @@ export default function ContactoPage() {
           </div>
 
           <div className="pt-8 border-t border-white/5 space-y-4">
-             <div className="flex items-center gap-3 text-slate-300">
-               <Mail className="w-5 h-5 text-primary" />
-               <span>hola@sanrafael360.com</span>
-             </div>
-             <div className="flex items-center gap-3 text-slate-300">
-               <Phone className="w-5 h-5 text-primary" />
-               <span>+54 260 400-0000</span>
-             </div>
-             <div className="flex items-center gap-3 text-slate-300">
-               <MapPin className="w-5 h-5 text-primary" />
-               <span>San Rafael, Mendoza, Argentina</span>
-             </div>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              ¿Tienes dudas o consultas específicas? Completa el formulario de la derecha y nuestro equipo se pondrá en contacto contigo a la brevedad.
+            </p>
+            <div className="flex items-center gap-3 text-slate-300 pt-2">
+              <MapPin className="w-5 h-5 text-primary shrink-0" />
+              <span>San Rafael, Mendoza, Argentina</span>
+            </div>
           </div>
         </motion.div>
 
