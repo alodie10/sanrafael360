@@ -110,6 +110,11 @@ export default async function BusinessLayout({ children, params }: { children: R
         "telephone": negocio.telefono,
         "url": `https://sanrafael360.com/negocios/${negocio.slug}`,
         "priceRange": negocio.price_range === "Economico" ? "$" : negocio.price_range === "Moderado" ? "$$" : "$$$",
+        "aggregateRating": (negocio.rating && negocio.review_count && negocio.review_count > 0) ? {
+          "@type": "AggregateRating",
+          "ratingValue": negocio.rating,
+          "reviewCount": negocio.review_count
+        } : undefined,
         "openingHoursSpecification": negocio.schedules?.map((s: any) => ({
           "@type": "OpeningHoursSpecification",
           "dayOfWeek": s.day,

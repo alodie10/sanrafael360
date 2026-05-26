@@ -20,6 +20,13 @@ const normalizeText = (str: string) => {
     .trim();
 };
 
+// Helper para verificar si un negocio tiene Premium activo y vigente
+const isPremiumActive = (negocio: Negocio): boolean => {
+  if (!negocio.is_premium) return false;
+  if (!negocio.premium_valid_until) return true; // Sin vencimiento = activo
+  return new Date(negocio.premium_valid_until) > new Date();
+};
+
 // Componente intermedio para manejar Suspense
 function HomeContent() {
   const router = useRouter();
@@ -327,10 +334,21 @@ function HomeContent() {
 
   // El filtro final ya está unificado arriba
   const sortedNegocios = [...filteredNegocios].sort((a, b) => {
-    if (!userLocation || !a.latitud || !a.longitud || !b.latitud || !b.longitud) return 0;
-    const distA = getDistance(userLocation.lat, userLocation.lng, a.latitud, a.longitud);
-    const distB = getDistance(userLocation.lat, userLocation.lng, b.latitud, b.longitud);
-    return distA - distB;
+    const isAPremium = isPremiumActive(a);
+    const isBPremium = isPremiumActive(b);
+
+    if (isAPremium && !isBPremium) return -1;
+    if (!isAPremium && isBPremium) return 1;
+
+    // Desempate por distancia si está disponible
+    if (userLocation && a.latitud && a.longitud && b.latitud && b.longitud) {
+      const distA = getDistance(userLocation.lat, userLocation.lng, a.latitud, a.longitud);
+      const distB = getDistance(userLocation.lat, userLocation.lng, b.latitud, b.longitud);
+      return distA - distB;
+    }
+
+    // Desempate alfabético por defecto
+    return a.nombre.localeCompare(b.nombre);
   });
 
   const isFiltering = searchQuery.trim().length > 0 || selectedCategoryDocId !== null || (localidadQuery !== "" && localidadQuery !== "San Rafael, Mendoza");
