@@ -253,7 +253,7 @@ function NavbarInner() {
                       <button onClick={() => setLocalidad("San Rafael, Mendoza")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
                     )}
                   </div>
-                  <button onClick={handleSearch} className="bg-[#9B1C1C] hover:bg-red-700 text-white px-10 py-4 md:py-0 font-black uppercase tracking-widest transition-all active:scale-95">BUSCAR</button>
+                  <button onClick={handleSearch} className="bg-white hover:bg-zinc-200 text-black px-10 py-4 md:py-0 font-heading font-black uppercase tracking-widest transition-all active:scale-95">BUSCAR</button>
                 </div>
 
                 <div ref={dropdownRef} className="flex items-center justify-center flex-wrap gap-x-6 gap-y-3 max-w-6xl mx-auto">

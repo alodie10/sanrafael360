@@ -26,8 +26,8 @@ export default function Logo({ className, showText = true, onClick }: LogoProps)
         />
       </div>
       {showText && (
-        <span className="text-2xl md:text-3xl font-serif font-bold tracking-[0.15em] text-white uppercase ml-1">
-          San Rafael <span className="text-primary">360</span>
+        <span className="text-2xl md:text-3xl font-heading font-light tracking-[0.25em] text-white uppercase ml-1">
+          San Rafael <span className="font-black text-primary tracking-normal">360</span>
         </span>
       )}
     </Link>

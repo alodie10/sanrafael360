@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MapPin, ArrowRight, Settings, Star } from "lucide-react";
+import { MapPin, ArrowRight, Settings, Star, Check } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
@@ -81,7 +81,7 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
             )}
             {isValidPremium && (
               <div className="px-3 py-1.5 bg-gradient-to-r from-amber-200 to-amber-500 rounded-full text-[10px] font-black text-black uppercase tracking-widest shadow-lg shadow-amber-500/20 flex items-center gap-1">
-                <Star className="w-2.5 h-2.5 fill-black" /> Premium
+                <Check className="w-3 h-3 stroke-[3]" /> Verificado
               </div>
             )}
           </div>

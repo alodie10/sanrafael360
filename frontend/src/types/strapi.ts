@@ -24,6 +24,8 @@ export interface Categoria {
   negocios?: Negocio[];
   parent?: Categoria;
   subcategorias?: Categoria[];
+}
+
 export interface Atributo {
   id: number;
   documentId: string;
