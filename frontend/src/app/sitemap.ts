@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const negocioUrls = negocios
     .filter((n: any) => n.slug)
     .map((n: any) => ({
-      url: `https://sanrafael360.com/negocios/${n.slug}`,
+      url: `https://www.sanrafael360.com/negocios/${n.slug}`,
       lastModified: n.updatedAt ? new Date(n.updatedAt) : new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
@@ -26,13 +26,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     {
-      url: 'https://sanrafael360.com',
+      url: 'https://www.sanrafael360.com',
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1.0,
     },
     {
-      url: 'https://sanrafael360.com/negocios',
+      url: 'https://www.sanrafael360.com/negocios',
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.9,

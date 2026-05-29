@@ -32,6 +32,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.sanrafael360.com"),
+  alternates: {
+    canonical: "/",
+  },
   title: {
     default: "San Rafael 360 — Descubrí la ciudad",
     template: "%s | San Rafael 360",

@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         description,
       },
       alternates: {
-        canonical: `https://sanrafael360.com/negocios/${slug}`,
+        canonical: `https://www.sanrafael360.com/negocios/${slug}`,
       }
     };
   } catch (e: any) {
@@ -108,7 +108,7 @@ export default async function BusinessLayout({ children, params }: { children: R
           "longitude": negocio.longitud
         } : undefined,
         "telephone": negocio.telefono,
-        "url": `https://sanrafael360.com/negocios/${negocio.slug}`,
+        "url": `https://www.sanrafael360.com/negocios/${negocio.slug}`,
         "priceRange": negocio.price_range === "Economico" ? "$" : negocio.price_range === "Moderado" ? "$$" : "$$$",
         "aggregateRating": (negocio.rating && negocio.review_count && negocio.review_count > 0) ? {
           "@type": "AggregateRating",
