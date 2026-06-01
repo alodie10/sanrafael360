@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         description,
       },
       alternates: {
-        canonical: `https://www.sanrafael360.com/negocios/${slug}`,
+        canonical: `https://www.sanrafael360.com/negocios/${negocio.slug}`,
       }
     };
   } catch (e: any) {

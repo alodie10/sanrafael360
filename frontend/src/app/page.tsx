@@ -82,7 +82,7 @@ function HomeContent() {
   useEffect(() => {
     if (categorias.length === 0) return;
 
-    const catParam = searchParams.get("cat");
+    const catParam = searchParams.get("cat") || searchParams.get("categoria");
     const qParam = searchParams.get("q");
     const lParam = searchParams.get("l");
 
@@ -115,7 +115,7 @@ function HomeContent() {
   // Auto-scroll a resultados cuando cambian los filtros (vía Navbar u otros)
   useEffect(() => {
     const q = searchParams.get("q");
-    const cat = searchParams.get("cat");
+    const cat = searchParams.get("cat") || searchParams.get("categoria");
     const l = searchParams.get("l");
     
     if (q || cat || l) {

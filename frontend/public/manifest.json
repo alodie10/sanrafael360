@@ -76,13 +76,13 @@
   "shortcuts": [
     {
       "name": "Buscar Restaurantes",
-      "url": "/negocios?categoria=restaurantes",
+      "url": "/?cat=restaurantes",
       "description": "Ver restaurantes en San Rafael",
       "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Buscar Hoteles",
-      "url": "/negocios?categoria=hoteles",
+      "url": "/?cat=hoteles",
       "description": "Ver hoteles y alojamientos",
       "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
     }
