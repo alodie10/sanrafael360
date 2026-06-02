@@ -185,8 +185,8 @@
   },
   "active": "22a10ef08d4bc400",
   "lastOpenFiles": [
-    "frontend/public/workbox-2fd5e59e.js",
     "frontend/public/sw.js",
+    "frontend/public/workbox-2fd5e59e.js",
     "frontend/public/fallback-ce627215c0e4a9af.js",
     "frontend/public/swe-worker-5c72df51bb1f6ee0.js",
     "scratch/data.db-journal",
