@@ -1,66 +1,57 @@
 # 💾 Session Restore — San Rafael 360
-*Última actualización: 2026-04-05*
+*Última actualización: 2026-06-04 (Diego & Antigravity)*
 
 ---
 
 ## 🟢 Estado General
-La plataforma está **estable en producción** (`sanrafael360.vercel.app`). Esta sesión fue una jornada de QA + fixes.
+El portal se encuentra **estable en producción** (`sanrafael360.vercel.app`) y el entorno de desarrollo local con Strapi backend corriendo sobre la base de datos SQLite local (`scratch/data.db`) está validado y operativo en el puerto `1337`.
 
 ---
 
-## ✅ Completado Hoy
+## ✅ Completado Hoy (4 de Junio de 2026)
 
-### Fix 1 — `bg-clip-text` clipping en /contacto
-- **Archivo:** `frontend/src/app/contacto/page.tsx`
-- **Fix:** `px-1 pb-1` en el `<span>` del gradiente "Negocio" para que la `o` cursiva no se recorte.
+### 📲 1. Redirecciones y Métricas de la App (Fase 1.1)
+- **Archivo:** `frontend/next.config.ts`
+- **Cambio:** Agregados redireccionamientos temporales (307) para `/descargar` y `/app` hacia la ficha oficial en Google Play Store (`id=com.sanrafael360.www.twa`). Probado en local con éxito.
 
-### Fix 2 — Columna principal en negro (Business Detail)
-- **Archivo:** `frontend/src/app/negocios/[slug]/page.tsx`
-- **Causa raíz:** CSS Grid `stretch` estiraba la columna izquierda hasta la altura del sidebar. Documentado en `/docs/fixes.md`.
-- **Fix:** `items-start` en el grid + placeholder glassmorphic si no hay descripción.
+### 🎨 2. Smart App Banner Móvil (Fase 1.2)
+- **Nuevo Componente:** [SmartAppBanner.tsx](file:///Users/diego/Documents/GitHub/sanrafael360/frontend/src/components/layout/SmartAppBanner.tsx)
+- **Integración:** Agregado de forma global en [layout.tsx](file:///Users/diego/Documents/GitHub/sanrafael360/frontend/src/app/layout.tsx).
+- **Lógica premium:**
+  - Posicionamiento `fixed top-0` (no invasivo para el bottom y sus botones de navegación).
+  - Ocultamiento automático si el usuario navega desde dentro de la App (modo `standalone`).
+  - Persistencia del descarte con el botón `X` en `localStorage` (`sr360_app_banner_dismissed`).
 
-### Fix 3 — WebsitePortlet rediseñado + hydration fix
-- **Archivo:** `frontend/src/components/business/WebsitePortlet.tsx`
-- **Fix:** Muestra favicon (Google Favicon API), nombre del negocio, dominio en monospace, badge "Verificado", CTA "Visitar" con hover. Favicon fallback via `useState` (no DOM manipulation).
+### ⚙️ 3. Fix de Colisión Navbar / MasterBar
+- **Archivos:** [Navbar.tsx](file:///Users/diego/Documents/GitHub/sanrafael360/frontend/src/components/layout/Navbar.tsx), [MasterBar.tsx](file:///Users/diego/Documents/GitHub/sanrafael360/frontend/src/components/layout/MasterBar.tsx), [layout.tsx](file:///Users/diego/Documents/GitHub/sanrafael360/frontend/src/app/layout.tsx).
+- **Fix:** Evita que el `MasterBar` (barra de administración) y el `Navbar` se superpongan cuando el banner se oculta o se abre. 
+- **Mecanismo:** El `MasterBar` inyecta dinámicamente la variable CSS `--master-bar-height` (40px si está visible / 0px si no). La Navbar calcula su posición superior mediante `top: calc(var(--app-banner-height) + var(--master-bar-height))` y el `app-container` utiliza `pt-[var(--app-banner-height)]` para desplazar el layout.
 
-### Fix 4 — BookingWidget: validación estricta de URL
-- **Archivo:** `frontend/src/components/business/BookingWidget.tsx`
-- **Fix:** `isValidUrl()` con `new URL()` — silencio visual si URL inválida o vacía.
+### 📝 4. Documentación y Estrategia de Marketing (Obsidian)
+- **Nuevos Archivos:**
+  - [campanas_turistas_b1.md](file:///Users/diego/Documents/GitHub/sanrafael360/docs/marketing/campanas_turistas_b1.md): Estrategia de seguridad y captación de turistas.
+  - [plan_meta_ads_turistas.md](file:///Users/diego/Documents/GitHub/sanrafael360/docs/marketing/plan_meta_ads_turistas.md): Plan de inversión mínima, segmentaciones, exclusión de locales y biblioteca de copys.
+- **Redes:** Publicado el post orgánico de lanzamiento del calco con código QR (`calco.jpeg`) adaptado con copys transparentes y directos para Facebook.
 
-### Fix 5 — Link "Sitio Web" duplicado en sidebar eliminado
-- **Archivo:** `frontend/src/app/negocios/[slug]/page.tsx`
-- **Fix:** Eliminado el `{negocio.website && <a>Visitar sitio oficial</a>}` del sidebar. Solo queda el `WebsitePortlet`.
-
-### Fix 6 — Encoding "Sábado" en frontend
-- **Archivo:** `frontend/src/app/negocios/[slug]/page.tsx`
-- **Causa raíz:** Datos scrapeados con doble-encoding Latin-1→UTF-8 ya persistidos en Railway/Postgres.
-- **Fix:** `sanitizeText()` con guard condicional — solo activa si detecta `Ã` o `Â`. Texto editado manualmente en Strapi pasa intacto.
-
-### Fix 7 — Directiva "Sin ejecución local" en ARCH_MANIFEST
-- **Archivo:** `.antigravity/ARCH_MANIFEST.md`
-- **Fix:** Nueva sección "Regla de Entorno: Sin Ejecución Local (CRÍTICO)".
-
-### Nuevos archivos creados
-- `docs/fixes.md` — Causa raíz de los 3 bugs del Business Detail documentada.
-- `frontend/tests/empty-state.spec.ts` — Suite Playwright de regresión (columna negra, booking inválido, hydration).
+### 📊 5. Pauta Paga Activa en Meta Ads Manager
+- **Campaña:** Creada y publicada la campaña de tráfico del calco orientada a turistas de Buenos Aires, Córdoba y Rosario, excluyendo San Rafael.
+- **Estado actual:** **Procesando / En revisión** en la plataforma de Meta Ads. Método de pago cargado exitosamente.
 
 ---
 
-## ⏳ Pendiente para Mañana
+## ⏳ Pendiente para la Próxima Sesión
 
-### 1. Push pendiente
-El fix del sanitizador (`sanitizeText` condicional) **no fue pusheado todavía**. Asegurarse de hacer push antes de hacer cualquier otra cosa.
+### 1. Monitoreo de Meta Ads
+- Controlar que la campaña pase de *En revisión* a **Activa** en el Ads Manager.
+- Monitorear el costo por clic (CPC) y las primeras métricas de visitas a la web desde la campaña.
 
-### 2. ~~Limpiar `reserva_url` de La Delicia Bulevard~~ ✅
-Hecho manualmente desde Strapi Admin. El BookingWidget ahora mostrará WhatsApp o se ocultará.
-
-### 3. Categoría "Productos Gourmet" — 0 lugares
-Aparece en el grid de la home con 0 negocios. Decisión pendiente: ¿poblar o esconder?
+### 2. ASO en Google Play Store
+- Esperar que Google apruebe la revisión de los nuevos textos optimizados de la ficha de la Play Store.
 
 ---
 
 ## 🔑 Datos Clave
-- **Frontend:** https://sanrafael360.vercel.app (Vercel — deploy automático desde `main`)
-- **Backend:** Railway — Strapi 5 + PostgreSQL
-- **Strapi UUID:** `21e7e9d7-7e91-40d4-a449-43ee75cf60c5`
-- **Regla crítica:** No corre nada localmente. Toda verificación contra producción.
+- **Play Store Package ID:** `com.sanrafael360.www.twa`
+- **URL Play Store:** `https://play.google.com/store/apps/details?id=com.sanrafael360.www.twa`
+- **Servidor Strapi Local:** `http://localhost:1337` (SQLite: `scratch/data.db`)
+- **Servidor Frontend Local:** `http://localhost:3000`
