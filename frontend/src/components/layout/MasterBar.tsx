@@ -20,7 +20,7 @@ export default function MasterBar() {
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 z-[100] bg-black border-b border-white/10 h-10 flex items-center px-4 md:px-8 justify-between backdrop-blur-xl bg-black/90">
+      <div className="fixed top-[var(--app-banner-height,0px)] left-0 right-0 z-[100] bg-black border-b border-white/10 h-10 flex items-center px-4 md:px-8 justify-between backdrop-blur-xl bg-black/90">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <ShieldCheck className={`w-3.5 h-3.5 ${isAdmin ? 'text-primary' : 'text-emerald-400'}`} />

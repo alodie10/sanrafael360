@@ -18,10 +18,10 @@ El núcleo de la campaña se basa en el **gancho de la seguridad**: presentar la
 ### 🔗 Fase 1: Preparación Técnica & Embudo de Descarga
 Antes de activar pauta publicitaria, el flujo de descarga debe ser simple y rastreable.
 
-- [ ] **1.1. Enlaces de Redirección y Métricas**
+- [x] **1.1. Enlaces de Redirección y Métricas**
   * Configurar una URL corta en el dominio principal (ej. `sanrafael360.com/descargar` o `/app`) que redireccione automáticamente a la ficha en Google Play Store.
   * Usar parámetros UTM o herramientas de medición para trackear cuántos usuarios hacen clic desde cada red social.
-- [ ] **1.2. Banner Inteligente en la Web (Smart App Banner)**
+- [x] **1.2. Banner Inteligente en la Web (Smart App Banner)**
   * Asegurar que el banner superior de invitación a descargar la app en el sitio móvil esté activo, limpio y con colores premium (Obsidian).
 - [ ] **1.3. Optimización de la Play Store (ASO Básico)**
   * Subir capturas de pantalla móviles estéticas usando la paleta de colores del proyecto (*Obsidian & Gold*).

@@ -72,7 +72,7 @@ export default function RootLayout({
       <body>
         <Toaster richColors position="top-right" />
         <SessionProvider>
-          <div className="app-container font-sans">
+          <div className="app-container font-sans pt-[var(--app-banner-height,0px)]">
             <MasterBar />
             <Navbar />
             {children}
