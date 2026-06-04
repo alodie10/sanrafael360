@@ -21,6 +21,16 @@ const nextConfig: NextConfig = {
         destination: "/",
         permanent: true,
       },
+      {
+        source: "/descargar",
+        destination: "https://play.google.com/store/apps/details?id=com.sanrafael360.www.twa",
+        permanent: false,
+      },
+      {
+        source: "/app",
+        destination: "https://play.google.com/store/apps/details?id=com.sanrafael360.www.twa",
+        permanent: false,
+      },
     ];
   },
 };
