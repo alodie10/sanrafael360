@@ -4,6 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import SessionProvider from "@/components/providers/SessionProvider";
 import Navbar from "@/components/layout/Navbar";
 import MasterBar from "@/components/layout/MasterBar";
+import SmartAppBanner from "@/components/layout/SmartAppBanner";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -75,6 +76,7 @@ export default function RootLayout({
             <MasterBar />
             <Navbar />
             {children}
+            <SmartAppBanner />
             <SpeedInsights />
           </div>
         </SessionProvider>
