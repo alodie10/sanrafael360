@@ -4,19 +4,32 @@ import { useSession } from "next-auth/react";
 import { ShieldCheck, LayoutDashboard, ExternalLink, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 export default function MasterBar() {
   const { data: session } = useSession();
   const pathname = usePathname();
 
-  if (!session) return null;
-  
-  const userRole = (session as any).user?.role;
+  const userRole = (session as any)?.user?.role;
   const isAdmin = userRole === 'Admin';
   const isOwner = userRole === 'Propietario' || userRole === 'Authenticated';
+  
+  const showMasterBar = !!session && (isAdmin || isOwner);
+
+  // Controlar la variable CSS de la altura del MasterBar
+  useEffect(() => {
+    if (showMasterBar) {
+      document.documentElement.style.setProperty('--master-bar-height', '40px'); // h-10 es 40px
+    } else {
+      document.documentElement.style.setProperty('--master-bar-height', '0px');
+    }
+    return () => {
+      document.documentElement.style.setProperty('--master-bar-height', '0px');
+    };
+  }, [showMasterBar]);
 
   // Solo mostrar a Admin o a usuarios con capacidad de gestión
-  if (!isAdmin && !isOwner) return null;
+  if (!showMasterBar) return null;
 
   return (
     <>

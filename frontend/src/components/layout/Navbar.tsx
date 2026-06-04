@@ -168,7 +168,7 @@ function NavbarInner() {
 
   return (
     <nav className={cn(
-      "fixed left-0 right-0 z-[100] transition-all duration-500 top-[var(--app-banner-height,0px)]",
+      "fixed left-0 right-0 z-[100] transition-all duration-500 top-[calc(var(--app-banner-height,0px)+var(--master-bar-height,0px))]",
       scrolled ? "bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl" : "bg-transparent border-b border-transparent"
     )}>
       <div className="max-w-7xl mx-auto flex flex-col">
