@@ -9,6 +9,9 @@ export default function SmartAppBanner() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    // Evitar ejecutar en computadoras/tablets (solo móvil < 768px)
+    if (typeof window !== "undefined" && window.innerWidth >= 768) return;
+
     // 1. Comprobar si ya fue cerrado anteriormente en este navegador
     const dismissed = localStorage.getItem("sr360_app_banner_dismissed");
     if (dismissed) {
@@ -36,7 +39,8 @@ export default function SmartAppBanner() {
 
   // Controlar la variable CSS para empujar el Navbar y el layout dinámicamente
   useEffect(() => {
-    if (isVisible) {
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    if (isVisible && isMobile) {
       document.documentElement.style.setProperty("--app-banner-height", "48px");
     } else {
       document.documentElement.style.setProperty("--app-banner-height", "0px");
