@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchFromStrapi } from "@/lib/strapi";
-import Navbar from "@/components/layout/Navbar";
+
 import BookingWidget from "@/components/business/BookingWidget";
 import ReviewSection from "@/components/business/ReviewSection";
 import BusinessHero from "@/components/business/BusinessHero";
@@ -195,8 +195,6 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
 
   return (
     <main className="min-h-screen bg-background pb-20">
-      <Navbar />
-
       <NavigationFAB isVisible={showScrollTop} type="back" onClick={() => router.back()} />
 
       <BusinessHero negocio={negocio} businessStatus={businessStatus} />

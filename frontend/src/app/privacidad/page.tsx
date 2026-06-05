@@ -1,4 +1,4 @@
-import Navbar from "@/components/layout/Navbar";
+
 
 
 export const metadata = {
@@ -9,7 +9,6 @@ export const metadata = {
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
       
       <main className="flex-1 py-32 px-4 md:px-8">
         <div className="max-w-4xl mx-auto prose prose-invert prose-emerald">
