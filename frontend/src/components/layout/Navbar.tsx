@@ -99,7 +99,7 @@ function NavbarInner() {
 
   // --- Resetear estados al cambiar de página ---
   useEffect(() => {
-    setScrolled(window.scrollY > 20);
+    setScrolled(false);
     setIsOpen(false);
     setActiveDropdown(null);
   }, [pathname]);
