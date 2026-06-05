@@ -97,6 +97,13 @@ function NavbarInner() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // --- Resetear estados al cambiar de página ---
+  useEffect(() => {
+    setScrolled(window.scrollY > 20);
+    setIsOpen(false);
+    setActiveDropdown(null);
+  }, [pathname]);
+
   // --- Cerrar dropdowns al clic fuera ---
   useEffect(() => {
     const handler = (e: MouseEvent) => {
