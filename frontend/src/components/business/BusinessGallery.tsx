@@ -62,7 +62,7 @@ export default function BusinessGallery({ negocio, isValidPremium }: BusinessGal
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="rounded-3xl overflow-hidden shadow-xl border border-white/5 bg-slate-900"
+              className="aspect-[4/3] md:aspect-auto rounded-3xl overflow-hidden shadow-xl border border-white/5 bg-slate-900"
             >
               <MediaRenderer 
                 media={img}
