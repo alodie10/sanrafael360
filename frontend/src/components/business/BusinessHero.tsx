@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, Camera } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
@@ -15,24 +16,141 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
   const logoUrl = negocio.logo?.url;
   const coverUrl = negocio.imagen_portada?.url;
 
+  // Verificar si el comercio es premium y su validez
+  let isValidPremium = negocio.is_premium || false;
+  if (isValidPremium && negocio.premium_valid_until && new Date() > new Date(negocio.premium_valid_until)) {
+    isValidPremium = false;
+  }
+
+  // Armar lista de imágenes: Portada + Galería (si es premium)
+  const images: string[] = [];
+  if (coverUrl) {
+    images.push(getStrapiMedia(coverUrl)!);
+  }
+  if (isValidPremium && negocio.galeria && negocio.galeria.length > 0) {
+    negocio.galeria.forEach((img) => {
+      if (img.url) {
+        const url = getStrapiMedia(img.url)!;
+        if (!images.includes(url)) {
+          images.push(url);
+        }
+      }
+    });
+  }
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Intervalo temporizado de 4 segundos
+  useEffect(() => {
+    if (images.length <= 1 || isPaused) return;
+
+    const intervalDuration = 4000; // 4s
+    const updateInterval = 50; // 50ms
+    const increment = (updateInterval / intervalDuration) * 100;
+
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          setActiveIndex((curr) => (curr + 1) % images.length);
+          return 0;
+        }
+        return prev + increment;
+      });
+    }, updateInterval);
+
+    return () => clearInterval(timer);
+  }, [images.length, isPaused]);
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setProgress(0);
+    setActiveIndex((curr) => (curr + 1) % images.length);
+  };
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setProgress(0);
+    setActiveIndex((curr) => (curr - 1 + images.length) % images.length);
+  };
+
   return (
-    <section className="relative overflow-hidden">
-      {/* Background: imagen de portada */}
-      <div className="absolute inset-0">
-        {coverUrl ? (
-          <img 
-            src={getStrapiMedia(coverUrl)!} 
-            alt={negocio.nombre}
-            className="w-full h-full object-cover brightness-50"
-          />
+    <section 
+      className="relative overflow-hidden group select-none"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={() => setIsPaused(true)}
+      onTouchEnd={() => setIsPaused(false)}
+    >
+      {/* Barras de progreso estilo Instagram Stories (Arriba) */}
+      {images.length > 1 && (
+        <div className="absolute top-4 left-0 right-0 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto z-20 flex gap-1.5 pointer-events-none">
+          {images.map((_, index) => (
+            <div key={index} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+              <div 
+                className="h-full bg-primary transition-all ease-linear"
+                style={{ 
+                   width: index === activeIndex 
+                     ? `${progress}%` 
+                     : index < activeIndex 
+                       ? "100%" 
+                       : "0%",
+                   transitionDuration: index === activeIndex ? "50ms" : "0ms"
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Background / Carrusel con transiciones */}
+      <div className="absolute inset-0 z-0 bg-slate-900">
+        {images.length > 0 ? (
+          images.map((imgUrl, index) => (
+            <motion.img
+              key={imgUrl}
+              src={imgUrl}
+              alt={`${negocio.nombre} - Foto ${index + 1}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: index === activeIndex ? 1 : 0 }}
+              transition={{ duration: 0.4 }}
+              className="absolute inset-0 w-full h-full object-cover brightness-50"
+              style={{ zIndex: index === activeIndex ? 1 : 0 }}
+            />
+          ))
         ) : (
           <div className="w-full h-full bg-slate-900" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-black/40 z-10" />
+
+        {/* Zonas táctiles invisibles para navegar */}
+        {images.length > 1 && (
+          <div className="absolute inset-0 z-20 flex pointer-events-auto">
+            <div 
+              onClick={handlePrev}
+              className="w-[30%] h-full cursor-pointer"
+              title="Imagen anterior"
+            />
+            <div 
+              onClick={handleNext}
+              className="w-[70%] h-full cursor-pointer"
+              title="Siguiente imagen"
+            />
+          </div>
+        )}
       </div>
 
-      <div className="relative flex flex-col justify-end min-h-[340px] md:min-h-[560px] pb-6 md:pb-16 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-10">
+      {/* Pill indicador de fotos */}
+      {images.length > 1 && (
+        <div className="absolute bottom-4 right-4 md:bottom-8 md:right-12 lg:right-16 z-20 bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-semibold border border-white/10 shadow-lg pointer-events-none">
+          <Camera className="w-3.5 h-3.5 text-primary" />
+          <span>{activeIndex + 1} / {images.length}</span>
+        </div>
+      )}
+
+      <div className="relative flex flex-col justify-end min-h-[340px] md:min-h-[560px] pb-6 md:pb-16 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto z-30 pointer-events-none">
+        <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-10 pointer-events-auto">
           {/* Logo */}
           <motion.div 
              initial={{ opacity: 0, scale: 0.8 }}
