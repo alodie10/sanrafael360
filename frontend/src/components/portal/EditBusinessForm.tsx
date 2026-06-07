@@ -57,6 +57,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
   const [existingGallery, setExistingGallery] = useState(negocio.galeria || []);
   const [removedGalleryIds, setRemovedGalleryIds] = useState<number[]>([]);
+  const [youtubeUrl, setYoutubeUrl] = useState(negocio.youtube_url || "");
 
   // Status
   const [isSaving, setIsSaving] = useState(false);
@@ -216,6 +217,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         tripadvisor_url: tripadvisorUrl,
         tripadvisor_rating: Number(tripadvisorRating) || 0,
         tripadvisor_review_count: Number(tripadvisorReviewCount) || 0,
+        youtube_url: youtubeUrl,
         galeria: existingGallery.map((img: any) => img.id)
       };
 
@@ -312,6 +314,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
           removeExistingPhoto={removeExistingPhoto}
           removeNewPhoto={removeNewPhoto}
           handleFileChange={handleFileChange}
+          youtubeUrl={youtubeUrl}
+          setYoutubeUrl={setYoutubeUrl}
         />
 
         <EditBusinessAttributes
