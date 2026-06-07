@@ -28,8 +28,11 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
     images.push(getStrapiMedia(coverUrl)!);
   }
   if (isValidPremium && negocio.galeria && negocio.galeria.length > 0) {
-    negocio.galeria.forEach((img) => {
+    negocio.galeria.forEach((img: any) => {
       if (img.url) {
+        // Excluir videos — los videos se muestran en BusinessGallery
+        const isVideo = img.mime?.startsWith('video/') || img.url.match(/\.(mp4|m4v|webm|ogg|mov)$/i);
+        if (isVideo) return;
         const url = getStrapiMedia(img.url)!;
         if (!images.includes(url)) {
           images.push(url);
