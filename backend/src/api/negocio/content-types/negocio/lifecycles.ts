@@ -63,8 +63,8 @@ export default {
         discoveryService.discover(result.nombre)
           .then(async (discovery) => {
             if (discovery.success) {
-              await strapi.query('api::negocio.negocio').update({
-                where: { id: result.id },
+              await strapi.documents('api::negocio.negocio').update({
+                documentId: result.documentId,
                 data: {
                   website: discovery.data?.website || result.website,
                   reserva_url: discovery.data?.reserva_url || result.reserva_url,
@@ -92,8 +92,8 @@ export default {
     if (result.tripadvisor_url) {
       syncTripAdvisor(result.tripadvisor_url).then(async (data) => {
         if (data.success && data.rating) {
-          await strapi.query('api::negocio.negocio').update({
-            where: { id: result.id },
+          await strapi.documents('api::negocio.negocio').update({
+            documentId: result.documentId,
             data: {
               tripadvisor_rating: data.rating,
               tripadvisor_review_count: data.reviewCount
@@ -117,8 +117,8 @@ export default {
           discoveryService.discover(result.nombre)
             .then(async (discovery) => {
               if (discovery.success) {
-                  await strapi.query('api::negocio.negocio').update({
-                    where: { id: result.id },
+                  await strapi.documents('api::negocio.negocio').update({
+                    documentId: result.documentId,
                     data: {
                       website: discovery.data?.website || result.website,
                       reserva_url: discovery.data?.reserva_url || result.reserva_url,
@@ -133,8 +133,8 @@ export default {
                   });
                  console.log(`Manual discovery successful for: ${result.nombre}`);
               } else {
-                 await strapi.query('api::negocio.negocio').update({
-                   where: { id: result.id },
+                 await strapi.documents('api::negocio.negocio').update({
+                   documentId: result.documentId,
                    data: { trigger_discovery: false }
                  }).catch(() => {});
                  console.warn(`[Discovery] Manual discovery bypassed: ${discovery.error}`);
@@ -142,8 +142,8 @@ export default {
             })
             .catch(err => {
               console.error(`[Discovery] Unhandled async error:`, err.message);
-              strapi.query('api::negocio.negocio').update({
-                where: { id: result.id },
+              strapi.documents('api::negocio.negocio').update({
+                documentId: result.documentId,
                 data: { trigger_discovery: false }
               }).catch(() => {});
             });
@@ -159,8 +159,8 @@ export default {
          console.log(`TripAdvisor sync requested for: ${result.nombre} (${newUrl})`);
          syncTripAdvisor(newUrl).then(async (data) => {
            if (data.success && data.rating) {
-             await strapi.query('api::negocio.negocio').update({
-               where: { id: result.id },
+             await strapi.documents('api::negocio.negocio').update({
+               documentId: result.documentId,
                data: {
                  tripadvisor_rating: data.rating,
                  tripadvisor_review_count: data.reviewCount

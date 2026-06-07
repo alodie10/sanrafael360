@@ -1,3 +1,5 @@
+import { config } from 'dotenv';
+config();
 import { DiscoveryService } from './src/services/discovery-service';
 
 const svc = new DiscoveryService();
