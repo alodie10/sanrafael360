@@ -15,6 +15,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Settings, MapPin, Phone, ExternalLink } from "lucide-react";
+import RatingSources from "@/components/business/RatingSources";
+import GooglePlacesReviews from "@/components/business/GooglePlacesReviews";
+import MobileActionFooter from "@/components/business/MobileActionFooter";
 
 import { Negocio } from "@/types/strapi";
 
@@ -53,7 +56,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
 
   const loadBusinessData = async () => {
     try {
-      const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo&populate[logo][fields][0]=url&populate[imagen_portada][fields][1]=url&populate[galeria][fields][0]=url&populate[schedules]=*&populate[owner][fields][0]=id&fields[0]=nombre&fields[1]=descripcion&fields[2]=direccion&fields[3]=telefono&fields[4]=whatsapp&fields[5]=website&fields[6]=instagram&fields[7]=facebook&fields[8]=latitud&fields[9]=longitud&fields[10]=verificado&fields[11]=reclamar_habilitado&fields[12]=reserva_url&fields[13]=reserva_habilitada&fields[14]=rating&fields[15]=review_count&fields[16]=is_premium&fields[17]=premium_valid_until";
+      const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo&populate[logo][fields][0]=url&populate[imagen_portada][fields][1]=url&populate[galeria][fields][0]=url&populate[schedules]=*&populate[owner][fields][0]=id&fields[0]=nombre&fields[1]=descripcion&fields[2]=direccion&fields[3]=telefono&fields[4]=whatsapp&fields[5]=website&fields[6]=instagram&fields[7]=facebook&fields[8]=latitud&fields[9]=longitud&fields[10]=verificado&fields[11]=reclamar_habilitado&fields[12]=reserva_url&fields[13]=reserva_habilitada&fields[14]=rating&fields[15]=review_count&fields[16]=is_premium&fields[17]=premium_valid_until&fields[18]=google_rating&fields[19]=google_review_count&fields[20]=google_place_id&fields[21]=tripadvisor_rating&fields[22]=tripadvisor_review_count&fields[23]=tripadvisor_url";
       const res = await fetchFromStrapi(`negocios?filters[slug][$eq]=${slug}&${populate}`);
       let businessData = res.data?.[0];
       if (!businessData) {
@@ -194,7 +197,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
   }
 
   return (
-    <main className="min-h-screen bg-background pb-20">
+    <main className="min-h-screen bg-background pb-32 md:pb-20">
       <NavigationFAB isVisible={showScrollTop} type="back" onClick={() => router.back()} />
 
       <BusinessHero negocio={negocio} businessStatus={businessStatus} />
@@ -231,7 +234,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
         )}
 
         {/* INFO MÓVIL: Ubicación y Contacto al principio para el Turista (Visible para TODOS) */}
-        <div className="lg:hidden mb-8">
+        <div className="lg:hidden mb-8 space-y-6">
           <div className="bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] p-7 border border-white/10 shadow-2xl">
              <div className="flex items-start gap-4 mb-6">
                 <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-black shrink-0 shadow-lg shadow-primary/20">
@@ -265,6 +268,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
                 </a>
              </div>
           </div>
+          <RatingSources negocio={negocio} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
@@ -289,7 +293,8 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
             />
           </div>
 
-          <aside className="hidden lg:block lg:col-span-1">
+          <aside className="hidden lg:block lg:col-span-1 space-y-6">
+            <RatingSources negocio={negocio} />
             <BusinessSidebar 
               negocio={negocio} 
               isValidPremium={isValidPremium} 
@@ -300,13 +305,18 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
             />
           </aside>
 
-          <div className="lg:col-span-2">
-            <ReviewSection 
-              negocioId={negocio.documentId} 
-              ownerId={ownerId} 
-              initialRating={negocio.rating} 
-              initialCount={negocio.review_count} 
-            />
+          <div className="lg:col-span-2 space-y-12">
+            {negocio.google_place_id && (
+              <GooglePlacesReviews googlePlaceId={negocio.google_place_id} />
+            )}
+            <div id="reviews-section">
+              <ReviewSection 
+                negocioId={negocio.documentId} 
+                ownerId={ownerId} 
+                initialRating={negocio.rating} 
+                initialCount={negocio.review_count} 
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -325,6 +335,8 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
           </div>
         </div>
       )}
+
+      <MobileActionFooter negocio={negocio} onTrackClick={trackClick} />
     </main>
   );
 }

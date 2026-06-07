@@ -22,7 +22,9 @@ export async function getNegocioBySlug(slug: string): Promise<Negocio | null> {
     "fields[8]=latitud&fields[9]=longitud&fields[10]=verificado&fields[11]=reclamar_habilitado&" +
     "fields[12]=reserva_url&fields[13]=reserva_habilitada&fields[14]=rating&" +
     "fields[15]=review_count&fields[16]=is_premium&fields[17]=premium_valid_until&" +
-    "fields[18]=price_range";
+    "fields[18]=price_range&fields[19]=google_rating&fields[20]=google_review_count&" +
+    "fields[21]=google_place_id&fields[22]=tripadvisor_rating&fields[23]=tripadvisor_review_count&" +
+    "fields[24]=tripadvisor_url";
 
   const strapiToken = process.env.STRAPI_API_TOKEN;
   const options: RequestInit = {

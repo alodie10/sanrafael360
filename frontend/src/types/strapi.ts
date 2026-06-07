@@ -60,6 +60,12 @@ export interface Negocio {
   horarios?: string;
   reserva_url?: string;
   google_maps_url?: string;
+  google_rating?: number;
+  google_review_count?: number;
+  google_place_id?: string;
+  tripadvisor_rating?: number;
+  tripadvisor_review_count?: number;
+  tripadvisor_url?: string;
   discovery_verified?: boolean;
   rating?: number;
   review_count?: number;

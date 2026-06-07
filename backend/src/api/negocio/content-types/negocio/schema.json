@@ -201,6 +201,28 @@
       "relation": "manyToMany",
       "target": "api::atributo.atributo",
       "inversedBy": "negocios"
+    },
+    "google_rating": {
+      "type": "float",
+      "default": 0
+    },
+    "google_review_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "google_place_id": {
+      "type": "string"
+    },
+    "tripadvisor_rating": {
+      "type": "float",
+      "default": 0
+    },
+    "tripadvisor_review_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "tripadvisor_url": {
+      "type": "string"
     }
   }
 }

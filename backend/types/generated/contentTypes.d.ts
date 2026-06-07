@@ -624,6 +624,10 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     facebook: Schema.Attribute.String;
     galeria: Schema.Attribute.Media<'images', true>;
     google_maps_url: Schema.Attribute.String;
+    google_place_id: Schema.Attribute.String;
+    google_rating: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
+    google_review_count: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<0>;
     horario_apertura: Schema.Attribute.JSON;
     horarios_texto: Schema.Attribute.String;
     imagen_portada: Schema.Attribute.Media<'images'>;
@@ -664,6 +668,10 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     telefono: Schema.Attribute.String;
     trigger_discovery: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
+    tripadvisor_rating: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
+    tripadvisor_review_count: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<0>;
+    tripadvisor_url: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
