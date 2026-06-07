@@ -277,11 +277,11 @@ function HomeContent() {
       );
       
       if (locTerms.length > 0) {
-        const bizAddress = normalizeText(negocio.direccion || "");
-        const bizLoc = normalizeText(negocio.localidad || "");
-        // Ahora usamos every: debe coincidir con todos los términos del distrito (ej: Valle Y Grande)
+        const bizDir = normalizeText(negocio.direccion || "");
+        const bizLoc = normalizeText((negocio as any).localidad || "");
+        
         matchesLocation = locTerms.every(term => 
-          bizAddress.includes(term) || bizLoc.includes(term)
+          bizDir.includes(term) || bizLoc.includes(term)
         );
       }
     }

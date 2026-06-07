@@ -9,6 +9,8 @@ interface EditBusinessGalleryProps {
   removeExistingPhoto: (id: number) => void;
   removeNewPhoto: (index: number) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover' | 'gallery') => void;
+  youtubeUrl: string;
+  setYoutubeUrl: (val: string) => void;
 }
 
 export default function EditBusinessGallery({
@@ -16,7 +18,9 @@ export default function EditBusinessGallery({
   newGalleryFiles,
   removeExistingPhoto,
   removeNewPhoto,
-  handleFileChange
+  handleFileChange,
+  youtubeUrl,
+  setYoutubeUrl
 }: EditBusinessGalleryProps) {
   return (
     <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
@@ -99,10 +103,30 @@ export default function EditBusinessGallery({
           className="flex items-center justify-center gap-2 w-full py-4 px-6 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border-2 border-blue-600/30 rounded-2xl font-bold cursor-pointer transition-all border-dashed"
         >
           <Upload className="w-5 h-5" />
-          {(existingGallery.length + newGalleryFiles.length) > 0 ? "Añadir más multimedia" : "Subir fotos o videos"}
+          {(existingGallery.length + newGalleryFiles.length) > 0 ? "Añadir más multimedia" : "Subir fotos o videos locales"}
         </label>
       </div>
       <p className="text-[10px] text-slate-500 mt-3 text-center uppercase tracking-widest font-black">Máximo 20 elementos | Límite 50MB recomendado</p>
+
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-8" />
+      
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+            <Video className="w-4 h-4 text-red-500" />
+            Video Institucional (YouTube)
+          </h3>
+          <p className="text-xs text-slate-400">Si tu video es muy pesado, te recomendamos subirlo a YouTube y pegar el enlace aquí.</p>
+        </div>
+        <input 
+          type="text"
+          value={youtubeUrl}
+          onChange={(e) => setYoutubeUrl(e.target.value)}
+          placeholder="https://www.youtube.com/watch?v=..."
+          className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+        />
+      </div>
+
     </div>
   );
 }

@@ -20,23 +20,25 @@ interface BusinessGalleryProps {
  */
 export default function BusinessGallery({ negocio, isValidPremium }: BusinessGalleryProps) {
   // La galería es un beneficio EXCLUSIVO Premium
-  if (!isValidPremium || !negocio.galeria || negocio.galeria.length === 0) return null;
+  if (!isValidPremium) return null;
+
+  const galeria = negocio.galeria || [];
 
   // Filtrar solo videos de la galería
-  const videos = negocio.galeria.filter((media: any) => {
+  const videos = galeria.filter((media: any) => {
     const url = getStrapiMedia(media.url);
     if (!url) return false;
     return media.mime?.startsWith('video/') || url.match(/\.(mp4|m4v|webm|ogg|mov)$/i);
   });
 
-  // Si no hay videos, no renderizar la sección
-  if (videos.length === 0) return null;
+  // Si no hay videos ni youtube, no renderizar la sección
+  if (videos.length === 0 && !negocio.youtube_url) return null;
 
-  return <VideoGallery videos={videos} businessName={negocio.nombre} />;
+  return <VideoGallery videos={videos} youtubeUrl={negocio.youtube_url} businessName={negocio.nombre} />;
 }
 
 /** Componente interno para manejar hooks (evitar early returns antes de hooks) */
-function VideoGallery({ videos, businessName }: { videos: any[]; businessName: string }) {
+function VideoGallery({ videos, youtubeUrl, businessName }: { videos: any[]; youtubeUrl?: string; businessName: string }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fullscreenVideoRef = useRef<HTMLVideoElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -73,6 +75,15 @@ function VideoGallery({ videos, businessName }: { videos: any[]; businessName: s
   const closeFullscreen = () => {
     setActiveVideoUrl(null);
   };
+
+  // Extraer ID de YouTube
+  const getYoutubeId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  const youtubeId = youtubeUrl ? getYoutubeId(youtubeUrl) : null;
 
   // Cerrar con tecla Escape
   useEffect(() => {
@@ -122,6 +133,23 @@ function VideoGallery({ videos, businessName }: { videos: any[]; businessName: s
             ref={scrollRef}
             className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide"
           >
+            {youtubeId && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="relative flex-shrink-0 w-64 md:w-80 snap-start rounded-2xl overflow-hidden border border-white/10 bg-slate-900 group/thumb"
+              >
+                <iframe 
+                  className="w-full h-full aspect-video"
+                  src={`https://www.youtube.com/embed/${youtubeId}?rel=0`}
+                  title="YouTube video player"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </motion.div>
+            )}
+
             {videos.map((video: any, i: number) => {
               const url = getStrapiMedia(video.url);
               if (!url) return null;
