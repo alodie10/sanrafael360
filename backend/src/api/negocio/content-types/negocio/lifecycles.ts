@@ -63,8 +63,10 @@ export default {
         discoveryService.discover(result.nombre)
           .then(async (discovery) => {
             if (discovery.success) {
+              const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
               await strapi.documents('api::negocio.negocio').update({
-                documentId: result.documentId,
+                documentId: docId,
+                id: typeof result.id === 'number' ? result.id : undefined,
                 data: {
                   website: discovery.data?.website || result.website,
                   reserva_url: discovery.data?.reserva_url || result.reserva_url,
@@ -92,8 +94,10 @@ export default {
     if (result.tripadvisor_url) {
       syncTripAdvisor(result.tripadvisor_url).then(async (data) => {
         if (data.success && data.rating) {
+          const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
           await strapi.documents('api::negocio.negocio').update({
-            documentId: result.documentId,
+            documentId: docId,
+            id: typeof result.id === 'number' ? result.id : undefined,
             data: {
               tripadvisor_rating: data.rating,
               tripadvisor_review_count: data.reviewCount
@@ -117,8 +121,10 @@ export default {
           discoveryService.discover(result.nombre)
             .then(async (discovery) => {
               if (discovery.success) {
+                  const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
                   await strapi.documents('api::negocio.negocio').update({
-                    documentId: result.documentId,
+                    documentId: docId,
+                    id: typeof result.id === 'number' ? result.id : undefined,
                     data: {
                       website: discovery.data?.website || result.website,
                       reserva_url: discovery.data?.reserva_url || result.reserva_url,
@@ -133,8 +139,10 @@ export default {
                   });
                  console.log(`Manual discovery successful for: ${result.nombre}`);
               } else {
+                 const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
                  await strapi.documents('api::negocio.negocio').update({
-                   documentId: result.documentId,
+                   documentId: docId,
+                   id: typeof result.id === 'number' ? result.id : undefined,
                    data: { trigger_discovery: false }
                  }).catch(() => {});
                  console.warn(`[Discovery] Manual discovery bypassed: ${discovery.error}`);
@@ -142,8 +150,10 @@ export default {
             })
             .catch(err => {
               console.error(`[Discovery] Unhandled async error:`, err.message);
+              const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
               strapi.documents('api::negocio.negocio').update({
-                documentId: result.documentId,
+                documentId: docId,
+                id: typeof result.id === 'number' ? result.id : undefined,
                 data: { trigger_discovery: false }
               }).catch(() => {});
             });
@@ -159,8 +169,10 @@ export default {
          console.log(`TripAdvisor sync requested for: ${result.nombre} (${newUrl})`);
          syncTripAdvisor(newUrl).then(async (data) => {
            if (data.success && data.rating) {
+             const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
              await strapi.documents('api::negocio.negocio').update({
-               documentId: result.documentId,
+               documentId: docId,
+               id: typeof result.id === 'number' ? result.id : undefined,
                data: {
                  tripadvisor_rating: data.rating,
                  tripadvisor_review_count: data.reviewCount
