@@ -1,6 +1,8 @@
 "use client";
 
+import { useRef, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Categoria } from "@/types/strapi";
 
@@ -10,61 +12,179 @@ interface FilterBarProps {
   onSelectCategory: (docId: string | null) => void;
 }
 
+/** Carrusel horizontal reutilizable con flechas */
+function PillCarousel({ children }: { children: React.ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    // Also check on resize for responsiveness
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      ro.disconnect();
+    };
+  }, [checkScroll, children]);
+
+  const scroll = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: direction === "left" ? -200 : 200, behavior: "smooth" });
+  };
+
+  return (
+    <div className="relative group/carousel">
+      {/* Flecha izquierda */}
+      {canScrollLeft && (
+        <button
+          onClick={() => scroll("left")}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg hover:bg-black/90 transition-all"
+          aria-label="Scroll izquierda"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+      )}
+
+      {/* Flecha derecha */}
+      {canScrollRight && (
+        <button
+          onClick={() => scroll("right")}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg hover:bg-black/90 transition-all"
+          aria-label="Scroll derecha"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      )}
+
+      {/* Contenido scrollable */}
+      <div
+        ref={scrollRef}
+        className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth px-1 py-0.5"
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /**
- * FilterBar — Solo muestra la barra de subcategorías cuando una categoría
- * principal está seleccionada y tiene hijos.
- * Las categorías principales viven en el Navbar (Split Search + Category Nav).
+ * FilterBar — Categorías y subcategorías como pills en carrusel horizontal.
+ * 
+ * Siempre visible debajo del search bar.
+ * - Fila 1: Categorías principales (scrollable)
+ * - Fila 2: Subcategorías (solo si la categoría seleccionada tiene hijos)
  */
 export default function FilterBar({ categorias, selectedCategoryDocId, onSelectCategory }: FilterBarProps) {
+  // Categorías principales (sin parent)
+  const mainCategorias = categorias.filter((c) => {
+    if (!c.parent) return true;
+    if (typeof c.parent === 'object' && !(c.parent as any).documentId) return true;
+    return false;
+  });
+
   // Lógica de subcategorías
   const selectedCategory = categorias.find(c => c.documentId === selectedCategoryDocId);
   const activeParentId = selectedCategory?.parent?.documentId || selectedCategory?.documentId;
-  const subcategorias = categorias.filter(c => c.parent?.documentId === activeParentId);
+  const subcategorias = categorias.filter(c => {
+    const pId = c.parent?.documentId || (c.parent as any)?.data?.documentId;
+    return pId === activeParentId;
+  });
   const showSubcategories = subcategorias.length > 0 && selectedCategoryDocId !== null;
 
-  // Si no hay subcategorías, no renderizamos nada
-  if (!showSubcategories) return null;
+  if (mainCategorias.length === 0) return null;
 
   return (
-    <div className="sticky top-[130px] md:top-[138px] z-40 bg-background/90 backdrop-blur-xl border-b border-white/[0.06] py-2.5 mb-6 transition-all">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          className="flex flex-wrap gap-2 items-center"
-        >
-          {/* Opción "Todas" para la categoría padre */}
+    <div className="sticky top-[72px] md:top-[80px] z-40 bg-background/95 backdrop-blur-xl border-b border-white/[0.06] py-2 transition-all">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-2">
+        {/* Fila 1: Categorías principales */}
+        <PillCarousel>
+          {/* Botón "Todos" */}
           <button
-            onClick={() => onSelectCategory(activeParentId!)}
+            onClick={() => onSelectCategory(null)}
             className={cn(
-              "px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border",
-              selectedCategoryDocId === activeParentId
-                ? "bg-white text-black border-white shadow-md"
-                : "bg-white/5 text-slate-400 border-transparent hover:bg-white/10 hover:text-white"
+              "flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
+              selectedCategoryDocId === null
+                ? "bg-primary text-black border-primary shadow-md shadow-primary/20"
+                : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white"
             )}
           >
-            Todas
+            Todos
           </button>
 
-          {/* Subcategorías */}
-          {subcategorias.map(sub => {
-            const isSubActive = selectedCategoryDocId === sub.documentId;
+          {mainCategorias.map((cat) => {
+            const isActive = selectedCategoryDocId === cat.documentId ||
+              (selectedCategory?.parent?.documentId === cat.documentId);
             return (
               <button
-                key={sub.id}
-                onClick={() => onSelectCategory(sub.documentId)}
+                key={cat.id}
+                onClick={() => onSelectCategory(cat.documentId)}
                 className={cn(
-                  "px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border",
-                  isSubActive
+                  "flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
+                  isActive
                     ? "bg-white text-black border-white shadow-md"
-                    : "bg-white/5 text-slate-400 border-transparent hover:bg-white/10 hover:text-white"
+                    : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white"
                 )}
               >
-                {sub.nombre}
+                {cat.nombre}
               </button>
             );
           })}
-        </motion.div>
+        </PillCarousel>
+
+        {/* Fila 2: Subcategorías (solo cuando aplica) */}
+        {showSubcategories && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            <PillCarousel>
+              {/* Botón "Todas" para ver todo dentro de la categoría padre */}
+              <button
+                onClick={() => onSelectCategory(activeParentId!)}
+                className={cn(
+                  "flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-all border",
+                  selectedCategoryDocId === activeParentId
+                    ? "bg-primary/20 text-primary border-primary/40"
+                    : "bg-white/[0.03] text-slate-500 border-white/[0.06] hover:bg-white/5 hover:text-slate-300"
+                )}
+              >
+                Todas
+              </button>
+
+              {subcategorias.map(sub => {
+                const isSubActive = selectedCategoryDocId === sub.documentId;
+                return (
+                  <button
+                    key={sub.id}
+                    onClick={() => onSelectCategory(sub.documentId)}
+                    className={cn(
+                      "flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-all border",
+                      isSubActive
+                        ? "bg-primary/20 text-primary border-primary/40"
+                        : "bg-white/[0.03] text-slate-500 border-white/[0.06] hover:bg-white/5 hover:text-slate-300"
+                    )}
+                  >
+                    {sub.nombre}
+                  </button>
+                );
+              })}
+            </PillCarousel>
+          </motion.div>
+        )}
       </div>
     </div>
   );
