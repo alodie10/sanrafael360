@@ -110,26 +110,37 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
           </h3>
 
           {/* Rating Stars (Yelp Style) */}
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex items-center gap-0.5">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <Star
-                  key={s}
-                  className={cn(
-                    "w-3.5 h-3.5",
-                    s <= (negocio.rating || 0) 
-                      ? "fill-primary text-primary" 
-                      : "fill-white/5 text-white/10"
-                  )}
-                />
-              ))}
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              {negocio.review_count && negocio.review_count > 0 
-                ? `${negocio.review_count} ${negocio.review_count === 1 ? 'Reseña' : 'Reseñas'}`
-                : "Sin reseñas"}
-            </span>
-          </div>
+          {(() => {
+            const hasSR360 = (negocio.review_count || 0) > 0;
+            const hasGoogle = (negocio.google_review_count || 0) > 0;
+            const hasTrip = (negocio.tripadvisor_review_count || 0) > 0;
+
+            const displayRating = hasSR360 ? (negocio.rating || 0) : hasGoogle ? (negocio.google_rating || 0) : hasTrip ? (negocio.tripadvisor_rating || 0) : 0;
+            const displayCount = hasSR360 ? (negocio.review_count || 0) : hasGoogle ? (negocio.google_review_count || 0) : hasTrip ? (negocio.tripadvisor_review_count || 0) : 0;
+
+            return (
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-0.5">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star
+                      key={s}
+                      className={cn(
+                        "w-3.5 h-3.5",
+                        s <= displayRating 
+                          ? "fill-primary text-primary" 
+                          : "fill-white/5 text-white/10"
+                      )}
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                  {displayCount > 0 
+                    ? `${displayCount} ${displayCount === 1 ? 'Reseña' : 'Reseñas'}`
+                    : "Sin reseñas"}
+                </span>
+              </div>
+            );
+          })()}
 
           <p className="text-slate-400 text-sm line-clamp-2 mb-6 leading-relaxed">
             {negocio.descripcion
