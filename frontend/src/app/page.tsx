@@ -42,7 +42,6 @@ function HomeContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [localidadQuery, setLocalidadQuery] = useState("");
   const [selectedCategoryDocId, setSelectedCategoryDocId] = useState<string | null>(null);
-  const [selectionCount, setSelectionCount] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   
   // Estados Etapa 2
@@ -56,7 +55,6 @@ function HomeContent() {
     if (id) {
       const cat = categorias.find(c => c.documentId === id);
       if (cat) params.set("cat", cat.slug || cat.documentId);
-      setSelectionCount(prev => prev + 1);
     } else {
       params.delete("cat");
       params.delete("q");
@@ -115,10 +113,9 @@ function HomeContent() {
   // Auto-scroll a resultados cuando cambian los filtros (vía Navbar u otros)
   useEffect(() => {
     const q = searchParams.get("q");
-    const cat = searchParams.get("cat") || searchParams.get("categoria");
     const l = searchParams.get("l");
     
-    if (q || cat || l) {
+    if (q || l) {
       // Pequeño timeout para asegurar que el DOM se haya actualizado si hay cambios de layout
       const timer = setTimeout(scrollToResults, 300);
       return () => clearTimeout(timer);
@@ -251,32 +248,6 @@ function HomeContent() {
   };
 
   const filterBarRef = useRef<HTMLDivElement>(null);
-
-  // Scroll automático inteligente (Mejora UX Mobile)
-  useEffect(() => {
-    // Solo scrollear si hay categorías, HUBO un clic (count > 0) y NO es el caso null (que se maneja arriba)
-    if (categorias.length === 0 || selectionCount === 0 || !selectedCategoryDocId) return;
-
-    const performScroll = () => {
-      const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
-      if (!selectedCat) return;
-
-      const hasSubcategories = categorias.some(c => c.parent?.documentId === selectedCategoryDocId);
-      const isSubcategory = !!selectedCat.parent;
-      
-      const filterBarTop = filterBarRef.current?.getBoundingClientRect().top || 0;
-      const isAlreadyAtFilters = filterBarTop < 150;
-
-      if (hasSubcategories && !isSubcategory && !isAlreadyAtFilters) {
-        filterBarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else {
-        scrollToResults();
-      }
-    };
-
-    const timer = setTimeout(performScroll, 100);
-    return () => clearTimeout(timer);
-  }, [selectionCount, categorias]);
 
   // Lógica de Filtrado Dinámico (Búsqueda Universal Nativa - Etapa 1)
   const filteredNegocios = negocios.filter((negocio) => {

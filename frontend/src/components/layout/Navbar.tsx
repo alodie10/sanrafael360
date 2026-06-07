@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Plus, Search, User, LogOut, MapPin, ChevronDown, LayoutGrid, Loader2 } from "lucide-react";
+import { Menu, X, Plus, Search, User, LogOut, MapPin, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/common/Logo";
 import { useSession, signOut } from "next-auth/react";
@@ -20,10 +20,8 @@ function NavbarInner() {
   const [loadingCats, setLoadingCats] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [localidad, setLocalidad] = useState("San Rafael, Mendoza");
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isPlacesLoaded, setIsPlacesLoaded] = useState(false);
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
 
   const pathname = usePathname();
@@ -101,19 +99,7 @@ function NavbarInner() {
   useEffect(() => {
     setScrolled(false);
     setIsOpen(false);
-    setActiveDropdown(null);
   }, [pathname]);
-
-  // --- Cerrar dropdowns al clic fuera ---
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setActiveDropdown(null);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
   const mainCategorias = categorias.filter((c) => {
     if (!c.parent) return true;
@@ -158,7 +144,6 @@ function NavbarInner() {
     const currentQ = searchParams.get("q");
     if (currentQ) params.set("q", currentQ);
     router.push(`/?${params.toString()}`, { scroll: false });
-    setActiveDropdown(null);
     setIsOpen(false);
   };
 
@@ -220,12 +205,12 @@ function NavbarInner() {
           </div>
         </div>
 
-        {/* Barra de búsqueda y categorías */}
+        {/* Barra de búsqueda */}
         <AnimatePresence>
           {(isHome || scrolled) && (
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-black/40 backdrop-blur-md border-t border-white/5 pb-6">
-              <div className="px-4 pt-4 flex flex-col gap-6">
-                <div className="flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl overflow-hidden max-w-4xl w-full mx-auto shadow-2xl">
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-black/40 backdrop-blur-md border-t border-white/5 pb-4">
+              <div className="px-4 pt-4 flex flex-col max-w-4xl mx-auto w-full">
+                <div className="flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl overflow-hidden w-full shadow-2xl">
                   {/* Qué buscas */}
                   <div className="flex-1 flex items-center gap-3 px-5 py-4 border-b md:border-b-0 md:border-r border-white/10 relative group">
                     <Search className="w-5 h-5 text-slate-500" />
@@ -261,38 +246,6 @@ function NavbarInner() {
                     )}
                   </div>
                   <button onClick={handleSearch} className="bg-white hover:bg-zinc-200 text-black px-10 py-4 md:py-0 font-heading font-black uppercase tracking-widest transition-all active:scale-95">BUSCAR</button>
-                </div>
-
-                <div ref={dropdownRef} className="flex items-center justify-center flex-wrap gap-x-6 gap-y-3 max-w-6xl mx-auto">
-                  {loadingCats ? (
-                    <div className="flex items-center gap-2 text-slate-500 py-2"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-xs font-bold uppercase">Cargando...</span></div>
-                  ) : (
-                    <>
-                      {mainCategorias.map((cat) => {
-                        const subCats = getSubcategories(cat.documentId);
-                        const isOpen = activeDropdown === cat.documentId;
-                        const isActive = activeCatParam === cat.slug || activeCatParam === cat.documentId;
-                        return (
-                          <div key={cat.id} className="relative">
-                            <button onClick={() => subCats.length ? setActiveDropdown(isOpen ? null : cat.documentId) : handleCatSelect(cat.documentId)} className={cn("flex items-center gap-1.5 text-[13px] font-bold py-1 border-b-2 transition-all", isActive ? "text-primary border-primary" : "text-slate-400 border-transparent hover:text-white")}>
-                              {cat.nombre} {subCats.length > 0 && <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", isOpen && "rotate-180")} />}
-                            </button>
-                            <AnimatePresence>
-                              {isOpen && (
-                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full left-0 mt-3 min-w-[240px] bg-zinc-950 border border-white/10 rounded-xl shadow-2xl z-[200] p-2">
-                                  <button onClick={() => handleCatSelect(cat.documentId)} className="w-full text-left px-4 py-3 text-[13px] font-black text-primary hover:bg-white/5 rounded-lg mb-1">Ver todo en {cat.nombre}</button>
-                                  <div className="h-px bg-white/5 my-1" />
-                                  {subCats.map(sub => (
-                                    <button key={sub.id} onClick={() => handleCatSelect(sub.documentId)} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">{sub.nombre}</button>
-                                  ))}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        );
-                      })}
-                    </>
-                  )}
                 </div>
               </div>
             </motion.div>

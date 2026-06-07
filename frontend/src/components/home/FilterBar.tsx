@@ -19,7 +19,7 @@ interface FilterBarProps {
 }
 
 /** Carrusel horizontal reutilizable con flechas */
-function PillCarousel({ children }: { children: React.ReactNode }) {
+function PillCarousel({ children, arrowAlign = "center" }: { children: React.ReactNode; arrowAlign?: "center" | "icon" }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -57,7 +57,10 @@ function PillCarousel({ children }: { children: React.ReactNode }) {
       {canScrollLeft && (
         <button
           onClick={() => scroll("left")}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg hover:bg-black/90 transition-all"
+          className={cn(
+            "absolute left-0 z-10 w-7 h-7 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg hover:bg-black/90 transition-all",
+            arrowAlign === "icon" ? "top-[32px] -translate-y-1/2" : "top-1/2 -translate-y-1/2"
+          )}
           aria-label="Scroll izquierda"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -68,7 +71,10 @@ function PillCarousel({ children }: { children: React.ReactNode }) {
       {canScrollRight && (
         <button
           onClick={() => scroll("right")}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg hover:bg-black/90 transition-all"
+          className={cn(
+            "absolute right-0 z-10 w-7 h-7 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg hover:bg-black/90 transition-all",
+            arrowAlign === "icon" ? "top-[32px] -translate-y-1/2" : "top-1/2 -translate-y-1/2"
+          )}
           aria-label="Scroll derecha"
         >
           <ChevronRight className="w-4 h-4" />
@@ -78,7 +84,7 @@ function PillCarousel({ children }: { children: React.ReactNode }) {
       {/* Contenido scrollable */}
       <div
         ref={scrollRef}
-        className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth px-1 py-0.5"
+        className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth px-1 py-2"
       >
         {children}
       </div>
@@ -149,19 +155,32 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
     <div className="sticky top-[72px] md:top-[80px] z-40 bg-background/95 backdrop-blur-xl border-b border-white/[0.06] py-2 transition-all">
       <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-2">
         {/* Fila 1: Categorías principales */}
-        <PillCarousel>
+        <PillCarousel arrowAlign="icon">
           {/* Botón "Todos" */}
           <button
             onClick={() => onSelectCategory(null)}
-            className={cn(
-              "flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
-              selectedCategoryDocId === null
-                ? "bg-primary text-black border-primary shadow-md shadow-primary/20"
-                : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white"
-            )}
+            className="flex-shrink-0 flex flex-col items-center gap-1.5 w-20 group transition-all"
           >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            Todos
+            <div
+              className={cn(
+                "w-16 h-16 rounded-2xl flex items-center justify-center border transition-all duration-300",
+                selectedCategoryDocId === null
+                  ? "bg-primary text-black border-primary shadow-[0_0_15px_rgba(214,175,55,0.4)]"
+                  : "bg-white/5 text-slate-400 border-white/10 group-hover:bg-white/10 group-hover:text-white group-hover:border-white/20"
+              )}
+            >
+              <LayoutGrid className="w-6 h-6" />
+            </div>
+            <span
+              className={cn(
+                "text-[10px] font-bold text-center uppercase tracking-wider truncate block w-full px-1 transition-colors",
+                selectedCategoryDocId === null
+                  ? "text-primary"
+                  : "text-slate-400 group-hover:text-white"
+              )}
+            >
+              Todos
+            </span>
           </button>
 
           {mainCategorias.map((cat) => {
@@ -172,15 +191,28 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
               <button
                 key={cat.id}
                 onClick={() => onSelectCategory(cat.documentId)}
-                className={cn(
-                  "flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
-                  isActive
-                    ? "bg-white text-black border-white shadow-md"
-                    : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white"
-                )}
+                className="flex-shrink-0 flex flex-col items-center gap-1.5 w-20 group transition-all"
               >
-                <Icon className="w-3.5 h-3.5" />
-                {cat.nombre}
+                <div
+                  className={cn(
+                    "w-16 h-16 rounded-2xl flex items-center justify-center border transition-all duration-300",
+                    isActive
+                      ? "bg-primary text-black border-primary shadow-[0_0_15px_rgba(214,175,55,0.4)]"
+                      : "bg-white/5 text-slate-400 border-white/10 group-hover:bg-white/10 group-hover:text-white group-hover:border-white/20"
+                  )}
+                >
+                  <Icon className="w-6 h-6" />
+                </div>
+                <span
+                  className={cn(
+                    "text-[10px] font-bold text-center uppercase tracking-wider truncate block w-full px-1 transition-colors",
+                    isActive
+                      ? "text-primary"
+                      : "text-slate-400 group-hover:text-white"
+                  )}
+                >
+                  {cat.nombre}
+                </span>
               </button>
             );
           })}
