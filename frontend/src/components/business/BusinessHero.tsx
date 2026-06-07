@@ -38,13 +38,15 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
     });
   }
 
+  const hasCarousel = images.length > 1;
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   // Intervalo temporizado de 4 segundos
   useEffect(() => {
-    if (images.length <= 1 || isPaused) return;
+    if (!hasCarousel || isPaused) return;
 
     const intervalDuration = 4000; // 4s
     const updateInterval = 50; // 50ms
@@ -61,7 +63,7 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
     }, updateInterval);
 
     return () => clearInterval(timer);
-  }, [images.length, isPaused]);
+  }, [hasCarousel, images.length, isPaused]);
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -76,36 +78,16 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
   };
 
   return (
-    <section 
-      className="relative overflow-hidden group select-none"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onTouchStart={() => setIsPaused(true)}
-      onTouchEnd={() => setIsPaused(false)}
-    >
-      {/* Barras de progreso estilo Instagram Stories (Arriba) */}
-      {images.length > 1 && (
-        <div className="absolute top-4 left-0 right-0 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto z-20 flex gap-1.5 pointer-events-none">
-          {images.map((_, index) => (
-            <div key={index} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
-              <div 
-                className="h-full bg-primary transition-all ease-linear"
-                style={{ 
-                   width: index === activeIndex 
-                     ? `${progress}%` 
-                     : index < activeIndex 
-                       ? "100%" 
-                       : "0%",
-                   transitionDuration: index === activeIndex ? "50ms" : "0ms"
-                }}
-              />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Background / Carrusel con transiciones */}
-      <div className="absolute inset-0 z-0 bg-slate-900">
+    <section className="select-none">
+      {/* ═══════════ ZONA 1: Carrusel de fotos (brillo completo) ═══════════ */}
+      <div 
+        className="relative w-full h-[300px] md:h-[480px] overflow-hidden bg-slate-900"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={() => setIsPaused(true)}
+        onTouchEnd={() => setIsPaused(false)}
+      >
+        {/* Imágenes del carrusel — brillo completo, sin oscurecer */}
         {images.length > 0 ? (
           images.map((imgUrl, index) => (
             <motion.img
@@ -115,18 +97,20 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
               initial={{ opacity: 0 }}
               animate={{ opacity: index === activeIndex ? 1 : 0 }}
               transition={{ duration: 0.4 }}
-              className="absolute inset-0 w-full h-full object-cover brightness-50"
+              className="absolute inset-0 w-full h-full object-cover"
               style={{ zIndex: index === activeIndex ? 1 : 0 }}
             />
           ))
         ) : (
           <div className="w-full h-full bg-slate-900" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-black/40 z-10" />
+
+        {/* Gradiente sutil solo en la base para legibilidad de las barras */}
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/50 to-transparent z-10" />
 
         {/* Zonas táctiles invisibles para navegar */}
-        {images.length > 1 && (
-          <div className="absolute inset-0 z-20 flex pointer-events-auto">
+        {hasCarousel && (
+          <div className="absolute inset-0 z-20 flex">
             <div 
               onClick={handlePrev}
               className="w-[30%] h-full cursor-pointer"
@@ -139,23 +123,45 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
             />
           </div>
         )}
+
+        {/* Barras de progreso estilo Stories (abajo del carrusel) */}
+        {hasCarousel && (
+          <div className="absolute bottom-3 left-0 right-0 px-4 md:px-8 z-30 flex gap-1.5 pointer-events-none">
+            {images.map((_, index) => (
+              <div key={index} className="h-[3px] flex-1 bg-white/30 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-white transition-all ease-linear rounded-full"
+                  style={{ 
+                    width: index === activeIndex 
+                      ? `${progress}%` 
+                      : index < activeIndex 
+                        ? "100%" 
+                        : "0%",
+                    transitionDuration: index === activeIndex ? "50ms" : "0ms"
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Pill indicador de fotos */}
+        {hasCarousel && (
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 bg-black/40 backdrop-blur-md text-white px-3 py-1 rounded-full flex items-center gap-1.5 text-xs font-semibold pointer-events-none">
+            <Camera className="w-3.5 h-3.5" />
+            <span>{images.length} fotos</span>
+          </div>
+        )}
       </div>
 
-      {/* Pill indicador de fotos */}
-      {images.length > 1 && (
-        <div className="absolute bottom-4 right-4 md:bottom-8 md:right-12 lg:right-16 z-20 bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-semibold border border-white/10 shadow-lg pointer-events-none">
-          <Camera className="w-3.5 h-3.5 text-primary" />
-          <span>{activeIndex + 1} / {images.length}</span>
-        </div>
-      )}
-
-      <div className="relative flex flex-col justify-end min-h-[340px] md:min-h-[560px] pb-6 md:pb-16 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto z-30 pointer-events-none">
-        <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-10 pointer-events-auto">
-          {/* Logo */}
+      {/* ═══════════ ZONA 2: Info del negocio (fondo sólido Obsidian) ═══════════ */}
+      <div className="relative bg-background px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-start gap-3 md:gap-6 pt-4 md:pt-6 pb-4 md:pb-6">
+          {/* Logo — se superpone ligeramente sobre la foto */}
           <motion.div 
-             initial={{ opacity: 0, scale: 0.8 }}
-             animate={{ opacity: 1, scale: 1 }}
-             className="w-20 h-20 md:w-44 md:h-44 bg-slate-900/80 backdrop-blur-xl p-2 md:p-3 rounded-2xl md:rounded-[2.5rem] shadow-2xl border border-white/10 shrink-0 flex items-center justify-center overflow-hidden"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-16 h-16 md:w-28 md:h-28 bg-surface backdrop-blur-xl p-1.5 md:p-2 rounded-xl md:rounded-2xl shadow-2xl border border-white/10 shrink-0 flex items-center justify-center overflow-hidden -mt-10 md:-mt-16 relative z-10"
           >
             {logoUrl ? (
               <img 
@@ -164,33 +170,34 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
                 className="w-full h-full object-contain"
               />
             ) : (
-               <div className="w-full h-full bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-black font-bold text-4xl">
-                  {negocio.nombre.charAt(0)}
-               </div>
+              <div className="w-full h-full bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-black font-bold text-2xl md:text-4xl">
+                {negocio.nombre.charAt(0)}
+              </div>
             )}
           </motion.div>
 
-          <div className="flex-1">
-            <h1 className="text-2xl md:text-6xl font-heading font-extrabold text-white mb-2 md:mb-4 tracking-tight text-balance">
+          {/* Nombre + Badges */}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl md:text-4xl font-heading font-extrabold text-white mb-2 tracking-tight text-balance leading-tight">
               {negocio.nombre}
             </h1>
-            <div className="flex flex-wrap items-center gap-6 text-slate-300">
-              {/* Rating Stars Header */}
-              <div className="flex items-center gap-3 bg-black/30 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/10 shadow-lg">
-                 <div className="flex items-center gap-0.5">
-                   {[1, 2, 3, 4, 5].map((s) => (
-                     <Star key={s} className={cn("w-3.5 h-3.5", s <= (negocio.rating || 0) ? "fill-primary text-primary" : "text-white/10")} />
-                   ))}
-                 </div>
-                 <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">
-                   {negocio.review_count || 0} Opiniones
-                 </span>
+            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+              {/* Rating Stars */}
+              <div className="flex items-center gap-2 bg-surface px-3 py-1 rounded-full border border-white/10">
+                <div className="flex items-center gap-0.5">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} className={cn("w-3 h-3", s <= (negocio.rating || 0) ? "fill-primary text-primary" : "text-white/10")} />
+                  ))}
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {negocio.review_count || 0} Opiniones
+                </span>
               </div>
 
               {businessStatus && (
-                 <div className={cn("px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border", businessStatus.color)}>
-                   {businessStatus.status}
-                 </div>
+                <div className={cn("px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border", businessStatus.color)}>
+                  {businessStatus.status}
+                </div>
               )}
 
               {(() => {
@@ -204,15 +211,14 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
                 return (
                   <>
                     {negocio.categoria && !categoriaYaCubierta && (
-                      <div className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-white/20 border border-white/30 text-white">
+                      <div className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/10 border border-white/15 text-slate-300">
                         {negocio.categoria.nombre}
                       </div>
                     )}
                     {negocio.atributos && negocio.atributos.length > 0 && (
-                      <div className="flex gap-2 flex-wrap">
-                        {/* Si la categoría ya está cubierta, mostramos todos los atributos. Si no, los filtrados */}
+                      <div className="flex gap-1.5 flex-wrap">
                         {(categoriaYaCubierta ? negocio.atributos : atributosFiltrados).map((attr) => (
-                          <div key={attr.documentId} className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-white/10 border border-white/20 text-slate-200">
+                          <div key={attr.documentId} className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 text-slate-400">
                             {attr.nombre}
                           </div>
                         ))}
@@ -228,3 +234,4 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
     </section>
   );
 }
+
