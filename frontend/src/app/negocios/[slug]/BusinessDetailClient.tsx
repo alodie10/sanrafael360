@@ -17,7 +17,6 @@ import { useSession } from "next-auth/react";
 import { Settings, MapPin, Phone, ExternalLink } from "lucide-react";
 import RatingSources from "@/components/business/RatingSources";
 import GooglePlacesReviews from "@/components/business/GooglePlacesReviews";
-import MobileActionFooter from "@/components/business/MobileActionFooter";
 
 import { Negocio } from "@/types/strapi";
 
@@ -197,7 +196,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
   }
 
   return (
-    <main className="min-h-screen bg-background pb-32 md:pb-20">
+    <main className="min-h-screen bg-background pb-20">
       <NavigationFAB isVisible={showScrollTop} type="back" onClick={() => router.back()} />
 
       <BusinessHero negocio={negocio} businessStatus={businessStatus} />
@@ -335,8 +334,6 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
           </div>
         </div>
       )}
-
-      <MobileActionFooter negocio={negocio} onTrackClick={trackClick} />
     </main>
   );
 }

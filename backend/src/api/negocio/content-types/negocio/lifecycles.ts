@@ -147,6 +147,9 @@ export default {
                 data: { trigger_discovery: false }
               }).catch(() => {});
             });
+        } catch (err) {
+          console.error(`Crash prevented in afterUpdate for ${result.nombre}:`, err);
+        }
      }
 
      // TripAdvisor manual sync on update (if URL changed/provided)
