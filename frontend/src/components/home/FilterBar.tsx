@@ -2,7 +2,13 @@
 
 import { useRef, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft, ChevronRight, LayoutGrid,
+  Plane, Hotel, Wine, UtensilsCrossed, ShoppingBag, Mountain,
+  Scissors, Stethoscope, Car, Hammer, GraduationCap, Music,
+  Dumbbell, PawPrint, Camera, Sparkles, TreePine, Store,
+  type LucideIcon
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Categoria } from "@/types/strapi";
 
@@ -80,11 +86,44 @@ function PillCarousel({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Mapa de categoría → ícono Lucide */
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  "agencias de viaje": Plane,
+  "alojamientos": Hotel,
+  "bodegas": Wine,
+  "gastronomía": UtensilsCrossed,
+  "gastronomia": UtensilsCrossed,
+  "productos gourmet": ShoppingBag,
+  "turismo aventura": Mountain,
+  "turismo": Mountain,
+  "salud": Stethoscope,
+  "belleza": Sparkles,
+  "peluquería": Scissors,
+  "peluqueria": Scissors,
+  "automotor": Car,
+  "construcción": Hammer,
+  "construccion": Hammer,
+  "educación": GraduationCap,
+  "educacion": GraduationCap,
+  "entretenimiento": Music,
+  "deportes": Dumbbell,
+  "mascotas": PawPrint,
+  "fotografía": Camera,
+  "fotografia": Camera,
+  "naturaleza": TreePine,
+  "comercios": Store,
+};
+
+function getCategoryIcon(name: string): LucideIcon {
+  const normalized = name.toLowerCase().trim();
+  return CATEGORY_ICONS[normalized] || Store;
+}
+
 /**
  * FilterBar — Categorías y subcategorías como pills en carrusel horizontal.
  * 
  * Siempre visible debajo del search bar.
- * - Fila 1: Categorías principales (scrollable)
+ * - Fila 1: Categorías principales con íconos (scrollable)
  * - Fila 2: Subcategorías (solo si la categoría seleccionada tiene hijos)
  */
 export default function FilterBar({ categorias, selectedCategoryDocId, onSelectCategory }: FilterBarProps) {
@@ -115,29 +154,32 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
           <button
             onClick={() => onSelectCategory(null)}
             className={cn(
-              "flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
+              "flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
               selectedCategoryDocId === null
                 ? "bg-primary text-black border-primary shadow-md shadow-primary/20"
                 : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white"
             )}
           >
+            <LayoutGrid className="w-3.5 h-3.5" />
             Todos
           </button>
 
           {mainCategorias.map((cat) => {
             const isActive = selectedCategoryDocId === cat.documentId ||
               (selectedCategory?.parent?.documentId === cat.documentId);
+            const Icon = getCategoryIcon(cat.nombre);
             return (
               <button
                 key={cat.id}
                 onClick={() => onSelectCategory(cat.documentId)}
                 className={cn(
-                  "flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
+                  "flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
                   isActive
                     ? "bg-white text-black border-white shadow-md"
                     : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white"
                 )}
               >
+                <Icon className="w-3.5 h-3.5" />
                 {cat.nombre}
               </button>
             );
