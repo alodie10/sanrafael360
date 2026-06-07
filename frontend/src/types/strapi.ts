@@ -66,6 +66,7 @@ export interface Negocio {
   tripadvisor_rating?: number;
   tripadvisor_review_count?: number;
   tripadvisor_url?: string;
+  youtube_url?: string;
   discovery_verified?: boolean;
   rating?: number;
   review_count?: number;

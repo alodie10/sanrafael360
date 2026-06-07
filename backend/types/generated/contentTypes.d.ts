@@ -679,6 +679,7 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     views: Schema.Attribute.BigInteger & Schema.Attribute.DefaultTo<'0'>;
     website: Schema.Attribute.String;
     whatsapp: Schema.Attribute.String;
+    youtube_url: Schema.Attribute.String;
   };
 }
 
