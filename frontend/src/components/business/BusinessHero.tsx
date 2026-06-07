@@ -178,7 +178,7 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
 
           {/* Nombre + Badges */}
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl md:text-4xl font-heading font-extrabold text-white mb-2 tracking-tight text-balance leading-tight">
+            <h1 className="text-2xl md:text-4xl font-heading font-extrabold text-white mb-2 tracking-tight text-balance leading-tight">
               {negocio.nombre}
             </h1>
             <div className="flex flex-wrap items-center gap-2 md:gap-3">
