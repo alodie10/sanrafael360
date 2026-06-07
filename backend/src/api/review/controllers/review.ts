@@ -1,6 +1,28 @@
 import { factories } from '@strapi/strapi';
 
 export default factories.createCoreController('api::review.review' as any, ({ strapi }) => ({
+  async find(ctx) {
+    const { data, meta } = await super.find(ctx);
+
+    const enhancedData = await Promise.all(
+      data.map(async (review: any) => {
+        const fullReview = await strapi.documents('api::review.review' as any).findOne({
+          documentId: review.documentId,
+          populate: ['autor']
+        });
+        
+        if (fullReview && fullReview.autor) {
+          review.autor = {
+            username: (fullReview.autor as any).username
+          };
+        }
+        return review;
+      })
+    );
+
+    return { data: enhancedData, meta };
+  },
+
   async create(ctx) {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
