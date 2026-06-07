@@ -34,7 +34,7 @@ export default function GooglePlacesReviews({ googlePlaceId, className }: Google
     const loader = new Loader({
       apiKey,
       version: "weekly",
-      libraries: ["places"],
+      libraries: ["places", "marker", "maps"],
       language: "es"
     });
 
