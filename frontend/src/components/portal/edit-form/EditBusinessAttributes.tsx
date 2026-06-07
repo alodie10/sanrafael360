@@ -25,11 +25,10 @@ export default function EditBusinessAttributes({
   const [isCreating, setIsCreating] = useState(false);
 
   const toggleAtributo = (documentId: string) => {
-    setAtributosSeleccionados((prev) => 
-      prev.includes(documentId) 
-        ? prev.filter(id => id !== documentId)
-        : [...prev, documentId]
-    );
+    const nextAtributos = atributosSeleccionados.includes(documentId) 
+        ? atributosSeleccionados.filter((id: string) => id !== documentId)
+        : [...atributosSeleccionados, documentId];
+    setAtributosSeleccionados(nextAtributos);
   };
 
   const handleCreateTag = async () => {

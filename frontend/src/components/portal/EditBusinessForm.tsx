@@ -14,6 +14,7 @@ import EditBusinessReservations from "./edit-form/EditBusinessReservations";
 import EditBusinessAttributes from "./edit-form/EditBusinessAttributes";
 import EditBusinessGallery from "./edit-form/EditBusinessGallery";
 import EditBusinessVisualIdentity from "./edit-form/EditBusinessVisualIdentity";
+import EditBusinessRatings from "./edit-form/EditBusinessRatings";
 import ScheduleEditor from "./ScheduleEditor";
 
 interface EditBusinessFormProps {
@@ -43,6 +44,12 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [categories, setCategories] = useState<any[]>([]);
   const [atributosSeleccionados, setAtributosSeleccionados] = useState<string[]>(negocio.atributos?.map((a: any) => a.documentId) || []);
   const [availableAtributos, setAvailableAtributos] = useState<any[]>([]);
+  
+  // Ratings & Discovery
+  const [triggerDiscovery, setTriggerDiscovery] = useState(false);
+  const [tripadvisorUrl, setTripadvisorUrl] = useState(negocio.tripadvisor_url || "");
+  const [tripadvisorRating, setTripadvisorRating] = useState(negocio.tripadvisor_rating || 0);
+  const [tripadvisorReviewCount, setTripadvisorReviewCount] = useState(negocio.tripadvisor_review_count || 0);
   
   // Files
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -205,7 +212,10 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         schedules,
         categoria: isAdmin ? categoria : undefined,
         atributos: atributosSeleccionados,
-        trigger_discovery: false,
+        trigger_discovery: triggerDiscovery,
+        tripadvisor_url: tripadvisorUrl,
+        tripadvisor_rating: Number(tripadvisorRating) || 0,
+        tripadvisor_review_count: Number(tripadvisorReviewCount) || 0,
         galeria: existingGallery.map((img: any) => img.id)
       };
 
@@ -319,6 +329,17 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
           setReservaHabilitada={setReservaHabilitada}
           reservaUrl={reservaUrl}
           setReservaUrl={setReservaUrl}
+        />
+
+        <EditBusinessRatings
+          triggerDiscovery={triggerDiscovery}
+          setTriggerDiscovery={setTriggerDiscovery}
+          tripadvisorUrl={tripadvisorUrl}
+          setTripadvisorUrl={setTripadvisorUrl}
+          tripadvisorRating={tripadvisorRating}
+          setTripadvisorRating={setTripadvisorRating}
+          tripadvisorReviewCount={tripadvisorReviewCount}
+          setTripadvisorReviewCount={setTripadvisorReviewCount}
         />
 
         <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">

@@ -48,7 +48,7 @@ export default function GooglePlacesReviews({ googlePlaceId, className }: Google
           placeId: googlePlaceId,
           fields: ["reviews"]
         },
-        (place, status) => {
+        (place: any, status: any) => {
           setLoading(false);
           if (status === google.maps.places.PlacesServiceStatus.OK && place?.reviews) {
             setReviews(place.reviews as GoogleReview[]);
