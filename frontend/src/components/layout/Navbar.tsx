@@ -160,8 +160,10 @@ function NavbarInner() {
 
   return (
     <nav className={cn(
-      "fixed left-0 right-0 z-[100] transition-all duration-500 top-[calc(var(--app-banner-height,0px)+var(--master-bar-height,0px))]",
-      scrolled ? "bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl" : "bg-transparent border-b border-transparent"
+      "left-0 right-0 z-[100] transition-all duration-500 top-[calc(var(--app-banner-height,0px)+var(--master-bar-height,0px))]",
+      scrolled 
+        ? "fixed bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl" 
+        : "relative md:fixed bg-transparent border-b border-transparent"
     )}>
       <div className="max-w-7xl mx-auto flex flex-col">
         {/* Superior */}
@@ -208,7 +210,15 @@ function NavbarInner() {
         {/* Barra de búsqueda */}
         <AnimatePresence>
           {(isHome || scrolled) && (
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-black/40 backdrop-blur-md border-t border-white/5 pb-4">
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: -20 }} 
+              className={cn(
+                "bg-black/40 backdrop-blur-md border-t border-white/5 pb-4",
+                scrolled ? "hidden md:block" : "block"
+              )}
+            >
               <div className="px-4 pt-4 flex flex-col max-w-4xl mx-auto w-full">
                 <div className="flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl overflow-hidden w-full shadow-2xl">
                   {/* Qué buscas */}

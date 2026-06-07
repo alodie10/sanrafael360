@@ -152,7 +152,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
   if (mainCategorias.length === 0) return null;
 
   return (
-    <div className="sticky top-[72px] md:top-[80px] z-40 bg-background/95 backdrop-blur-xl border-b border-white/[0.06] py-2 transition-all">
+    <div className="bg-background/95 backdrop-blur-xl border-b border-white/[0.06] py-2 transition-all">
       <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-2">
         {/* Fila 1: Categorías principales */}
         <PillCarousel arrowAlign="icon">

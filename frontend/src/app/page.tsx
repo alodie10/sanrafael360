@@ -333,7 +333,7 @@ function HomeContent() {
       </section>
 
       {/* FILTER BAR STICKY — subcategorías y estado de filtrado */}
-      <div id="filter-bar" ref={filterBarRef} className="scroll-mt-36">
+      <div id="filter-bar" ref={filterBarRef} className="sticky-filter-bar scroll-mt-36">
         <FilterBar 
           categorias={categorias} 
           selectedCategoryDocId={selectedCategoryDocId} 
@@ -347,8 +347,8 @@ function HomeContent() {
           {/* Eliminado bloque redundante de stats */}
         </AnimatePresence>
 
-        {/* FEATURED PLACES / SEARCH RESULTS — Margen de seguridad alto para móviles para evitar solapamiento */}
-        <section className="mt-64 md:mt-12 scroll-mt-64" ref={resultsRef}>
+        {/* FEATURED PLACES / SEARCH RESULTS */}
+        <section className="mt-6 md:mt-12 scroll-mt-64" ref={resultsRef}>
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
             <div className="max-w-xl">
               <div className="flex flex-wrap items-center gap-3 mb-4">
