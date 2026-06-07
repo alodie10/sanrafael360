@@ -111,13 +111,19 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
 
           {/* Rating Stars (Yelp Style) */}
           {(() => {
-            const hasSR360 = (negocio.review_count || 0) > 0;
-            const hasGoogle = (negocio.google_review_count || 0) > 0;
-            const hasTrip = (negocio.tripadvisor_review_count || 0) > 0;
+            const srCount = negocio.review_count || 0;
+            const gCount = negocio.google_review_count || 0;
+            const tCount = negocio.tripadvisor_review_count || 0;
+            const displayCount = srCount + gCount + tCount;
 
-            const displayRating = hasSR360 ? (negocio.rating || 0) : hasGoogle ? (negocio.google_rating || 0) : hasTrip ? (negocio.tripadvisor_rating || 0) : 0;
-            const roundedRating = Math.round(displayRating);
-            const displayCount = hasSR360 ? (negocio.review_count || 0) : hasGoogle ? (negocio.google_review_count || 0) : hasTrip ? (negocio.tripadvisor_review_count || 0) : 0;
+            let averageRating = 0;
+            if (displayCount > 0) {
+              const srTotal = srCount * (negocio.rating || 0);
+              const gTotal = gCount * (negocio.google_rating || 0);
+              const tTotal = tCount * (negocio.tripadvisor_rating || 0);
+              averageRating = (srTotal + gTotal + tTotal) / displayCount;
+            }
+            const roundedRating = Math.round(averageRating);
 
             return (
               <div className="flex items-center gap-2 mb-4">
