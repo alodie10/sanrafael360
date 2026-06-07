@@ -116,6 +116,7 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
             const hasTrip = (negocio.tripadvisor_review_count || 0) > 0;
 
             const displayRating = hasSR360 ? (negocio.rating || 0) : hasGoogle ? (negocio.google_rating || 0) : hasTrip ? (negocio.tripadvisor_rating || 0) : 0;
+            const roundedRating = Math.round(displayRating);
             const displayCount = hasSR360 ? (negocio.review_count || 0) : hasGoogle ? (negocio.google_review_count || 0) : hasTrip ? (negocio.tripadvisor_review_count || 0) : 0;
 
             return (
@@ -126,7 +127,7 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
                       key={s}
                       className={cn(
                         "w-3.5 h-3.5",
-                        s <= displayRating 
+                        s <= roundedRating 
                           ? "fill-primary text-primary" 
                           : "fill-white/5 text-white/10"
                       )}

@@ -192,13 +192,14 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
                 const hasTrip = (negocio.tripadvisor_review_count || 0) > 0;
 
                 const displayRating = hasSR360 ? (negocio.rating || 0) : hasGoogle ? (negocio.google_rating || 0) : hasTrip ? (negocio.tripadvisor_rating || 0) : 0;
+                const roundedRating = Math.round(displayRating);
                 const displayCount = hasSR360 ? (negocio.review_count || 0) : hasGoogle ? (negocio.google_review_count || 0) : hasTrip ? (negocio.tripadvisor_review_count || 0) : 0;
                 
                 return (
                   <div className="flex items-center gap-2 bg-surface px-3 py-1 rounded-full border border-white/10">
                     <div className="flex items-center gap-0.5">
                       {[1, 2, 3, 4, 5].map((s) => (
-                        <Star key={s} className={cn("w-3 h-3", s <= displayRating ? "fill-primary text-primary" : "text-white/10")} />
+                        <Star key={s} className={cn("w-3 h-3", s <= roundedRating ? "fill-primary text-primary" : "text-white/10")} />
                       ))}
                     </div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
