@@ -1,103 +1,105 @@
 import { Metadata } from "next";
 import { ReactNode } from "react";
 import { getNegocioBySlug } from "@/lib/negocios";
+import { LocalBusinessSchema } from "@/components/business/LocalBusinessSchema";
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+const OG_DEFAULT_IMAGE = "https://www.sanrafael360.com/og-default.jpg";
+const SITE_URL = "https://www.sanrafael360.com";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
-  
+
   try {
     const negocio = await getNegocioBySlug(slug);
 
     if (!negocio) {
-      console.warn(`[SEO Warning] Negocio no encontrado después de intentar por slug/documentId: ${slug}`);
       return { title: "Negocio no encontrado | San Rafael 360" };
     }
 
-    const title = `${negocio.nombre} | ${negocio.categoria?.nombre || 'San Rafael'} | San Rafael 360`;
-    const description = negocio.descripcion 
-      ? negocio.descripcion.substring(0, 160).replace(/[#*]/g, '') 
-      : `Descubre ${negocio.nombre} en San Rafael. Dirección, horarios, fotos y contacto directo en el portal más completo de la ciudad.`;
+    // Título: "Nombre — Categoría | San Rafael 360"
+    const title = `${negocio.nombre}${negocio.categoria?.nombre ? ` — ${negocio.categoria.nombre}` : ""} | San Rafael 360`;
+
+    // Descripción: limpia de markdown/HTML, máx 155 chars
+    const rawDesc = negocio.descripcion
+      ? negocio.descripcion
+          .replace(/<[^>]*>/g, "")
+          .replace(/[#*_~`>]/g, "")
+          .trim()
+      : "";
+    const description =
+      rawDesc.length > 10
+        ? rawDesc.substring(0, 152) + "..."
+        : `Descubrí ${negocio.nombre} en San Rafael, Mendoza. Dirección, horarios, fotos y contacto directo en el portal más completo de la ciudad.`;
+
+    // Imagen para Open Graph — con dimensiones explícitas para redes
+    const ogImageUrl =
+      negocio.imagen_portada?.url || negocio.logo?.url || OG_DEFAULT_IMAGE;
+
+    const canonicalUrl = `${SITE_URL}/negocios/${negocio.slug}`;
 
     return {
       title,
       description,
+      alternates: {
+        canonical: canonicalUrl,
+      },
       openGraph: {
         title,
         description,
-        images: negocio.imagen_portada?.url ? [{ url: negocio.imagen_portada.url }] : [],
-        type: 'website',
+        url: canonicalUrl,
+        siteName: "San Rafael 360",
+        locale: "es_AR",
+        type: "website",
+        images: [
+          {
+            url: ogImageUrl,
+            width: 1200,
+            height: 630,
+            alt: `${negocio.nombre} — San Rafael 360`,
+          },
+        ],
       },
       twitter: {
-        card: 'summary_large_image',
+        card: "summary_large_image",
         title,
         description,
+        images: [ogImageUrl],
+        site: "@sanrafael360",
       },
-      alternates: {
-        canonical: `https://www.sanrafael360.com/negocios/${negocio.slug}`,
-      }
     };
   } catch (e: any) {
-    console.error(`[SEO Critical Error] Error en generateMetadata para ${slug}:`, e.message || e);
+    console.error(
+      `[SEO Critical Error] generateMetadata para ${slug}:`,
+      e.message || e
+    );
     return { title: "San Rafael 360" };
   }
 }
 
-export default async function BusinessLayout({ children, params }: { children: ReactNode, params: Promise<{ slug: string }> }) {
+export default async function BusinessLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
 
-  let jsonLd = null;
+  let negocio = null;
   try {
-    const negocio = await getNegocioBySlug(slug);
-    
-    if (negocio) {
-      jsonLd = {
-        "@context": "https://schema.org",
-        "@type": "LocalBusiness",
-        "name": negocio.nombre,
-        "description": negocio.descripcion?.replace(/[#*]/g, ''),
-        "image": negocio.imagen_portada?.url || negocio.logo?.url,
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": negocio.direccion,
-          "addressLocality": "San Rafael",
-          "addressRegion": "Mendoza",
-          "addressCountry": "AR"
-        },
-        "geo": negocio.latitud && negocio.longitud ? {
-          "@type": "GeoCoordinates",
-          "latitude": negocio.latitud,
-          "longitude": negocio.longitud
-        } : undefined,
-        "telephone": negocio.telefono || negocio.whatsapp,
-        "url": `https://www.sanrafael360.com/negocios/${negocio.slug}`,
-        "priceRange": negocio.price_range === "Economico" ? "$" : negocio.price_range === "Moderado" ? "$$" : "$$$",
-        "aggregateRating": (negocio.rating && negocio.review_count && negocio.review_count > 0) ? {
-          "@type": "AggregateRating",
-          "ratingValue": negocio.rating,
-          "reviewCount": negocio.review_count
-        } : undefined,
-        "openingHoursSpecification": negocio.schedules?.map((s: any) => ({
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": s.day,
-          "opens": s.opening_time,
-          "closes": s.closing_time
-        }))
-      };
-    }
+    negocio = await getNegocioBySlug(slug);
   } catch (e: any) {
-    console.error(`[SEO Layout Error] Error generando JSON-LD para ${slug}:`, e.message || e);
+    console.error(`[SEO Layout Error] getNegocioBySlug falló para ${slug}:`, e.message || e);
   }
 
   return (
     <>
-      {jsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      )}
+      {negocio && <LocalBusinessSchema negocio={negocio} />}
       {children}
     </>
   );
 }
-

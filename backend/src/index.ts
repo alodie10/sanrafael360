@@ -164,6 +164,82 @@ export default {
         strapi.log.error('❌ Error en migración de Atributos:', err.message);
       }
 
+      // 5. LIFECYCLE HOOKS — Auto-inicialización al crear/publicar un negocio
+      strapi.log.info('🔗 Registrando lifecycle hooks de Negocio...');
+      strapi.db.lifecycles.subscribe({
+        models: ['api::negocio.negocio'],
+
+        /**
+         * afterCreate: se dispara cuando se crea un negocio (como draft).
+         * Garantiza que discovery_pending=true y discovery_verified=false.
+         */
+        async afterCreate(event) {
+          const { result } = event;
+          strapi.log.info(`[NegocioLifecycle] 🆕 Nuevo negocio creado: "${result.nombre}" (${result.documentId})`);
+          try {
+            await strapi.documents('api::negocio.negocio').update({
+              documentId: result.documentId,
+              data: {
+                discovery_pending: true,
+                discovery_verified: false,
+              } as any,
+            });
+            strapi.log.info(`[NegocioLifecycle] ✅ discovery_pending=true inicializado para "${result.nombre}"`);
+          } catch (err: any) {
+            strapi.log.error(`[NegocioLifecycle] ❌ Error inicializando discovery fields: ${err.message}`);
+          }
+        },
+
+        /**
+         * afterUpdate: detecta cuando un negocio que era draft pasa a published
+         * (publishedAt cambia de null a una fecha). Envía email al admin.
+         * En Strapi v5 la publicación es un update con publishedAt.
+         */
+        async afterUpdate(event) {
+          const { result, params } = event;
+          if (!result?.nombre) return;
+
+          // Solo notificamos si acaba de publicarse (publishedAt presente y recién seteado)
+          const wasJustPublished =
+            result.publishedAt &&
+            params?.data?.publishedAt &&
+            !params?.data?.status; // evitar re-notificar en updates normales
+
+          if (!wasJustPublished) return;
+
+          strapi.log.info(`[NegocioLifecycle] 📢 Negocio publicado: "${result.nombre}" (slug: ${result.slug})`);
+          try {
+            const from = 'San Rafael 360 <no-reply@sanrafael360.com>';
+            const adminEmails: string[] = (process.env.ADMIN_EMAILS || 'hola@sanrafael360.com').split(',');
+            const subject = `🆕 Nuevo negocio publicado: ${result.nombre}`;
+            const html = `
+              <div style="font-family:sans-serif;max-width:600px;margin:auto;">
+                <h2 style="color:#D6AF37;">San Rafael 360 — Nuevo Negocio</h2>
+                <p>Se acaba de publicar un nuevo negocio en el directorio:</p>
+                <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+                  <tr><td style="padding:8px;font-weight:bold;color:#888;">Nombre</td><td style="padding:8px;">${result.nombre}</td></tr>
+                  <tr><td style="padding:8px;font-weight:bold;color:#888;">Slug</td><td style="padding:8px;">${result.slug || '—'}</td></tr>
+                  <tr><td style="padding:8px;font-weight:bold;color:#888;">Discovery</td><td style="padding:8px;">${result.discovery_pending ? '⏳ Pendiente' : '✅ Verificado'}</td></tr>
+                </table>
+                <a href="https://www.sanrafael360.com/negocios/${result.slug}" style="display:inline-block;padding:12px 24px;background:#D6AF37;color:#000;font-weight:bold;border-radius:8px;text-decoration:none;">Ver ficha pública</a>
+              </div>
+            `;
+            for (const adminEmail of adminEmails) {
+              await strapi.plugins['email'].services.email.send({
+                to: adminEmail.trim(),
+                from,
+                subject,
+                html,
+              });
+            }
+            strapi.log.info(`[NegocioLifecycle] ✅ Email de nuevo negocio enviado a admins.`);
+          } catch (emailErr: any) {
+            strapi.log.warn(`[NegocioLifecycle] ⚠️ No se pudo enviar email de notificación: ${emailErr.message}`);
+          }
+        },
+      });
+      strapi.log.info('✅ Lifecycle hooks de Negocio registrados correctamente.');
+
     } catch (error) {
       strapi.log.error('❌ Error general en bootstrap:', error);
     }
