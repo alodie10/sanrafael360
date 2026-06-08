@@ -46,12 +46,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily" as const,
       priority: 1.0,
     },
-    {
-      url: "https://www.sanrafael360.com/negocios",
-      lastModified: new Date(),
-      changeFrequency: "daily" as const,
-      priority: 0.9,
-    },
+    // NOTA: /negocios no se incluye porque next.config.ts tiene un redirect 301 → /
+    // Incluirla causaría una señal SEO contradictoria para Google.
     ...negocioUrls,
   ];
 }

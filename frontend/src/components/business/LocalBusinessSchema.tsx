@@ -92,7 +92,9 @@ interface LocalBusinessSchemaProps {
  */
 export function LocalBusinessSchema({ negocio }: LocalBusinessSchemaProps) {
   const schemaType = getSchemaType(negocio.categoria?.nombre);
-  const canonicalUrl = `https://www.sanrafael360.com/negocios/${negocio.slug}`;
+  // Fallback defensivo: si slug es undefined (campo no solicitado a Strapi), usar documentId
+  const slugOrId = negocio.slug || negocio.documentId;
+  const canonicalUrl = `https://www.sanrafael360.com/negocios/${slugOrId}`;
   const imageUrl =
     negocio.imagen_portada?.url ||
     negocio.logo?.url ||
