@@ -32,7 +32,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<'all' | 'premium' | 'expired' | 'expiring'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'premium' | 'expired' | 'expiring'>('premium');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -172,10 +172,6 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
 
         <div className="flex items-center gap-2 p-1 bg-black/20 rounded-2xl border border-white/5">
           <button 
-            onClick={() => setFilterType('all')}
-            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterType === 'all' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-white'}`}
-          >Todos</button>
-          <button 
             onClick={() => setFilterType('premium')}
             className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterType === 'premium' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-white'}`}
           >Activos</button>
@@ -187,6 +183,10 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
             onClick={() => setFilterType('expired')}
             className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterType === 'expired' ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'text-slate-500 hover:text-white'}`}
           >Vencidos</button>
+          <button 
+            onClick={() => setFilterType('all')}
+            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterType === 'all' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-white'}`}
+          >Todos</button>
         </div>
       </div>
 
