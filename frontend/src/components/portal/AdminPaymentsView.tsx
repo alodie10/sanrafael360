@@ -41,8 +41,8 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
         const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
         
         // Construimos la URL con filtros de servidor para que busque en TODA la base
-        // Nota: Strapi 5 usa status=draft para ver borradores
-        let query = `/api/negocios?populate[owner]=true&populate[pagos]=true&pagination[pageSize]=1000&status=draft`;
+        // Construimos la URL con filtros de servidor para que busque en TODA la base
+        let query = `/api/negocios?populate[owner]=true&populate[pagos]=true&pagination[pageSize]=1000`;
         
         // Búsqueda simplificada para evitar Error 500 en Strapi 5
         if (searchTerm) {

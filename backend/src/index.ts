@@ -26,7 +26,9 @@ export default {
             'api::review.review.create', // Permiso vital para reseñas
             'api::atributo.atributo.find',
             'api::atributo.atributo.findOne',
-            'api::atributo.atributo.create'
+            'api::atributo.atributo.create',
+            'api::pago.pago.find',
+            'api::pago.pago.findOne'
           ];
 
           for (const action of actions) {
