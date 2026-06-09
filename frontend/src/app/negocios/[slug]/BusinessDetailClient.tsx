@@ -279,7 +279,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
             <div className="prose prose-invert max-w-none">
               <h3 className="text-3xl font-serif font-bold text-white mb-6 italic">Sobre el <span className="text-primary">negocio</span></h3>
               <div 
-                className="text-slate-200 text-lg leading-relaxed space-y-6" 
+                className="text-slate-200 text-lg leading-relaxed space-y-6 whitespace-pre-wrap" 
                 dangerouslySetInnerHTML={{ __html: negocio.descripcion || "Descubrí la mejor atención y calidad." }} 
               />
             </div>
