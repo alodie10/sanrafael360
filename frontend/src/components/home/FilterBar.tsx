@@ -84,7 +84,7 @@ function PillCarousel({ children, arrowAlign = "center" }: { children: React.Rea
       {/* Contenido scrollable */}
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth px-1 py-2"
+        className="flex gap-5 overflow-x-auto scrollbar-hide scroll-smooth px-1 py-2 items-start"
       >
         {children}
       </div>
@@ -159,7 +159,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
           {/* Botón "Todos" */}
           <button
             onClick={() => onSelectCategory(null)}
-            className="flex-shrink-0 flex flex-col items-center gap-1.5 w-20 group transition-all"
+            className="flex-shrink-0 flex flex-col items-center gap-2 w-28 group transition-all"
           >
             <div
               className={cn(
@@ -173,7 +173,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
             </div>
             <span
               className={cn(
-                "text-[10px] font-bold text-center uppercase tracking-wider truncate block w-full px-1 transition-colors",
+                "text-[10px] font-bold text-center uppercase tracking-wider whitespace-normal line-clamp-2 leading-tight block w-full px-1 transition-colors",
                 selectedCategoryDocId === null
                   ? "text-primary"
                   : "text-slate-400 group-hover:text-white"
@@ -191,7 +191,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
               <button
                 key={cat.id}
                 onClick={() => onSelectCategory(cat.documentId)}
-                className="flex-shrink-0 flex flex-col items-center gap-1.5 w-20 group transition-all"
+                className="flex-shrink-0 flex flex-col items-center gap-2 w-28 group transition-all"
               >
                 <div
                   className={cn(
@@ -205,7 +205,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
                 </div>
                 <span
                   className={cn(
-                    "text-[10px] font-bold text-center uppercase tracking-wider truncate block w-full px-1 transition-colors",
+                    "text-[10px] font-bold text-center uppercase tracking-wider whitespace-normal line-clamp-2 leading-tight block w-full px-1 transition-colors",
                     isActive
                       ? "text-primary"
                       : "text-slate-400 group-hover:text-white"
