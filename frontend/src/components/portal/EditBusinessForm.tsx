@@ -15,6 +15,7 @@ import EditBusinessAttributes from "./edit-form/EditBusinessAttributes";
 import EditBusinessGallery from "./edit-form/EditBusinessGallery";
 import EditBusinessVisualIdentity from "./edit-form/EditBusinessVisualIdentity";
 import EditBusinessRatings from "./edit-form/EditBusinessRatings";
+import EditBusinessPremium from "./edit-form/EditBusinessPremium";
 import ScheduleEditor from "./ScheduleEditor";
 
 interface EditBusinessFormProps {
@@ -50,6 +51,11 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [tripadvisorUrl, setTripadvisorUrl] = useState(negocio.tripadvisor_url || "");
   const [tripadvisorRating, setTripadvisorRating] = useState(negocio.tripadvisor_rating || 0);
   const [tripadvisorReviewCount, setTripadvisorReviewCount] = useState(negocio.tripadvisor_review_count || 0);
+
+  // Premium
+  const [isPremium, setIsPremium] = useState(negocio.is_premium || false);
+  const [premiumValidUntil, setPremiumValidUntil] = useState(negocio.premium_valid_until ? negocio.premium_valid_until.split('T')[0] : "");
+
   
   // Files
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -218,6 +224,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         tripadvisor_rating: Number(tripadvisorRating) || 0,
         tripadvisor_review_count: Number(tripadvisorReviewCount) || 0,
         youtube_url: youtubeUrl,
+        is_premium: isAdmin ? isPremium : undefined,
+        premium_valid_until: isAdmin ? (premiumValidUntil ? new Date(premiumValidUntil).toISOString() : null) : undefined,
         galeria: existingGallery.map((img: any) => img.id)
       };
 
@@ -345,6 +353,15 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
           tripadvisorReviewCount={tripadvisorReviewCount}
           setTripadvisorReviewCount={setTripadvisorReviewCount}
         />
+
+        {isAdmin && (
+          <EditBusinessPremium
+            isPremium={isPremium}
+            setIsPremium={setIsPremium}
+            premiumValidUntil={premiumValidUntil}
+            setPremiumValidUntil={setPremiumValidUntil}
+          />
+        )}
 
         <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
           <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">

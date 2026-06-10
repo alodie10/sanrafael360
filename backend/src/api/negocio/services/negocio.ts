@@ -62,6 +62,9 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     }
 
     const forbiddenFields = ['owner', 'slug', 'documentId', 'id', 'estado_reclamo', 'publishedAt'];
+    if (!isAdmin) {
+      forbiddenFields.push('is_premium', 'premium_valid_until');
+    }
     const updateData = { ...data };
     forbiddenFields.forEach(f => delete updateData[f]);
 
