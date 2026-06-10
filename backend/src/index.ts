@@ -166,7 +166,38 @@ export default {
         strapi.log.error('❌ Error en migración de Atributos:', err.message);
       }
 
-      // 5. LIFECYCLE HOOKS — Auto-inicialización al crear/publicar un negocio
+      // 5. MIGRACIÓN SILENCIOSA: Backfill de Estadísticas a daily-stat
+      strapi.log.info('📊 Verificando si es necesario backfill de estadísticas...');
+      try {
+        const statsCount = await strapi.documents('api::daily-stat.daily-stat' as any).count();
+        if (statsCount === 0) {
+          strapi.log.info('   ⚠️ No se encontraron estadísticas diarias. Iniciando backfill con fecha 15 de Mayo...');
+          const negociosStats = await strapi.documents('api::negocio.negocio' as any).findMany({ limit: -1 });
+          let backfillCount = 0;
+          for (const n of negociosStats) {
+            if (Number(n.views) > 0 || Number(n.clicks_whatsapp) > 0 || Number(n.clicks_website) > 0) {
+              await strapi.documents('api::daily-stat.daily-stat' as any).create({
+                data: {
+                  negocio_id: n.documentId,
+                  date: '2026-05-15',
+                  views: Number(n.views) || 0,
+                  clicks_whatsapp: Number(n.clicks_whatsapp) || 0,
+                  clicks_website: Number(n.clicks_website) || 0
+                },
+                status: 'published'
+              });
+              backfillCount++;
+            }
+          }
+          strapi.log.info(`   ✅ Backfill completado. Se crearon ${backfillCount} registros.`);
+        } else {
+          strapi.log.info(`   ✅ Backfill omitido. Ya existen ${statsCount} registros.`);
+        }
+      } catch (err: any) {
+        strapi.log.error('❌ Error en backfill de estadísticas:', err.message);
+      }
+
+      // 6. LIFECYCLE HOOKS — Auto-inicialización al crear/publicar un negocio
       strapi.log.info('🔗 Registrando lifecycle hooks de Negocio...');
       strapi.db.lifecycles.subscribe({
         models: ['api::negocio.negocio'],
