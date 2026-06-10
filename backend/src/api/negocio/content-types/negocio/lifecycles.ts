@@ -112,56 +112,6 @@ export default {
   async afterUpdate(event: any) {
     const { result, params } = event;
     
-     // Si el usuario activa manualmente el DISCOVERY via el toggle trigger_discovery
-     if (params.data.trigger_discovery === true) {
-        console.log(`Manual discovery request (Re-scan) for: ${result.nombre}`);
-        
-        try {
-          // Fire & Forget con manejo de errores ultra-seguro
-          discoveryService.discover(result.nombre)
-            .then(async (discovery) => {
-              if (discovery.success) {
-                  const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
-                  await strapi.documents('api::negocio.negocio').update({
-                    documentId: docId,
-                    id: typeof result.id === 'number' ? result.id : undefined,
-                    data: {
-                      website: discovery.data?.website || result.website,
-                      reserva_url: discovery.data?.reserva_url || result.reserva_url,
-                      google_maps_url: discovery.data?.google_maps_url,
-                      google_place_id: discovery.data?.place_id,
-                      google_rating: discovery.data?.rating,
-                      google_review_count: discovery.data?.user_ratings_total,
-                      horarios_texto: discovery.data?.horarios_texto,
-                      discovery_pending: false,
-                      trigger_discovery: false
-                    }
-                  });
-                 console.log(`Manual discovery successful for: ${result.nombre}`);
-              } else {
-                 const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
-                 await strapi.documents('api::negocio.negocio').update({
-                   documentId: docId,
-                   id: typeof result.id === 'number' ? result.id : undefined,
-                   data: { trigger_discovery: false }
-                 }).catch(() => {});
-                 console.warn(`[Discovery] Manual discovery bypassed: ${discovery.error}`);
-              }
-            })
-            .catch(err => {
-              console.error(`[Discovery] Unhandled async error:`, err.message);
-              const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
-              strapi.documents('api::negocio.negocio').update({
-                documentId: docId,
-                id: typeof result.id === 'number' ? result.id : undefined,
-                data: { trigger_discovery: false }
-              }).catch(() => {});
-            });
-        } catch (err) {
-          console.error(`Crash prevented in afterUpdate for ${result.nombre}:`, err);
-        }
-     }
-
      // TripAdvisor manual sync on update (if URL changed/provided)
      if (params.data && params.data.tripadvisor_url !== undefined && params.data.tripadvisor_url !== null) {
        const newUrl = params.data.tripadvisor_url;

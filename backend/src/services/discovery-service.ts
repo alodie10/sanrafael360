@@ -246,12 +246,20 @@ export class DiscoveryService {
 
       // 3. Fallback to Text Search (if no CID or CID failed)
       if (!placeId) {
-        const query = encodeURIComponent(businessName);
+        const searchSuffix = " San Rafael Mendoza Argentina";
+        const queryStr = businessName.toLowerCase().includes("san rafael") 
+          ? businessName 
+          : businessName + searchSuffix;
+
+        const query = encodeURIComponent(queryStr);
         let searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${apiKey}&language=es`;
         
-        if (biasLocation) {
-          searchUrl += `&location=${biasLocation.lat},${biasLocation.lng}&radius=1000`;
-        }
+        // Si no hay bias específico desde la URL, forzamos el centro de San Rafael
+        const lat = biasLocation?.lat || -34.6176;
+        const lng = biasLocation?.lng || -68.3301;
+        const radius = biasLocation ? 1000 : 50000; // 50km si es búsqueda general
+        
+        searchUrl += `&location=${lat},${lng}&radius=${radius}`;
 
         const searchRes = await fetch(searchUrl);
         const searchData: any = await searchRes.json();

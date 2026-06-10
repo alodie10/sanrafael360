@@ -4,6 +4,9 @@ import { ADMIN_EMAILS } from '../../../utils/constants';
 import { NotFoundError, ValidationError, ForbiddenError } from '../../../utils/errors';
 import { logActivity } from '../../../utils/strapi-utils';
 import { getAdminClaimEmail, getOwnerResolutionEmail } from './templates/email-templates';
+import { DiscoveryService } from '../../../services/discovery-service';
+
+const discoveryService = new DiscoveryService();
 
 export default factories.createCoreService('api::negocio.negocio', ({ strapi }) => ({
   async claimNegocio(id: string, user: any, bodyData: any, files: any) {
@@ -85,6 +88,29 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
         opening_time: s.opening_time ? (s.opening_time.split('.')[0].length === 5 ? `${s.opening_time.split('.')[0]}:00.000` : (s.opening_time.split('.')[0].length === 8 ? `${s.opening_time.split('.')[0]}.000` : s.opening_time)) : null,
         closing_time: s.closing_time ? (s.closing_time.split('.')[0].length === 5 ? `${s.closing_time.split('.')[0]}:00.000` : (s.closing_time.split('.')[0].length === 8 ? `${s.closing_time.split('.')[0]}.000` : s.closing_time)) : null,
       }));
+    }
+
+    // Auto-Discovery Síncrono (Si el usuario presionó el botón)
+    if (updateData.trigger_discovery === true) {
+      strapi.log.info(`[PortalUpdate] Ejecutando Auto-Discovery síncrono para ${negocio.nombre}`);
+      try {
+        const discovery = await discoveryService.discover(updateData.nombre || negocio.nombre);
+        if (discovery.success && discovery.data) {
+          updateData.google_rating = discovery.data.rating;
+          updateData.google_review_count = discovery.data.user_ratings_total;
+          updateData.google_place_id = discovery.data.place_id;
+          if (discovery.data.google_maps_url) updateData.google_maps_url = discovery.data.google_maps_url;
+          if (!updateData.website && discovery.data.website) updateData.website = discovery.data.website;
+          if (!updateData.telefono && discovery.data.telefono) updateData.telefono = discovery.data.telefono;
+          
+          strapi.log.info(`[PortalUpdate] Auto-Discovery exitoso. Rating: ${discovery.data.rating}`);
+        } else {
+          strapi.log.warn(`[PortalUpdate] Auto-Discovery falló o no encontró datos: ${discovery.error}`);
+        }
+      } catch (err: any) {
+        strapi.log.error(`[PortalUpdate] Error en Auto-Discovery: ${err.message}`);
+      }
+      updateData.trigger_discovery = false; // Reset flag
     }
 
     let updated = await repo.update(id, updateData);
