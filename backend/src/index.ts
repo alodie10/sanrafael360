@@ -169,7 +169,7 @@ export default {
       // 5. MIGRACIÓN SILENCIOSA: Backfill de Estadísticas a daily-stat
       strapi.log.info('📊 Verificando si es necesario backfill de estadísticas...');
       try {
-        const statsCount = await strapi.documents('api::daily-stat.daily-stat' as any).count();
+        const statsCount = await strapi.documents('api::daily-stat.daily-stat' as any).count({});
         if (statsCount === 0) {
           strapi.log.info('   ⚠️ No se encontraron estadísticas diarias. Iniciando backfill con fecha 15 de Mayo...');
           const negociosStats = await strapi.documents('api::negocio.negocio' as any).findMany({ limit: -1 });
