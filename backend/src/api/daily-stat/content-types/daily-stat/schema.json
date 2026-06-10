@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "daily_stats",
+  "info": {
+    "singularName": "daily-stat",
+    "pluralName": "daily-stats",
+    "displayName": "Estadistica Diaria"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "negocio_id": {
+      "type": "string",
+      "required": true
+    },
+    "date": {
+      "type": "date",
+      "required": true
+    },
+    "views": {
+      "type": "integer",
+      "default": 0
+    },
+    "clicks_whatsapp": {
+      "type": "integer",
+      "default": 0
+    },
+    "clicks_website": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

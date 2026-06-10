@@ -159,20 +159,65 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     return await repo.findByOwner(userId, ['logo', 'categoria', 'atributos', 'imagen_portada', 'galeria', 'schedules']);
   },
 
-  async getPortalStats(userId?: number) {
+  async getPortalStats(userId?: number, startDate?: string, endDate?: string) {
     const filters = userId ? { owner: userId } : {};
-    const results = await (strapi.documents('api::negocio.negocio') as any).findMany({
+    const negocios = await (strapi.documents('api::negocio.negocio') as any).findMany({
       filters,
-      fields: ['views', 'clicks_whatsapp', 'clicks_website'],
+      fields: ['nombre', 'documentId', 'views', 'clicks_whatsapp', 'clicks_website', 'is_premium', 'premium_valid_until'],
       limit: -1, 
     });
 
-    return results.reduce((acc: any, curr: any) => ({
+    let results = negocios;
+
+    // Si hay rango de fechas, buscamos en daily-stat
+    if (startDate && endDate) {
+      const negocioIds = negocios.map((n: any) => n.documentId);
+      const dailyStats = await strapi.documents('api::daily-stat.daily-stat').findMany({
+        filters: {
+          negocio_id: { $in: negocioIds },
+          date: { $gte: startDate, $lte: endDate }
+        },
+        limit: -1
+      });
+
+      // Mapeamos los totales por negocio
+      const statsByNegocio: Record<string, any> = {};
+      dailyStats.forEach((stat: any) => {
+        if (!statsByNegocio[stat.negocio_id]) {
+          statsByNegocio[stat.negocio_id] = { views: 0, clicks_whatsapp: 0, clicks_website: 0 };
+        }
+        statsByNegocio[stat.negocio_id].views += (Number(stat.views) || 0);
+        statsByNegocio[stat.negocio_id].clicks_whatsapp += (Number(stat.clicks_whatsapp) || 0);
+        statsByNegocio[stat.negocio_id].clicks_website += (Number(stat.clicks_website) || 0);
+      });
+
+      // Sobrescribir los resultados con los totales de fechas
+      results = negocios.map((n: any) => ({
+        ...n,
+        views: statsByNegocio[n.documentId]?.views || 0,
+        clicks_whatsapp: statsByNegocio[n.documentId]?.clicks_whatsapp || 0,
+        clicks_website: statsByNegocio[n.documentId]?.clicks_website || 0,
+      }));
+    }
+
+    const summary = results.reduce((acc: any, curr: any) => ({
       views: acc.views + (Number(curr.views) || 0),
       clicks_whatsapp: acc.clicks_whatsapp + (Number(curr.clicks_whatsapp) || 0),
       clicks_website: acc.clicks_website + (Number(curr.clicks_website) || 0),
       totalNegocios: results.length
     }), { views: 0, clicks_whatsapp: 0, clicks_website: 0, totalNegocios: 0 });
+
+    const breakdown = results.map((r: any) => ({
+      documentId: r.documentId,
+      nombre: r.nombre,
+      views: Number(r.views) || 0,
+      clicks_whatsapp: Number(r.clicks_whatsapp) || 0,
+      clicks_website: Number(r.clicks_website) || 0,
+      is_premium: r.is_premium || false,
+      premium_valid_until: r.premium_valid_until || null
+    })).sort((a: any, b: any) => (b.views + b.clicks_whatsapp + b.clicks_website) - (a.views + a.clicks_whatsapp + a.clicks_website));
+
+    return { summary, breakdown };
   },
 
   async incrementStats(id: string, type: 'view' | 'whatsapp' | 'website') {
@@ -186,11 +231,40 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     const field = type === 'view' ? 'views' : type === 'whatsapp' ? 'clicks_whatsapp' : 'clicks_website';
     const currentValue = Number(negocio[field] || 0);
 
+    // 1. Actualizar global
     const result = await strapi.documents('api::negocio.negocio').update({
       documentId: negocio.documentId,
       data: { [field]: currentValue + 1 },
       status: 'published'
     });
+
+    // 2. Actualizar Daily Stat
+    const today = new Date().toISOString().split('T')[0];
+    const dailyStats = await strapi.documents('api::daily-stat.daily-stat').findMany({
+      filters: { negocio_id: negocio.documentId, date: today },
+      limit: 1
+    });
+
+    if (dailyStats && dailyStats.length > 0) {
+      const currentDaily = dailyStats[0];
+      await strapi.documents('api::daily-stat.daily-stat').update({
+        documentId: currentDaily.documentId,
+        data: { [field]: Number(currentDaily[field] || 0) + 1 },
+        status: 'published'
+      });
+    } else {
+      await strapi.documents('api::daily-stat.daily-stat').create({
+        data: { 
+          negocio_id: negocio.documentId, 
+          date: today, 
+          views: type === 'view' ? 1 : 0,
+          clicks_whatsapp: type === 'whatsapp' ? 1 : 0,
+          clicks_website: type === 'website' ? 1 : 0
+        },
+        status: 'published'
+      });
+    }
+
     return result[field];
   },
 

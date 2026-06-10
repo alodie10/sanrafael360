@@ -548,6 +548,38 @@ export interface ApiCategoriaCategoria extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiDailyStatDailyStat extends Struct.CollectionTypeSchema {
+  collectionName: 'daily_stats';
+  info: {
+    displayName: 'Estadistica Diaria';
+    pluralName: 'daily-stats';
+    singularName: 'daily-stat';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    clicks_website: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    clicks_whatsapp: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    date: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::daily-stat.daily-stat'
+    > &
+      Schema.Attribute.Private;
+    negocio_id: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    views: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+  };
+}
+
 export interface ApiLeadLead extends Struct.CollectionTypeSchema {
   collectionName: 'leads';
   info: {
@@ -1358,6 +1390,7 @@ declare module '@strapi/strapi' {
       'api::actividad.actividad': ApiActividadActividad;
       'api::atributo.atributo': ApiAtributoAtributo;
       'api::categoria.categoria': ApiCategoriaCategoria;
+      'api::daily-stat.daily-stat': ApiDailyStatDailyStat;
       'api::lead.lead': ApiLeadLead;
       'api::negocio.negocio': ApiNegocioNegocio;
       'api::pago.pago': ApiPagoPago;

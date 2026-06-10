@@ -37,5 +37,14 @@ export default {
         middlewares: [],
       },
     },
+    {
+      method: 'POST',
+      path: '/negocios/admin/backfill-stats',
+      handler: 'negocio.backfillStats',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };

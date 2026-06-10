@@ -45,7 +45,8 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
     const isAdmin = user.role?.name?.toLowerCase() === 'admin' || ADMIN_EMAILS.includes(user.email?.toLowerCase());
-    const stats = await strapi.service('api::negocio.negocio').getPortalStats(isAdmin ? undefined : user.id);
+    const { startDate, endDate } = ctx.query;
+    const stats = await strapi.service('api::negocio.negocio').getPortalStats(isAdmin ? undefined : user.id, startDate as string, endDate as string);
     return ctx.send({ success: true, data: stats });
   }),
 
@@ -111,6 +112,30 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     const { type } = ctx.request.body;
     if (!['view', 'whatsapp', 'website'].includes(type)) throw new ValidationError('Tipo de estadística inválido');
     const count = await strapi.service('api::negocio.negocio').incrementStats(id, type);
+    return ctx.send({ success: true, count });
+  }),
+
+  backfillStats: asyncHandler(async (ctx) => {
+    if (process.env.NODE_ENV === 'production' && !ADMIN_EMAILS.includes(ctx.state.user?.email?.toLowerCase())) {
+       return ctx.forbidden('Solo el admin');
+    }
+    const negocios = await strapi.documents('api::negocio.negocio').findMany({ limit: -1 });
+    let count = 0;
+    for (const n of negocios) {
+      if (Number(n.views) > 0 || Number(n.clicks_whatsapp) > 0 || Number(n.clicks_website) > 0) {
+        await strapi.documents('api::daily-stat.daily-stat').create({
+          data: {
+            negocio_id: n.documentId,
+            date: '2026-05-15',
+            views: Number(n.views) || 0,
+            clicks_whatsapp: Number(n.clicks_whatsapp) || 0,
+            clicks_website: Number(n.clicks_website) || 0
+          },
+          status: 'published'
+        });
+        count++;
+      }
+    }
     return ctx.send({ success: true, count });
   })
 }));
