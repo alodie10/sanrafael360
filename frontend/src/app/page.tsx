@@ -160,7 +160,7 @@ function HomeContent() {
     const loadData = async () => {
       try {
         setLoading(true);
-        const catRes = await fetchFromStrapi("categorias?fields[0]=nombre&fields[1]=slug&populate[parent][fields][0]=documentId&sort=nombre:asc");
+        const catRes = await fetchFromStrapi("categorias?fields[0]=nombre&fields[1]=slug&populate[parent][fields][0]=documentId&sort=nombre:asc&pagination[pageSize]=100");
         setCategorias(catRes.data || []);
 
         let allNegocios: Negocio[] = [];
