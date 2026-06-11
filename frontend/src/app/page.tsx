@@ -298,6 +298,15 @@ function HomeContent() {
         }
       });
       matchesBarCategory = validCategoryNames.includes(bizCatName);
+      
+      // Permitir coincidencia si el negocio tiene un atributo (tag) con el mismo nombre que la categoría
+      if (!matchesBarCategory && negocio.atributos) {
+        const bizAttrs = negocio.atributos.map((a: any) => (a.nombre || "").toLowerCase());
+        const hasMatchingAttr = validCategoryNames.some(catName => catName && bizAttrs.includes(catName));
+        if (hasMatchingAttr) {
+          matchesBarCategory = true;
+        }
+      }
     }
 
     return matchesSearch && matchesLocation && matchesBarCategory;
