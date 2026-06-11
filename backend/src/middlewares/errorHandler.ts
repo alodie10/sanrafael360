@@ -5,6 +5,11 @@ export default (config: any, { strapi }: { strapi: any }) => {
     try {
       await next();
     } catch (err: any) {
+      // Dejar que Strapi maneje los errores del panel de administración
+      if (!ctx.request.url.startsWith('/api/')) {
+        throw err;
+      }
+
       const statusCode = err.statusCode || err.status || 500;
       const isProduction = process.env.NODE_ENV === 'production';
 
@@ -17,7 +22,7 @@ export default (config: any, { strapi }: { strapi: any }) => {
         method: ctx.method,
       });
 
-      // Respuesta estandarizada
+      // Respuesta estandarizada para la API pública
       ctx.status = statusCode;
       ctx.body = {
         success: false,
