@@ -27,8 +27,8 @@ export default (config: any, { strapi }: { strapi: any }) => {
       ctx.body = {
         success: false,
         error: {
-          code: err.code || 'INTERNAL_ERROR',
-          message: err.isOperational || !isProduction ? err.message : 'Error interno del servidor',
+          code: err.code || (statusCode < 500 ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR'),
+          message: (err.isOperational || statusCode < 500 || !isProduction) ? err.message : 'Error interno del servidor',
           ...((!isProduction && err.stack) && { stack: err.stack }),
         },
       };
