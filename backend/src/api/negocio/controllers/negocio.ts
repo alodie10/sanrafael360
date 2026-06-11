@@ -60,11 +60,18 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   portalUpdate: asyncHandler(async (ctx) => {
     const { id } = ctx.params;
     const user = ctx.state.user;
-    if (!user) return ctx.unauthorized();
-    const fullUser = await strapi.query('plugin::users-permissions.user').findOne({
-      where: { id: user.id },
-      populate: ['role']
-    });
+    const isApiToken = ctx.state.auth && ctx.state.auth.strategy.name === 'api-token';
+    
+    let fullUser;
+    if (isApiToken) {
+      fullUser = { email: ADMIN_EMAILS[0], role: { name: 'Admin' }, id: -1 };
+    } else {
+      if (!user) return ctx.unauthorized();
+      fullUser = await strapi.query('plugin::users-permissions.user').findOne({
+        where: { id: user.id },
+        populate: ['role']
+      });
+    }
     const body = ctx.request.body;
     const data = typeof body.data === 'string' ? JSON.parse(body.data) : (body.data || body);
     const result = await strapi.service('api::negocio.negocio').updatePortal(id, fullUser, data, (ctx.request as any).files);
