@@ -1,3 +1,7 @@
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+
 /**
  * DiscoveryService — Google Places API + Playwright fallback
  *
@@ -17,6 +21,7 @@ export interface DiscoveryCandidate {
   rating?: number;
   user_ratings_total?: number;
   photo_reference?: string;
+  photo_references?: string[];
   location?: { lat: number; lng: number };
   types?: string[];
 }
@@ -237,6 +242,7 @@ export class DiscoveryService {
               rating: result.rating,
               user_ratings_total: result.user_ratings_total,
               photo_reference: result.photos?.[0]?.photo_reference,
+              photo_references: result.photos ? result.photos.slice(0, 3).map((p: any) => p.photo_reference) : [],
               location: result.geometry?.location,
               schedules
             }
@@ -292,6 +298,7 @@ export class DiscoveryService {
           rating: result.rating,
           user_ratings_total: result.user_ratings_total,
           photo_reference: result.photos?.[0]?.photo_reference,
+          photo_references: result.photos ? result.photos.slice(0, 3).map((p: any) => p.photo_reference) : [],
           location: result.geometry?.location,
           schedules
         }
@@ -322,5 +329,57 @@ export class DiscoveryService {
     }
 
     return results;
+  }
+
+  async downloadPhotosToStrapi(photoRefs: string[], businessName: string, strapi: any): Promise<number[]> {
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.warn('Cannot download photos without GOOGLE_MAPS_API_KEY');
+      return [];
+    }
+
+    const uploadedIds: number[] = [];
+    for (let i = 0; i < photoRefs.length; i++) {
+      try {
+        const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${photoRefs[i]}&key=${apiKey}`;
+        const res = await fetch(url);
+        if (!res.ok) continue;
+
+        const buffer = Buffer.from(await res.arrayBuffer());
+        const ext = '.jpg';
+        const fileName = `google-maps-${businessName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${i + 1}${ext}`;
+        const tmpPath = path.join(os.tmpdir(), fileName);
+        
+        fs.writeFileSync(tmpPath, buffer);
+        const stats = fs.statSync(tmpPath);
+        
+        const uploadedFile = await strapi.plugin('upload').service('upload').upload({
+          data: { 
+            fileInfo: { 
+              alternativeText: `${businessName} Foto ${i + 1}`, 
+              caption: `${businessName} Foto de Google Maps` 
+            } 
+          },
+          files: {
+            path: tmpPath,
+            filepath: tmpPath,
+            name: fileName,
+            originalFilename: fileName,
+            type: res.headers.get('content-type') || 'image/jpeg',
+            mimetype: res.headers.get('content-type') || 'image/jpeg',
+            size: stats.size,
+          }
+        });
+        
+        if (uploadedFile && uploadedFile.length > 0) {
+          uploadedIds.push(uploadedFile[0].id);
+        }
+        
+        fs.unlinkSync(tmpPath);
+      } catch(e: any) {
+        strapi.log.error(`Photo sync error for ${businessName}: ${e.message}`);
+      }
+    }
+    return uploadedIds;
   }
 }

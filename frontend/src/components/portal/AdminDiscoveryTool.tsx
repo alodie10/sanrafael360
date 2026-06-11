@@ -112,6 +112,21 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
       });
 
       if (!res.ok) throw new Error("Error al crear el negocio en la base de datos.");
+      const createdData = await res.json();
+      
+      // Ejecutar Auto-Discovery nativo para descargar fotos y sincronizar reseñas
+      if (createdData.data?.documentId) {
+        const formData = new FormData();
+        formData.append("data", JSON.stringify({ trigger_discovery: true }));
+        
+        await fetch(`${STRAPI_URL}/api/negocios/${createdData.data.documentId}/portal-update`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${jwt}`
+          },
+          body: formData
+        });
+      }
       
       setSuccess(true);
       setResult(null);

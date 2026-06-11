@@ -104,6 +104,50 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
           if (!updateData.telefono && discovery.data.telefono) updateData.telefono = discovery.data.telefono;
           
           strapi.log.info(`[PortalUpdate] Auto-Discovery exitoso. Rating: ${discovery.data.rating}`);
+
+          // ---- LÓGICA DE FOTOS INTELIGENTE ----
+          if (discovery.data.photo_references && discovery.data.photo_references.length > 0) {
+            const negocioDB = await repo.findById(id, ['imagen_portada', 'galeria']);
+            
+            const isUploadingCover = !!(updateData.imagen_portada || files?.imagen_portada || files?.['files.imagen_portada']);
+            // El frontend envía galeria: [] si no hay fotos, lo cual es truthy. Debemos ignorarlo si está vacío.
+            const isUploadingGallery = (Array.isArray(updateData.galeria) && updateData.galeria.length > 0) || !!(updateData.galeria && !Array.isArray(updateData.galeria)) || !!files?.galeria || !!files?.['files.galeria'];
+            
+            const needsGallery = (!negocioDB.galeria || negocioDB.galeria.length === 0) && !isUploadingGallery;
+            
+            // Si falta galería, también forzamos re-descargar la portada de Google (para reemplazar logos mal puestos),
+            // a menos que el usuario esté subiendo una portada manualmente en este instante.
+            const needsCover = (!negocioDB.imagen_portada || needsGallery) && !isUploadingCover;
+            
+            if (needsCover || needsGallery) {
+              const refsToDownload = [];
+              if (needsCover && discovery.data.photo_references.length > 0) {
+                refsToDownload.push(discovery.data.photo_references[0]);
+              }
+              if (needsGallery) {
+                const startIndex = needsCover ? 1 : 0;
+                refsToDownload.push(...discovery.data.photo_references.slice(startIndex, 3));
+              }
+
+              if (refsToDownload.length > 0) {
+                strapi.log.info(`[PortalUpdate] Descargando ${refsToDownload.length} fotos desde Google Places...`);
+                const downloadedIds = await discoveryService.downloadPhotosToStrapi(refsToDownload, updateData.nombre || negocio.nombre, strapi);
+                
+                if (downloadedIds.length > 0) {
+                  let idIndex = 0;
+                  if (needsCover && downloadedIds[idIndex]) {
+                    updateData.imagen_portada = downloadedIds[idIndex];
+                    idIndex++;
+                  }
+                  if (needsGallery && downloadedIds.slice(idIndex).length > 0) {
+                    updateData.galeria = downloadedIds.slice(idIndex);
+                  }
+                }
+              }
+            }
+          }
+          // ---- FIN LÓGICA DE FOTOS ----
+          
         } else {
           strapi.log.warn(`[PortalUpdate] Auto-Discovery falló o no encontró datos: ${discovery.error}`);
         }

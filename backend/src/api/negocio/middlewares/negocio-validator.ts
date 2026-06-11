@@ -24,10 +24,15 @@ export default (config: any, { strapi }: { strapi: any }) => {
     }
 
     if (path.includes('/portal-update')) {
-      const requiredFields = ['descripcion'];
-      for (const field of requiredFields) {
-        if (!bodyData[field]) {
-          throw new ValidationError(`El campo ${field} es obligatorio.`);
+      // Si la petición es solo para disparar el discovery (como en AdminDiscoveryTool), no exigimos descripción
+      const isOnlyTriggerDiscovery = bodyData && bodyData.trigger_discovery === true && Object.keys(bodyData).length === 1;
+      
+      if (!isOnlyTriggerDiscovery) {
+        const requiredFields = ['descripcion'];
+        for (const field of requiredFields) {
+          if (!bodyData[field]) {
+            throw new ValidationError(`El campo ${field} es obligatorio.`);
+          }
         }
       }
     }
