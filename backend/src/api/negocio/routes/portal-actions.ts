@@ -5,6 +5,7 @@ export default {
       path: '/negocios/:id/portal-update',
       handler: 'negocio.portalUpdate',
       config: {
+        auth: false,
         policies: [],
         middlewares: ['api::negocio.negocio-validator'],
       },
