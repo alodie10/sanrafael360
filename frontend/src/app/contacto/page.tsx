@@ -226,7 +226,7 @@ export default function ContactoPage() {
                 ) : (
                   <Plus className="w-6 h-6" />
                 )}
-                Solicitar Alta en San Rafael 360
+                Enviar consulta
               </button>
               <p className="text-center text-xs text-slate-500">Nos contactaremos contigo en menos de 24hs.</p>
             </form>
