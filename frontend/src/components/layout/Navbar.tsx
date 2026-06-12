@@ -189,15 +189,19 @@ function NavbarInner() {
                 Salir
               </button>
             )}
-            <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">Vende aquí</Link>
+            {pathname !== "/contacto" && (
+              <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">Vende aquí</Link>
+            )}
           </div>
           <div className="flex items-center gap-4 md:hidden self-end">
-            <Link 
-              href="/contacto" 
-              className="bg-primary text-black px-4 py-2 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_15px_rgba(255,191,0,0.3)] whitespace-nowrap"
-            >
-              Contáctanos
-            </Link>
+            {pathname !== "/contacto" && (
+              <Link 
+                href="/contacto" 
+                className="bg-primary text-black px-4 py-2 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_15px_rgba(255,191,0,0.3)] whitespace-nowrap"
+              >
+                Contáctanos
+              </Link>
+            )}
             {!session ? (
               <Link href="/login" className="text-white p-1">
                 <User className="w-7 h-7 text-primary" />
