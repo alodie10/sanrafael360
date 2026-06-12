@@ -30,7 +30,14 @@ export default function SmartAppBanner() {
       return;
     }
 
-    // 3. Mostrar banner tras un delay de 500ms
+    // 3. Detectar si es iOS (iPhone/iPad). La descarga de PWA/APK no es natural allí.
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIOS) {
+      console.log("--- DEBUG [SmartAppBanner]: Usuario en iOS. No se sugiere la app.");
+      return;
+    }
+
+    // 4. Mostrar banner tras un delay de 500ms
     const timer = setTimeout(() => {
       setIsVisible(true);
     }, 500);
