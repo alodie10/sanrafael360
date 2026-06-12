@@ -61,7 +61,7 @@
   .sticky-filter-bar {
     position: sticky;
     z-index: 40;
-    top: calc(64px + var(--app-banner-height, 0px) + var(--master-bar-height, 0px));
+    top: calc(124px + var(--app-banner-height, 0px) + var(--master-bar-height, 0px));
   }
 
   @media (min-width: 768px) {
