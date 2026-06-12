@@ -81,7 +81,7 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
             )}
             {isValidPremium && (
               <div className="px-3 py-1.5 bg-gradient-to-r from-amber-200 to-amber-500 rounded-full text-[10px] font-black text-black uppercase tracking-widest shadow-lg shadow-amber-500/20 flex items-center gap-1">
-                <Check className="w-3 h-3 stroke-[3]" /> Verificado
+                <Check className="w-3 h-3 stroke-[3]" /> PREMIUM
               </div>
             )}
           </div>

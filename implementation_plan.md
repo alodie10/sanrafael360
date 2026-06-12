@@ -1,95 +1,63 @@
-# Guía y Relevamiento San Rafael 360 - Transformación a Desarrollo a Medida
+# Migración a WhatsApp Cloud API (Oficial de Meta)
 
-Entiendo perfectamente la frustración. El stack actual de WordPress con múltiples capas (Listeo, Elementor, WooCommerce, TranslatePress) genera un efecto "Frankenstein": el sitio se vuelve lento, difícil de mantener y cualquier personalización choca con las restricciones de los plugins o se rompe en actualizaciones futuras.
+Este plan detalla los pasos necesarios para abandonar el bot "pirata" (basado en automatización web) y migrar la campaña de San Rafael 360 a la API oficial de WhatsApp, garantizando que el número no sea bloqueado ni reportado como spam.
 
-Para lograr una plataforma rápida, 100% controlable, estéticamente premium y versionada en GitHub, el paso lógico es abandonar los sistemas monolíticos empaquetados y transicionar hacia una **arquitectura moderna desacoplada (Headless)**.
+## 📊 Estado Actual de tu Campaña
+Revisé los archivos locales y este es el reporte exacto:
+- **Total de contactos en lista:** ~195 (en `curada.csv`).
+- **Mensajes enviados exitosamente:** 97 (registrados en `enviados.json`).
+- **Restantes por enviar:** ~98 contactos.
 
-A continuación, presento el documento de arquitectura y relevamiento como base para este nuevo desarrollo.
+> [!TIP]
+> ¡Excelente progreso! El bot hizo la mitad del trabajo sin ser baneado gracias a las pausas que programamos, pero para escalar esto a cientos o miles de negocios, la API oficial es el único camino seguro.
 
----
+## 💰 Cálculo de Costos (API Oficial)
+Meta cobra por **"Conversación de 24 horas"**. El mensaje que estás enviando ofreciendo el plan PREMIUM se clasifica estrictamente como **Marketing**.
 
-## 1. Relevamiento Funcional (Estado Actual y Necesidades)
+- **Costo en Argentina:** ~$0.060 USD por conversación de marketing.
+- **Costo estimado para los 98 restantes:** ~$5.88 USD (aprox. $6 dólares).
+- **Costo estimado para 1.000 negocios:** ~$60.00 USD.
 
-Basado en nuestro trabajo previo sobre el directorio de San Rafael, estas son las entidades y funcionalidades "Core" que la plataforma realiza (y que debemos migrar y mejorar).
+> [!NOTE]
+> *Ventaja:* Si un cliente te responde y tú le contestas (Mensaje de Servicio / Atención al cliente), esos mensajes de ida y vuelta durante las siguientes 24 horas son **gratuitos**. Solo pagas la "apertura" del canal con la plantilla de marketing.
 
-### Módulos y Funcionalidades Clave
-1. **Directorio de Estructuras (Listings):**
-   - Fichas completas de negocios: Hoteles, Cabañas, Gastronomía, Actividades, etc.
-   - Datos integrados: Nombre, Dirección, Teléfono, WhatsApp, URL a redes (Instagram), Coordenadas GPS exactas.
-   - Atributos dinámicos: Horarios de apertura, etiquetas (Ej: "Verificado").
-2. **Gestión Multimedia e Imágenes:**
-   - Logotipo del negocio.
-   - Imagen de portada.
-   - Galería de imágenes (actualmente automatizadas e iteradas para cargar en formato de grilla fotográfica).
-3. **Exploración y Filtrado:**
-   - Buscador por texto libre.
-   - Filtrado y categorización en jerarquías (Categorías Principales y Subcategorías, ej. Alojamiento > Hoteles).
-4. **Localización Espacial (Geolocalización):**
-   - Renderizado de todos los negocios en un mapa interactivo global, y en mapas individuales por ficha de negocio.
-5. **Manejo de Idiomas (i18n):**
-   - Soporte multilingüe real y amigable (reemplazando al engorroso TranslatePress), donde las etiquetas (Horarios, Verificado, Búsqueda, etc.) puedan traducirse orgánicamente sin conflictos de UI.
+## User Review Required
 
----
+> [!WARNING]
+> **Requisitos Legales de Meta**
+> Para usar la API oficial necesitas:
+> 1. Una cuenta de **Meta Business Manager** (idealmente verificada con datos de la empresa).
+> 2. Una tarjeta de crédito asociada en Meta para los cobros.
+> 3. El mensaje que enviemos ya no puede ser texto libre; debe ser enviado como una **"Plantilla (Template)"** que Meta debe aprobar previamente (suele tardar minutos en aprobarse, pero son estrictos con el formato).
 
-## 2. Nueva Arquitectura Propuesta (Control 100% a Medida)
-
-La arquitectura sugerida separa de forma rígida el **Frontend** (lo que ve el usuario) del **Backend** (dónde viven los datos). Ambos reposarán de manera limpia en tu repositorio de GitHub.
-
-### 2.1. Frontend (Aplicación Cliente)
-- **Framework Principal:** **Next.js** (basado en React). 
-  - *¿Por qué?* Posee Renderizado del Lado del Servidor (SSR) lo cual es *vital* para el SEO (posicionamiento de los negocios en Google) pero brindando la velocidad vertiginosa de una SPA (Single Page Application).
-- **Estilización (UI/Vistas):** **CSS de Vainilla + CSS Modules**. 
-  - *¿Por qué?* Según tus indicaciones, no utilizaremos frameworks pesados como Elementor ni clases utilitarias agobiantes si no las solicitas. Crearemos un diseño premium y de alto impacto a través de CSS nativo.
-- **Micro-interacciones y Animaciones:** CSS nativo suave y dinámico (efectos de 'glassmorphism', transiciones suaves de hover).
-- **Mapas Interactivos:** Utilización directa por código de **Mapbox GL JS** o **Google Maps JavaScript API**. Sin envolturas de WordPress.
-
-### 2.2. Backend y Base de Datos (Gestión de Información)
-Al huir de la base de datos caótica de WordPress (`wp_posts`, `wp_postmeta`), diseñaremos una estructura relacional impecable y optimizada.
-
-- **Base de Datos:** **PostgreSQL**. Fuerte, relacional y altamente estructurada para unir Negocios, Categorías y Multimedia.
-- **Capa del Servidor / API:** **API Routes de Next.js** o **Node.js (Express)**. Construiremos nuestros propios "Endpoints" (ej. `/api/negocios/hoteles`) para servir *solo* los datos requeridos, minimizando el ancho de banda.
-- **ORM (Mapeo de Datos):** **Prisma**. Te brinda código autocompletado para interactuar con tu base de datos y migraciones controladas en GitHub.
-- **Gestión Multimedia:** Para el almacenamiento de fotos se sugiere un CDN en la nube (**Cloudinary** o un bucket **AWS S3**), para servir todas las imágenes con el mejor peso posible (WebP) y no saturar el servidor local.
-
-### 2.3. Herramienta de Administración (CMS)
-Como ya no tendremos el panel `/wp-admin` clásico de WordPress, propongo dos posibles caminos para que tú y tu equipo ingresen datos:
-
-- **Opción A (Panel a Medida):** Desarrollamos un panel sencillo desde cero con Next.js que solo permita editar/crear listings, categorías y subir fotos. Control total, pero más tiempo de desarrollo.
-- **Opción B (Headless CMS - Ej: Strapi / PayloadCMS):** Utilizamos una base de panel "libre" de código abierto que nos da un área de administración visual impecable, pero que solo funciona como "Base de Datos/API", de forma separada de cómo se muestra al usuario. Esto retiene el control absoluto del código visual, pero agiliza la entrada de datos.
-
----
-
-## 3. Plan de Desarrollo y Etapas de Migración
-
-1. **Fase 1: Configuración de Repositorios e Infraestructura Base.**
-   - Creación y estructuración del proyecto en GitHub.
-   - Modelado de las tablas en PostgreSQL.
-2. **Fase 2: Motor de Backend y Base de datos.**
-   - Desarrollo de la API de provisión de negocios y filtros.
-   - Creación de un "Script Puente" que lea los excels o datos actuales de WordPress (`san_rafael_businesses.xlsx`) y los inyecte automáticamente en nuestra nueva base de datos limpia.
-3. **Fase 3: Desarrollo Visual del Frontend (Next.js).**
-   - Desarrollo del Sistema de Diseño (Variables CSS, Tipografías modernas).
-   - Componentes principales (Tarjetas de negocios, Menú Superior, Grillas de Galerías, Modal de Mapas).
-4. **Fase 4: Integración Multilingüe y Optimización.**
-   - Inyección de librerías nativas de i18n para Next.js.
-   - Pulido de rendimiento (con la meta de > 95 pts. en mediciones de calidad).
-
----
-
-## Open Questions (Preguntas para orientar el diseño)
+## Open Questions
 
 > [!IMPORTANT]
-> **Decisiones Arquitectónicas Clave (Aprobadas y Definidas):**
+> 1. **El Número de Teléfono:** El número que se asocia a la API Oficial **no puede** usarse simultáneamente en la app de WhatsApp del celular o WhatsApp Web normal. ¿Usaremos un número nuevo exclusivo para la API, o estás dispuesto a migrar el número actual (perdiendo el acceso desde la app tradicional)?
+> 2. **Respuestas de clientes:** Como no tendrás la app en el celular, para leer las respuestas de los clientes necesitaremos conectar el backend a una bandeja de entrada compartida (tipo chat en el portal) o reenviar los mensajes de alguna forma. ¿Cómo prefieres gestionar las respuestas?
 
-1. **Administración de Datos:** **Opción B (Headless CMS - Ej: Strapi).** Utilizaremos un Headless CMS para tener un panel de administración robusto, visual e impecable para la carga de datos, mientras que el Frontend Next.js consumirá la API de Strapi para mantener un control del 100% sobre lo visual.
-2. **Autogestión de Clientes:** **Sí, con funcionalidad "Toggle" (Encendido/Apagado).** Crearemos la arquitectura de base de datos y la capacidad para que los dueños reclamen su perfil, pero la implementaremos con un interruptor para que de entrada permanezca apagada hasta que consideres oportuno activarla.
-3. **Plazos / Migración:** **Hosting Paralelo (Mismo Servidor).** Desarrollaremos y probaremos todo en un subdominio o directorio dentro de tu mismo hosting (ej. `v2.sanrafael360.com`). *Nota: Aseguraremos que tu plan de hosting actual soporte la ejecución de aplicaciones Node.js (Next.js y Strapi requerirán este entorno, a diferencia de PHP).*
-4. **Script de Migración:** Utilizaremos el archivo `importar_listeo_geocodificado.csv` (que ya contiene datos y coordenadas corregidas) como la fuente de la verdad para inyectar la información en la nueva base de datos.
+## Proposed Changes
 
+### 1. Configuración de Meta (Manual / Guiada)
+- Crear App en el panel de Facebook Developers.
+- Configurar WhatsApp Cloud API y obtener el `ACCESS_TOKEN` y el `PHONE_NUMBER_ID`.
+- Crear la plantilla de marketing (ej: `sumate_directorio`) con variables `{{1}}` para el nombre del negocio.
+
+### 2. Nuevo Script de Envío (`scripts/whatsapp-campaign/meta_bot.js`)
+
+#### [NEW] `scripts/whatsapp-campaign/meta_bot.js`
+- Script basado en Node.js puro sin necesidad de `whatsapp-web.js` ni levantar navegadores Chrome.
+- Utilizará peticiones HTTP POST directamente a `graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages`.
+- Leerá `curada.csv` y respetará el archivo `enviados.json` para continuar exactamente donde lo dejaste.
+- Velocidad de envío drásticamente mayor: Meta permite enviar cientos de mensajes por minuto sin riesgo de ban, ya que es la vía legal.
+
+#### [MODIFY] `package.json`
+- Añadir dependencia `axios` (o usar fetch nativo) para las llamadas a la API de Meta.
 
 ## Verification Plan
 
-### Evaluación de Avance y Tests Visuales
-- Una vez construido el prototipo, realizaremos despliegues atómicos utilizando Vercel/Render.
-- Podrás ver una URL donde evaluaremos juntos si el diseño excede lo visual y respeta las microanimaciones en vivo antes de conectar la base de datos real.
-- Analizaremos métricas de Lighthouse y PageSpeed midiendo explícitamente cuánto mejora vs Elementor.
+### Manual Verification
+1. Generaremos un token de prueba desde tu Meta Business.
+2. Usaremos un número de prueba proporcionado por Meta para enviar un mensaje a TU propio celular.
+3. Verificaremos que el mensaje llega con el formato de la plantilla oficial (con botones si lo deseamos).
+4. Una vez validado, reemplazamos por el token y número en producción e iniciamos la campaña para los 98 contactos restantes.
