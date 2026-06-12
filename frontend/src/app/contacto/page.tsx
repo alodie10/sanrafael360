@@ -55,14 +55,14 @@ export default function ContactoPage() {
   };
 
   return (
-    <main className="min-h-screen pt-32 pb-20 px-4 md:px-8 bg-slate-950 text-white selection:bg-primary/30">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+    <main className="min-h-screen pt-12 md:pt-32 pb-20 px-4 md:px-8 bg-slate-950 text-white selection:bg-primary/30">
+      <div className="max-w-7xl mx-auto flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
         
         {/* Left Side: Info */}
         <motion.div 
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-8"
+          className="space-y-8 order-2 lg:order-1"
         >
           <div className="space-y-4">
             <h2 className="text-primary font-bold tracking-widest uppercase text-sm">Súmate a la plataforma</h2>
@@ -107,7 +107,7 @@ export default function ContactoPage() {
           </div>
 
           <div className="pt-8 border-t border-white/5 space-y-4">
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <p className="text-slate-400 text-sm leading-relaxed hidden lg:block">
               ¿Tienes dudas o consultas específicas? Completa el formulario de la derecha y nuestro equipo se pondrá en contacto contigo a la brevedad.
             </p>
             <div className="flex items-center gap-3 text-slate-300 pt-2">
@@ -122,7 +122,7 @@ export default function ContactoPage() {
            initial={{ opacity: 0, y: 30 }}
            animate={{ opacity: 1, y: 0 }}
            transition={{ delay: 0.2 }}
-           className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden"
+           className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden order-1 lg:order-2"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[100px] -z-10" />
           
@@ -144,6 +144,11 @@ export default function ContactoPage() {
             </div>
           ) : (
             <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="lg:hidden mb-6">
+                <h2 className="text-2xl font-bold text-white mb-2">Déjanos tus datos</h2>
+                <p className="text-sm text-slate-400">Completa el formulario y te contactaremos en breve.</p>
+              </div>
+
               {error && (
                 <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm">
                   <AlertCircle className="w-5 h-5 shrink-0" />
