@@ -191,18 +191,24 @@ function NavbarInner() {
             )}
             <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">Vende aquí</Link>
           </div>
-          <div className="flex items-center gap-4 md:hidden">
+          <div className="flex items-center gap-3 md:hidden">
+            <Link 
+              href="/contacto" 
+              className="bg-primary text-black px-3 py-1.5 rounded-full font-black text-xs hover:scale-105 transition-all shadow-[0_0_15px_rgba(255,191,0,0.3)] whitespace-nowrap"
+            >
+              Vende aquí
+            </Link>
             {!session ? (
               <Link href="/login" className="text-white p-1">
-                <User className="w-7 h-7 text-primary" />
+                <User className="w-6 h-6 text-primary" />
               </Link>
             ) : (
               <button onClick={() => signOut()} className="text-white p-1">
-                <LogOut className="w-7 h-7 text-rose-500" />
+                <LogOut className="w-6 h-6 text-rose-500" />
               </button>
             )}
-            <button onClick={() => setIsOpen(!isOpen)} className="text-white">
-              <Menu className="w-8 h-8" />
+            <button onClick={() => setIsOpen(!isOpen)} className="text-white p-1">
+              <Menu className="w-6 h-6" />
             </button>
           </div>
         </div>
