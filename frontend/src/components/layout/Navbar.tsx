@@ -167,8 +167,8 @@ function NavbarInner() {
     )}>
       <div className="max-w-7xl mx-auto flex flex-col">
         {/* Superior */}
-        <div className="relative z-10 flex items-center justify-between px-4 md:px-8 h-[72px] md:h-20 bg-black/90 md:bg-transparent">
-          <div className="flex items-center gap-2">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between px-4 md:px-8 py-3 md:py-0 min-h-[72px] md:h-20 bg-black/90 md:bg-transparent gap-3 md:gap-0">
+          <div className="flex items-center gap-2 self-start md:self-auto">
             <Logo onClick={handleResetAll} className="hover:scale-105 transition-transform" />
             <span className="text-[10px] text-white/20 font-mono mt-4 hidden md:block">
               {process.env.NEXT_PUBLIC_APP_VERSION || "v1.1"}
@@ -191,25 +191,22 @@ function NavbarInner() {
             )}
             <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">Vende aquí</Link>
           </div>
-          <div className="flex items-center gap-3 md:hidden">
+          <div className="flex items-center gap-4 md:hidden self-end">
             <Link 
               href="/contacto" 
-              className="bg-primary text-black px-3 py-1.5 rounded-full font-black text-xs hover:scale-105 transition-all shadow-[0_0_15px_rgba(255,191,0,0.3)] whitespace-nowrap"
+              className="bg-primary text-black px-4 py-2 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_15px_rgba(255,191,0,0.3)] whitespace-nowrap"
             >
               Contáctanos
             </Link>
             {!session ? (
               <Link href="/login" className="text-white p-1">
-                <User className="w-6 h-6 text-primary" />
+                <User className="w-7 h-7 text-primary" />
               </Link>
             ) : (
               <button onClick={() => signOut()} className="text-white p-1">
-                <LogOut className="w-6 h-6 text-rose-500" />
+                <LogOut className="w-7 h-7 text-rose-500" />
               </button>
             )}
-            <button onClick={() => setIsOpen(!isOpen)} className="text-white p-1">
-              <Menu className="w-6 h-6" />
-            </button>
           </div>
         </div>
 
