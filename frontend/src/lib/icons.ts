@@ -176,7 +176,7 @@ export const gradientMap: Record<string, string> = {
  */
 export function getCategoryIcon(name: string): LucideIcon {
   if (!name) return Info;
-  const n = name.toLowerCase().trim();
+  const n = name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   
   // Intenta match por raíz
   const entry = Object.entries(iconMap).find(([key]) => 
@@ -188,7 +188,7 @@ export function getCategoryIcon(name: string): LucideIcon {
 
 export function getCategoryGradient(name: string): string {
   if (!name) return gradientMap.default;
-  const n = name.toLowerCase().trim();
+  const n = name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   
   const entry = Object.entries(gradientMap).find(([key]) => 
     n.includes(key.toLowerCase())
