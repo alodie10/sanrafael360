@@ -209,7 +209,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
 
       <section className="py-6 md:py-20 px-4 md:px-12 lg:px-16 max-w-7xl mx-auto">
         {/* RECLAMAR PERFIL — Visible para todos en todo dispositivo, arriba del contenido */}
-        {negocio.reclamar_habilitado && !negocio.owner && (!negocio.estado_reclamo || negocio.estado_reclamo === 'ninguno') && (
+        {negocio.reclamar_habilitado && !negocio.owner && (!negocio.estado_reclamo || negocio.estado_reclamo === 'ninguno') && !isValidPremium && (
           <div className="mb-8 p-5 rounded-[2rem] bg-blue-500/10 border border-blue-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl shadow-blue-900/10">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center shrink-0">

@@ -224,7 +224,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
                         </div>
                         <div>
                           <div className={`text-sm font-bold transition-colors ${negocio.owner ? 'text-white group-hover:text-primary' : 'text-slate-500'}`}>
-                            {negocio.owner?.email || "Sin dueño asignado"}
+                            {negocio.owner?.email || ((negocio.is_premium && !isExpired) ? "Gestionado por San Rafael 360" : "Sin dueño asignado")}
                           </div>
                           <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest">{negocio.nombre}</div>
                         </div>
