@@ -36,7 +36,7 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch(`${STRAPI_URL}/api/categorias?sort=nombre:asc`);
+      const res = await fetch(`${STRAPI_URL}/api/categorias?sort=nombre:asc&pagination[limit]=1000`);
       const data = await res.json();
       setCategories(data.data || []);
     } catch (e) {
