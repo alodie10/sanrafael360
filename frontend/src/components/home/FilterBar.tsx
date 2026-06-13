@@ -10,6 +10,7 @@ import {
   type LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getCategoryIcon } from "@/lib/icons";
 import { Categoria } from "@/types/strapi";
 
 interface FilterBarProps {
@@ -92,38 +93,6 @@ function PillCarousel({ children, arrowAlign = "center" }: { children: React.Rea
   );
 }
 
-/** Mapa de categoría → ícono Lucide */
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  "agencias de viaje": Plane,
-  "alojamientos": Hotel,
-  "bodegas": Wine,
-  "gastronomía": UtensilsCrossed,
-  "gastronomia": UtensilsCrossed,
-  "productos gourmet": ShoppingBag,
-  "turismo aventura": Mountain,
-  "turismo": Mountain,
-  "salud": Stethoscope,
-  "belleza": Sparkles,
-  "peluquería": Scissors,
-  "peluqueria": Scissors,
-  "automotor": Car,
-  "construcción": Hammer,
-  "construccion": Hammer,
-  "educación": GraduationCap,
-  "educacion": GraduationCap,
-  "entretenimiento": Music,
-  "deportes": Dumbbell,
-  "mascotas": PawPrint,
-  "fotografía": Camera,
-  "fotografia": Camera,
-  "naturaleza": TreePine,
-  "comercios": Store,
-};
-
-function getCategoryIcon(name: string): LucideIcon {
-  const normalized = name.toLowerCase().trim();
-  return CATEGORY_ICONS[normalized] || Store;
-}
 
 /**
  * FilterBar — Categorías y subcategorías como pills en carrusel horizontal.
