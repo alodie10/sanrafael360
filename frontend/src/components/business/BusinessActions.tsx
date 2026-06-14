@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircle, Globe, Instagram, Facebook } from "lucide-react";
+import { MessageCircle, Globe, Instagram, Facebook, Share2 } from "lucide-react";
 import { Negocio } from "@/types/strapi";
 
 interface BusinessActionsProps {
@@ -10,15 +10,33 @@ interface BusinessActionsProps {
 }
 
 export default function BusinessActions({ negocio, isValidPremium, onTrackClick }: BusinessActionsProps) {
-  // Solo se muestra para negocios Premium que tengan al menos una red o contacto
+  // Solo se muestra para negocios Premium
   if (!isValidPremium) return null;
-
-  const hasActions = negocio.whatsapp || negocio.website || negocio.instagram || negocio.facebook;
-  if (!hasActions) return null;
 
   return (
     <section className="bg-slate-900/50 border-b border-white/5 py-6 px-4 md:px-8">
       <div className="max-w-7xl mx-auto flex flex-wrap justify-center md:justify-start gap-4">
+        {/* COMPARTIR BOTÓN (Siempre visible para Premium) */}
+        <button
+          onClick={async () => {
+            const url = window.location.href;
+            const text = `¡Mirá ${negocio.nombre} en San Rafael 360!`;
+            if (navigator.share) {
+              try { await navigator.share({ title: negocio.nombre, text, url }); }
+              catch (err) { console.error("Error compartiendo:", err); }
+            } else {
+              try {
+                await navigator.clipboard.writeText(url);
+                alert("¡Enlace copiado al portapapeles!");
+              } catch (err) { console.error("Error copiando:", err); }
+            }
+          }}
+          className="flex-1 min-w-[200px] md:flex-none flex items-center justify-center gap-3 bg-zinc-800 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-zinc-700 hover:scale-105 transition-all shadow-xl shadow-black/20 active:scale-95"
+        >
+          <Share2 className="w-5 h-5" />
+          Compartir
+        </button>
+
         {negocio.whatsapp && (
           <a 
             href={`https://wa.me/${negocio.whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent(`¡Hola! Vi tu negocio "${negocio.nombre}" en sanrafael360.com y quería hacerte una consulta.`)}`} 
