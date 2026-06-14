@@ -228,9 +228,9 @@ function NavbarInner() {
 
           {/* ── Mobile right actions: lupa (si colapsado) + hamburger ── */}
           <div className="flex items-center gap-2 md:hidden">
-            {/* Lupa para re-expandir el search — solo aparece si está colapsado */}
+            {/* Lupa para re-expandir el search — aparece cuando el search está colapsado */}
             <AnimatePresence>
-              {mobileSearchCollapsed && isHome && !scrolled && (
+              {mobileSearchCollapsed && isHome && (
                 <motion.button
                   key="mobile-search-expand"
                   initial={{ opacity: 0, scale: 0.8 }}
