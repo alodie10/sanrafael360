@@ -61,14 +61,14 @@
   .sticky-filter-bar {
     position: sticky;
     z-index: 40;
-    /* Mobile: el Navbar tiene h mínima de 72px (sin barra de búsqueda al hacer scroll) */
-    top: calc(72px + var(--app-banner-height, 0px) + var(--master-bar-height, 0px));
+    /* Usa la altura real del Navbar, publicada dinámicamente por el componente.
+       Fallback: 72px mobile / 80px desktop si el JS aún no ejecutó. */
+    top: calc(var(--navbar-height, 72px) + var(--master-bar-height, 0px) + var(--app-banner-height, 0px));
   }
 
   @media (min-width: 768px) {
     .sticky-filter-bar {
-      /* Desktop: Navbar fixed mide 80px */
-      top: calc(80px + var(--app-banner-height, 0px) + var(--master-bar-height, 0px));
+      top: calc(var(--navbar-height, 80px) + var(--master-bar-height, 0px) + var(--app-banner-height, 0px));
     }
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,6 +15,7 @@ import { Loader } from "@googlemaps/js-api-loader";
 
 function NavbarInner() {
   const [isOpen, setIsOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loadingCats, setLoadingCats] = useState(true);
@@ -88,12 +89,29 @@ function NavbarInner() {
     }
   }, [searchParams]);
 
-  // --- Scroll listener ---
+  // --- Scroll listener + publicar altura del Navbar como CSS var ---
+  const publishNavHeight = useCallback(() => {
+    const h = navRef.current?.getBoundingClientRect().height ?? 0;
+    document.documentElement.style.setProperty('--navbar-height', `${Math.round(h)}px`);
+  }, []);
+
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+      // Republish after state change settles (next frame)
+      requestAnimationFrame(publishNavHeight);
+    };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [publishNavHeight]);
+
+  // Publicar altura en mount y en resize
+  useEffect(() => {
+    publishNavHeight();
+    const ro = new ResizeObserver(publishNavHeight);
+    if (navRef.current) ro.observe(navRef.current);
+    return () => ro.disconnect();
+  }, [publishNavHeight, scrolled]);
 
   // --- Resetear estados al cambiar de página ---
   useEffect(() => {
@@ -159,7 +177,7 @@ function NavbarInner() {
   };
 
   return (
-    <nav className={cn(
+    <nav ref={navRef} className={cn(
       "left-0 right-0 z-[100] transition-all duration-500 top-[calc(var(--app-banner-height,0px)+var(--master-bar-height,0px))]",
       scrolled 
         ? "fixed bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl" 
