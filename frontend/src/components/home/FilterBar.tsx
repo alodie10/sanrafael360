@@ -120,74 +120,60 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
 
   if (mainCategorias.length === 0) return null;
 
+  // Render compartido: botón de cada categoría
+  const renderCategoryButton = (cat: Categoria | null) => {
+    const isAll = cat === null;
+    const isActive = isAll ? selectedCategoryDocId === null : (
+      selectedCategoryDocId === cat.documentId ||
+      (selectedCategory?.parent?.documentId === cat.documentId)
+    );
+    const Icon = isAll ? LayoutGrid : getCategoryIcon(cat.nombre);
+    const docId = isAll ? null : cat.documentId;
+    const label = isAll ? "Todos" : cat.nombre;
+
+    return (
+      <button
+        key={isAll ? "todos" : cat.id}
+        onClick={() => onSelectCategory(docId)}
+        className="flex-shrink-0 flex flex-col items-center gap-2 w-24 md:w-20 group transition-all"
+      >
+        <div className={cn(
+          "w-14 h-14 md:w-12 md:h-12 rounded-2xl flex items-center justify-center border transition-all duration-300",
+          isActive
+            ? "bg-primary text-black border-primary shadow-[0_0_15px_rgba(214,175,55,0.4)]"
+            : "bg-white/5 text-slate-400 border-white/10 group-hover:bg-white/10 group-hover:text-white group-hover:border-white/20"
+        )}>
+          <Icon className="w-5 h-5" />
+        </div>
+        <span className={cn(
+          "text-[9px] font-bold text-center uppercase tracking-wider whitespace-normal line-clamp-2 leading-tight block w-full px-0.5 transition-colors",
+          isActive ? "text-primary" : "text-slate-400 group-hover:text-white"
+        )}>
+          {label}
+        </span>
+      </button>
+    );
+  };
+
+  const allCats = [null, ...mainCategorias] as (Categoria | null)[];
+
   return (
     <div className="bg-background/95 backdrop-blur-xl border-b border-white/[0.06] py-2 transition-all">
       <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-2">
-        {/* Fila 1: Categorías principales */}
-        <PillCarousel arrowAlign="icon">
-          {/* Botón "Todos" */}
-          <button
-            onClick={() => onSelectCategory(null)}
-            className="flex-shrink-0 flex flex-col items-center gap-2 w-28 group transition-all"
-          >
-            <div
-              className={cn(
-                "w-16 h-16 rounded-2xl flex items-center justify-center border transition-all duration-300",
-                selectedCategoryDocId === null
-                  ? "bg-primary text-black border-primary shadow-[0_0_15px_rgba(214,175,55,0.4)]"
-                  : "bg-white/5 text-slate-400 border-white/10 group-hover:bg-white/10 group-hover:text-white group-hover:border-white/20"
-              )}
-            >
-              <LayoutGrid className="w-6 h-6" />
-            </div>
-            <span
-              className={cn(
-                "text-[10px] font-bold text-center uppercase tracking-wider whitespace-normal line-clamp-2 leading-tight block w-full px-1 transition-colors",
-                selectedCategoryDocId === null
-                  ? "text-primary"
-                  : "text-slate-400 group-hover:text-white"
-              )}
-            >
-              Todos
-            </span>
-          </button>
 
-          {mainCategorias.map((cat) => {
-            const isActive = selectedCategoryDocId === cat.documentId ||
-              (selectedCategory?.parent?.documentId === cat.documentId);
-            const Icon = getCategoryIcon(cat.nombre);
-            return (
-              <button
-                key={cat.id}
-                onClick={() => onSelectCategory(cat.documentId)}
-                className="flex-shrink-0 flex flex-col items-center gap-2 w-28 group transition-all"
-              >
-                <div
-                  className={cn(
-                    "w-16 h-16 rounded-2xl flex items-center justify-center border transition-all duration-300",
-                    isActive
-                      ? "bg-primary text-black border-primary shadow-[0_0_15px_rgba(214,175,55,0.4)]"
-                      : "bg-white/5 text-slate-400 border-white/10 group-hover:bg-white/10 group-hover:text-white group-hover:border-white/20"
-                  )}
-                >
-                  <Icon className="w-6 h-6" />
-                </div>
-                <span
-                  className={cn(
-                    "text-[10px] font-bold text-center uppercase tracking-wider whitespace-normal line-clamp-2 leading-tight block w-full px-1 transition-colors",
-                    isActive
-                      ? "text-primary"
-                      : "text-slate-400 group-hover:text-white"
-                  )}
-                >
-                  {cat.nombre}
-                </span>
-              </button>
-            );
-          })}
-        </PillCarousel>
+        {/* Mobile: carrusel horizontal con flechas */}
+        <div className="md:hidden">
+          <PillCarousel arrowAlign="icon">
+            {allCats.map(cat => renderCategoryButton(cat))}
+          </PillCarousel>
+        </div>
 
-        {/* Fila 2: Subcategorías (solo cuando aplica) */}
+        {/* Desktop: flex-wrap sin scroll ni flechas */}
+        <div className="hidden md:flex flex-wrap gap-x-1 gap-y-3 py-1">
+          {allCats.map(cat => renderCategoryButton(cat))}
+        </div>
+
+        {/* Fila 2: Subcategorías (solo cuando aplica) — ambos dispositivos */}
         {showSubcategories && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -195,7 +181,6 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
             exit={{ opacity: 0, height: 0 }}
           >
             <PillCarousel>
-              {/* Botón "Todas" para ver todo dentro de la categoría padre */}
               <button
                 onClick={() => onSelectCategory(activeParentId!)}
                 className={cn(
@@ -207,7 +192,6 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
               >
                 Todas
               </button>
-
               {subcategorias.map(sub => {
                 const isSubActive = selectedCategoryDocId === sub.documentId;
                 return (

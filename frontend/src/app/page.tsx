@@ -357,22 +357,24 @@ function HomeContent() {
         </AnimatePresence>
 
         {/* FEATURED PLACES / SEARCH RESULTS */}
-        <section className="mt-6 md:mt-12 scroll-mt-64" ref={resultsRef}>
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-            <div className="max-w-xl">
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <h2 className="text-4xl md:text-5xl font-serif font-extrabold text-white tracking-tight">
-                  Comercios <span className="text-primary italic font-medium">{isFiltering ? "Encontrados" : "Destacados"}</span>
-                </h2>
-              </div>
-              <p className="text-slate-400">
-                {isFiltering 
-                  ? `Hemos encontrado ${filteredNegocios.length} opciones para vos en ${selectedCategoryDocId ? categorias.find(c => c.documentId === selectedCategoryDocId)?.nombre : "San Rafael"}.`
-                  : "Seleccionamos las mejores opciones locales para que tu estadía en San Rafael sea inolvidable."}
-              </p>
+        <section className="mt-4 scroll-mt-64" ref={resultsRef}>
+          <div className="flex items-center justify-between mb-6 gap-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">
+                Comercios <span className="text-primary italic">{isFiltering ? "Encontrados" : "Destacados"}</span>
+              </h2>
+              <span className="text-xs font-bold text-slate-500 bg-white/[0.04] border border-white/[0.08] rounded-full px-2.5 py-0.5">
+                {isFiltering ? filteredNegocios.length : negocios.length}
+              </span>
             </div>
+            {isFiltering && (
+              <p className="text-xs text-slate-500 hidden md:block">
+                {selectedCategoryDocId
+                  ? `En ${categorias.find(c => c.documentId === selectedCategoryDocId)?.nombre}`
+                  : "San Rafael, Mendoza"}
+              </p>
+            )}
           </div>
-
           <BusinessGrid 
             negocios={sortedNegocios} 
             loading={loading} 
