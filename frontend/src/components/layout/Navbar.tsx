@@ -25,41 +25,70 @@ function NavbarInner() {
   const [searchQuery, setSearchQuery] = useState("");
   const [localidad, setLocalidad] = useState("San Rafael, Mendoza");
 
-  const locationInputRef = useRef<HTMLInputElement>(null);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autocompleteRef = useRef<any>(null);
 
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
 
-  // --- Google Places Autocomplete ---
+  // --- Google Places Autocomplete (State Ref) ---
+  const [locationInput, setLocationInput] = useState<HTMLInputElement | null>(null);
+
+  // Visibilidad del search bar:
+  const isHome = pathname === "/";
+  const showSearchBarDesktop = !scrolled ? isHome : isHoveringNav;
+  const showSearchBarMobile = isHome && !scrolled && !mobileSearchCollapsed;
+  const showSearchBar = showSearchBarDesktop || showSearchBarMobile;
+
   useEffect(() => {
+    if (!showSearchBar || !locationInput) return;
+
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey || !locationInputRef.current) return;
+    if (!apiKey) return;
+
+    let isMounted = true;
     const loader = new Loader({ apiKey, version: "weekly", libraries: ["places", "marker", "maps"], language: "es" });
+    
     loader.load().then((google) => {
-      const bounds = new google.maps.LatLngBounds(
-        new google.maps.LatLng(-36.2, -70.3),
-        new google.maps.LatLng(-33.8, -67.2)
-      );
-      const autocomplete = new google.maps.places.Autocomplete(locationInputRef.current!, {
-        componentRestrictions: { country: "ar" },
-        types: [],
-        fields: ["formatted_address", "geometry"],
-        bounds,
-        strictBounds: true,
-      });
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (place.formatted_address) {
-          let clean = place.formatted_address.split(",")[0]
-            .replace(/M560\d/g, "").replace(/RN\d+/g, "").replace(/RP\d+/g, "").trim();
-          setLocalidad(clean || place.formatted_address.split(",")[0]);
-        }
-      });
+      if (!isMounted || !locationInput.isConnected) return;
+      if (!(locationInput instanceof HTMLInputElement)) return;
+      
+      try {
+        const bounds = new google.maps.LatLngBounds(
+          new google.maps.LatLng(-36.2, -70.3),
+          new google.maps.LatLng(-33.8, -67.2)
+        );
+        
+        const autocomplete = new google.maps.places.Autocomplete(locationInput, {
+          componentRestrictions: { country: "ar" },
+          types: [],
+          fields: ["formatted_address", "geometry"],
+          bounds,
+          strictBounds: true,
+        });
+        
+        autocompleteRef.current = autocomplete;
+        
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (place.formatted_address) {
+            let clean = place.formatted_address.split(",")[0]
+              .replace(/M560\d/g, "").replace(/RN\d+/g, "").replace(/RP\d+/g, "").trim();
+            setLocalidad(clean || place.formatted_address.split(",")[0]);
+          }
+        });
+      } catch (err) {
+        console.error("Google Autocomplete initialization error:", err);
+      }
     }).catch(() => {});
-  }, []);
+
+    return () => {
+      isMounted = false;
+      autocompleteRef.current = null;
+    };
+  }, [showSearchBar, locationInput]);
 
   // --- Cargar categorías ---
   useEffect(() => {
@@ -68,21 +97,24 @@ function NavbarInner() {
       .catch(() => {});
   }, []);
 
-  // --- Sincronizar query y localidad desde URL ---
   useEffect(() => {
     setSearchQuery(searchParams.get("q") || "");
-    if (searchParams.get("l")) {
-      setLocalidad(searchParams.get("l") || "San Rafael, Mendoza");
-    } else if (!searchParams.get("cat") && !searchParams.get("q")) {
-      setLocalidad("San Rafael, Mendoza");
-    }
-  }, [searchParams]);
+    setLocalidad(searchParams.get("l") || "San Rafael, Mendoza");
+    setMobileSearchCollapsed(!!(searchParams.get("q") || searchParams.get("cat")));
+  }, []);
 
-  // --- Auto-colapsar search en mobile cuando hay filtro activo en la URL ---
   useEffect(() => {
-    const hasFilter = !!(searchParams.get("q") || searchParams.get("cat"));
-    setMobileSearchCollapsed(hasFilter);
-  }, [searchParams]);
+    const handleSync = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setSearchQuery(customEvent.detail.q || "");
+        setLocalidad(customEvent.detail.l || "San Rafael, Mendoza");
+        setMobileSearchCollapsed(!!(customEvent.detail.q || customEvent.detail.cat));
+      }
+    };
+    window.addEventListener("query-params-changed", handleSync);
+    return () => window.removeEventListener("query-params-changed", handleSync);
+  }, []);
 
   // --- Scroll listener + publicar altura del Navbar como CSS var ---
   const publishNavHeight = useCallback(() => {
@@ -136,6 +168,13 @@ function NavbarInner() {
     const qs = params.toString();
     router.push(qs ? `/?${qs}` : "/");
     setIsMenuOpen(false);
+
+    // Sincronizar inmediatamente el estado
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("query-params-changed", {
+        detail: { q: searchQuery.trim(), l: localidad.trim(), cat: "" }
+      }));
+    }
   };
 
   const handleResetAll = () => {
@@ -144,20 +183,17 @@ function NavbarInner() {
     router.push("/");
     setIsMenuOpen(false);
     setMobileSearchCollapsed(false);
+    window.scrollTo(0, 0);
+
+    // Sincronizar inmediatamente el estado
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("query-params-changed", {
+        detail: { q: "", l: "San Rafael, Mendoza", cat: "" }
+      }));
+    }
   };
 
-  const isHome = pathname === "/";
-
-  // Visibilidad del search bar:
-  // Desktop no-scroll: visible en home
-  // Desktop scroll: hover
-  // Mobile no-scroll: visible en home Y no colapsado
-  // Mobile scroll: oculto (no hay hover en touch)
-  const showSearchBarDesktop = !scrolled ? isHome : isHoveringNav;
-  const showSearchBarMobile = isHome && !scrolled && !mobileSearchCollapsed;
-  // Usamos un solo AnimatePresence pero con clases para mostrar/ocultar por viewport
-  // La key cambia para reforzar la animación de entrada/salida
-  const showSearchBar = showSearchBarDesktop || showSearchBarMobile;
+  // Ya calculados arriba para el Autocomplete
 
   return (
     <nav
@@ -228,9 +264,9 @@ function NavbarInner() {
 
           {/* ── Mobile right actions: lupa (si colapsado) + hamburger ── */}
           <div className="flex items-center gap-2 md:hidden">
-            {/* Lupa para re-expandir el search — aparece cuando el search está colapsado */}
+            {/* Lupa para re-expandir el search — aparece cuando el search está colapsado o se hizo scroll */}
             <AnimatePresence>
-              {mobileSearchCollapsed && isHome && (
+              {(mobileSearchCollapsed || scrolled) && isHome && (
                 <motion.button
                   key="mobile-search-expand"
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -336,7 +372,23 @@ function NavbarInner() {
                         className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8"
                       />
                       {searchQuery && (
-                        <button onClick={() => setSearchQuery("")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all">
+                        <button
+                          onClick={() => {
+                            setSearchQuery("");
+                            const params = new URLSearchParams(window.location.search);
+                            if (params.has("q")) {
+                              params.delete("q");
+                              const qs = params.toString();
+                              router.push(qs ? `/?${qs}` : "/", { scroll: false });
+                            }
+                            if (typeof window !== "undefined") {
+                              window.dispatchEvent(new CustomEvent("query-params-changed", {
+                                detail: { q: "", l: localidad, cat: params.get("cat") || "" }
+                              }));
+                            }
+                          }}
+                          className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"
+                        >
                           <X className="w-4 h-4" />
                         </button>
                       )}
@@ -345,7 +397,7 @@ function NavbarInner() {
                     <div className="flex-1 flex items-center gap-3 px-5 py-4 relative group">
                       <MapPin className="w-5 h-5 text-slate-500" />
                       <input
-                        ref={locationInputRef}
+                        ref={setLocationInput}
                         type="text"
                         placeholder="Localidad"
                         value={localidad}

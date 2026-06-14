@@ -38,7 +38,7 @@ function HomeContent() {
   const resultsRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
-  // Estados de Filtrado
+  // Filtros como estado reactivo sincronizados con la URL mediante eventos
   const [searchQuery, setSearchQuery] = useState("");
   const [localidadQuery, setLocalidadQuery] = useState("");
   const [selectedCategoryDocId, setSelectedCategoryDocId] = useState<string | null>(null);
@@ -50,23 +50,35 @@ function HomeContent() {
 
   const handleSelectCategory = (id: string | null) => {
     setSelectedCategoryDocId(id);
+    setSearchQuery(""); // Force instant clear
+    setLocalidadQuery(""); // Force instant clear
     
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(searchParams.toString());
     if (id) {
       const cat = categorias.find(c => c.documentId === id);
       if (cat) params.set("cat", cat.slug || cat.documentId);
-      // Resetear el filtro de texto al seleccionar una categoría
-      params.delete("q");
-      setSearchQuery("");
+      params.delete("q"); // Limpiar texto al seleccionar categoría
+      params.delete("l"); // Limpiar localidad también
     } else {
       params.delete("cat");
       params.delete("q");
-      setSearchQuery("");
+      params.delete("l");
       scrollToResults();
     }
     
     const queryString = params.toString();
     router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+    
+    // Forzar reseteo y sincronización del Navbar e inputs de inmediato
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("query-params-changed", {
+        detail: {
+          q: "",
+          l: "",
+          cat: params.get("cat") || ""
+        }
+      }));
+    }
   };
 
   // Detector de scroll para el botón flotante
@@ -79,85 +91,89 @@ function HomeContent() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Sincronizar filtros DESDE la URL al cargar y al navegar (Memoria de hierro)
+  // Sincronizar todos los estados desde la URL y mediante eventos globales
   useEffect(() => {
     if (categorias.length === 0) return;
 
-    const catParam = searchParams.get("cat") || searchParams.get("categoria");
-    const qParam = searchParams.get("q");
-    const lParam = searchParams.get("l");
+    const syncFromUrl = (e?: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent && customEvent.detail) {
+        // Leer directamente desde el detalle del evento para evitar condiciones de carrera
+        // con la navegación asíncrona de Next.js (router.push)
+        const qVal = customEvent.detail.q || "";
+        const lVal = customEvent.detail.l || "";
+        const catVal = customEvent.detail.cat || "";
 
-    if (qParam !== null) {
-      setSearchQuery(qParam);
-    } else {
-      setSearchQuery("");
-    }
+        setSearchQuery(qVal);
+        setLocalidadQuery(lVal);
 
-    if (lParam !== null) {
-      setLocalidadQuery(lParam);
-    } else {
-      setLocalidadQuery("San Rafael, Mendoza");
-    }
-    
-    if (catParam) {
-      const found = categorias.find(c => 
-        c.documentId === catParam ||
-        c.slug === catParam ||
-        normalizeText(c.nombre) === normalizeText(catParam)
-      );
-      if (found && found.documentId !== selectedCategoryDocId) {
-        setSelectedCategoryDocId(found.documentId);
+        if (catVal) {
+          const found = categorias.find(c => c.documentId === catVal || c.slug === catVal);
+          setSelectedCategoryDocId(found ? found.documentId : null);
+        } else {
+          setSelectedCategoryDocId(null);
+        }
+        return;
       }
-    } else if (catParam === null && selectedCategoryDocId !== null) {
-      setSelectedCategoryDocId(null);
-    }
-  }, [searchParams, categorias]); 
 
-  // Auto-scroll a resultados cuando cambian los filtros (vía Navbar u otros)
+      // Fallback para popstate (atrás/adelante) o carga inicial
+      // Usamos el searchParams reactivo siempre que podamos, pero si estamos en popstate usamos location
+      const paramsString = e && e.type === "popstate" ? window.location.search : searchParams.toString();
+      const params = new URLSearchParams(paramsString);
+      setSearchQuery(params.get("q") || "");
+      setLocalidadQuery(params.get("l") || "");
+
+      const catParam = params.get("cat") || params.get("categoria");
+      if (catParam) {
+        const found = categorias.find(c => 
+          c.documentId === catParam ||
+          c.slug === catParam ||
+          normalizeText(c.nombre) === normalizeText(catParam)
+        );
+        if (found) {
+          setSelectedCategoryDocId(found.documentId);
+        } else {
+          setSelectedCategoryDocId(null);
+        }
+      } else {
+        setSelectedCategoryDocId(null);
+      }
+    };
+
+    syncFromUrl();
+
+    window.addEventListener("popstate", syncFromUrl);
+    window.addEventListener("query-params-changed", syncFromUrl);
+
+    return () => {
+      window.removeEventListener("popstate", syncFromUrl);
+      window.removeEventListener("query-params-changed", syncFromUrl);
+    };
+  }, [categorias]);
+
+  // Dispatch inicial al cargar la página para que el Navbar esté en sincronía total
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("query-params-changed", {
+        detail: {
+          q: searchParams.get("q") || "",
+          l: searchParams.get("l") || "",
+          cat: searchParams.get("cat") || searchParams.get("categoria") || ""
+        }
+      }));
+    }
+  }, [searchParams]);
+
+  // Auto-scroll a resultados cuando cambian los filtros de texto o localidad
   useEffect(() => {
     const q = searchParams.get("q");
     const l = searchParams.get("l");
-    
     if (q || l) {
-      // Pequeño timeout para asegurar que el DOM se haya actualizado si hay cambios de layout
       const timer = setTimeout(scrollToResults, 300);
       return () => clearTimeout(timer);
     }
-  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
-  // Sincronizar búsqueda HACIA la URL (solo con debounce para el texto)
-  useEffect(() => {
-    if (categorias.length === 0) return;
-
-    const timer = setTimeout(() => {
-      const params = new URLSearchParams(window.location.search);
-      const currentQ = params.get("q") || "";
-      const currentL = params.get("l") || "";
-      
-      let changed = false;
-      if (searchQuery !== currentQ) {
-        if (searchQuery) params.set("q", searchQuery);
-        else params.delete("q");
-        changed = true;
-      }
-
-      if (localidadQuery !== currentL) {
-        if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
-          params.set("l", localidadQuery);
-        } else {
-          params.delete("l");
-        }
-        changed = true;
-      }
-      
-      if (changed) {
-        const queryString = params.toString();
-        router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
-      }
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, localidadQuery, pathname, router, categorias]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -213,7 +229,16 @@ function HomeContent() {
     
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
-      setSearchQuery(transcript);
+      const params = new URLSearchParams(searchParams.toString());
+      if (transcript.trim()) {
+        params.set("q", transcript.trim());
+      } else {
+        params.delete("q");
+      }
+      params.delete("cat");
+      params.delete("categoria");
+      const qs = params.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
       scrollToResults();
     };
 
@@ -381,7 +406,11 @@ function HomeContent() {
           <BusinessGrid 
             negocios={sortedNegocios} 
             loading={loading} 
-            onClearFilters={() => { setSearchQuery(""); setSelectedCategoryDocId(null); setUserLocation(null); }}
+            onClearFilters={() => {
+              setSelectedCategoryDocId(null);
+              setUserLocation(null);
+              router.push(pathname, { scroll: false });
+            }}
           />
         </section>
       </div>

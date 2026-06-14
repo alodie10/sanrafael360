@@ -95,13 +95,13 @@ export default function SmartAppBanner() {
           </div>
           
           {/* Botón Instalar */}
-          <Link
+          <a
             href="/descargar"
             onClick={handleDismiss}
             className="bg-primary text-black text-[10px] font-black px-3.5 py-1.5 rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(255,191,0,0.2)] shrink-0"
           >
             INSTALAR
-          </Link>
+          </a>
         </motion.div>
       )}
     </AnimatePresence>
