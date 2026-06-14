@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Plus, Search, User, LogOut, MapPin, LayoutGrid } from "lucide-react";
+import { Menu, X, Plus, Search, User, LogOut, MapPin, LayoutGrid, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/common/Logo";
 import { useSession, signOut } from "next-auth/react";
@@ -17,6 +17,8 @@ function NavbarInner() {
   const [isOpen, setIsOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [isHoveringNav, setIsHoveringNav] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loadingCats, setLoadingCats] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,6 +26,8 @@ function NavbarInner() {
   const [isPlacesLoaded, setIsPlacesLoaded] = useState(false);
 
   const locationInputRef = useRef<HTMLInputElement>(null);
+  // Timeout ref para delay en el mouse leave (evita flicker al mover entre elementos)
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -55,11 +59,10 @@ function NavbarInner() {
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
         if (place.formatted_address) {
-          // Limpiamos la basura técnica (códigos postales, rutas) del texto que ve el usuario
           let clean = place.formatted_address.split(',')[0]; 
-          clean = clean.replace(/M560\d/g, '') // Elimina M5600, M5603...
-                       .replace(/RN\d+/g, '')  // Elimina RN143...
-                       .replace(/RP\d+/g, '')  // Elimina RP173...
+          clean = clean.replace(/M560\d/g, '')
+                       .replace(/RN\d+/g, '')
+                       .replace(/RP\d+/g, '')
                        .trim();
           setLocalidad(clean || place.formatted_address.split(',')[0]);
         }
@@ -98,7 +101,6 @@ function NavbarInner() {
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
-      // Republish after state change settles (next frame)
       requestAnimationFrame(publishNavHeight);
     };
     window.addEventListener("scroll", handleScroll);
@@ -111,13 +113,32 @@ function NavbarInner() {
     const ro = new ResizeObserver(publishNavHeight);
     if (navRef.current) ro.observe(navRef.current);
     return () => ro.disconnect();
-  }, [publishNavHeight, scrolled]);
+  }, [publishNavHeight, scrolled, isHoveringNav]);
 
   // --- Resetear estados al cambiar de página ---
   useEffect(() => {
     setScrolled(false);
     setIsOpen(false);
   }, [pathname]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    };
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setIsHoveringNav(true);
+  };
+
+  const handleMouseLeave = () => {
+    // Pequeño delay para evitar flicker al mover el mouse dentro del nav
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHoveringNav(false);
+    }, 150);
+  };
 
   const mainCategorias = categorias.filter((c) => {
     if (!c.parent) return true;
@@ -141,6 +162,7 @@ function NavbarInner() {
     const qs = params.toString();
     router.push(qs ? `/?${qs}` : "/");
     setIsOpen(false);
+    setIsMobileSearchOpen(false); // Cierra el buscador en mobile al buscar
   };
 
   const handleResetAll = () => {
@@ -148,6 +170,7 @@ function NavbarInner() {
     setLocalidad("San Rafael, Mendoza");
     router.push("/");
     setIsOpen(false);
+    setIsMobileSearchOpen(false);
   };
 
   const handleCatSelect = (docId: string | null) => {
@@ -176,13 +199,24 @@ function NavbarInner() {
     e.target.select();
   };
 
+  // Lógica de visibilidad de la barra de búsqueda:
+  // - Sin scroll: visible en home
+  // - Con scroll en desktop: hover sobre el navbar
+  // - Con scroll en mobile: toggle manual con botón lupa
+  const showSearchBar = !scrolled ? isHome : (isHoveringNav || isMobileSearchOpen);
+
   return (
-    <nav ref={navRef} className={cn(
-      "left-0 right-0 z-[100] transition-all duration-500 top-[calc(var(--app-banner-height,0px)+var(--master-bar-height,0px))]",
-      scrolled 
-        ? "fixed bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl" 
-        : "relative md:fixed bg-transparent border-b border-transparent"
-    )}>
+    <nav
+      ref={navRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className={cn(
+        "left-0 right-0 z-[100] transition-all duration-300 top-[calc(var(--app-banner-height,0px)+var(--master-bar-height,0px))]",
+        scrolled 
+          ? "fixed bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl" 
+          : "relative md:fixed bg-transparent border-b border-transparent"
+      )}
+    >
       <div className="max-w-7xl mx-auto flex flex-col">
         {/* Superior */}
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between px-4 md:px-8 py-3 md:py-0 min-h-[72px] md:h-20 bg-black/90 md:bg-transparent gap-3 md:gap-0">
@@ -192,6 +226,29 @@ function NavbarInner() {
               {process.env.NEXT_PUBLIC_APP_VERSION || "v1.1"}
             </span>
           </div>
+
+          {/* Hint de búsqueda compacto — solo visible cuando scrolled y sin hover en desktop */}
+          <AnimatePresence>
+            {scrolled && !isHoveringNav && (
+              <motion.button
+                key="search-hint"
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15 }}
+                onClick={() => setIsHoveringNav(true)}
+                className="hidden md:flex items-center gap-2 bg-white/[0.06] hover:bg-white/10 border border-white/10 rounded-full px-4 py-2 text-slate-400 hover:text-white text-sm transition-all group"
+                aria-label="Abrir buscador"
+              >
+                <Search className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-medium">
+                  {searchQuery ? `"${searchQuery}"` : "¿Qué buscás?"}
+                </span>
+                <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+              </motion.button>
+            )}
+          </AnimatePresence>
+
           <div className="hidden md:flex items-center gap-6">
             {!session ? (
               <Link href="/login" className="text-white/70 hover:text-white text-sm font-bold transition-colors flex items-center gap-2">
@@ -212,6 +269,19 @@ function NavbarInner() {
             )}
           </div>
           <div className="flex items-center gap-4 md:hidden self-end">
+            {/* Lupa para abrir/cerrar buscador en mobile cuando está scrolleado */}
+            {scrolled && (
+              <button
+                onClick={() => setIsMobileSearchOpen(prev => !prev)}
+                className="text-white p-1.5 rounded-full hover:bg-white/10 transition-all"
+                aria-label={isMobileSearchOpen ? "Cerrar buscador" : "Abrir buscador"}
+              >
+                {isMobileSearchOpen
+                  ? <X className="w-5 h-5 text-primary" />
+                  : <Search className="w-5 h-5 text-primary" />
+                }
+              </button>
+            )}
             {pathname !== "/contacto" && (
               <Link 
                 href="/contacto" 
@@ -232,55 +302,56 @@ function NavbarInner() {
           </div>
         </div>
 
-        {/* Barra de búsqueda */}
+        {/* Barra de búsqueda — auto-hide en scroll, reveal en hover (desktop) */}
         <AnimatePresence>
-          {(isHome || scrolled) && (
-            <motion.div 
-              initial={{ opacity: 0, y: -20 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              exit={{ opacity: 0, y: -20 }} 
-              className={cn(
-                "bg-black/40 backdrop-blur-md border-t border-white/5 pb-4",
-                scrolled ? "hidden md:block" : "block"
-              )}
+          {showSearchBar && (
+            <motion.div
+              key="searchbar"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              className="overflow-hidden"
             >
-              <div className="px-4 pt-4 flex flex-col max-w-4xl mx-auto w-full">
-                <div className="flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl overflow-hidden w-full shadow-2xl">
-                  {/* Qué buscas */}
-                  <div className="flex-1 flex items-center gap-3 px-5 py-4 border-b md:border-b-0 md:border-r border-white/10 relative group">
-                    <Search className="w-5 h-5 text-slate-500" />
-                    <input 
-                      type="text" 
-                      placeholder="¿Qué buscas?" 
-                      value={searchQuery} 
-                      onChange={(e) => setSearchQuery(e.target.value)} 
-                      onFocus={handleSearchInputFocus}
-                      onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
-                      className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
-                    />
-                    {searchQuery && (
-                      <button onClick={() => setSearchQuery("")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
-                    )}
-                  </div>
+              <div className="bg-black/40 backdrop-blur-md border-t border-white/5 pb-4">
+                <div className="px-4 pt-4 flex flex-col max-w-4xl mx-auto w-full">
+                  <div className="flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl overflow-hidden w-full shadow-2xl">
+                    {/* Qué buscas */}
+                    <div className="flex-1 flex items-center gap-3 px-5 py-4 border-b md:border-b-0 md:border-r border-white/10 relative group">
+                      <Search className="w-5 h-5 text-slate-500" />
+                      <input 
+                        type="text" 
+                        placeholder="¿Qué buscas?" 
+                        value={searchQuery} 
+                        onChange={(e) => setSearchQuery(e.target.value)} 
+                        onFocus={handleSearchInputFocus}
+                        onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
+                        className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
+                      />
+                      {searchQuery && (
+                        <button onClick={() => setSearchQuery("")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
+                      )}
+                    </div>
 
-                  {/* Dónde */}
-                  <div className="flex-1 flex items-center gap-3 px-5 py-4 relative group">
-                    <MapPin className="w-5 h-5 text-slate-500" />
-                    <input 
-                      ref={locationInputRef} 
-                      type="text" 
-                      placeholder="Localidad" 
-                      value={localidad} 
-                      onChange={(e) => setLocalidad(e.target.value)} 
-                      onFocus={handleLocationInputFocus}
-                      onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
-                      className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
-                    />
-                    {localidad !== "San Rafael, Mendoza" && (
-                      <button onClick={() => setLocalidad("San Rafael, Mendoza")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
-                    )}
+                    {/* Dónde */}
+                    <div className="flex-1 flex items-center gap-3 px-5 py-4 relative group">
+                      <MapPin className="w-5 h-5 text-slate-500" />
+                      <input 
+                        ref={locationInputRef} 
+                        type="text" 
+                        placeholder="Localidad" 
+                        value={localidad} 
+                        onChange={(e) => setLocalidad(e.target.value)} 
+                        onFocus={handleLocationInputFocus}
+                        onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
+                        className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8" 
+                      />
+                      {localidad !== "San Rafael, Mendoza" && (
+                        <button onClick={() => setLocalidad("San Rafael, Mendoza")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X className="w-4 h-4" /></button>
+                      )}
+                    </div>
+                    <button onClick={handleSearch} className="bg-white hover:bg-zinc-200 text-black px-10 py-4 md:py-0 font-heading font-black uppercase tracking-widest transition-all active:scale-95">BUSCAR</button>
                   </div>
-                  <button onClick={handleSearch} className="bg-white hover:bg-zinc-200 text-black px-10 py-4 md:py-0 font-heading font-black uppercase tracking-widest transition-all active:scale-95">BUSCAR</button>
                 </div>
               </div>
             </motion.div>
