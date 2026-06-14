@@ -237,9 +237,9 @@ function NavbarInner() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.15 }}
-                  onClick={() => setMobileSearchCollapsed(false)}
+                  onClick={handleResetAll}
                   className="p-2 rounded-full text-primary hover:bg-white/10 transition-all"
-                  aria-label="Abrir buscador"
+                  aria-label="Limpiar búsqueda y abrir buscador"
                 >
                   <Search className="w-5 h-5" />
                 </motion.button>

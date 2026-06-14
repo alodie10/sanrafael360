@@ -55,6 +55,9 @@ function HomeContent() {
     if (id) {
       const cat = categorias.find(c => c.documentId === id);
       if (cat) params.set("cat", cat.slug || cat.documentId);
+      // Resetear el filtro de texto al seleccionar una categoría
+      params.delete("q");
+      setSearchQuery("");
     } else {
       params.delete("cat");
       params.delete("q");
