@@ -161,17 +161,10 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
     <div className="bg-background/95 backdrop-blur-xl border-b border-white/[0.06] py-2 transition-all">
       <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-2">
 
-        {/* Mobile: carrusel horizontal con flechas */}
-        <div className="md:hidden">
-          <PillCarousel arrowAlign="icon">
-            {allCats.map(cat => renderCategoryButton(cat))}
-          </PillCarousel>
-        </div>
-
-        {/* Desktop: flex-wrap sin scroll ni flechas */}
-        <div className="hidden md:flex flex-wrap gap-x-1 gap-y-3 py-1">
+        {/* Carrusel horizontal con flechas — 1 línea, scroll si es necesario */}
+        <PillCarousel arrowAlign="icon">
           {allCats.map(cat => renderCategoryButton(cat))}
-        </div>
+        </PillCarousel>
 
         {/* Fila 2: Subcategorías (solo cuando aplica) — ambos dispositivos */}
         {showSubcategories && (
