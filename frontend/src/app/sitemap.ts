@@ -10,9 +10,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ? { headers: { Authorization: `Bearer ${strapiToken}` } }
       : {};
 
-    // Traemos slug, updatedAt y is_premium para diferenciar prioridad
+    // Traemos slug, updatedAt, is_premium y campos de calidad de contenido
     const res = await fetchFromStrapi(
-      "negocios?fields[0]=slug&fields[1]=updatedAt&fields[2]=is_premium&fields[3]=premium_valid_until&pagination[pageSize]=1000",
+      "negocios?fields[0]=slug&fields[1]=updatedAt&fields[2]=is_premium&fields[3]=premium_valid_until&fields[4]=descripcion&populate[imagen_portada][fields][0]=url&pagination[pageSize]=1000",
       options
     );
     negocios = res.data || [];
@@ -29,8 +29,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return new Date(n.premium_valid_until) > new Date();
   };
 
+  // Solo incluir en el sitemap negocios con contenido mínimo:
+  // descripción >= 30 caracteres O imagen de portada cargada.
+  // Evita que Google indexe páginas vacías que consumen crawl budget.
+  const hasMinimumContent = (n: any): boolean => {
+    const hasDescription =
+      typeof n.descripcion === "string" && n.descripcion.trim().length >= 30;
+    const hasImage = !!n.imagen_portada?.url;
+    return hasDescription || hasImage;
+  };
+
   const negocioUrls: MetadataRoute.Sitemap = negocios
-    .filter((n: any) => n.slug)
+    .filter((n: any) => n.slug && hasMinimumContent(n))
     .map((n: any) => ({
       url: `https://www.sanrafael360.com/negocios/${n.slug}`,
       lastModified: n.updatedAt ? new Date(n.updatedAt) : new Date(),
