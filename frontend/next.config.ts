@@ -31,6 +31,13 @@ const nextConfig: NextConfig = {
         destination: "https://play.google.com/store/apps/details?id=com.sanrafael360.www.twa",
         permanent: false,
       },
+      {
+        // URL malformada detectada en GSC el 15/06/2026 — link copiado incorrectamente
+        // en WhatsApp/redes con el & pegado al dominio → redirect permanente a home
+        source: "/&",
+        destination: "/",
+        permanent: true,
+      },
     ];
   },
 };
