@@ -40,7 +40,8 @@ import {
   Glasses,
   Scale,
   Calculator,
-  PawPrint
+  PawPrint,
+  Sofa
 } from "lucide-react";
 
 /**
@@ -136,6 +137,11 @@ export const iconMap: Record<string, LucideIcon> = {
   "taxi": Car,
   "remis": Car,
   "transporte": Bus,
+  "hogar": Sofa,
+  "decoracion": Sofa,
+  "mueble": Sofa,
+  "muebleria": Sofa,
+  "living": Sofa,
 };
 
 /**
@@ -168,6 +174,9 @@ export const gradientMap: Record<string, string> = {
   "mascota": "from-amber-400 to-orange-500",
   "abogad": "from-slate-700 to-zinc-900",
   "climatizacion": "from-cyan-400 to-blue-500",
+  "hogar": "from-amber-500 to-orange-600",
+  "decoracion": "from-amber-500 to-orange-600",
+  "mueble": "from-amber-600 to-yellow-700",
   "default": "from-slate-800 to-slate-900",
 };
 
