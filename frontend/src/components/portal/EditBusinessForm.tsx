@@ -81,7 +81,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       const fetchCategories = async () => {
         try {
           const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
-          const res = await fetch(`${strapiUrl}/api/categorias?sort=nombre:asc`);
+          const res = await fetch(`${strapiUrl}/api/categorias?sort=nombre:asc&pagination[pageSize]=100`);
           const data = await res.json();
           setCategories(data.data || []);
         } catch (e) {
