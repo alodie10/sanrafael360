@@ -4,6 +4,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
 
 interface BusinessGalleryProps {
   negocio: any;
@@ -151,8 +152,18 @@ function VideoGallery({ videos, youtubeUrl, businessName }: { videos: any[]; you
             )}
 
             {videos.map((video: any, i: number) => {
-              const url = getStrapiMedia(video.url);
-              if (!url) return null;
+              const originalUrl = getStrapiMedia(video.url);
+              if (!originalUrl) return null;
+              
+              // 1. Generar miniatura animada ultraligera (Live Thumbnail)
+              // Al pedir un .gif y usar f_auto, Cloudinary toma los primeros 3 segundos (du_3)
+              // y los sirve como WebP animado (pesa KBs) en los navegadores que lo soportan.
+              const urlAsGif = originalUrl.replace(/\.(mp4|mov|webm)$/i, '.gif');
+              const thumbnailUrl = optimizeCloudinaryUrl(urlAsGif, "f_auto,q_auto,c_fill,w_400,h_400,so_0,du_3");
+              
+              // 2. Optimizar el video en alta calidad para cuando le den click
+              const optimizedVideoUrl = optimizeCloudinaryUrl(originalUrl, "f_auto,q_auto");
+
               return (
                 <motion.button
                   key={video.id || i}
@@ -160,16 +171,14 @@ function VideoGallery({ videos, youtubeUrl, businessName }: { videos: any[]; you
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
-                  onClick={() => openFullscreen(url)}
+                  onClick={() => openFullscreen(optimizedVideoUrl)}
                   className="relative flex-shrink-0 w-28 h-28 md:w-36 md:h-36 snap-start rounded-2xl overflow-hidden border border-white/10 bg-slate-900 group/thumb cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
-                  {/* Poster del video como thumbnail */}
-                  <video
-                    src={url}
+                  {/* Poster del video como thumbnail ultraligero */}
+                  <img
+                    src={thumbnailUrl}
+                    alt={`Video ${i+1}`}
                     className="w-full h-full object-cover pointer-events-none"
-                    preload="metadata"
-                    muted
-                    playsInline
                   />
                   {/* Overlay con icono Play */}
                   <div className="absolute inset-0 bg-black/30 group-hover/thumb:bg-black/50 transition-colors flex items-center justify-center">

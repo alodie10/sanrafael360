@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, Camera } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
 
@@ -93,16 +94,33 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
         {/* Imágenes del carrusel — brillo completo, sin oscurecer */}
         {images.length > 0 ? (
           images.map((imgUrl, index) => (
-            <motion.img
+            <motion.div
               key={imgUrl}
-              src={imgUrl}
-              alt={`${negocio.nombre} - Foto ${index + 1}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: index === activeIndex ? 1 : 0 }}
               transition={{ duration: 0.4 }}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full"
               style={{ zIndex: index === activeIndex ? 1 : 0 }}
-            />
+            >
+              <picture>
+                {/* Mobile: Crop más vertical para que el g_auto se centre bien en la pantalla angosta */}
+                <source 
+                  media="(max-width: 768px)" 
+                  srcSet={optimizeCloudinaryUrl(imgUrl, "c_fill,ar_4:5,g_auto,w_800,f_auto,q_auto")} 
+                />
+                {/* Desktop: Crop ultrawide para el banner de la PC */}
+                <source 
+                  media="(min-width: 769px)" 
+                  srcSet={optimizeCloudinaryUrl(imgUrl, "c_fill,ar_21:9,g_auto,w_1600,f_auto,q_auto")} 
+                />
+                {/* Fallback */}
+                <img
+                  src={optimizeCloudinaryUrl(imgUrl, "f_auto,q_auto")}
+                  alt={`${negocio.nombre} - Foto ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </picture>
+            </motion.div>
           ))
         ) : (
           <div className="w-full h-full bg-slate-900" />
