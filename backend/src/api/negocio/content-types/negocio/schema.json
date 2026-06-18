@@ -98,6 +98,37 @@
       "default": true,
       "description": "Indica si el bot\u00f3n de reserva debe mostrarse"
     },
+    "cta_habilitado": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indica si el Botón de Acción (CTA) personalizado está activo"
+    },
+    "cta_titulo": {
+      "type": "string",
+      "description": "Título principal del CTA (ej: 'Pedi para llevar', 'Reserva tu lugar')"
+    },
+    "cta_texto": {
+      "type": "text",
+      "description": "Texto descriptivo debajo del título del CTA"
+    },
+    "cta_boton_texto": {
+      "type": "string",
+      "description": "Texto que aparece dentro del botón (ej: 'Consultar Cita')"
+    },
+    "cta_link": {
+      "type": "string",
+      "description": "URL personalizada para el botón. Si está vacía, puede ir a WhatsApp."
+    },
+    "cta_tag_confirmacion": {
+      "type": "boolean",
+      "default": false,
+      "description": "Muestra la etiqueta 'Confirmación Inmediata'"
+    },
+    "cta_tag_sin_comisiones": {
+      "type": "boolean",
+      "default": false,
+      "description": "Muestra la etiqueta 'Sin comisiones'"
+    },
     "discovery_pending": {
       "type": "boolean",
       "default": true

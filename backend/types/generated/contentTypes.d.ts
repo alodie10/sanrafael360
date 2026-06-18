@@ -643,6 +643,16 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    cta_boton_texto: Schema.Attribute.String;
+    cta_habilitado: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    cta_link: Schema.Attribute.String;
+    cta_tag_confirmacion: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    cta_tag_sin_comisiones: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    cta_texto: Schema.Attribute.Text;
+    cta_titulo: Schema.Attribute.String;
     descripcion: Schema.Attribute.RichText;
     direccion: Schema.Attribute.String;
     discovery_pending: Schema.Attribute.Boolean &

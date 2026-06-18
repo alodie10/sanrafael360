@@ -80,6 +80,13 @@ export interface Negocio {
   reclamar_habilitado?: boolean;
   estado_reclamo?: string;
   reserva_habilitada?: boolean;
+  cta_habilitado?: boolean;
+  cta_titulo?: string;
+  cta_texto?: string;
+  cta_boton_texto?: string;
+  cta_link?: string;
+  cta_tag_confirmacion?: boolean;
+  cta_tag_sin_comisiones?: boolean;
 }
 
 export interface StrapiResponse<T> {

@@ -40,6 +40,13 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [priceRange, setPriceRange] = useState(negocio.price_range || "Moderado");
   const [reservaHabilitada, setReservaHabilitada] = useState(negocio.reserva_habilitada ?? false);
   const [reservaUrl, setReservaUrl] = useState(negocio.reserva_url || "");
+  const [ctaHabilitado, setCtaHabilitado] = useState(negocio.cta_habilitado ?? (negocio.reserva_habilitada !== false));
+  const [ctaTitulo, setCtaTitulo] = useState(negocio.cta_titulo || "");
+  const [ctaTexto, setCtaTexto] = useState(negocio.cta_texto || "");
+  const [ctaBotonTexto, setCtaBotonTexto] = useState(negocio.cta_boton_texto || "");
+  const [ctaLink, setCtaLink] = useState(negocio.cta_link || negocio.reserva_url || "");
+  const [ctaTagConfirmacion, setCtaTagConfirmacion] = useState(negocio.cta_tag_confirmacion ?? false);
+  const [ctaTagSinComisiones, setCtaTagSinComisiones] = useState(negocio.cta_tag_sin_comisiones ?? false);
   const [schedules, setSchedules] = useState(negocio.schedules || []);
   const [categoria, setCategoria] = useState(negocio.categoria?.documentId || negocio.categoria?.id || "");
   const [categories, setCategories] = useState<any[]>([]);
@@ -216,6 +223,13 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         price_range: priceRange,
         reserva_habilitada: reservaHabilitada,
         reserva_url: reservaUrl,
+        cta_habilitado: ctaHabilitado,
+        cta_titulo: ctaTitulo,
+        cta_texto: ctaTexto,
+        cta_boton_texto: ctaBotonTexto,
+        cta_link: ctaLink,
+        cta_tag_confirmacion: ctaTagConfirmacion,
+        cta_tag_sin_comisiones: ctaTagSinComisiones,
         schedules,
         categoria: isAdmin ? categoria : undefined,
         atributos: atributosSeleccionados,
@@ -337,10 +351,20 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         <EditBusinessReservations 
           priceRange={priceRange}
           setPriceRange={setPriceRange}
-          reservaHabilitada={reservaHabilitada}
-          setReservaHabilitada={setReservaHabilitada}
-          reservaUrl={reservaUrl}
-          setReservaUrl={setReservaUrl}
+          ctaHabilitado={ctaHabilitado}
+          setCtaHabilitado={setCtaHabilitado}
+          ctaTitulo={ctaTitulo}
+          setCtaTitulo={setCtaTitulo}
+          ctaTexto={ctaTexto}
+          setCtaTexto={setCtaTexto}
+          ctaBotonTexto={ctaBotonTexto}
+          setCtaBotonTexto={setCtaBotonTexto}
+          ctaLink={ctaLink}
+          setCtaLink={setCtaLink}
+          ctaTagConfirmacion={ctaTagConfirmacion}
+          setCtaTagConfirmacion={setCtaTagConfirmacion}
+          ctaTagSinComisiones={ctaTagSinComisiones}
+          setCtaTagSinComisiones={setCtaTagSinComisiones}
         />
 
         <EditBusinessRatings
