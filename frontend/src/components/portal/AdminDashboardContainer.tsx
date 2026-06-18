@@ -191,7 +191,7 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
           </aside>
 
           {/* Main Content Area */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="lg:col-span-3 space-y-8 min-w-0">
             {activeTab === 'stats' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-12">
                 <div>

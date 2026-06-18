@@ -81,7 +81,7 @@ export default function AdminClaimCard({ claim, jwt, onResolve }: AdminClaimCard
         <div className="flex flex-col lg:flex-row gap-10">
           
           {/* Business Core Info */}
-          <div className="flex-1 space-y-6">
+          <div className="flex-1 space-y-6 min-w-0">
             <div className="flex items-center gap-6">
               <div className="w-20 h-20 rounded-3xl bg-zinc-950/60 border border-white/10 overflow-hidden shrink-0 shadow-2xl group-hover:scale-105 transition-transform duration-500">
                 {logoUrl ? (
@@ -92,12 +92,12 @@ export default function AdminClaimCard({ claim, jwt, onResolve }: AdminClaimCard
                   </div>
                 )}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0 flex-1">
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60">Solicitud de Propiedad</span>
-                <h3 className="text-2xl md:text-3xl font-serif font-bold text-white group-hover:text-primary transition-colors uppercase tracking-tight italic leading-none">
+                <h3 className="text-2xl md:text-3xl font-serif font-bold text-white group-hover:text-primary transition-colors uppercase tracking-tight italic leading-none truncate">
                    {claim.nombre}
                  </h3>
-                 <div className="flex items-center gap-2 text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] pt-2">
+                 <div className="flex items-center gap-2 text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] pt-2 min-w-0">
                    <MapPin className="w-4 h-4 text-primary/70 shrink-0" />
                    <span className="truncate">{claim.direccion || "San Rafael, Mendoza"}</span>
                  </div>
@@ -105,25 +105,25 @@ export default function AdminClaimCard({ claim, jwt, onResolve }: AdminClaimCard
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 bg-white/5 rounded-[2rem] border border-white/5 shadow-inner">
-               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center border border-white/10 shadow-lg">
+               <div className="flex items-center gap-4 min-w-0">
+                <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center border border-white/10 shadow-lg shrink-0">
                   <User className="w-5 h-5 text-primary" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">Postulante</p>
-                  <p className="font-bold text-sm text-white truncate max-w-[150px]">{claim.owner?.username || "Usuario SR360"}</p>
+                  <p className="font-bold text-sm text-white truncate">{claim.owner?.username || "Usuario SR360"}</p>
                   <p className="text-[10px] text-zinc-500 truncate">{claim.owner?.email}</p>
                 </div>
               </div>
 
-               <div className="flex items-center gap-4">
+               <div className="flex items-center gap-4 min-w-0">
                 <div className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center border shadow-lg transition-colors",
+                  "w-12 h-12 rounded-2xl flex items-center justify-center border shadow-lg transition-colors shrink-0",
                   docUrl ? "bg-primary/10 border-primary/20" : "bg-red-500/10 border-red-500/20"
                 )}>
                   <FileText className={cn("w-5 h-5", docUrl ? "text-primary" : "text-red-500")} />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">Documentación</p>
                   {docUrl ? (
                     <a 
@@ -152,7 +152,7 @@ export default function AdminClaimCard({ claim, jwt, onResolve }: AdminClaimCard
           </div>
 
           {/* Action Column */}
-          <div className="flex flex-row lg:flex-col gap-4 justify-center lg:w-48">
+          <div className="flex flex-row lg:flex-col gap-4 justify-center shrink-0 lg:w-48">
             <button 
               onClick={() => handleResolve('approved')}
               disabled={!!isResolving}
