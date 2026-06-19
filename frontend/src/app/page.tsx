@@ -374,7 +374,6 @@ function HomeContent() {
         <FilterBar 
           categorias={categorias} 
           selectedCategoryDocId={selectedCategoryDocId} 
-          onSelectCategory={handleSelectCategory} 
         />
       </div>
 

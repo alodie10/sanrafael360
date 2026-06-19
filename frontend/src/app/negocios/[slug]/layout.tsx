@@ -41,12 +41,21 @@ export async function generateMetadata({
 
     const canonicalUrl = `${SITE_URL}/negocios/${negocio.slug}`;
 
+    // Lógica para prevenir indexación de contenido pobre (igual que en sitemap.ts)
+    const hasDescription =
+      typeof negocio.descripcion === "string" && negocio.descripcion.trim().length >= 30;
+    const hasImage = !!negocio.imagen_portada?.url;
+    const hasMinimumContent = hasDescription || hasImage;
+
     return {
       title,
       description,
       alternates: {
         canonical: canonicalUrl,
       },
+      robots: hasMinimumContent
+        ? { index: true, follow: true }
+        : { index: false, follow: true }, // Evita indexar perfiles casi vacíos
       openGraph: {
         title,
         description,

@@ -12,11 +12,11 @@ import {
 import { cn } from "@/lib/utils";
 import { getCategoryIcon } from "@/lib/icons";
 import { Categoria } from "@/types/strapi";
+import Link from "next/link";
 
 interface FilterBarProps {
   categorias: Categoria[];
   selectedCategoryDocId: string | null;
-  onSelectCategory: (docId: string | null) => void;
 }
 
 /** Carrusel horizontal reutilizable con flechas */
@@ -101,7 +101,7 @@ function PillCarousel({ children, arrowAlign = "center" }: { children: React.Rea
  * - Fila 1: Categorías principales con íconos (scrollable)
  * - Fila 2: Subcategorías (solo si la categoría seleccionada tiene hijos)
  */
-export default function FilterBar({ categorias, selectedCategoryDocId, onSelectCategory }: FilterBarProps) {
+export default function FilterBar({ categorias, selectedCategoryDocId }: FilterBarProps) {
   // Categorías principales (sin parent)
   const mainCategorias = categorias.filter((c) => {
     if (!c.parent) return true;
@@ -128,13 +128,13 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
       (selectedCategory?.parent?.documentId === cat.documentId)
     );
     const Icon = isAll ? LayoutGrid : getCategoryIcon(cat.nombre);
-    const docId = isAll ? null : cat.documentId;
     const label = isAll ? "Todos" : cat.nombre;
+    const href = isAll ? "/" : `/categoria/${cat.slug || cat.documentId}`;
 
     return (
-      <button
+      <Link
+        href={href}
         key={isAll ? "todos" : cat.id}
-        onClick={() => onSelectCategory(docId)}
         className="flex-shrink-0 flex flex-col items-center gap-2 w-24 md:w-20 group transition-all"
       >
         <div className={cn(
@@ -151,7 +151,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
         )}>
           {label}
         </span>
-      </button>
+      </Link>
     );
   };
 
@@ -174,8 +174,8 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
             exit={{ opacity: 0, height: 0 }}
           >
             <PillCarousel>
-              <button
-                onClick={() => onSelectCategory(activeParentId!)}
+              <Link
+                href={`/categoria/${(selectedCategory?.parent as any)?.slug || selectedCategory?.slug || activeParentId}`}
                 className={cn(
                   "flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-all border",
                   selectedCategoryDocId === activeParentId
@@ -184,13 +184,13 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
                 )}
               >
                 Todas
-              </button>
+              </Link>
               {subcategorias.map(sub => {
                 const isSubActive = selectedCategoryDocId === sub.documentId;
                 return (
-                  <button
+                  <Link
+                    href={`/categoria/${sub.slug || sub.documentId}`}
                     key={sub.id}
-                    onClick={() => onSelectCategory(sub.documentId)}
                     className={cn(
                       "flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-all border",
                       isSubActive
@@ -199,7 +199,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId, onSelectC
                     )}
                   >
                     {sub.nombre}
-                  </button>
+                  </Link>
                 );
               })}
             </PillCarousel>

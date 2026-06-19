@@ -49,6 +49,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: isPremiumActive(n) ? 0.9 : 0.8,
     }));
 
+  let categorias: any[] = [];
+  try {
+    const strapiToken = process.env.STRAPI_API_TOKEN;
+    const options = strapiToken
+      ? { headers: { Authorization: `Bearer ${strapiToken}` } }
+      : {};
+    const catRes = await fetchFromStrapi(
+      "categorias?fields[0]=slug&fields[1]=updatedAt&pagination[pageSize]=100",
+      options
+    );
+    categorias = catRes.data || [];
+  } catch (error) {
+    console.error(
+      "[Sitemap Error] Falló la obtención de categorías desde Strapi:",
+      error
+    );
+  }
+
+  const categoriaUrls: MetadataRoute.Sitemap = categorias
+    .filter((c: any) => c.slug)
+    .map((c: any) => ({
+      url: `https://www.sanrafael360.com/categoria/${c.slug}`,
+      lastModified: c.updatedAt ? new Date(c.updatedAt) : new Date(),
+      changeFrequency: "daily" as const,
+      priority: 0.9, // Las categorías son páginas de aterrizaje importantes
+    }));
+
   return [
     {
       url: "https://www.sanrafael360.com",
@@ -58,6 +85,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     // NOTA: /negocios no se incluye porque next.config.ts tiene un redirect 301 → /
     // Incluirla causaría una señal SEO contradictoria para Google.
+    ...categoriaUrls,
     ...negocioUrls,
   ];
 }
