@@ -37,12 +37,24 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
         // Excluir videos — los videos se muestran en BusinessGallery
         const isVideo = img.mime?.startsWith('video/') || img.url.match(/\.(mp4|m4v|webm|ogg|mov)$/i);
         if (isVideo) return;
+        
+        // Excluir imágenes marcadas como internas
+        const configStr = negocio.galeria_config?.[img.id];
+        let cropGravity = negocio.crop_gravity || "g_auto";
+        let isInternal = false;
+        
+        if (typeof configStr === 'string') {
+           cropGravity = configStr;
+        } else if (configStr) {
+           cropGravity = configStr.cropGravity || cropGravity;
+           isInternal = configStr.isInternal === true;
+        }
+
+        if (isInternal) return;
+
         const url = getStrapiMedia(img.url)!;
         if (!images.find(i => i.url === url)) {
-          images.push({ 
-            url, 
-            cropGravity: negocio.galeria_config?.[img.id] || negocio.crop_gravity || "g_auto" 
-          });
+          images.push({ url, cropGravity });
         }
       }
     });

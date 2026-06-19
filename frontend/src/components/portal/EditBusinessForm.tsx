@@ -65,7 +65,21 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
 
   // Files & Visual
   const [cropGravity, setCropGravity] = useState(negocio.crop_gravity || "g_auto");
-  const [galeriaConfig, setGaleriaConfig] = useState<Record<string, string>>(negocio.galeria_config || {});
+  
+  // Normalizar galeria_config (retrocompatibilidad: antes guardaba solo un string)
+  const [galeriaConfig, setGaleriaConfig] = useState<Record<string, any>>(() => {
+    const config = negocio.galeria_config || {};
+    const normalized: Record<string, any> = {};
+    Object.keys(config).forEach(key => {
+      if (typeof config[key] === 'string') {
+        normalized[key] = { cropGravity: config[key], isInternal: false };
+      } else {
+        normalized[key] = config[key];
+      }
+    });
+    return normalized;
+  });
+  
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);

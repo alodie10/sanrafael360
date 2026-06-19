@@ -11,8 +11,8 @@ interface EditBusinessGalleryProps {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover' | 'gallery') => void;
   youtubeUrl: string;
   setYoutubeUrl: (val: string) => void;
-  galeriaConfig: Record<string, string>;
-  setGaleriaConfig: (val: Record<string, string>) => void;
+  galeriaConfig: Record<string, any>;
+  setGaleriaConfig: (val: Record<string, any>) => void;
 }
 
 export default function EditBusinessGallery({
@@ -59,17 +59,41 @@ export default function EditBusinessGallery({
               
               {!isVideo && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md p-2 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <select
-                    value={galeriaConfig[photo.id.toString()] || "g_auto"}
-                    onChange={(e) => setGaleriaConfig({ ...galeriaConfig, [photo.id.toString()]: e.target.value })}
-                    className="w-full bg-slate-800 border border-white/20 rounded-md px-2 py-1 text-white focus:outline-none text-xs appearance-none"
-                  >
-                    <option value="g_auto">Auto Inteligente</option>
-                    <option value="g_center">Centrado</option>
-                    <option value="g_north">Arriba</option>
-                    <option value="g_south">Abajo</option>
-                    <option value="g_auto:subject">Sujeto</option>
-                  </select>
+                  <label className="flex items-center gap-2 mb-2 cursor-pointer text-xs text-white">
+                    <input 
+                      type="checkbox" 
+                      className="accent-blue-500 rounded bg-slate-800 border-white/20"
+                      checked={galeriaConfig[photo.id.toString()]?.isInternal || false}
+                      onChange={(e) => {
+                        const current = galeriaConfig[photo.id.toString()] || { cropGravity: "g_auto" };
+                        setGaleriaConfig({ 
+                          ...galeriaConfig, 
+                          [photo.id.toString()]: { ...current, isInternal: e.target.checked }
+                        });
+                      }}
+                    />
+                    Mandar a galería interna
+                  </label>
+
+                  {!(galeriaConfig[photo.id.toString()]?.isInternal) && (
+                    <select
+                      value={galeriaConfig[photo.id.toString()]?.cropGravity || "g_auto"}
+                      onChange={(e) => {
+                        const current = galeriaConfig[photo.id.toString()] || { isInternal: false };
+                        setGaleriaConfig({ 
+                          ...galeriaConfig, 
+                          [photo.id.toString()]: { ...current, cropGravity: e.target.value } 
+                        });
+                      }}
+                      className="w-full bg-slate-800 border border-white/20 rounded-md px-2 py-1 text-white focus:outline-none text-xs appearance-none"
+                    >
+                      <option value="g_auto">Auto Inteligente (Recorte)</option>
+                      <option value="g_center">Centrado (Recorte)</option>
+                      <option value="g_north">Arriba (Recorte)</option>
+                      <option value="g_south">Abajo (Recorte)</option>
+                      <option value="g_auto:subject">Sujeto (Recorte)</option>
+                    </select>
+                  )}
                 </div>
               )}
             </div>
