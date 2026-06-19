@@ -87,6 +87,8 @@ export interface Negocio {
   cta_link?: string;
   cta_tag_confirmacion?: boolean;
   cta_tag_sin_comisiones?: boolean;
+  crop_gravity?: string;
+  galeria_config?: Record<string, string>;
 }
 
 export interface StrapiResponse<T> {

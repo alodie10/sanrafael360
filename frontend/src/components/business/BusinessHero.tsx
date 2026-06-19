@@ -24,9 +24,12 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
   }
 
   // Armar lista de imágenes: Portada + Galería (si es premium)
-  const images: string[] = [];
+  const images: { url: string, cropGravity: string }[] = [];
   if (coverUrl) {
-    images.push(getStrapiMedia(coverUrl)!);
+    images.push({ 
+      url: getStrapiMedia(coverUrl)!, 
+      cropGravity: negocio.crop_gravity || "g_auto" 
+    });
   }
   if (isValidPremium && negocio.galeria && negocio.galeria.length > 0) {
     negocio.galeria.forEach((img: any) => {
@@ -35,8 +38,11 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
         const isVideo = img.mime?.startsWith('video/') || img.url.match(/\.(mp4|m4v|webm|ogg|mov)$/i);
         if (isVideo) return;
         const url = getStrapiMedia(img.url)!;
-        if (!images.includes(url)) {
-          images.push(url);
+        if (!images.find(i => i.url === url)) {
+          images.push({ 
+            url, 
+            cropGravity: negocio.galeria_config?.[img.id] || negocio.crop_gravity || "g_auto" 
+          });
         }
       }
     });
@@ -93,7 +99,7 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
       >
         {/* Imágenes del carrusel — brillo completo, sin oscurecer */}
         {images.length > 0 ? (
-          images.map((imgUrl, index) => (
+          images.map(({ url: imgUrl, cropGravity }, index) => (
             <motion.div
               key={imgUrl}
               initial={{ opacity: 0 }}
@@ -103,15 +109,15 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
               style={{ zIndex: index === activeIndex ? 1 : 0 }}
             >
               <picture>
-                {/* Mobile: Crop más vertical para que el g_auto se centre bien en la pantalla angosta */}
+                {/* Mobile: Crop más vertical */}
                 <source 
                   media="(max-width: 768px)" 
-                  srcSet={optimizeCloudinaryUrl(imgUrl, "c_fill,ar_4:5,g_auto,w_800,f_auto,q_auto")} 
+                  srcSet={optimizeCloudinaryUrl(imgUrl, `c_fill,ar_4:5,${cropGravity},w_800,f_auto,q_auto`)} 
                 />
                 {/* Desktop: Crop ultrawide para el banner de la PC */}
                 <source 
                   media="(min-width: 769px)" 
-                  srcSet={optimizeCloudinaryUrl(imgUrl, "c_fill,ar_21:9,g_auto,w_1600,f_auto,q_auto")} 
+                  srcSet={optimizeCloudinaryUrl(imgUrl, `c_fill,ar_21:9,${cropGravity},w_1600,f_auto,q_auto`)} 
                 />
                 {/* Fallback */}
                 <img

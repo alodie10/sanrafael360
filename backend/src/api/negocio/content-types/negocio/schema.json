@@ -257,6 +257,22 @@
     },
     "youtube_url": {
       "type": "string"
+    },
+    "crop_gravity": {
+      "type": "enumeration",
+      "enum": [
+        "g_auto",
+        "g_center",
+        "g_north",
+        "g_south",
+        "g_auto:subject"
+      ],
+      "default": "g_auto",
+      "description": "Controla qué parte de la imagen se prioriza al recortar fotos de portada o galería"
+    },
+    "galeria_config": {
+      "type": "json",
+      "description": "Configuración individual de recorte para cada imagen de la galería. Ej: { '123': 'g_center' }"
     }
   }
 }

@@ -63,8 +63,9 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [isPremium, setIsPremium] = useState(negocio.is_premium || false);
   const [premiumValidUntil, setPremiumValidUntil] = useState(negocio.premium_valid_until ? negocio.premium_valid_until.split('T')[0] : "");
 
-  
-  // Files
+  // Files & Visual
+  const [cropGravity, setCropGravity] = useState(negocio.crop_gravity || "g_auto");
+  const [galeriaConfig, setGaleriaConfig] = useState<Record<string, string>>(negocio.galeria_config || {});
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
@@ -238,6 +239,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         tripadvisor_rating: Number(tripadvisorRating) || 0,
         tripadvisor_review_count: Number(tripadvisorReviewCount) || 0,
         youtube_url: youtubeUrl,
+        crop_gravity: cropGravity,
+        galeria_config: galeriaConfig,
         is_premium: isAdmin ? isPremium : undefined,
         premium_valid_until: isAdmin ? (premiumValidUntil ? new Date(premiumValidUntil).toISOString() : null) : undefined,
         galeria: existingGallery.map((img: any) => img.id)
@@ -310,8 +313,10 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
           logoFile={logoFile}
           cover={negocio.imagen_portada}
           coverFile={coverFile}
+          cropGravity={cropGravity}
           setLogoFile={setLogoFile}
           setCoverFile={setCoverFile}
+          setCropGravity={setCropGravity}
           handleFileChange={handleFileChange}
         />
 
@@ -338,6 +343,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
           handleFileChange={handleFileChange}
           youtubeUrl={youtubeUrl}
           setYoutubeUrl={setYoutubeUrl}
+          galeriaConfig={galeriaConfig}
+          setGaleriaConfig={setGaleriaConfig}
         />
 
         <EditBusinessAttributes

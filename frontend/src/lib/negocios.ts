@@ -28,7 +28,8 @@ export async function getNegocioBySlug(slug: string): Promise<Negocio | null> {
     // CRÍTICO: slug debe estar explícito — sin él el Schema.org genera /negocios/undefined
     "fields[26]=slug&fields[27]=estado_reclamo&fields[28]=email&" +
     "fields[29]=cta_habilitado&fields[30]=cta_titulo&fields[31]=cta_texto&" +
-    "fields[32]=cta_boton_texto&fields[33]=cta_link&fields[34]=cta_tag_confirmacion&fields[35]=cta_tag_sin_comisiones";
+    "fields[32]=cta_boton_texto&fields[33]=cta_link&fields[34]=cta_tag_confirmacion&fields[35]=cta_tag_sin_comisiones&" +
+    "fields[36]=crop_gravity&fields[37]=galeria_config";
 
   const strapiToken = process.env.STRAPI_API_TOKEN;
   const options: RequestInit = {

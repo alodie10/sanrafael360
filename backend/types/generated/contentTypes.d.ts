@@ -643,6 +643,10 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    crop_gravity: Schema.Attribute.Enumeration<
+      ['g_auto', 'g_center', 'g_north', 'g_south', 'g_auto:subject']
+    > &
+      Schema.Attribute.DefaultTo<'g_auto'>;
     cta_boton_texto: Schema.Attribute.String;
     cta_habilitado: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
@@ -665,6 +669,7 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
       Schema.Attribute.DefaultTo<'ninguno'>;
     facebook: Schema.Attribute.String;
     galeria: Schema.Attribute.Media<'images', true>;
+    galeria_config: Schema.Attribute.JSON;
     google_maps_url: Schema.Attribute.String;
     google_place_id: Schema.Attribute.String;
     google_rating: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;

@@ -11,6 +11,8 @@ interface EditBusinessGalleryProps {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover' | 'gallery') => void;
   youtubeUrl: string;
   setYoutubeUrl: (val: string) => void;
+  galeriaConfig: Record<string, string>;
+  setGaleriaConfig: (val: Record<string, string>) => void;
 }
 
 export default function EditBusinessGallery({
@@ -20,7 +22,9 @@ export default function EditBusinessGallery({
   removeNewPhoto,
   handleFileChange,
   youtubeUrl,
-  setYoutubeUrl
+  setYoutubeUrl,
+  galeriaConfig,
+  setGaleriaConfig
 }: EditBusinessGalleryProps) {
   return (
     <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
@@ -52,6 +56,22 @@ export default function EditBusinessGallery({
               >
                 <X className="w-4 h-4" />
               </button>
+              
+              {!isVideo && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md p-2 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <select
+                    value={galeriaConfig[photo.id.toString()] || "g_auto"}
+                    onChange={(e) => setGaleriaConfig({ ...galeriaConfig, [photo.id.toString()]: e.target.value })}
+                    className="w-full bg-slate-800 border border-white/20 rounded-md px-2 py-1 text-white focus:outline-none text-xs appearance-none"
+                  >
+                    <option value="g_auto">Auto Inteligente</option>
+                    <option value="g_center">Centrado</option>
+                    <option value="g_north">Arriba</option>
+                    <option value="g_south">Abajo</option>
+                    <option value="g_auto:subject">Sujeto</option>
+                  </select>
+                </div>
+              )}
             </div>
           );
         })}
@@ -77,6 +97,12 @@ export default function EditBusinessGallery({
               >
                 <X className="w-4 h-4" />
               </button>
+              
+              {!isVideo && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md p-2 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <p className="text-[10px] text-slate-300 text-center leading-tight font-medium">Guarda los cambios para configurar su recorte</p>
+                </div>
+              )}
             </div>
           );
         })}

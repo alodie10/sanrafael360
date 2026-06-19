@@ -8,8 +8,10 @@ interface EditBusinessVisualIdentityProps {
   logoFile: File | null;
   cover: any;
   coverFile: File | null;
+  cropGravity: string;
   setLogoFile: (file: File | null) => void;
   setCoverFile: (file: File | null) => void;
+  setCropGravity: (gravity: string) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover' | 'gallery') => void;
 }
 
@@ -18,8 +20,10 @@ export default function EditBusinessVisualIdentity({
   logoFile,
   cover,
   coverFile,
+  cropGravity,
   setLogoFile,
   setCoverFile,
+  setCropGravity,
   handleFileChange
 }: EditBusinessVisualIdentityProps) {
   return (
@@ -105,6 +109,22 @@ export default function EditBusinessVisualIdentity({
           >
             Subir Portada
           </label>
+
+          <div className="mt-2 space-y-2">
+            <label className="text-sm font-bold text-slate-300">Enfoque del recorte automático</label>
+            <p className="text-xs text-slate-500 mb-2">Selecciona qué parte de la imagen priorizar cuando se adapta a pantallas grandes o móviles.</p>
+            <select
+              value={cropGravity}
+              onChange={(e) => setCropGravity(e.target.value)}
+              className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm appearance-none"
+            >
+              <option value="g_auto">Automático Inteligente (Detecta rostros/objetos principales)</option>
+              <option value="g_center">Centrado (Enfoca siempre el centro de la imagen)</option>
+              <option value="g_north">Arriba (Enfoca la parte superior)</option>
+              <option value="g_south">Abajo (Enfoca la parte inferior)</option>
+              <option value="g_auto:subject">Sujeto Principal (Intenta detectar el objeto dominante)</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
