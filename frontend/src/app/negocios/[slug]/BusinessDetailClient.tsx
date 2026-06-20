@@ -294,7 +294,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
               ctaLink={negocio.cta_link}
               ctaTagConfirmacion={negocio.cta_tag_confirmacion}
               ctaTagSinComisiones={negocio.cta_tag_sin_comisiones}
-              whatsapp={negocio.telefono_whatsapp || negocio.telefono}  
+              whatsapp={negocio.whatsapp || negocio.telefono}  
               onTrackClick={trackClick}
             />
           </div>
