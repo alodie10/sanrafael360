@@ -230,11 +230,41 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
   },
 
   async getPortalStats(userId?: number, startDate?: string, endDate?: string) {
+    // ─── Score de salud del perfil ────────────────────────────────────────────
+    // Pesos: deben sumar 100. Cada campo se verifica de forma específica.
+    const SCORE_WEIGHTS = [
+      { key: 'descripcion',    weight: 20, check: (v: any) => typeof v === 'string' && v.trim().replace(/<[^>]*>/g, '').length >= 50 },
+      { key: 'imagen_portada', weight: 20, check: (v: any) => !!v?.url },
+      { key: 'telefono',       weight: 10, check: (v: any) => typeof v === 'string' && v.trim().length > 0 },
+      { key: 'whatsapp',       weight: 10, check: (v: any) => typeof v === 'string' && v.trim().length > 0 },
+      { key: 'direccion',      weight: 10, check: (v: any) => typeof v === 'string' && v.trim().length > 0 },
+      { key: 'schedules',      weight: 10, check: (v: any) => Array.isArray(v) && v.length > 0 },
+      { key: 'logo',           weight: 10, check: (v: any) => !!v?.url },
+      { key: 'website',        weight:  5, check: (v: any) => typeof v === 'string' && v.trim().length > 0 },
+      { key: 'instagram',      weight:  3, check: (v: any) => typeof v === 'string' && v.trim().length > 0 },
+      { key: 'galeria',        weight:  2, check: (v: any) => Array.isArray(v) && v.length > 0 },
+    ] as const;
+
+    const computeProfileScore = (n: any): number => {
+      let score = 0;
+      for (const { key, weight, check } of SCORE_WEIGHTS) {
+        if (check(n[key])) score += weight;
+      }
+      return score; // 0-100
+    };
+    // ─────────────────────────────────────────────────────────────────────────
+
     const filters = userId ? { owner: userId } : {};
     const negocios = await (strapi.documents('api::negocio.negocio') as any).findMany({
       filters,
-      fields: ['nombre', 'documentId', 'views', 'clicks_whatsapp', 'clicks_website', 'is_premium', 'premium_valid_until'],
-      limit: -1, 
+      fields: [
+        'nombre', 'documentId', 'views', 'clicks_whatsapp', 'clicks_website',
+        'is_premium', 'premium_valid_until',
+        // Campos para calcular salud del perfil
+        'descripcion', 'telefono', 'whatsapp', 'direccion', 'website', 'instagram',
+      ],
+      populate: { imagen_portada: { fields: ['url'] }, logo: { fields: ['url'] }, galeria: { fields: ['url'] }, schedules: true },
+      limit: -1,
     });
 
     let results = negocios;
@@ -270,24 +300,32 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       }));
     }
 
-    const summary = results.reduce((acc: any, curr: any) => ({
-      views: acc.views + (Number(curr.views) || 0),
-      clicks_whatsapp: acc.clicks_whatsapp + (Number(curr.clicks_whatsapp) || 0),
-      clicks_website: acc.clicks_website + (Number(curr.clicks_website) || 0),
-      totalNegocios: results.length
-    }), { views: 0, clicks_whatsapp: 0, clicks_website: 0, totalNegocios: 0 });
-
-    const breakdown = results.map((r: any) => ({
+    const breakdownWithScore = results.map((r: any) => ({
       documentId: r.documentId,
       nombre: r.nombre,
       views: Number(r.views) || 0,
       clicks_whatsapp: Number(r.clicks_whatsapp) || 0,
       clicks_website: Number(r.clicks_website) || 0,
       is_premium: r.is_premium || false,
-      premium_valid_until: r.premium_valid_until || null
+      premium_valid_until: r.premium_valid_until || null,
+      profile_score: computeProfileScore(r),
     })).sort((a: any, b: any) => (b.views + b.clicks_whatsapp + b.clicks_website) - (a.views + a.clicks_whatsapp + a.clicks_website));
 
-    return { summary, breakdown };
+    const summary = breakdownWithScore.reduce((acc: any, curr: any) => ({
+      views: acc.views + curr.views,
+      clicks_whatsapp: acc.clicks_whatsapp + curr.clicks_whatsapp,
+      clicks_website: acc.clicks_website + curr.clicks_website,
+      totalNegocios: breakdownWithScore.length,
+      // Promedio de salud del perfil entre todos los negocios del usuario
+      profileScore: acc.profileScore + curr.profile_score,
+    }), { views: 0, clicks_whatsapp: 0, clicks_website: 0, totalNegocios: 0, profileScore: 0 });
+
+    // Convertir acumulado a promedio
+    if (summary.totalNegocios > 0) {
+      summary.profileScore = Math.round(summary.profileScore / summary.totalNegocios);
+    }
+
+    return { summary, breakdown: breakdownWithScore };
   },
 
   async incrementStats(id: string, type: 'view' | 'whatsapp' | 'website') {

@@ -84,7 +84,7 @@ export default function PortalStats() {
         views: stats.views || 0,
         leads: stats.clicks_whatsapp || 0,
         clicks: stats.clicks_website || 0,
-        score: stats.totalNegocios > 0 ? 85 : 0,
+        score: stats.profileScore || 0,
         loading: false
       });
       setBreakdown(bkd);
@@ -205,6 +205,7 @@ export default function PortalStats() {
               <thead className="bg-zinc-900/50 text-xs uppercase font-black tracking-wider text-zinc-500">
                 <tr>
                   <th className="px-6 py-4">Negocio</th>
+                  <th className="px-6 py-4 text-center">Salud</th>
                   <th className="px-6 py-4 text-center">Visitas</th>
                   <th className="px-6 py-4 text-center">Clicks Web</th>
                   <th className="px-6 py-4 text-center">Contactos WSP</th>
@@ -225,6 +226,7 @@ export default function PortalStats() {
                           </div>
                         )}
                       </td>
+                      <td className="px-6 py-4 text-center font-bold text-amber-400">{b.profile_score || 0}%</td>
                       <td className="px-6 py-4 text-center text-blue-400 font-bold">{b.views.toLocaleString()}</td>
                       <td className="px-6 py-4 text-center text-primary font-bold">{b.clicks_website.toLocaleString()}</td>
                       <td className="px-6 py-4 text-center text-emerald-400 font-bold">{b.clicks_whatsapp.toLocaleString()}</td>
@@ -233,7 +235,7 @@ export default function PortalStats() {
                   )
                 }) : (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-zinc-500">
                       No se encontraron negocios con ese nombre.
                     </td>
                   </tr>
