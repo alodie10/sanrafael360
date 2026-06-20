@@ -1,5 +1,5 @@
 # 💾 Session Restore — San Rafael 360
-*Última actualización: 2026-06-04 (Diego & Antigravity)*
+*Última actualización: 2026-06-20 (Diego & Antigravity)*
 
 ---
 
@@ -39,14 +39,50 @@ El portal se encuentra **estable en producción** (`sanrafael360.vercel.app`) y 
 
 ---
 
+## ✅ Completado el 20 de Junio de 2026
+
+### 🐛 1. Fix CTA Button — WhatsApp en lugar de Teléfono
+- **Archivo:** [`frontend/src/app/negocios/[slug]/BusinessDetailClient.tsx`](file:///Users/diego/Documents/GitHub/sanrafael360/frontend/src/app/negocios/%5Bslug%5D/BusinessDetailClient.tsx) (línea ~297)
+- **Bug:** El `BookingWidget` recibía `negocio.telefono_whatsapp || negocio.telefono`. El campo `telefono_whatsapp` no existe en el schema → siempre caía al fallback `telefono`, generando un link `wa.me/` con el número de teléfono fijo.
+- **Fix:** Cambiado a `negocio.whatsapp || negocio.telefono`. Ahora el CTA usa el WhatsApp correcto cuando el `cta_link` no está configurado.
+
+### 🔍 2. SEO Audit — LocalBusinessSchema (sin cambios aún → ver pendientes)
+- Auditado [`LocalBusinessSchema.tsx`](file:///Users/diego/Documents/GitHub/sanrafael360/frontend/src/components/business/LocalBusinessSchema.tsx) y [`layout.tsx`](file:///Users/diego/Documents/GitHub/sanrafael360/frontend/src/app/negocios/%5Bslug%5D/layout.tsx).
+- Sitio con 393 impresiones/día y 1.3% CTR → oportunidad de mejora con rich snippets.
+- Identificados 3 problemas (2 ejecutados, 1 pendiente).
+
+### ⭐ 3. Fix AggregateRating — Combinado Multi-Fuente (Alto impacto CTR)
+- **Archivo:** [`LocalBusinessSchema.tsx`](file:///Users/diego/Documents/GitHub/sanrafael360/frontend/src/components/business/LocalBusinessSchema.tsx)
+- **Bug:** Solo usaba `negocio.rating` + `negocio.review_count` (fuente SR360). Negocios con 400 reseñas de Google pero 0 internas no mostraban estrellas en Google Search.
+- **Fix:** Cálculo de promedio ponderado combinando las 3 fuentes:
+  - SR360: `rating` × `review_count`
+  - Google: `google_rating` × `google_review_count`
+  - TripAdvisor: `tripadvisor_rating` × `tripadvisor_review_count`
+- Guarda defensivo: si `combinedRating <= 0` → omite el bloque (Google lo rechaza).
+
+### 🖼️ 4. Fix Image URL — URL Absoluta en JSON-LD (Impacto medio)
+- **Archivo:** [`LocalBusinessSchema.tsx`](file:///Users/diego/Documents/GitHub/sanrafael360/frontend/src/components/business/LocalBusinessSchema.tsx)
+- **Bug:** La URL de imagen podía ser un path relativo (`/uploads/foto.jpg`) → schema inválido para Google.
+- **Fix:** Ahora pasa por `getStrapiMedia()` que garantiza URL absoluta con el dominio del backend. Fallback a `og-default.jpg` si la imagen no existe.
+
+---
+
 ## ⏳ Pendiente para la Próxima Sesión
 
-### 1. Monitoreo de Meta Ads
-- Controlar que la campaña pase de *En revisión* a **Activa** en el Ads Manager.
-- Monitorear el costo por clic (CPC) y las primeras métricas de visitas a la web desde la campaña.
+### 1. SEO — Fix Horarios (Impacto bajo)
+- Si el negocio usa `horarios_texto` (texto libre) en lugar de `schedules` estructurados, el schema emite `openingHoursSpecification: undefined`.
+- **Acción:** Parsear `horarios_texto` como fallback o agregarle un campo de texto libre al schema JSON-LD.
 
-### 2. ASO en Google Play Store
-- Esperar que Google apruebe la revisión de los nuevos textos optimizados de la ficha de la Play Store.
+### 2. SEO — Monitoreo de Rich Snippets
+- Luego de deployar, verificar en [Google Rich Results Test](https://search.google.com/test/rich-results) que los negocios con reseñas de Google muestren `AggregateRating` correctamente.
+- Esperar ~1-2 semanas para que el CTR mejore y comparar contra la baseline de 1.3%.
+
+### 3. Monitoreo de Meta Ads
+- Controlar que la campaña pase de *En revisión* a **Activa** en el Ads Manager.
+- Monitorear el costo por clic (CPC) y las primeras métricas de visitas.
+
+### 4. ASO en Google Play Store
+- Esperar que Google apruebe la revisión de los nuevos textos optimizados de la ficha.
 
 ---
 
