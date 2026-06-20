@@ -1,4 +1,5 @@
 import { Negocio } from "@/types/strapi";
+import { getStrapiMedia } from "@/lib/strapi";
 
 // --- Mapeos ---
 
@@ -95,10 +96,13 @@ export function LocalBusinessSchema({ negocio }: LocalBusinessSchemaProps) {
   // Fallback defensivo: si slug es undefined (campo no solicitado a Strapi), usar documentId
   const slugOrId = negocio.slug || negocio.documentId;
   const canonicalUrl = `https://www.sanrafael360.com/negocios/${slugOrId}`;
-  const imageUrl =
-    negocio.imagen_portada?.url ||
-    negocio.logo?.url ||
-    "https://www.sanrafael360.com/og-default.jpg";
+
+  // FIX: usar getStrapiMedia() para garantizar URL absoluta en el JSON-LD.
+  // Sin esto, URLs relativas como /uploads/foto.jpg generan schema inválido para Google.
+  const rawImageUrl = negocio.imagen_portada?.url || negocio.logo?.url;
+  const imageUrl = rawImageUrl
+    ? (getStrapiMedia(rawImageUrl) ?? "https://www.sanrafael360.com/og-default.jpg")
+    : "https://www.sanrafael360.com/og-default.jpg";
 
   // openingHoursSpecification — formato correcto Schema.org
   const openingHours =
@@ -152,16 +156,33 @@ export function LocalBusinessSchema({ negocio }: LocalBusinessSchemaProps) {
     priceRange: negocio.price_range
       ? PRICE_RANGE_MAP[negocio.price_range] || negocio.price_range
       : undefined,
-    aggregateRating:
-      negocio.rating && negocio.review_count && negocio.review_count > 0
-        ? {
-            "@type": "AggregateRating",
-            ratingValue: negocio.rating.toFixed(1),
-            reviewCount: negocio.review_count,
-            bestRating: "5",
-            worstRating: "1",
-          }
-        : undefined,
+    aggregateRating: (() => {
+      // FIX: combinar todas las fuentes de rating en un promedio ponderado.
+      // Antes solo usaba review_count propio de SR360, dejando sin estrellas a
+      // negocios con reseñas de Google o TripAdvisor pero sin reseñas internas.
+      const srCount  = negocio.review_count             || 0;
+      const gCount   = negocio.google_review_count      || 0;
+      const tCount   = negocio.tripadvisor_review_count || 0;
+      const totalCount = srCount + gCount + tCount;
+
+      if (totalCount === 0) return undefined;
+
+      const srTotal = srCount * (negocio.rating            || 0);
+      const gTotal  = gCount  * (negocio.google_rating     || 0);
+      const tTotal  = tCount  * (negocio.tripadvisor_rating || 0);
+      const combinedRating = (srTotal + gTotal + tTotal) / totalCount;
+
+      // Google rechaza AggregateRating con ratingValue = 0
+      if (combinedRating <= 0) return undefined;
+
+      return {
+        "@type": "AggregateRating",
+        ratingValue: combinedRating.toFixed(1),
+        reviewCount: totalCount,
+        bestRating: "5",
+        worstRating: "1",
+      };
+    })(),
     openingHoursSpecification: openingHours.length > 0 ? openingHours : undefined,
     sameAs: sameAs.length > 0 ? sameAs : undefined,
   };
