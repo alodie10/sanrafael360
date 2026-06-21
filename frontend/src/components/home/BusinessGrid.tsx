@@ -3,12 +3,14 @@
 import { motion } from "framer-motion";
 import BusinessCard from "./BusinessCard";
 import BusinessCardSkeleton from "./BusinessCardSkeleton";
+import PromotionsCarousel from "./PromotionsCarousel";
 import { Negocio } from "@/types/strapi";
 
 interface BusinessGridProps {
   negocios: Negocio[];
   loading?: boolean;
   onClearFilters?: () => void;
+  filterFavorites?: boolean;
 }
 
 const container = {
@@ -26,18 +28,27 @@ const item = {
   show: { opacity: 1, y: 0 }
 };
 
-export default function BusinessGrid({ negocios, loading = false, onClearFilters }: BusinessGridProps) {
+import { useFavorites } from "@/context/FavoritesContext";
+
+export default function BusinessGrid({ negocios, loading = false, onClearFilters, filterFavorites = false }: BusinessGridProps) {
+  const { isFavorite } = useFavorites();
+
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
-        {[...Array(6)].map((_, i) => (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+        {[...Array(10)].map((_, i) => (
           <BusinessCardSkeleton key={i} />
         ))}
       </div>
     );
   }
 
-  if (negocios.length === 0) {
+  // Filtrar si estamos en la página de favoritos para ocultar los removidos inmediatamente
+  const displayNegocios = filterFavorites 
+    ? negocios.filter(n => isFavorite(n.documentId))
+    : negocios;
+
+  if (displayNegocios.length === 0) {
     return (
       <div className="text-center py-24 px-6 bg-slate-900/20 rounded-[3rem] border border-white/5 backdrop-blur-sm">
         <div className="text-5xl mb-6 opacity-30">🏔️</div>
@@ -56,19 +67,37 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
     );
   }
 
+  const promociones = displayNegocios.filter(n => n.promocion_activa);
+  
+  // Dividimos la grilla para intercalar el carrusel
+  const topNegocios = displayNegocios.slice(0, 4);
+  const restNegocios = displayNegocios.slice(4);
+
   return (
     <motion.div 
       variants={container}
       initial="hidden"
       whileInView="show"
       viewport={{ once: true }}
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10"
+      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6"
     >
-      {negocios.map((negocio, index) => (
+      {topNegocios.map((negocio, index) => (
         <BusinessCard 
           key={negocio.id} 
           negocio={negocio} 
           index={index} 
+        />
+      ))}
+      
+      {promociones.length > 0 && (
+        <PromotionsCarousel promociones={promociones} />
+      )}
+
+      {restNegocios.map((negocio, index) => (
+        <BusinessCard 
+          key={negocio.id} 
+          negocio={negocio} 
+          index={index + 4} 
         />
       ))}
     </motion.div>

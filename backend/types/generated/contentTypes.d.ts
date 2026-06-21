@@ -668,6 +668,10 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     estado_reclamo: Schema.Attribute.String &
       Schema.Attribute.DefaultTo<'ninguno'>;
     facebook: Schema.Attribute.String;
+    favorited_by: Schema.Attribute.Relation<
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
     galeria: Schema.Attribute.Media<'images', true>;
     galeria_config: Schema.Attribute.JSON;
     google_maps_url: Schema.Attribute.String;
@@ -701,6 +705,9 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     price_range: Schema.Attribute.Enumeration<
       ['Economico', 'Moderado', 'Medio-Alto', 'Alto']
     >;
+    promocion_activa: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    promocion_flyer: Schema.Attribute.Media<'images'>;
     publishedAt: Schema.Attribute.DateTime;
     rating: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
     reclamar_habilitado: Schema.Attribute.Boolean &
@@ -1360,6 +1367,7 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.SetMinMaxLength<{
         minLength: 6;
       }>;
+    favoritos: Schema.Attribute.Relation<'manyToMany', 'api::negocio.negocio'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',

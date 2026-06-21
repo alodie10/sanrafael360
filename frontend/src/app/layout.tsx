@@ -5,6 +5,7 @@ import SessionProvider from "@/components/providers/SessionProvider";
 import Navbar from "@/components/layout/Navbar";
 import MasterBar from "@/components/layout/MasterBar";
 import SmartAppBanner from "@/components/layout/SmartAppBanner";
+import BottomNav from "@/components/layout/BottomNav";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -62,6 +63,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { FavoritesProvider } from "@/context/FavoritesContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -72,13 +75,16 @@ export default function RootLayout({
       <body>
         <Toaster richColors position="top-right" />
         <SessionProvider>
-          <div className="app-container font-sans pt-[var(--app-banner-height,0px)]">
-            <MasterBar />
-            <Navbar />
-            {children}
-            <SmartAppBanner />
-            <SpeedInsights />
-          </div>
+          <FavoritesProvider>
+            <div className="app-container font-sans pt-[var(--app-banner-height,0px)]">
+              <MasterBar />
+              <Navbar />
+              {children}
+              <BottomNav />
+              <SmartAppBanner />
+              <SpeedInsights />
+            </div>
+          </FavoritesProvider>
         </SessionProvider>
       </body>
     </html>

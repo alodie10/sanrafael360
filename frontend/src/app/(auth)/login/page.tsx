@@ -37,48 +37,18 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg border border-gray-100 dark:bg-gray-900 mx-auto">
-      <h1 className="text-3xl font-heading font-bold text-center text-gray-900 dark:text-white">Iniciar Sesión</h1>
-      {error && <p className="text-red-500 text-center text-sm">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2 mt-1 text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-            required
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 mt-1 text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-            required
-          />
-          <div className="flex justify-end">
-            <a href="/olvide-password" title="Recuperar contraseña" className="text-xs text-blue-600 hover:underline dark:text-blue-400">
-              ¿Olvidaste tu contraseña?
-            </a>
-          </div>
-        </div>
-        <button type="submit" className="w-full px-4 py-2 font-bold text-white bg-black dark:bg-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
-          Entrar
-        </button>
-      </form>
-
-      <div className="relative flex items-center py-2">
-        <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
-        <span className="flex-shrink mx-4 text-gray-400 text-sm italic">o</span>
-        <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-heading font-bold text-gray-900 dark:text-white">Bienvenido</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Iniciá sesión para guardar tus favoritos y gestionar tu negocio.
+        </p>
       </div>
+
+      {error && <p className="text-red-500 text-center text-sm">{error}</p>}
 
       <button 
         onClick={() => signIn("google", { callbackUrl })}
-        className="w-full flex items-center justify-center gap-3 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300 font-medium"
+        className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all text-gray-700 dark:text-gray-300 font-bold shadow-sm"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -88,15 +58,6 @@ function LoginForm() {
         </svg>
         Continuar con Google
       </button>
-      <p className="text-sm text-center text-gray-600 dark:text-gray-400">
-        ¿No tienes cuenta? <a href={(() => {
-          if (callbackUrl.includes("/negocios/") && callbackUrl.includes("auto_claim=1")) {
-            const match = callbackUrl.match(/\/negocios\/([^\?]+)/);
-            if (match && match[1]) return `/registro?claim=${match[1]}`;
-          }
-          return "/registro";
-        })()} className="text-blue-600 hover:underline dark:text-blue-400">Regístrate</a>
-      </p>
     </div>
   );
 }

@@ -273,6 +273,22 @@
     "galeria_config": {
       "type": "json",
       "description": "Configuración individual de recorte para cada imagen de la galería. Ej: { '123': 'g_center' }"
+    },
+    "favorited_by": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::users-permissions.user",
+      "mappedBy": "favoritos"
+    },
+    "promocion_activa": {
+      "type": "boolean",
+      "default": false
+    },
+    "promocion_flyer": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
     }
   }
 }

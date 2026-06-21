@@ -1,6 +1,24 @@
 export default {
   routes: [
     {
+      method: 'GET',
+      path: '/negocios/favoritos/me',
+      handler: 'negocio.getFavorites',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/negocios/:documentId/toggle-favorite',
+      handler: 'negocio.toggleFavorite',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
       method: 'PUT',
       path: '/negocios/:id/portal-update',
       handler: 'negocio.portalUpdate',

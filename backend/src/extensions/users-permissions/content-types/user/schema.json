@@ -68,6 +68,12 @@
     },
     "tipo_registro": {
       "type": "string"
+    },
+    "favoritos": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::negocio.negocio",
+      "inversedBy": "favorited_by"
     }
   }
 }

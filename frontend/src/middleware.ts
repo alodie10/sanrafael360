@@ -4,6 +4,9 @@ export default withAuth({
   callbacks: {
     authorized: ({ token }) => !!token,
   },
+  pages: {
+    signIn: "/login",
+  }
 });
 
 // Definimos qué rutas requieren autenticación

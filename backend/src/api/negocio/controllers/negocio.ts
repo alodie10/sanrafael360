@@ -20,7 +20,10 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   },
 
   async findOne(ctx) {
-    const { data, meta } = await super.findOne(ctx);
+    const response = await super.findOne(ctx);
+    if (!response) return response;
+    const { data, meta } = response;
+    
     if (data) {
       const fullItem = await strapi.documents('api::negocio.negocio').findOne({
         documentId: data.documentId,
@@ -145,5 +148,75 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       }
     }
     return ctx.send({ success: true, count });
+  }),
+
+  getFavorites: asyncHandler(async (ctx) => {
+    const user = ctx.state.user;
+    if (!user) return ctx.unauthorized();
+    
+    const dbUser = await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: { id: user.id },
+      populate: { 
+        favoritos: {
+          populate: ['categoria', 'imagen_portada', 'owner']
+        }
+      }
+    });
+    
+    const favList = (dbUser?.favoritos || []).map((n: any) => ({
+      ...n,
+      // strapi.db.query devuelve document_id (snake_case), normalizar para el frontend
+      documentId: n.documentId || n.document_id,
+      categoria: n.categoria ? { ...n.categoria, documentId: n.categoria.documentId || n.categoria.document_id } : null,
+    }));
+    
+    return ctx.send({
+      success: true,
+      data: favList
+    });
+  }),
+
+  toggleFavorite: asyncHandler(async (ctx) => {
+    const user = ctx.state.user;
+    if (!user) return ctx.unauthorized();
+    
+    const { documentId } = ctx.params;
+    if (!documentId) throw new ValidationError('Negocio documentId es requerido');
+
+    const negocio = await strapi.db.query('api::negocio.negocio').findOne({
+      where: { documentId }
+    });
+    if (!negocio) return ctx.notFound('Negocio no encontrado');
+
+    const dbUser = await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: { id: user.id },
+      populate: ['favoritos'],
+    });
+
+    const favorites = dbUser?.favoritos || [];
+    const negocioId = Number(negocio.id);
+    const isFavorited = favorites.some((f: any) => Number(f.id) === negocioId);
+
+    let newFavoritesIds = favorites.map((f: any) => Number(f.id));
+
+    if (isFavorited) {
+      // Remover del array
+      newFavoritesIds = newFavoritesIds.filter(id => id !== negocioId);
+    } else {
+      // Agregar al array
+      newFavoritesIds.push(negocioId);
+    }
+
+    await strapi.entityService.update('plugin::users-permissions.user', user.id, {
+      data: { 
+        favoritos: newFavoritesIds
+      }
+    });
+
+    return ctx.send({
+      success: true,
+      action: isFavorited ? 'removed' : 'added',
+      documentId
+    });
   })
 }));

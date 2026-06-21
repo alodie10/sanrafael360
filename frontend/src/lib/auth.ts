@@ -1,5 +1,4 @@
 import { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 
 export const ADMIN_EMAILS = ['diegocristianalonso@gmail.com', 'mlauralodi@gmail.com'];
@@ -20,47 +19,6 @@ export const authOptions: NextAuthOptions = {
           }
         })] 
       : []),
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        identifier: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
-      },
-      async authorize(credentials) {
-        if (!credentials?.identifier || !credentials?.password) return null;
-
-        try {
-          const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
-          const res = await fetch(`${strapiUrl}/api/auth/local`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              identifier: credentials.identifier,
-              password: credentials.password,
-            }),
-          });
-          
-          if (!res.ok) return null;
-
-          const data = await res.json();
-          if (res.ok && data.user) {
-            const isSovereignAdmin = ADMIN_EMAILS.includes(data.user.email?.toLowerCase());
-            return {
-              id: data.user.id.toString(),
-              name: data.user.username,
-              email: data.user.email,
-              role: isSovereignAdmin ? 'Admin' : 'Authenticated',
-              jwt: data.jwt 
-            };
-          }
-          return null;
-        } catch (e: any) {
-          return null;
-        }
-      }
-    })
   ],
   callbacks: {
     async jwt({ token, user, account }) {
@@ -87,10 +45,6 @@ export const authOptions: NextAuthOptions = {
         } catch (e: any) {
           token.error = `Error de red: ${e.message}`;
         }
-      } else if (user) {
-        token.jwt = (user as any).jwt;
-        token.id = user.id;
-        token.role = (user as any).role;
       }
       return token;
     },

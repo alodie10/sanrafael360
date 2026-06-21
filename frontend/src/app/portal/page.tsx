@@ -43,6 +43,9 @@ export default async function PortalPage() {
     redirect("/portal/admin");
   }
 
+  // Si es un usuario regular (no admin) y no tiene negocios, le mostramos el estado vacío
+  // en lugar de rebotarlo a la home, para que pueda ver la opción de Reclamar Negocio.
+
   return (
     <div className="min-h-screen bg-black font-sans selection:bg-primary/30 pt-24">
       <PortalHeader userName={session.user?.name || "Usuario"} />

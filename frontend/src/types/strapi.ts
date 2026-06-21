@@ -89,6 +89,16 @@ export interface Negocio {
   cta_tag_sin_comisiones?: boolean;
   crop_gravity?: string;
   galeria_config?: Record<string, any>; // { cropGravity?: string, isInternal?: boolean }
+  promocion_activa?: boolean;
+  promocion_flyer?: StrapiMedia;
+}
+
+export interface StrapiUser {
+  id: number;
+  documentId: string;
+  username: string;
+  email: string;
+  favoritos?: Negocio[];
 }
 
 export interface StrapiResponse<T> {

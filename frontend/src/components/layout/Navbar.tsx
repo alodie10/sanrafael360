@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Search, User, LogOut, MapPin, ChevronDown, Phone } from "lucide-react";
+import { Menu, X, Search, User, LogOut, MapPin, ChevronDown, Phone, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/common/Logo";
 import { useSession, signOut } from "next-auth/react";
@@ -250,10 +250,16 @@ function NavbarInner() {
                 Ingresar
               </Link>
             ) : (
-              <button onClick={() => signOut()} className="text-white/70 hover:text-white text-sm font-bold transition-colors flex items-center gap-2">
-                <LogOut className="w-4 h-4 text-rose-500" />
-                Salir
-              </button>
+              <>
+                <Link href="/favoritos" className="text-white/70 hover:text-white text-sm font-bold transition-colors flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-red-500" />
+                  Mis Favoritos
+                </Link>
+                <button onClick={() => signOut()} className="text-white/70 hover:text-white text-sm font-bold transition-colors flex items-center gap-2">
+                  <LogOut className="w-4 h-4 text-rose-500" />
+                  Salir
+                </button>
+              </>
             )}
             {pathname !== "/contacto" && (
               <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">

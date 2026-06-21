@@ -1,0 +1,13 @@
+--- frontend/src/components/home/BusinessCard.tsx
++++ frontend/src/components/home/BusinessCard.tsx
+@@ -43,6 +43,10 @@
+ 
+   const isFav = isFavorite(businessId);
+ 
++  if (businessId === 'gxz8xlmquimitke4b4ekxbkx' || businessId === 'k2tr3dk6g5vraihq20m72yrf') {
++     console.log(`[BusinessCard] render for ${negocio.nombre}, businessId=${businessId}, isFav=${isFav}`);
++  }
++
+   return (
+     <div className="relative h-full group">
+       <motion.div

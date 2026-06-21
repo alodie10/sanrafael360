@@ -29,7 +29,7 @@ export async function fetchFromStrapi(path: string, options: RequestInit = {}) {
       'Content-Type': 'application/json',
       ...options.headers,
     },
-    next: { revalidate: 60 }
+    cache: 'no-store',
   });
 
   if (!response.ok) throw new Error(`Fetch Error: ${response.statusText}`);
