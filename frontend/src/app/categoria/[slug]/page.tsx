@@ -56,8 +56,9 @@ export default async function CategoriaPage({
           "&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url" +
           "&populate[owner][fields][0]=id";
         
+        const filters = `filters[$or][0][categoria][slug][$eq]=${slug}&filters[$or][1][categoria][parent][slug][$eq]=${slug}`;
         const negRes = await fetchFromStrapi(
-          `negocios?filters[categoria][slug][$eq]=${slug}&${populate}&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=100`,
+          `negocios?${filters}&${populate}&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=100`,
           options
         );
         
