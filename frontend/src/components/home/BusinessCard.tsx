@@ -6,9 +6,12 @@ import { getStrapiMedia } from "@/lib/strapi";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
-import FavoritesModal from "../auth/FavoritesModal";
+
+const FavoritesModal = dynamic(() => import('../auth/FavoritesModal'), { ssr: false });
 import { toast } from "sonner";
 import { useFavorites } from "@/context/FavoritesContext";
 
@@ -77,12 +80,16 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
         <div className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden bg-slate-800 z-0">
           {coverUrl ? (
             <>
-              <motion.img
-                src={getStrapiMedia(coverUrl)!}
-                alt={negocio.nombre}
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-black/20" />
+              <motion.div className="w-full h-full relative transition-transform duration-1000 group-hover:scale-110 opacity-70">
+                <Image
+                  src={getStrapiMedia(coverUrl)!}
+                  alt={negocio.nombre}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="object-cover"
+                />
+              </motion.div>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-black/20 pointer-events-none" />
             </>
           ) : (
             <div className="w-full h-full bg-slate-800 flex items-center justify-center">
