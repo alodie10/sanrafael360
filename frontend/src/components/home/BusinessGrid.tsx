@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
 import BusinessCard from "./BusinessCard";
 import BusinessCardSkeleton from "./BusinessCardSkeleton";
 import PromotionsCarousel from "./PromotionsCarousel";
@@ -32,6 +33,35 @@ import { useFavorites } from "@/context/FavoritesContext";
 
 export default function BusinessGrid({ negocios, loading = false, onClearFilters, filterFavorites = false }: BusinessGridProps) {
   const { isFavorite } = useFavorites();
+  const [visibleCount, setVisibleCount] = useState(16);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  // Filtrar si estamos en la página de favoritos para ocultar los removidos inmediatamente
+  const displayNegocios = filterFavorites 
+    ? negocios.filter(n => isFavorite(n.documentId))
+    : negocios;
+
+  // Reseteamos el conteo si cambia la longitud de la lista filtrada (ej. al buscar)
+  useEffect(() => {
+    setVisibleCount(16);
+  }, [displayNegocios.length]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < displayNegocios.length) {
+          setVisibleCount((prev) => prev + 12);
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [visibleCount, displayNegocios.length]);
 
   if (loading) {
     return (
@@ -43,10 +73,7 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
     );
   }
 
-  // Filtrar si estamos en la página de favoritos para ocultar los removidos inmediatamente
-  const displayNegocios = filterFavorites 
-    ? negocios.filter(n => isFavorite(n.documentId))
-    : negocios;
+
 
   if (displayNegocios.length === 0) {
     return (
@@ -67,15 +94,17 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
     );
   }
 
-  const promociones = displayNegocios.filter(n => n.promocion_activa);
+  const visibleNegocios = displayNegocios.slice(0, visibleCount);
+  const promociones = visibleNegocios.filter(n => n.promocion_activa);
   
   // Dividimos la grilla para intercalar el carrusel
-  const topNegocios = displayNegocios.slice(0, 4);
-  const restNegocios = displayNegocios.slice(4);
+  const topNegocios = visibleNegocios.slice(0, 4);
+  const restNegocios = visibleNegocios.slice(4);
 
   return (
-    <motion.div 
-      variants={container}
+    <>
+      <motion.div 
+        variants={container}
       initial="hidden"
       whileInView="show"
       viewport={{ once: true }}
@@ -101,5 +130,11 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
         />
       ))}
     </motion.div>
+      
+      {/* Elemento invisible para disparar el IntersectionObserver */}
+      {visibleCount < displayNegocios.length && (
+        <div ref={observerTarget} className="w-full h-10 mt-8" />
+      )}
+    </>
   );
 }
