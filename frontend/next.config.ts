@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
         hostname: "sanrafael360-production.up.railway.app",
       },
       {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+      {
         protocol: "http",
         hostname: "localhost",
       },
