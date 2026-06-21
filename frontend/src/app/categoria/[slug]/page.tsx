@@ -8,7 +8,7 @@ import { notFound } from "next/navigation";
 
 // Helper para verificar si un negocio tiene Premium activo y vigente
 const isPremiumActive = (negocio: Negocio): boolean => {
-  if (!negocio.is_premium) return false;
+  if (!negocio?.is_premium) return false;
   if (!negocio.premium_valid_until) return true; // Sin vencimiento = activo
   return new Date(negocio.premium_valid_until) > new Date();
 };
@@ -22,6 +22,7 @@ export default async function CategoriaPage({
 
   let categoria: Categoria | null = null;
   let negocios: Negocio[] = [];
+  let categorias: any[] = [];
 
   try {
     const strapiToken = process.env.STRAPI_API_TOKEN;
@@ -34,61 +35,69 @@ export default async function CategoriaPage({
       `categorias?filters[slug][$eq]=${slug}&fields[0]=nombre&fields[1]=descripcion&fields[2]=documentId`,
       options
     );
-    categoria = catRes.data?.[0];
+    categoria = catRes.data?.[0] || null;
 
-    if (!categoria) {
-      notFound();
-    }
-
-    // 1.5 Obtener todas las categorías para el FilterBar
-    const allCatRes = await fetchFromStrapi(
-      "categorias?fields[0]=nombre&fields[1]=slug&populate[parent][fields][0]=documentId&sort=nombre:asc&pagination[pageSize]=100",
-      options
-    );
-    const categorias = allCatRes.data || [];
-
-    // 2. Obtener negocios de esta categoría (paginando hasta traer todos)
-    let page = 1;
-    let pageCount = 1;
-
-    do {
-      const populate =
-        "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug" +
-        "&populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo" +
-        "&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url" +
-        "&populate[owner][fields][0]=id";
-      
-      const negRes = await fetchFromStrapi(
-        `negocios?filters[categoria][slug][$eq]=${slug}&${populate}&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=100`,
+    if (categoria) {
+      // 1.5 Obtener todas las categorías para el FilterBar
+      const allCatRes = await fetchFromStrapi(
+        "categorias?fields[0]=nombre&fields[1]=slug&populate[parent][fields][0]=documentId&sort=nombre:asc&pagination[pageSize]=100",
         options
       );
-      
-      if (negRes.data) {
-        negocios = [...negocios, ...negRes.data];
+      categorias = allCatRes.data || [];
+
+      // 2. Obtener negocios de esta categoría (paginando hasta traer todos)
+      let page = 1;
+      let pageCount = 1;
+
+      do {
+        const populate =
+          "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug" +
+          "&populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo" +
+          "&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url" +
+          "&populate[owner][fields][0]=id";
+        
+        const negRes = await fetchFromStrapi(
+          `negocios?filters[categoria][slug][$eq]=${slug}&${populate}&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=100`,
+          options
+        );
+        
+        if (negRes.data) {
+          negocios = [...negocios, ...negRes.data];
+        }
+        pageCount = negRes.meta?.pagination?.pageCount || 1;
+        page++;
+      } while (page <= pageCount);
+
+      // Ordenar los negocios (Premium primero)
+      if (negocios.length > 0) {
+        negocios.sort((a, b) => {
+          if (!a || !b) return 0;
+          const isAPremium = isPremiumActive(a);
+          const isBPremium = isPremiumActive(b);
+
+          if (isAPremium && !isBPremium) return -1;
+          if (!isAPremium && isBPremium) return 1;
+
+          // Desempate alfabético por defecto (seguro contra null)
+          const nombreA = a.nombre || "";
+          const nombreB = b.nombre || "";
+          return nombreA.localeCompare(nombreB);
+        });
       }
-      pageCount = negRes.meta?.pagination?.pageCount || 1;
-      page++;
-    } while (page <= pageCount);
+    }
 
-    // Ordenar los negocios (Premium primero)
-    negocios.sort((a, b) => {
-      const isAPremium = isPremiumActive(a);
-      const isBPremium = isPremiumActive(b);
-
-      if (isAPremium && !isBPremium) return -1;
-      if (!isAPremium && isBPremium) return 1;
-
-      // Desempate alfabético por defecto
-      return a.nombre.localeCompare(b.nombre);
-    });
-
-  } catch (error) {
+  } catch (error: any) {
+    // Si el error es de Next.js (notFound/redirect), lo relanzamos
+    if (error?.digest?.startsWith('NEXT_NOT_FOUND')) throw error;
     console.error("Error cargando categoría:", error);
+  }
+
+  // Si no encontró categoría, llamamos a notFound fuera del catch (por seguridad)
+  if (!categoria) {
     notFound();
   }
 
   // To pass the correct selectedCategoryDocId to FilterBar, we need to find it in the list
-  // Actually we fetched it with documentId included in step 1.
   const selectedCategoryDocId = categoria?.documentId || null;
 
   return (
