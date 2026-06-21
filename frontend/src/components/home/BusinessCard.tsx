@@ -42,17 +42,19 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
 
   const isFav = isFavorite(businessId);
 
-  // Calcular rating
-  const reseñas = negocio.reseñas || [];
-  const validReviews = reseñas.filter(r => r.rating > 0);
-  let displayCount = validReviews.length;
-  let averageRating = displayCount > 0 
-    ? validReviews.reduce((sum, r) => sum + r.rating, 0) / displayCount
-    : 0;
+  // Calcular rating usando los campos precalculados de Strapi
+  let displayCount = negocio.review_count || 0;
+  let averageRating = negocio.rating || 0;
   
-  if (displayCount === 0 && negocio.calificacion_google) {
-    displayCount = negocio.total_reseñas_google || 1;
-    averageRating = negocio.calificacion_google;
+  // Fallback a Google/TripAdvisor si no hay reseñas nativas
+  if (displayCount === 0) {
+    if (negocio.google_review_count && negocio.google_review_count > 0) {
+      displayCount = negocio.google_review_count;
+      averageRating = negocio.google_rating || 0;
+    } else if (negocio.tripadvisor_review_count && negocio.tripadvisor_review_count > 0) {
+      displayCount = negocio.tripadvisor_review_count;
+      averageRating = negocio.tripadvisor_rating || 0;
+    }
   }
 
   return (
