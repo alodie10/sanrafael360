@@ -4,7 +4,7 @@ import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
-const FB_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+const FB_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "717295573214072";
 
 export const pageview = () => {
   if (typeof window !== "undefined" && (window as any).fbq) {
