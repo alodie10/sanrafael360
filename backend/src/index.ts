@@ -203,24 +203,19 @@ export default {
         models: ['api::negocio.negocio'],
 
         /**
-         * afterCreate: se dispara cuando se crea un negocio (como draft).
-         * Garantiza que discovery_pending=true y discovery_verified=false.
+         * beforeCreate: se dispara antes de crear el negocio.
+         * Garantiza que discovery_pending=true y discovery_verified=false sin query adicional.
          */
+        async beforeCreate(event) {
+          if (event.params.data) {
+            event.params.data.discovery_pending = true;
+            event.params.data.discovery_verified = false;
+          }
+        },
+
         async afterCreate(event) {
           const { result } = event;
           strapi.log.info(`[NegocioLifecycle] 🆕 Nuevo negocio creado: "${result.nombre}" (${result.documentId})`);
-          try {
-            await strapi.documents('api::negocio.negocio').update({
-              documentId: result.documentId,
-              data: {
-                discovery_pending: true,
-                discovery_verified: false,
-              } as any,
-            });
-            strapi.log.info(`[NegocioLifecycle] ✅ discovery_pending=true inicializado para "${result.nombre}"`);
-          } catch (err: any) {
-            strapi.log.error(`[NegocioLifecycle] ❌ Error inicializando discovery fields: ${err.message}`);
-          }
         },
 
         /**
