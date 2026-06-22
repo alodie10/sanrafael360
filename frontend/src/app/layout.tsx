@@ -64,6 +64,8 @@ export const metadata: Metadata = {
 };
 
 import { FavoritesProvider } from "@/context/FavoritesContext";
+import MetaPixel from "@/components/layout/MetaPixel";
+import { Suspense } from "react";
 
 export default function RootLayout({
   children,
@@ -83,6 +85,9 @@ export default function RootLayout({
               <BottomNav />
               <SmartAppBanner />
               <SpeedInsights />
+              <Suspense fallback={null}>
+                <MetaPixel />
+              </Suspense>
             </div>
           </FavoritesProvider>
         </SessionProvider>
