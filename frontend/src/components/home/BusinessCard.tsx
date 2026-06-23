@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star, Check, Heart, Settings } from "lucide-react";
+import { Star, Check, Heart, Settings, Crown } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
@@ -97,18 +97,13 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
             </div>
           )}
 
-          {/* Badges Overlay */}
+          {/* Badges Overlay (Atributos Destacados) */}
           <div className="absolute top-4 left-4 flex flex-col items-start gap-2 z-10">
-            {negocio.categoria && (
-              <div className="px-3 py-1 bg-black/40 backdrop-blur-md rounded-full text-[10px] font-bold text-white border border-white/20 uppercase tracking-widest shadow-lg">
-                {negocio.categoria.nombre}
+            {negocio.atributos && negocio.atributos.length > 0 && negocio.atributos.slice(0, 2).map((attr: any) => (
+              <div key={attr.id || attr.nombre} className="px-3 py-1 bg-black/40 backdrop-blur-md rounded-full text-[10px] font-bold text-white border border-white/20 uppercase tracking-widest shadow-lg">
+                {attr.nombre}
               </div>
-            )}
-            {isValidPremium && (
-              <div className="px-3 py-1 bg-gradient-to-r from-amber-200 to-amber-500 rounded-full text-[10px] font-black text-black uppercase tracking-widest shadow-lg shadow-amber-500/20 flex items-center gap-1">
-                <Check className="w-3 h-3 stroke-[3]" /> PREMIUM
-              </div>
-            )}
+            ))}
           </div>
         </div>
 
@@ -136,6 +131,16 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
               )} 
             />
           </button>
+
+          {/* Corona Premium */}
+          {isValidPremium && (
+            <div 
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-amber-500/30 drop-shadow-lg"
+              title="Socio Premium"
+            >
+              <Crown className="w-5 h-5 text-amber-400 fill-amber-400/20" />
+            </div>
+          )}
 
           {/* Gestionar */}
           {canManage && (
