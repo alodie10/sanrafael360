@@ -176,11 +176,35 @@ function HomeContent() {
 
 
   useEffect(() => {
+    const CACHE_KEY_NEGOCIOS = "sr360_negocios_cache";
+    const CACHE_KEY_CATEGORIAS = "sr360_categorias_cache";
+    const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
+
     const loadData = async () => {
       try {
         setLoading(true);
+
+        // — Intentar usar caché de sessionStorage —
+        try {
+          const cachedN = sessionStorage.getItem(CACHE_KEY_NEGOCIOS);
+          const cachedC = sessionStorage.getItem(CACHE_KEY_CATEGORIAS);
+          if (cachedN && cachedC) {
+            const { data: negData, ts: negTs } = JSON.parse(cachedN);
+            const { data: catData, ts: catTs } = JSON.parse(cachedC);
+            const now = Date.now();
+            if (now - negTs < CACHE_TTL_MS && now - catTs < CACHE_TTL_MS) {
+              setNegocios(negData);
+              setCategorias(catData);
+              setLoading(false);
+              return; // Datos frescos en caché — no llamamos a Strapi
+            }
+          }
+        } catch (_) { /* sessionStorage no disponible */ }
+
+        // — Cargar desde Strapi —
         const catRes = await fetchFromStrapi("categorias?fields[0]=nombre&fields[1]=slug&populate[parent][fields][0]=documentId&sort=nombre:asc&pagination[pageSize]=100");
-        setCategorias(catRes.data || []);
+        const catData = catRes.data || [];
+        setCategorias(catData);
 
         let allNegocios: Negocio[] = [];
         let page = 1;
@@ -198,6 +222,13 @@ function HomeContent() {
         } while (page <= pageCount);
 
         setNegocios(allNegocios);
+
+        // — Guardar en caché —
+        try {
+          sessionStorage.setItem(CACHE_KEY_NEGOCIOS, JSON.stringify({ data: allNegocios, ts: Date.now() }));
+          sessionStorage.setItem(CACHE_KEY_CATEGORIAS, JSON.stringify({ data: catData, ts: Date.now() }));
+        } catch (_) { /* sessionStorage lleno o no disponible */ }
+
       } catch (error) {
         console.error("Error cargando datos principales:", error);
       } finally {
