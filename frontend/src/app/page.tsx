@@ -221,11 +221,23 @@ function HomeContent() {
           page++;
         } while (page <= pageCount);
 
-        setNegocios(allNegocios);
+        // — Pre-computar strings de búsqueda para rendimiento extremo —
+        const processedNegocios = allNegocios.map(negocio => {
+          const bizName = negocio.nombre || "";
+          const bizCat = negocio.categoria?.nombre || "";
+          const bizAttrs = (negocio.atributos || []).map((a: any) => a.nombre).join(" ");
+          
+          return {
+            ...negocio,
+            _searchString: normalizeText(`${bizName} ${bizCat} ${bizAttrs}`)
+          };
+        });
+
+        setNegocios(processedNegocios);
 
         // — Guardar en caché —
         try {
-          sessionStorage.setItem(CACHE_KEY_NEGOCIOS, JSON.stringify({ data: allNegocios, ts: Date.now() }));
+          sessionStorage.setItem(CACHE_KEY_NEGOCIOS, JSON.stringify({ data: processedNegocios, ts: Date.now() }));
           sessionStorage.setItem(CACHE_KEY_CATEGORIAS, JSON.stringify({ data: catData, ts: Date.now() }));
         } catch (_) { /* sessionStorage lleno o no disponible */ }
 
@@ -310,85 +322,85 @@ function HomeContent() {
   const filterBarRef = useRef<HTMLDivElement>(null);
 
   // Lógica de Filtrado Dinámico (Búsqueda Universal Nativa - Etapa 1)
-  const filteredNegocios = negocios.filter((negocio) => {
-    // 1. Filtro de Búsqueda (Texto)
-    const normalizedQuery = normalizeText(searchQuery);
-    let matchesSearch = true;
-    if (normalizedQuery.length > 0) {
-      const searchTerms = normalizedQuery.split(/\s+/).filter(t => t.length > 0);
-      const bizName = normalizeText(negocio.nombre);
-      const bizCat = normalizeText(negocio.categoria?.nombre || "");
-      const bizAttrs = (negocio.atributos || []).map((a: { nombre: string }) => normalizeText(a.nombre)).join(" ");
-      matchesSearch = searchTerms.every(term => 
-        bizName.includes(term) || bizCat.includes(term) || bizAttrs.includes(term)
-      );
-    }
+  const filteredNegocios = React.useMemo(() => {
+    return negocios.filter((negocio) => {
+      // 1. Filtro de Búsqueda (Texto)
+      const normalizedQuery = normalizeText(searchQuery);
+      let matchesSearch = true;
+      if (normalizedQuery.length > 0) {
+        const searchTerms = normalizedQuery.split(/\s+/).filter(t => t.length > 0);
+        const searchStr = (negocio as any)._searchString || "";
+        matchesSearch = searchTerms.every(term => searchStr.includes(term));
+      }
 
-    // 2. Filtro de Localidad (Dirección)
-    let matchesLocation = true;
-    if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
-      const normalizedLoc = normalizeText(localidadQuery.split(',')[0]); // Solo el distrito
-      const locTerms = normalizedLoc.split(/\s+/).filter(t => 
-        t.length > 2 && 
-        !["mendoza", "argentina", "rafael", "rn143", "rp173", "m5600", "m5603"].includes(t) &&
-        !/^[a-z]\d+/.test(t) && // Excluye códigos tipo M5600
-        !/^\d+$/.test(t)
-      );
-      
-      if (locTerms.length > 0) {
-        const bizDir = normalizeText(negocio.direccion || "");
-        const bizLoc = normalizeText((negocio as any).localidad || "");
-        
-        matchesLocation = locTerms.every(term => 
-          bizDir.includes(term) || bizLoc.includes(term)
+      // 2. Filtro de Localidad (Dirección)
+      let matchesLocation = true;
+      if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
+        const normalizedLoc = normalizeText(localidadQuery.split(',')[0]); // Solo el distrito
+        const locTerms = normalizedLoc.split(/\s+/).filter(t => 
+          t.length > 2 && 
+          !["mendoza", "argentina", "rafael", "rn143", "rp173", "m5600", "m5603"].includes(t) &&
+          !/^[a-z]\d+/.test(t) && // Excluye códigos tipo M5600
+          !/^\d+$/.test(t)
         );
-      }
-    }
-
-    // 3. Filtro de Categoría de la barra
-    let matchesBarCategory = true;
-    if (selectedCategoryDocId) {
-      const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
-      const bizCatName = (negocio.categoria?.nombre || "").toLowerCase();
-      let validCategoryNames = [selectedCat?.nombre.toLowerCase()];
-      categorias.forEach(c => {
-        if (c.parent?.documentId === selectedCategoryDocId) {
-          validCategoryNames.push(c.nombre.toLowerCase());
-        }
-      });
-      matchesBarCategory = validCategoryNames.includes(bizCatName);
-      
-      // Permitir coincidencia si el negocio tiene un atributo (tag) con el mismo nombre que la categoría
-      if (!matchesBarCategory && negocio.atributos) {
-        const bizAttrs = negocio.atributos.map((a: any) => (a.nombre || "").toLowerCase());
-        const hasMatchingAttr = validCategoryNames.some(catName => catName && bizAttrs.includes(catName));
-        if (hasMatchingAttr) {
-          matchesBarCategory = true;
+        
+        if (locTerms.length > 0) {
+          const bizDir = normalizeText(negocio.direccion || "");
+          const bizLoc = normalizeText((negocio as any).localidad || "");
+          
+          matchesLocation = locTerms.every(term => 
+            bizDir.includes(term) || bizLoc.includes(term)
+          );
         }
       }
-    }
 
-    return matchesSearch && matchesLocation && matchesBarCategory;
-  });
+      // 3. Filtro de Categoría de la barra
+      let matchesBarCategory = true;
+      if (selectedCategoryDocId) {
+        const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
+        const bizCatName = (negocio.categoria?.nombre || "").toLowerCase();
+        let validCategoryNames = [selectedCat?.nombre.toLowerCase()];
+        categorias.forEach(c => {
+          if (c.parent?.documentId === selectedCategoryDocId) {
+            validCategoryNames.push(c.nombre.toLowerCase());
+          }
+        });
+        matchesBarCategory = validCategoryNames.includes(bizCatName);
+        
+        // Permitir coincidencia si el negocio tiene un atributo (tag) con el mismo nombre que la categoría
+        if (!matchesBarCategory && negocio.atributos) {
+          const bizAttrs = negocio.atributos.map((a: any) => (a.nombre || "").toLowerCase());
+          const hasMatchingAttr = validCategoryNames.some(catName => catName && bizAttrs.includes(catName));
+          if (hasMatchingAttr) {
+            matchesBarCategory = true;
+          }
+        }
+      }
+
+      return matchesSearch && matchesLocation && matchesBarCategory;
+    });
+  }, [negocios, searchQuery, localidadQuery, selectedCategoryDocId, categorias]);
 
   // El filtro final ya está unificado arriba
-  const sortedNegocios = [...filteredNegocios].sort((a, b) => {
-    const isAPremium = isPremiumActive(a);
-    const isBPremium = isPremiumActive(b);
+  const sortedNegocios = React.useMemo(() => {
+    return [...filteredNegocios].sort((a, b) => {
+      const isAPremium = isPremiumActive(a);
+      const isBPremium = isPremiumActive(b);
 
-    if (isAPremium && !isBPremium) return -1;
-    if (!isAPremium && isBPremium) return 1;
+      if (isAPremium && !isBPremium) return -1;
+      if (!isAPremium && isBPremium) return 1;
 
-    // Desempate por distancia si está disponible
-    if (userLocation && a.latitud && a.longitud && b.latitud && b.longitud) {
-      const distA = getDistance(userLocation.lat, userLocation.lng, a.latitud, a.longitud);
-      const distB = getDistance(userLocation.lat, userLocation.lng, b.latitud, b.longitud);
-      return distA - distB;
-    }
+      // Desempate por distancia si está disponible
+      if (userLocation && a.latitud && a.longitud && b.latitud && b.longitud) {
+        const distA = getDistance(userLocation.lat, userLocation.lng, a.latitud, a.longitud);
+        const distB = getDistance(userLocation.lat, userLocation.lng, b.latitud, b.longitud);
+        return distA - distB;
+      }
 
-    // Desempate alfabético por defecto
-    return a.nombre.localeCompare(b.nombre);
-  });
+      // Desempate alfabético por defecto
+      return a.nombre.localeCompare(b.nombre);
+    });
+  }, [filteredNegocios, userLocation]);
 
   const isFiltering = searchQuery.trim().length > 0 || selectedCategoryDocId !== null || (localidadQuery !== "" && localidadQuery !== "San Rafael, Mendoza");
 
