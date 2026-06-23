@@ -189,7 +189,7 @@ function HomeContent() {
         do {
           const fields = "fields[0]=nombre&fields[1]=slug&fields[2]=descripcion&fields[3]=direccion&fields[4]=latitud&fields[5]=longitud&fields[6]=is_premium&fields[7]=premium_valid_until&fields[8]=rating&fields[9]=review_count&fields[10]=google_rating&fields[11]=google_review_count&fields[12]=tripadvisor_rating&fields[13]=tripadvisor_review_count&fields[14]=estado_reclamo";
           const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[owner][fields][0]=id";
-          const negRes = await fetchFromStrapi(`negocios?${fields}&${populate}&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=100`);
+          const negRes = await fetchFromStrapi(`negocios?${fields}&${populate}&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=25`);
           if (negRes.data) {
             allNegocios = [...allNegocios, ...negRes.data];
           }
