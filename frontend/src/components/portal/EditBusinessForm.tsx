@@ -86,6 +86,9 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [existingGallery, setExistingGallery] = useState(negocio.galeria || []);
   const [removedGalleryIds, setRemovedGalleryIds] = useState<number[]>([]);
   const [youtubeUrl, setYoutubeUrl] = useState(negocio.youtube_url || "");
+  // Videos subidos directo a Cloudinary (array de { url, publicId })
+  const [cloudinaryVideos, setCloudinaryVideos] = useState<{ url: string; public_id: string }[]>([]);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   // Status
   const [isSaving, setIsSaving] = useState(false);
@@ -214,6 +217,47 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     });
   };
 
+  // Sube un video directo a Cloudinary desde el browser (sin pasar por Railway)
+  const uploadVideoToCloudinary = async (file: File): Promise<void> => {
+    setUploadingVideo(true);
+    const toastId = toast.loading(`Subiendo video... (puede tardar por el tamaño)`);
+    try {
+      // 1. Pedir firma al servidor Next.js
+      const signRes = await fetch("/api/cloudinary-sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folder: "sanrafael360_galeria" }),
+      });
+      const { signature, timestamp, api_key, cloud_name, folder } = await signRes.json();
+
+      // 2. Subir directo a Cloudinary
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", api_key);
+      formData.append("timestamp", String(timestamp));
+      formData.append("signature", signature);
+      formData.append("folder", folder);
+      formData.append("resource_type", "video");
+
+      const uploadRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloud_name}/video/upload`,
+        { method: "POST", body: formData }
+      );
+      const uploadData = await uploadRes.json();
+
+      if (!uploadRes.ok || !uploadData.secure_url) {
+        throw new Error(uploadData.error?.message || "Error al subir el video a Cloudinary");
+      }
+
+      setCloudinaryVideos(prev => [...prev, { url: uploadData.secure_url, public_id: uploadData.public_id }]);
+      toast.success("¡Video subido con éxito!", { id: toastId });
+    } catch (err: any) {
+      toast.error(`Error al subir el video: ${err.message}`, { id: toastId });
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
   // Handlers
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover' | 'gallery') => {
     const files = e.target.files;
@@ -226,8 +270,20 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       const fixed = await fixImageOrientation(files[0]);
       setCoverFile(fixed);
     } else if (type === 'gallery') {
-      const fixed = await Promise.all(Array.from(files).map(f => fixImageOrientation(f)));
-      setNewGalleryFiles((prev: File[]) => [...prev, ...fixed]);
+      const allFiles = Array.from(files);
+      const videoFiles = allFiles.filter(f => f.type.startsWith('video/'));
+      const imageFiles = allFiles.filter(f => !f.type.startsWith('video/'));
+
+      // Videos → subida directa a Cloudinary (bypass Railway)
+      for (const videoFile of videoFiles) {
+        await uploadVideoToCloudinary(videoFile);
+      }
+
+      // Imágenes → flujo normal (con corrección EXIF + compresión)
+      if (imageFiles.length > 0) {
+        const fixed = await Promise.all(imageFiles.map(f => fixImageOrientation(f)));
+        setNewGalleryFiles((prev: File[]) => [...prev, ...fixed]);
+      }
     }
   };
 
@@ -345,7 +401,9 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         galeria_config: galeriaConfig,
         is_premium: isAdmin ? isPremium : undefined,
         premium_valid_until: isAdmin ? (premiumValidUntil ? new Date(premiumValidUntil).toISOString() : null) : undefined,
-        galeria: existingGallery.map((img: any) => img.id)
+        galeria: existingGallery.map((img: any) => img.id),
+        // URLs de videos subidos directo a Cloudinary (no pasan por Railway)
+        cloudinary_videos_urls: cloudinaryVideos.map(v => v.url)
       };
 
       formData.append("data", JSON.stringify(payload));
@@ -440,8 +498,11 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         <EditBusinessGallery 
           existingGallery={existingGallery}
           newGalleryFiles={newGalleryFiles}
+          cloudinaryVideos={cloudinaryVideos}
+          uploadingVideo={uploadingVideo}
           removeExistingPhoto={removeExistingPhoto}
           removeNewPhoto={removeNewPhoto}
+          removeCloudinaryVideo={(idx) => setCloudinaryVideos(prev => prev.filter((_, i) => i !== idx))}
           handleFileChange={handleFileChange}
           youtubeUrl={youtubeUrl}
           setYoutubeUrl={setYoutubeUrl}

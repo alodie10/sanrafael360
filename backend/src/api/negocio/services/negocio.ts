@@ -186,6 +186,39 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       }
     }
 
+    // Registrar videos subidos directo a Cloudinary por el browser
+    if (updateData.cloudinary_videos_urls && Array.isArray(updateData.cloudinary_videos_urls) && updateData.cloudinary_videos_urls.length > 0) {
+      try {
+        const videoIds: number[] = [];
+        for (const videoUrl of updateData.cloudinary_videos_urls) {
+          // Crear una entrada en la media library de Strapi apuntando al archivo ya subido en Cloudinary
+          const filename = videoUrl.split('/').pop() || 'video.mp4';
+          const mediaEntry = await strapi.plugins['upload'].services.upload.add({
+            name: filename,
+            alternativeText: `Video de ${negocio.nombre}`,
+            caption: '',
+            url: videoUrl,
+            provider: 'cloudinary',
+            provider_metadata: { public_id: filename.replace(/\.[^.]+$/, ''), resource_type: 'video' },
+            mime: 'video/mp4',
+            ext: '.mp4',
+            size: 0,
+          });
+          videoIds.push(mediaEntry.id);
+        }
+        if (videoIds.length > 0) {
+          // Obtener galería actual para hacer append
+          const current = await repo.findById(id, ['galeria']);
+          const existingIds = (current.galeria || []).map((g: any) => g.id);
+          await repo.update(id, { galeria: [...existingIds, ...videoIds] });
+          strapi.log.info(`[PortalUpdate] ${videoIds.length} video(s) de Cloudinary registrados en la galería de ${negocio.nombre}`);
+          updated = await repo.findById(id, ['logo', 'imagen_portada', 'galeria', 'schedules']);
+        }
+      } catch (videoErr: any) {
+        strapi.log.error(`[PortalUpdate] Error registrando videos de Cloudinary: ${videoErr.message}`);
+      }
+    }
+
     await repo.publish(id);
     await logActivity(strapi, 'info', 'Actualización de Perfil', `Perfil actualizado: ${negocio.nombre}`, id, { id: user.id });
 

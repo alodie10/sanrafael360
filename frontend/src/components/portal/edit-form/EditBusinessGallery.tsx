@@ -1,13 +1,16 @@
 "use client";
 
-import { Image as ImageIcon, Video, X, Upload } from "lucide-react";
+import { Image as ImageIcon, Video, X, Upload, Loader2 } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
 
 interface EditBusinessGalleryProps {
   existingGallery: any[];
   newGalleryFiles: File[];
+  cloudinaryVideos: { url: string; public_id: string }[];
+  uploadingVideo: boolean;
   removeExistingPhoto: (id: number) => void;
   removeNewPhoto: (index: number) => void;
+  removeCloudinaryVideo: (index: number) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover' | 'gallery') => void;
   youtubeUrl: string;
   setYoutubeUrl: (val: string) => void;
@@ -18,8 +21,11 @@ interface EditBusinessGalleryProps {
 export default function EditBusinessGallery({
   existingGallery,
   newGalleryFiles,
+  cloudinaryVideos,
+  uploadingVideo,
   removeExistingPhoto,
   removeNewPhoto,
+  removeCloudinaryVideo,
   handleFileChange,
   youtubeUrl,
   setYoutubeUrl,
@@ -130,6 +136,33 @@ export default function EditBusinessGallery({
             </div>
           );
         })}
+
+        {/* Cloudinary Videos (subidos directo, pendientes de guardar) */}
+        {cloudinaryVideos.map((vid, i) => (
+          <div key={`cv-${i}`} className="relative group aspect-square rounded-2xl bg-zinc-950 border border-blue-500/40 overflow-hidden shadow-xl">
+            <video src={vid.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted />
+            <div className="absolute top-2 left-2 p-1.5 bg-blue-600/80 backdrop-blur-md rounded-lg border border-white/10">
+              <Video className="w-3.5 h-3.5 text-white" />
+            </div>
+            <button 
+              onClick={() => removeCloudinaryVideo(i)}
+              className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-1.5 text-center">
+              <p className="text-[9px] text-blue-300 font-bold uppercase tracking-widest">Pendiente de guardar</p>
+            </div>
+          </div>
+        ))}
+
+        {/* Spinner mientras se sube un video */}
+        {uploadingVideo && (
+          <div className="aspect-square rounded-2xl bg-zinc-950 border-2 border-dashed border-blue-500/50 flex flex-col items-center justify-center gap-2">
+            <Loader2 className="w-7 h-7 text-blue-400 animate-spin" />
+            <p className="text-[10px] text-blue-400 font-bold text-center leading-tight">Subiendo<br/>video...</p>
+          </div>
+        )}
 
         {/* Empty Slots */}
         {Array.from({ length: Math.max(0, 5 - (existingGallery.length + newGalleryFiles.length) % 5) }).map((_, i) => (
