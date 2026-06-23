@@ -130,16 +130,104 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     fetchAtributos();
   }, []);
 
+  // Corrige la orientación EXIF de una imagen usando un canvas y la comprime
+  const fixImageOrientation = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          // Leer orientación EXIF
+          const arrayBuffer = e.target?.result as ArrayBuffer;
+          let orientation = 1;
+          try {
+            const view = new DataView(arrayBuffer);
+            if (view.getUint16(0, false) === 0xFFD8) {
+              let offset = 2;
+              while (offset < view.byteLength) {
+                const marker = view.getUint16(offset, false);
+                offset += 2;
+                if (marker === 0xFFE1) {
+                  if (view.getUint32(offset += 2, false) === 0x45786966) {
+                    const little = view.getUint16(offset += 6, false) === 0x4949;
+                    offset += view.getUint32(offset + 4, little);
+                    const tags = view.getUint16(offset, little);
+                    offset += 2;
+                    for (let i = 0; i < tags; i++) {
+                      if (view.getUint16(offset + i * 12, little) === 0x0112) {
+                        orientation = view.getUint16(offset + i * 12 + 8, little);
+                        break;
+                      }
+                    }
+                  }
+                  break;
+                } else if ((marker & 0xFF00) !== 0xFF00) break;
+                else offset += view.getUint16(offset, false);
+              }
+            }
+          } catch (_) { /* Si falla el EXIF, usamos orientación 1 */ }
+
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d')!;
+          const { width, height } = img;
+
+          // Ajustar dimensiones del canvas según orientación
+          if (orientation >= 5 && orientation <= 8) {
+            canvas.width = height;
+            canvas.height = width;
+          } else {
+            canvas.width = width;
+            canvas.height = height;
+          }
+
+          // Rotar según EXIF
+          switch (orientation) {
+            case 2: ctx.transform(-1, 0, 0, 1, width, 0); break;
+            case 3: ctx.transform(-1, 0, 0, -1, width, height); break;
+            case 4: ctx.transform(1, 0, 0, -1, 0, height); break;
+            case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;
+            case 6: ctx.transform(0, 1, -1, 0, height, 0); break;
+            case 7: ctx.transform(0, -1, -1, 0, height, width); break;
+            case 8: ctx.transform(0, -1, 1, 0, 0, width); break;
+            default: break;
+          }
+          ctx.drawImage(img, 0, 0);
+
+          // Comprimir a JPEG para ahorrar tiempo de upload (máx 1600px ancho, calidad 85%)
+          const MAX_W = 1600;
+          const finalCanvas = document.createElement('canvas');
+          const finalCtx = finalCanvas.getContext('2d')!;
+          const scale = Math.min(1, MAX_W / canvas.width);
+          finalCanvas.width = Math.round(canvas.width * scale);
+          finalCanvas.height = Math.round(canvas.height * scale);
+          finalCtx.drawImage(canvas, 0, 0, finalCanvas.width, finalCanvas.height);
+
+          finalCanvas.toBlob((blob) => {
+            if (!blob) return resolve(file);
+            const corrected = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+            resolve(corrected);
+          }, 'image/jpeg', 0.85);
+        };
+        img.src = URL.createObjectURL(file);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
   // Handlers
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover' | 'gallery') => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover' | 'gallery') => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    if (type === 'logo') setLogoFile(files[0]);
-    else if (type === 'cover') setCoverFile(files[0]);
-    else if (type === 'gallery') {
-      const newFiles = Array.from(files);
-      setNewGalleryFiles((prev: File[]) => [...prev, ...newFiles]);
+    if (type === 'logo') {
+      const fixed = await fixImageOrientation(files[0]);
+      setLogoFile(fixed);
+    } else if (type === 'cover') {
+      const fixed = await fixImageOrientation(files[0]);
+      setCoverFile(fixed);
+    } else if (type === 'gallery') {
+      const fixed = await Promise.all(Array.from(files).map(f => fixImageOrientation(f)));
+      setNewGalleryFiles((prev: File[]) => [...prev, ...fixed]);
     }
   };
 
