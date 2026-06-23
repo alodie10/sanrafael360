@@ -191,23 +191,33 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       try {
         const videoIds: number[] = [];
         for (const videoUrl of updateData.cloudinary_videos_urls) {
-          // Crear una entrada en la media library de Strapi apuntando al archivo ya subido en Cloudinary
-          const filename = videoUrl.split('/').pop() || 'video.mp4';
-          const mediaEntry = await strapi.plugins['upload'].services.upload.add({
-            name: filename,
-            alternativeText: `Video de ${negocio.nombre}`,
-            caption: '',
-            url: videoUrl,
-            provider: 'cloudinary',
-            provider_metadata: { public_id: filename.replace(/\.[^.]+$/, ''), resource_type: 'video' },
-            mime: 'video/mp4',
-            ext: '.mp4',
-            size: 0,
+          const filename = videoUrl.split('/').pop()?.split('?')[0] || 'video.mp4';
+          const publicId = filename.replace(/\.[^.]+$/, '');
+
+          // Strapi v5: registrar archivo externo creando una entrada directamente en la tabla de archivos
+          const mediaEntry = await strapi.db.query('plugin::upload.file').create({
+            data: {
+              name: filename,
+              alternativeText: `Video de ${negocio.nombre}`,
+              caption: '',
+              url: videoUrl,
+              provider: 'cloudinary',
+              provider_metadata: { public_id: publicId, resource_type: 'video' },
+              mime: 'video/mp4',
+              ext: '.mp4',
+              size: 0,
+              width: null,
+              height: null,
+              formats: null,
+              hash: publicId,
+              folderPath: '/',
+            },
           });
           videoIds.push(mediaEntry.id);
         }
+
         if (videoIds.length > 0) {
-          // Obtener galería actual para hacer append
+          // Hacer append a la galería existente
           const current = await repo.findById(id, ['galeria']);
           const existingIds = (current.galeria || []).map((g: any) => g.id);
           await repo.update(id, { galeria: [...existingIds, ...videoIds] });
