@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense, useRef } from "react";
+import { useEffect, useState, Suspense, useRef, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { fetchFromStrapi } from "@/lib/strapi";
 import HeroCarousel from "@/components/home/HeroCarousel";
@@ -322,7 +322,7 @@ function HomeContent() {
   const filterBarRef = useRef<HTMLDivElement>(null);
 
   // Lógica de Filtrado Dinámico (Búsqueda Universal Nativa - Etapa 1)
-  const filteredNegocios = React.useMemo(() => {
+  const filteredNegocios = useMemo(() => {
     return negocios.filter((negocio) => {
       // 1. Filtro de Búsqueda (Texto)
       const normalizedQuery = normalizeText(searchQuery);
@@ -382,7 +382,7 @@ function HomeContent() {
   }, [negocios, searchQuery, localidadQuery, selectedCategoryDocId, categorias]);
 
   // El filtro final ya está unificado arriba
-  const sortedNegocios = React.useMemo(() => {
+  const sortedNegocios = useMemo(() => {
     return [...filteredNegocios].sort((a, b) => {
       const isAPremium = isPremiumActive(a);
       const isBPremium = isPremiumActive(b);
