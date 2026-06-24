@@ -416,7 +416,7 @@ function HomeContent() {
                 Comercios <span className="text-primary italic">{isFiltering ? "Encontrados" : "Destacados"}</span>
               </h2>
               <span className="text-xs font-bold text-slate-500 bg-white/[0.04] border border-white/[0.08] rounded-full px-2.5 py-0.5">
-                {isFiltering ? filteredNegocios.length : negocios.length}
+                {sortedNegocios.length}
               </span>
             </div>
             {isFiltering && (
