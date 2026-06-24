@@ -16,7 +16,7 @@ export const syncNegocioToAlgolia = async (documentId: string) => {
     // Fetch complete negocio data with relations
     const negocioData: any = await strapi.documents('api::negocio.negocio').findOne({
       documentId,
-      populate: ['categoria', 'atributos']
+      populate: ['categoria', 'atributos', 'imagen_portada', 'logo', 'owner']
     });
 
     if (!negocioData) {
