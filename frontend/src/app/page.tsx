@@ -32,7 +32,6 @@ function HomeContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [negocios, setNegocios] = useState<Negocio[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -178,14 +177,8 @@ function HomeContent() {
     }
   }, [searchParams]);
 
-  // Hook de Búsqueda en Algolia
+  // Búsqueda en Algolia (Ahora es el motor principal, carga instantánea)
   useEffect(() => {
-    // Si no hay texto de búsqueda Y no hay localidad, usamos el filtro local súper rápido (Fallback)
-    if (!searchQuery && !localidadQuery) {
-      setAlgoliaHits(null);
-      return;
-    }
-
     const performSearch = async () => {
       setIsSearchingAlgolia(true);
       try {
@@ -231,7 +224,6 @@ function HomeContent() {
 
 
   useEffect(() => {
-    const CACHE_KEY_NEGOCIOS = "sr360_negocios_cache";
     const CACHE_KEY_CATEGORIAS = "sr360_categorias_cache";
     const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
 
@@ -239,65 +231,31 @@ function HomeContent() {
       try {
         setLoading(true);
 
-        // — Intentar usar caché de sessionStorage —
+        // — Intentar usar caché de sessionStorage solo para Categorías —
         try {
-          const cachedN = sessionStorage.getItem(CACHE_KEY_NEGOCIOS);
           const cachedC = sessionStorage.getItem(CACHE_KEY_CATEGORIAS);
-          if (cachedN && cachedC) {
-            const { data: negData, ts: negTs } = JSON.parse(cachedN);
+          if (cachedC) {
             const { data: catData, ts: catTs } = JSON.parse(cachedC);
             const now = Date.now();
-            if (now - negTs < CACHE_TTL_MS && now - catTs < CACHE_TTL_MS) {
-              setNegocios(negData);
+            if (now - catTs < CACHE_TTL_MS) {
               setCategorias(catData);
               setLoading(false);
-              return; // Datos frescos en caché — no llamamos a Strapi
+              return; 
             }
           }
-        } catch (_) { /* sessionStorage no disponible */ }
+        } catch (_) { }
 
-        // — Cargar desde Strapi —
+        // — Cargar Categorías desde Strapi —
         const catRes = await fetchFromStrapi("categorias?fields[0]=nombre&fields[1]=slug&populate[parent][fields][0]=documentId&sort=nombre:asc&pagination[pageSize]=100");
         const catData = catRes.data || [];
         setCategorias(catData);
 
-        let allNegocios: Negocio[] = [];
-        let page = 1;
-        let pageCount = 1;
-
-        do {
-          const fields = "fields[0]=nombre&fields[1]=slug&fields[2]=direccion&fields[3]=latitud&fields[4]=longitud&fields[5]=is_premium&fields[6]=premium_valid_until&fields[7]=rating&fields[8]=review_count&fields[9]=google_rating&fields[10]=google_review_count&fields[11]=tripadvisor_rating&fields[12]=tripadvisor_review_count&fields[13]=estado_reclamo";
-          const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url&populate[owner][fields][0]=id";
-          const negRes = await fetchFromStrapi(`negocios?${fields}&${populate}&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=25`);
-          if (negRes.data) {
-            allNegocios = [...allNegocios, ...negRes.data];
-          }
-          pageCount = negRes.meta?.pagination?.pageCount || 1;
-          page++;
-        } while (page <= pageCount);
-
-        // — Pre-computar strings de búsqueda para rendimiento extremo —
-        const processedNegocios = allNegocios.map(negocio => {
-          const bizName = negocio.nombre || "";
-          const bizCat = negocio.categoria?.nombre || "";
-          const bizAttrs = (negocio.atributos || []).map((a: any) => a.nombre).join(" ");
-          
-          return {
-            ...negocio,
-            _searchString: normalizeText(`${bizName} ${bizCat} ${bizAttrs}`)
-          };
-        });
-
-        setNegocios(processedNegocios);
-
-        // — Guardar en caché —
         try {
-          sessionStorage.setItem(CACHE_KEY_NEGOCIOS, JSON.stringify({ data: processedNegocios, ts: Date.now() }));
           sessionStorage.setItem(CACHE_KEY_CATEGORIAS, JSON.stringify({ data: catData, ts: Date.now() }));
-        } catch (_) { /* sessionStorage lleno o no disponible */ }
+        } catch (_) { }
 
       } catch (error) {
-        console.error("Error cargando datos principales:", error);
+        console.error("Error cargando categorías:", error);
       } finally {
         setLoading(false);
       }
@@ -376,41 +334,34 @@ function HomeContent() {
 
   const filterBarRef = useRef<HTMLDivElement>(null);
 
-  // Lógica de Filtrado Dinámico (Algolia + Fallback Local)
+  // Lógica de Filtrado Dinámico (Algolia Headless)
   const filteredNegocios = useMemo(() => {
-    // Si Algolia trajo resultados (el usuario buscó texto), mapeamos los IDs a nuestros negocios en memoria
-    // Esto mantiene el orden de relevancia mágico de Algolia pero renderiza toda la info e imágenes locales
-    if (algoliaHits !== null) {
-      const mapped = algoliaHits.map(hit => negocios.find(n => n.documentId === hit.objectID)).filter(Boolean) as Negocio[];
-      return mapped;
-    }
-
-    // FALLBACK LOCAL: Si solo se seleccionó una categoría o nada, usamos el filtro exacto en memoria
-    return negocios.filter((negocio) => {
-      // Filtro de Categoría de la barra
-      let matchesBarCategory = true;
-      if (selectedCategoryDocId) {
-        const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
-        const bizCatName = (negocio.categoria?.nombre || "").toLowerCase();
-        let validCategoryNames = [selectedCat?.nombre?.toLowerCase()];
-        categorias.forEach(c => {
-          if (c.parent?.documentId === selectedCategoryDocId) {
-            validCategoryNames.push(c.nombre.toLowerCase());
-          }
-        });
-        matchesBarCategory = validCategoryNames.includes(bizCatName);
-        
-        if (!matchesBarCategory && negocio.atributos) {
-          const bizAttrs = negocio.atributos.map((a: any) => (a.nombre || "").toLowerCase());
-          const hasMatchingAttr = validCategoryNames.some(catName => catName && bizAttrs.includes(catName));
-          if (hasMatchingAttr) {
-            matchesBarCategory = true;
-          }
-        }
-      }
-      return matchesBarCategory;
-    });
-  }, [negocios, selectedCategoryDocId, categorias, algoliaHits]);
+    if (!algoliaHits) return [];
+    
+    // Mapeamos los resultados de Algolia a la estructura Negocio que espera BusinessCard
+    return algoliaHits.map(hit => ({
+      documentId: hit.objectID,
+      slug: hit.slug,
+      nombre: hit.nombre,
+      direccion: hit.direccion,
+      is_premium: hit.is_premium,
+      premium_valid_until: hit.premium_valid_until,
+      categoria: hit.categoria ? { nombre: hit.categoria } : undefined,
+      atributos: hit.atributos_ui || [], // Mapeado desde nuestro script
+      price_range: hit.price_range,
+      rating: hit.rating,
+      review_count: hit.review_count,
+      google_rating: hit.google_rating,
+      google_review_count: hit.google_review_count,
+      tripadvisor_rating: hit.tripadvisor_rating,
+      tripadvisor_review_count: hit.tripadvisor_review_count,
+      imagen_portada: hit.imagen_portada || null,
+      logo: hit.logo || null,
+      owner: hit.owner || null,
+      latitud: hit.latitud,
+      longitud: hit.longitud
+    })) as Negocio[];
+  }, [algoliaHits]);
 
   // El filtro final ya está unificado arriba
   const sortedNegocios = useMemo(() => {
