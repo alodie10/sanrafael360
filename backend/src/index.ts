@@ -268,6 +268,33 @@ export default {
       });
       strapi.log.info('✅ Lifecycle hooks de Negocio registrados correctamente.');
 
+      // 7. STRApi 5 DOCUMENT SERVICE MIDDLEWARE (Para atrapar Publish/Unpublish)
+      strapi.documents.use(async (context, next) => {
+        const result = await next();
+        
+        if (context.uid === 'api::negocio.negocio') {
+          // Importamos las funciones dinámicamente para no romper el boot si hay un error arriba
+          const algoliaService = require('./api/negocio/services/algolia');
+          
+          if (context.action === 'publish') {
+            const docId = (result as any)?.documentId;
+            if (docId) {
+               strapi.log.info(`[Algolia Middleware] Publicación detectada para: ${docId}`);
+               algoliaService.syncNegocioToAlgolia(docId).catch((err: any) => strapi.log.error('Algolia publish error:', err));
+            }
+          } else if (context.action === 'unpublish') {
+            const docId = (result as any)?.documentId;
+            if (docId) {
+               strapi.log.info(`[Algolia Middleware] Despublicación detectada para: ${docId}`);
+               algoliaService.deleteNegocioFromAlgolia(docId).catch((err: any) => strapi.log.error('Algolia unpublish error:', err));
+            }
+          }
+        }
+        
+        return result;
+      });
+      strapi.log.info('✅ Document Service Middleware para Algolia registrado.');
+
     } catch (error) {
       strapi.log.error('❌ Error general en bootstrap:', error);
     }
