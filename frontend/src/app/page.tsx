@@ -48,6 +48,10 @@ function HomeContent() {
   const [isListening, setIsListening] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
 
+  // --- LÓGICA ETAPA 3: ALGOLIA SEARCH ---
+  const [algoliaHits, setAlgoliaHits] = useState<any[] | null>(null);
+  const [isSearchingAlgolia, setIsSearchingAlgolia] = useState(false);
+
   const handleSelectCategory = (id: string | null) => {
     setSelectedCategoryDocId(id);
     setSearchQuery(""); // Force instant clear
@@ -173,6 +177,57 @@ function HomeContent() {
       return () => clearTimeout(timer);
     }
   }, [searchParams]);
+
+  // Hook de Búsqueda en Algolia
+  useEffect(() => {
+    // Si no hay texto de búsqueda Y no hay localidad, usamos el filtro local súper rápido (Fallback)
+    if (!searchQuery && !localidadQuery) {
+      setAlgoliaHits(null);
+      return;
+    }
+
+    const performSearch = async () => {
+      setIsSearchingAlgolia(true);
+      try {
+        const { algoliasearch } = await import('algoliasearch');
+        const client = algoliasearch(
+          process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || '',
+          process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY || ''
+        );
+        
+        let fullQuery = `${searchQuery} ${localidadQuery}`.trim();
+
+        if (selectedCategoryDocId) {
+           const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
+           if (selectedCat) {
+             fullQuery = `${fullQuery} ${selectedCat.nombre}`.trim();
+           }
+        }
+
+        const { results } = await client.search({
+          requests: [
+            {
+              indexName: 'negocios',
+              query: fullQuery,
+              hitsPerPage: 100,
+            }
+          ]
+        });
+        
+        setAlgoliaHits(results[0]?.hits || []);
+      } catch (e) {
+        console.error("Algolia search error:", e);
+        setAlgoliaHits(null); 
+      } finally {
+        setIsSearchingAlgolia(false);
+      }
+    };
+    
+    // Debounce de 300ms
+    const timer = setTimeout(performSearch, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, localidadQuery, selectedCategoryDocId, categorias]);
+
 
 
   useEffect(() => {
@@ -321,45 +376,23 @@ function HomeContent() {
 
   const filterBarRef = useRef<HTMLDivElement>(null);
 
-  // Lógica de Filtrado Dinámico (Búsqueda Universal Nativa - Etapa 1)
+  // Lógica de Filtrado Dinámico (Algolia + Fallback Local)
   const filteredNegocios = useMemo(() => {
+    // Si Algolia trajo resultados (el usuario buscó texto), mapeamos los IDs a nuestros negocios en memoria
+    // Esto mantiene el orden de relevancia mágico de Algolia pero renderiza toda la info e imágenes locales
+    if (algoliaHits !== null) {
+      const mapped = algoliaHits.map(hit => negocios.find(n => n.documentId === hit.objectID)).filter(Boolean) as Negocio[];
+      return mapped;
+    }
+
+    // FALLBACK LOCAL: Si solo se seleccionó una categoría o nada, usamos el filtro exacto en memoria
     return negocios.filter((negocio) => {
-      // 1. Filtro de Búsqueda (Texto)
-      const normalizedQuery = normalizeText(searchQuery);
-      let matchesSearch = true;
-      if (normalizedQuery.length > 0) {
-        const searchTerms = normalizedQuery.split(/\s+/).filter(t => t.length > 0);
-        const searchStr = (negocio as any)._searchString || "";
-        matchesSearch = searchTerms.every(term => searchStr.includes(term));
-      }
-
-      // 2. Filtro de Localidad (Dirección)
-      let matchesLocation = true;
-      if (localidadQuery && localidadQuery !== "San Rafael, Mendoza") {
-        const normalizedLoc = normalizeText(localidadQuery.split(',')[0]); // Solo el distrito
-        const locTerms = normalizedLoc.split(/\s+/).filter(t => 
-          t.length > 2 && 
-          !["mendoza", "argentina", "rafael", "rn143", "rp173", "m5600", "m5603"].includes(t) &&
-          !/^[a-z]\d+/.test(t) && // Excluye códigos tipo M5600
-          !/^\d+$/.test(t)
-        );
-        
-        if (locTerms.length > 0) {
-          const bizDir = normalizeText(negocio.direccion || "");
-          const bizLoc = normalizeText((negocio as any).localidad || "");
-          
-          matchesLocation = locTerms.every(term => 
-            bizDir.includes(term) || bizLoc.includes(term)
-          );
-        }
-      }
-
-      // 3. Filtro de Categoría de la barra
+      // Filtro de Categoría de la barra
       let matchesBarCategory = true;
       if (selectedCategoryDocId) {
         const selectedCat = categorias.find(c => c.documentId === selectedCategoryDocId);
         const bizCatName = (negocio.categoria?.nombre || "").toLowerCase();
-        let validCategoryNames = [selectedCat?.nombre.toLowerCase()];
+        let validCategoryNames = [selectedCat?.nombre?.toLowerCase()];
         categorias.forEach(c => {
           if (c.parent?.documentId === selectedCategoryDocId) {
             validCategoryNames.push(c.nombre.toLowerCase());
@@ -367,7 +400,6 @@ function HomeContent() {
         });
         matchesBarCategory = validCategoryNames.includes(bizCatName);
         
-        // Permitir coincidencia si el negocio tiene un atributo (tag) con el mismo nombre que la categoría
         if (!matchesBarCategory && negocio.atributos) {
           const bizAttrs = negocio.atributos.map((a: any) => (a.nombre || "").toLowerCase());
           const hasMatchingAttr = validCategoryNames.some(catName => catName && bizAttrs.includes(catName));
@@ -376,10 +408,9 @@ function HomeContent() {
           }
         }
       }
-
-      return matchesSearch && matchesLocation && matchesBarCategory;
+      return matchesBarCategory;
     });
-  }, [negocios, searchQuery, localidadQuery, selectedCategoryDocId, categorias]);
+  }, [negocios, selectedCategoryDocId, categorias, algoliaHits]);
 
   // El filtro final ya está unificado arriba
   const sortedNegocios = useMemo(() => {
@@ -447,7 +478,12 @@ function HomeContent() {
           </div>
           <BusinessGrid 
             negocios={sortedNegocios} 
-            loading={loading} 
+            loading={loading || isSearchingAlgolia} 
+            emptyMessage={
+              searchQuery 
+                ? "No encontramos negocios exactos, probá buscar con otras palabras o sinónimos."
+                : "No hay negocios en esta categoría."
+            }
             onClearFilters={() => {
               setSelectedCategoryDocId(null);
               setUserLocation(null);

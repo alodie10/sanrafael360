@@ -1,4 +1,5 @@
 import { DiscoveryService } from '../../../../services/discovery-service';
+import { syncNegocioToAlgolia, deleteNegocioFromAlgolia } from '../../services/algolia';
 
 const discoveryService = new DiscoveryService();
 
@@ -107,6 +108,12 @@ export default {
         }
       }).catch(err => console.error(`TripAdvisor auto-sync error for ${result.nombre}:`, err));
     }
+
+    // Algolia Sync
+    const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
+    if (docId) {
+      syncNegocioToAlgolia(docId).catch(err => console.error('Algolia afterCreate sync error:', err));
+    }
   },
 
   async afterUpdate(event: any) {
@@ -133,5 +140,19 @@ export default {
          }).catch(err => console.error(`TripAdvisor manual sync error for ${result.nombre}:`, err));
        }
      }
+
+    // Algolia Sync
+    const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
+    if (docId) {
+      syncNegocioToAlgolia(docId).catch(err => console.error('Algolia afterUpdate sync error:', err));
+    }
+  },
+
+  async afterDelete(event: any) {
+    const { result } = event;
+    const docId = result?.documentId || (result?.id && typeof result.id === 'string' ? result.id : undefined);
+    if (docId) {
+      deleteNegocioFromAlgolia(docId).catch(err => console.error('Algolia afterDelete sync error:', err));
+    }
   }
 };

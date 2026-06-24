@@ -24,6 +24,7 @@
     "@strapi/plugin-users-permissions": "5.40.0",
     "@strapi/provider-upload-cloudinary": "5.40.0",
     "@strapi/strapi": "5.40.0",
+    "algoliasearch": "^5.55.1",
     "better-sqlite3": "12.6.2",
     "cloudinary": "^2.5.1",
     "esbuild": "^0.20.0",
