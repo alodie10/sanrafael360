@@ -280,13 +280,21 @@ export default {
             const docId = (result as any)?.documentId;
             if (docId) {
                strapi.log.info(`[Algolia Middleware] Publicación detectada para: ${docId}`);
-               algoliaService.syncNegocioToAlgolia(docId).catch((err: any) => strapi.log.error('Algolia publish error:', err));
+               try {
+                 await algoliaService.syncNegocioToAlgolia(docId);
+               } catch (err: any) {
+                 strapi.log.error('Algolia publish error:', err);
+               }
             }
           } else if (context.action === 'unpublish') {
             const docId = (result as any)?.documentId;
             if (docId) {
                strapi.log.info(`[Algolia Middleware] Despublicación detectada para: ${docId}`);
-               algoliaService.deleteNegocioFromAlgolia(docId).catch((err: any) => strapi.log.error('Algolia unpublish error:', err));
+               try {
+                 await algoliaService.deleteNegocioFromAlgolia(docId);
+               } catch (err: any) {
+                 strapi.log.error('Algolia unpublish error:', err);
+               }
             }
           }
         }

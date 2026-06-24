@@ -112,7 +112,11 @@ export default {
     // Algolia Sync
     const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
     if (docId) {
-      syncNegocioToAlgolia(docId).catch(err => console.error('Algolia afterCreate sync error:', err));
+      try {
+        await syncNegocioToAlgolia(docId);
+      } catch (err) {
+        console.error('Algolia afterCreate sync error:', err);
+      }
     }
   },
 
@@ -144,7 +148,11 @@ export default {
     // Algolia Sync
     const docId = result.documentId || (typeof result.id === 'string' ? result.id : undefined);
     if (docId) {
-      syncNegocioToAlgolia(docId).catch(err => console.error('Algolia afterUpdate sync error:', err));
+      try {
+        await syncNegocioToAlgolia(docId);
+      } catch (err) {
+        console.error('Algolia afterUpdate sync error:', err);
+      }
     }
   },
 
@@ -152,7 +160,11 @@ export default {
     const { result } = event;
     const docId = result?.documentId || (result?.id && typeof result.id === 'string' ? result.id : undefined);
     if (docId) {
-      deleteNegocioFromAlgolia(docId).catch(err => console.error('Algolia afterDelete sync error:', err));
+      try {
+        await deleteNegocioFromAlgolia(docId);
+      } catch (err) {
+        console.error('Algolia afterDelete sync error:', err);
+      }
     }
   }
 };
