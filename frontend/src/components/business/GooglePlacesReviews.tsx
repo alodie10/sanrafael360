@@ -51,7 +51,13 @@ export default function GooglePlacesReviews({ googlePlaceId, className }: Google
         (place: any, status: any) => {
           setLoading(false);
           if (status === google.maps.places.PlacesServiceStatus.OK && place?.reviews) {
-            setReviews(place.reviews as GoogleReview[]);
+            // Quedarnos solo con reseñas de 4 o 5 estrellas
+            const positiveReviews = (place.reviews as GoogleReview[]).filter(r => r.rating >= 4);
+            
+            // Ordenar de mayor a menor rating para asegurar que las de 5 salgan primero
+            const sortedReviews = positiveReviews.sort((a, b) => b.rating - a.rating);
+            
+            setReviews(sortedReviews);
           }
         }
       );
