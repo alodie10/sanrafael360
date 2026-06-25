@@ -201,24 +201,24 @@ export default function PortalStats() {
           </div>
 
           <div className="overflow-x-auto pb-4">
-            <table className="w-full min-w-max text-left text-sm text-zinc-300">
-              <thead className="bg-zinc-900/50 text-xs uppercase font-black tracking-wider text-zinc-500 whitespace-nowrap">
+            <table className="w-full text-left text-sm text-zinc-300">
+              <thead className="bg-zinc-900/50 text-xs uppercase font-black tracking-wider text-zinc-500">
                 <tr>
-                  <th className="px-6 py-4">Negocio</th>
-                  <th className="px-6 py-4 text-center">Salud</th>
-                  <th className="px-6 py-4 text-center">Visitas</th>
-                  <th className="px-6 py-4 text-center">Clicks Web</th>
-                  <th className="px-6 py-4 text-center">Contactos WSP</th>
-                  <th className="px-6 py-4 text-center">Total Interacciones</th>
+                  <th className="px-4 py-4">Negocio</th>
+                  <th className="px-4 py-4 text-center">Salud</th>
+                  <th className="px-4 py-4 text-center">Visitas</th>
+                  <th className="px-4 py-4 text-center">Clicks Web</th>
+                  <th className="px-4 py-4 text-center">Contactos WSP</th>
+                  <th className="px-4 py-4 text-center">Total Interacciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {filteredBreakdown.length > 0 ? filteredBreakdown.map((b, i) => {
                   const total = b.views + b.clicks_whatsapp + b.clicks_website;
                   return (
-                    <tr key={b.documentId || i} className="hover:bg-white/[0.02] transition-colors whitespace-nowrap">
-                      <td className="px-6 py-4 font-medium text-white flex items-center gap-3">
-                        <span className="truncate max-w-[200px] sm:max-w-[300px] block" title={b.nombre}>{b.nombre}</span>
+                    <tr key={b.documentId || i} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="px-4 py-4 font-medium text-white flex items-center gap-3">
+                        <span className="truncate max-w-[150px] sm:max-w-[250px] block" title={b.nombre}>{b.nombre}</span>
                         {b.is_premium && (
                           <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border border-yellow-500/20" title={`Válido hasta: ${b.premium_valid_until ? new Date(b.premium_valid_until).toLocaleDateString() : 'Activo'}`}>
                             <Crown className="w-3 h-3" />
@@ -226,11 +226,11 @@ export default function PortalStats() {
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-center font-bold text-amber-400">{b.profile_score || 0}%</td>
-                      <td className="px-6 py-4 text-center text-blue-400 font-bold">{b.views.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-center text-primary font-bold">{b.clicks_website.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-center text-emerald-400 font-bold">{b.clicks_whatsapp.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-center font-bold text-white bg-white/5">{total.toLocaleString()}</td>
+                      <td className="px-4 py-4 text-center font-bold text-amber-400">{b.profile_score || 0}%</td>
+                      <td className="px-4 py-4 text-center text-blue-400 font-bold">{b.views.toLocaleString()}</td>
+                      <td className="px-4 py-4 text-center text-primary font-bold">{b.clicks_website.toLocaleString()}</td>
+                      <td className="px-4 py-4 text-center text-emerald-400 font-bold">{b.clicks_whatsapp.toLocaleString()}</td>
+                      <td className="px-4 py-4 text-center font-bold text-white bg-white/5">{total.toLocaleString()}</td>
                     </tr>
                   )
                 }) : (
