@@ -25,8 +25,8 @@ export async function generateMetadata({
     }
 
     const currentYear = new Date().getFullYear();
-    const title = `Los Mejores ${categoria.nombre} en San Rafael, Mza (${currentYear}) | SR360`;
-    const description = `✅ Descubrí los mejores ${categoria.nombre.toLowerCase()} en San Rafael, Mendoza. Compará opiniones, mirá fotos, horarios y contactá directo por WhatsApp. La guía más completa del ${currentYear}.`;
+    const title = `Guía de ${categoria.nombre} en San Rafael, Mza (${currentYear}) | SR360`;
+    const description = `✅ Descubrí lo mejor en ${categoria.nombre.toLowerCase()} en San Rafael, Mendoza. Compará opiniones, mirá fotos, horarios y contactá directo por WhatsApp. La guía más completa del ${currentYear}.`;
 
     const canonicalUrl = `${SITE_URL}/categoria/${slug}`;
 
