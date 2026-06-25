@@ -200,9 +200,9 @@ export default function PortalStats() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-zinc-300">
-              <thead className="bg-zinc-900/50 text-xs uppercase font-black tracking-wider text-zinc-500">
+          <div className="overflow-x-auto pb-4">
+            <table className="w-full min-w-max text-left text-sm text-zinc-300">
+              <thead className="bg-zinc-900/50 text-xs uppercase font-black tracking-wider text-zinc-500 whitespace-nowrap">
                 <tr>
                   <th className="px-6 py-4">Negocio</th>
                   <th className="px-6 py-4 text-center">Salud</th>
@@ -216,7 +216,7 @@ export default function PortalStats() {
                 {filteredBreakdown.length > 0 ? filteredBreakdown.map((b, i) => {
                   const total = b.views + b.clicks_whatsapp + b.clicks_website;
                   return (
-                    <tr key={b.documentId || i} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={b.documentId || i} className="hover:bg-white/[0.02] transition-colors whitespace-nowrap">
                       <td className="px-6 py-4 font-medium text-white flex items-center gap-3">
                         <span className="truncate max-w-[200px] sm:max-w-[300px] block" title={b.nombre}>{b.nombre}</span>
                         {b.is_premium && (
