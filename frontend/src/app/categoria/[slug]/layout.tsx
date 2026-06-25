@@ -24,10 +24,9 @@ export async function generateMetadata({
       return { title: "Categoría no encontrada | San Rafael 360" };
     }
 
-    const title = `${categoria.nombre} en San Rafael | San Rafael 360`;
-    const description = categoria.descripcion 
-      ? categoria.descripcion.substring(0, 155) 
-      : `Descubrí los mejores ${categoria.nombre.toLowerCase()} en San Rafael, Mendoza. La guía más completa de comercios y servicios.`;
+    const currentYear = new Date().getFullYear();
+    const title = `Los Mejores ${categoria.nombre} en San Rafael, Mza (${currentYear}) | SR360`;
+    const description = `✅ Descubrí los mejores ${categoria.nombre.toLowerCase()} en San Rafael, Mendoza. Compará opiniones, mirá fotos, horarios y contactá directo por WhatsApp. La guía más completa del ${currentYear}.`;
 
     const canonicalUrl = `${SITE_URL}/categoria/${slug}`;
 

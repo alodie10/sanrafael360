@@ -20,20 +20,11 @@ export async function generateMetadata({
       return { title: "Negocio no encontrado | San Rafael 360" };
     }
 
-    // Título: "Nombre — Categoría | San Rafael 360"
-    const title = `${negocio.nombre}${negocio.categoria?.nombre ? ` — ${negocio.categoria.nombre}` : ""} | San Rafael 360`;
+    // Título optimizado para CTR local (Intención de búsqueda)
+    const title = `${negocio.nombre} en San Rafael: Opiniones, Horarios y Contacto | SR360`;
 
-    // Descripción: limpia de markdown/HTML, máx 155 chars
-    const rawDesc = negocio.descripcion
-      ? negocio.descripcion
-          .replace(/<[^>]*>/g, "")
-          .replace(/[#*_~`>]/g, "")
-          .trim()
-      : "";
-    const description =
-      rawDesc.length > 10
-        ? rawDesc.substring(0, 152) + "..."
-        : `Descubrí ${negocio.nombre} en San Rafael, Mendoza. Dirección, horarios, fotos y contacto directo en el portal más completo de la ciudad.`;
+    // Descripción optimizada para CTR con Call to Action fuerte
+    const description = `Todo sobre ${negocio.nombre} en San Rafael, Mendoza. ✅ Conocé opiniones reales, fotos, horarios actualizados, teléfono y ubicación en el directorio más completo.`;
 
     // Imagen para Open Graph — con dimensiones explícitas para redes
     const ogImageUrl =
