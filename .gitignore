@@ -36,3 +36,5 @@ id_rsa.pub
 # Obsidian settings
 .obsidian/
 
+# WhatsApp Bot Sessions
+.wwebjs_auth/
