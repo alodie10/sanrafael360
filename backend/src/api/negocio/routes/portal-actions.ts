@@ -64,5 +64,23 @@ export default {
         middlewares: [],
       },
     },
+    {
+      method: 'POST',
+      path: '/negocios/admin/pagos',
+      handler: 'negocio.adminCreatePayment',
+      config: { policies: [], middlewares: [] },
+    },
+    {
+      method: 'DELETE',
+      path: '/negocios/admin/pagos/:documentId',
+      handler: 'negocio.adminDeletePayment',
+      config: { policies: [], middlewares: [] },
+    },
+    {
+      method: 'PUT',
+      path: '/negocios/admin/vigencia/:documentId',
+      handler: 'negocio.adminUpdateValidity',
+      config: { policies: [], middlewares: [] },
+    },
   ],
 };

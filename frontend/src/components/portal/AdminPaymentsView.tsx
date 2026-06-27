@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { 
   CreditCard, 
   Calendar, 
@@ -10,7 +11,8 @@ import {
   AlertCircle,
   TrendingUp,
   Search,
-  ChevronRight
+  ChevronRight,
+  Plus, X, Trash2, History
 } from "lucide-react";
 // Formateo nativo para evitar dependencias extra
 const formatDate = (dateString: string) => {
@@ -33,6 +35,39 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<'all' | 'premium' | 'expired' | 'expiring'>('premium');
+
+  // Estados para Modal de Pagos
+  const [selectedBusiness, setSelectedBusiness] = useState<any | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [amount, setAmount] = useState("");
+  const [notes, setNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [extendMonths, setExtendMonths] = useState(1);
+  const [manualDate, setManualDate] = useState("");
+  const [isUpdatingDate, setIsUpdatingDate] = useState(false);
+
+  useEffect(() => {
+    if (selectedBusiness && selectedBusiness.premium_valid_until) {
+      setManualDate(selectedBusiness.premium_valid_until.split('T')[0]);
+    } else {
+      setManualDate("");
+    }
+  }, [selectedBusiness?.id]);
+  
+  // Mantener el negocio seleccionado actualizado tras recargar la data
+  useEffect(() => {
+    if (selectedBusiness) {
+      const updated = data.find(b => b.id === selectedBusiness.id);
+      if (updated) {
+        setSelectedBusiness(updated);
+        if (updated.premium_valid_until) {
+          setManualDate(updated.premium_valid_until.split('T')[0]);
+        } else {
+          setManualDate("");
+        }
+      }
+    }
+  }, [data]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,10 +99,15 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
         }
 
         const res = await fetch(`${strapiUrl}${query}`, {
-          headers: { Authorization: `Bearer ${jwt}` }
+          headers: { Authorization: `Bearer ${jwt}` },
+          cache: 'no-store'
         });
         const json = await res.json();
-        console.log(`DEBUG: Strapi devolvió ${json.data?.length || 0} negocios de un total de ${json.meta?.pagination?.total || 0}`);
+        console.log(`DEBUG: Strapi devolvió ${json.data?.length || 0} negocios`);
+        if (selectedBusiness) {
+          const check = json.data.find(b => b.id === selectedBusiness.id);
+          console.log("DEBUG: Refresh fetched selected business pagos:", check?.pagos?.length || (check?.pagos?.data?.length || 0));
+        }
         setData(json.data || []);
       } catch (err) {
         console.error("Error fetching admin payments data:", err);
@@ -79,9 +119,108 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
     // Debounce simple para no saturar el servidor mientras escribís
     const timer = setTimeout(() => fetchData(), 300);
     return () => clearTimeout(timer);
-  }, [jwt, searchTerm, filterType]);
+  }, [jwt, searchTerm, filterType, refreshTrigger]);
 
   // Ya no filtramos localmente, usamos la data que viene del server
+
+  const handleAddPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount || isNaN(Number(amount)) || !selectedBusiness) return;
+    
+    setIsSubmitting(true);
+    try {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      
+      // 1. Crear el pago
+      const pagoData = {
+        monto: Number(amount),
+        estado: 'aprobado',
+        fecha_pago: new Date().toISOString(),
+        external_reference: notes,
+        negocio: selectedBusiness.documentId,
+        extendMonths: extendMonths
+      };
+      
+      const res = await fetch(`${strapiUrl}/api/negocios/admin/pagos`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwt}` 
+        },
+        body: JSON.stringify(pagoData)
+      });
+      
+      if (!res.ok) throw new Error("Error creando pago custom");
+
+      setAmount("");
+      setNotes("");
+      setExtendMonths(1);
+      setRefreshTrigger(prev => prev + 1);
+      
+      // Optimistic update para que se vea inmediato en pantalla
+      setSelectedBusiness(prev => {
+        if (!prev) return prev;
+        const currentPagos = Array.isArray(prev.pagos) ? [...prev.pagos] : [...(prev.pagos?.data || [])];
+        return {
+          ...prev,
+          pagos: [
+            { ...pagoData, id: 'temp_' + Date.now(), documentId: 'temp_' + Date.now(), createdAt: new Date().toISOString() },
+            ...currentPagos
+          ]
+        };
+      });
+    } catch (err) {
+      console.error("Error agregando pago:", err);
+      alert("Error al guardar el pago");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+
+  const handleUpdateValidity = async () => {
+    if (!selectedBusiness) return;
+    setIsUpdatingDate(true);
+    try {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const res = await fetch(`${strapiUrl}/api/negocios/admin/vigencia/${selectedBusiness.documentId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwt}` 
+        },
+        body: JSON.stringify({ premium_valid_until: manualDate || null })
+      });
+      if (!res.ok) throw new Error("Error al guardar la vigencia: " + await res.text());
+      const responseBody = await res.json();
+      console.log("VIGENCIA UPDATE RESPONSE:", responseBody);
+      setRefreshTrigger(prev => prev + 1);
+      alert("Guardado OK! Vuelve a recargar si la fecha salta.");
+    } catch (err) {
+      console.error(err);
+      alert("Error crítico al actualizar: " + err.message);
+    } finally {
+      setIsUpdatingDate(false);
+    }
+  };
+
+  const handleDeletePayment = async (documentId: string) => {
+    if (!confirm("¿Estás seguro de eliminar este pago?")) return;
+    
+    try {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const res = await fetch(`${strapiUrl}/api/negocios/admin/pagos/${documentId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${jwt}` }
+      });
+      if (!res.ok) throw new Error("Error eliminando pago");
+      setRefreshTrigger(prev => prev + 1);
+    } catch (err) {
+      console.error("Error eliminando pago:", err);
+      alert("Error al eliminar el pago");
+    }
+  };
+
   const processedData = useMemo(() => {
     const sorted = [...data].sort((a, b) => {
       const aPagos = a.pagos || a.attributes?.pagos;
@@ -243,7 +382,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
                                       validUntil > now;
 
                 return (
-                  <tr key={negocio.id} className="hover:bg-white/[0.02] transition-colors group">
+                  <tr key={negocio.id} onClick={() => setSelectedBusiness(negocio)} className="hover:bg-white/[0.02] transition-colors group cursor-pointer">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all ${negocio.owner ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-slate-800 border-white/5 text-slate-600'}`}>
@@ -319,6 +458,162 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
           </table>
         </div>
       </div>
+
+      {/* Modal de Pagos */}
+      {selectedBusiness && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex justify-between items-center p-6 border-b border-white/5 bg-black/20">
+              <div>
+                <h3 className="text-xl font-bold text-white uppercase tracking-tight">{selectedBusiness.nombre}</h3>
+                <p className="text-xs text-primary font-black uppercase tracking-widest mt-1">
+                  Gestión de Pagos {selectedBusiness.is_premium ? '• ELITE' : '• BÁSICO'}
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedBusiness(null)}
+                className="p-2 bg-white/5 hover:bg-white/10 text-white rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Contenido (Scrollable) */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+              
+              
+              {/* Correccion Manual de Vigencia */}
+              <div className="bg-black/30 p-5 rounded-2xl border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-primary" /> Vencimiento de Suscripción
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-1">Si hubo un error, puedes corregir la fecha de fin de Premium manualmente.</p>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <input 
+                    type="date" 
+                    value={manualDate}
+                    onChange={(e) => setManualDate(e.target.value)}
+                    className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-primary/50 text-xs w-full md:w-auto"
+                  />
+                  <button 
+                    onClick={handleUpdateValidity}
+                    disabled={isUpdatingDate}
+                    className="p-2 bg-primary/10 text-primary hover:bg-primary hover:text-black rounded-xl transition-colors shrink-0 disabled:opacity-50"
+                    title="Guardar Fecha Exacta"
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Formulario de Carga */}
+
+              <div className="bg-black/30 p-5 rounded-2xl border border-white/5">
+                <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-primary" /> Nuevo Pago
+                </h4>
+                <form onSubmit={handleAddPayment} className="space-y-4">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1">
+                      <label className="block text-[10px] text-slate-500 uppercase font-black mb-1.5">Monto ($)</label>
+                      <input 
+                        type="number" 
+                        required
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-primary/50"
+                        placeholder="Ej: 29000"
+                      />
+                    </div>
+                    <div className="flex-[2]">
+                      <label className="block text-[10px] text-slate-500 uppercase font-black mb-1.5">Referencia / Notas</label>
+                      <input 
+                        type="text"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-primary/50"
+                        placeholder="Ej: Transf. Banco Galicia"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <select 
+                        value={extendMonths}
+                        onChange={(e) => setExtendMonths(Number(e.target.value))}
+                        className="bg-black border border-white/10 rounded-lg px-2 py-1 text-white text-[11px] focus:outline-none focus:border-primary/50"
+                      >
+                        <option value={0}>No extender</option>
+                        <option value={1}>+1 Mes</option>
+                        <option value={2}>+2 Meses</option>
+                        <option value={3}>+3 Meses</option>
+                        <option value={6}>+6 Meses</option>
+                        <option value={12}>+1 Año</option>
+                      </select>
+                      <span className="text-[11px] text-slate-400">Vigencia Premium</span>
+                    </label>
+                    <button 
+                      type="submit" 
+                      disabled={isSubmitting}
+                      className="px-6 py-2 bg-primary hover:bg-primary/90 text-black text-xs font-black uppercase tracking-widest rounded-xl transition-all disabled:opacity-50"
+                    >
+                      {isSubmitting ? "Guardando..." : "Cargar Pago"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Historial de Pagos */}
+              <div>
+                <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                  <History className="w-4 h-4 text-slate-400" /> Historial de Transacciones
+                </h4>
+                
+                <div className="space-y-3">
+                  {(!selectedBusiness.pagos || (Array.isArray(selectedBusiness.pagos) ? selectedBusiness.pagos : (selectedBusiness.pagos.data || [])).length === 0) ? (
+                    <p className="text-center text-slate-500 italic text-sm py-4">No hay pagos registrados.</p>
+                  ) : (
+                    (Array.isArray(selectedBusiness.pagos) ? selectedBusiness.pagos : (selectedBusiness.pagos.data || []))
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .map((pago: any) => (
+                      <div key={pago.id || pago.documentId} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/[0.04] transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20">
+                            <CreditCard className="w-4 h-4 text-green-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-white">$ {pago.monto?.toLocaleString()}</p>
+                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-0.5">
+                              {formatDate(pago.fecha_pago || pago.createdAt)}
+                              {pago.external_reference && ` • ${pago.external_reference}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="px-2 py-1 bg-green-500/10 text-green-500 text-[9px] font-black uppercase tracking-widest rounded border border-green-500/20">
+                            {pago.estado || 'aprobado'}
+                          </span>
+                          <button 
+                            onClick={() => handleDeletePayment(pago.documentId)}
+                            className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                            title="Eliminar Pago"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      , document.body)}
     </div>
   );
 }

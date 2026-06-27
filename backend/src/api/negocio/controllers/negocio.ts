@@ -218,5 +218,104 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       action: isFavorited ? 'removed' : 'added',
       documentId
     });
-  })
+  }),
+    async adminUpdateValidity(ctx) {
+    try {
+      const { documentId } = ctx.params;
+      const { premium_valid_until } = ctx.request.body;
+      
+      const is_premium = premium_valid_until ? (new Date(premium_valid_until) >= new Date(new Date().setHours(0,0,0,0))) : false;
+
+      let validUntilISO = null;
+      if (premium_valid_until) {
+         const d = new Date(premium_valid_until);
+         d.setHours(12, 0, 0, 0); // Evitar problemas de timezone
+         validUntilISO = d.toISOString();
+      }
+
+      await strapi.documents('api::negocio.negocio').update({
+        documentId,
+        data: {
+          is_premium,
+          premium_valid_until: validUntilISO
+        },
+        status: 'draft'
+      });
+      await strapi.documents('api::negocio.negocio').update({
+        documentId,
+        data: {
+          is_premium,
+          premium_valid_until: validUntilISO
+        },
+        status: 'published'
+      });
+
+      ctx.send({ success: true });
+    } catch (err) {
+      console.error(err);
+      ctx.badRequest("Error actualizando vigencia");
+    }
+  },
+
+    
+  async adminCreatePayment(ctx) {
+    try {
+      const { monto, estado, fecha_pago, external_reference, negocio, extendMonths } = ctx.request.body;
+      
+      // Crear el pago
+      const newPago = await strapi.documents('api::pago.pago').create({
+        data: {
+          monto,
+          estado,
+          fecha_pago,
+          external_reference,
+          negocio
+        }
+      });
+
+      // Extender vigencia del negocio si se pidió
+      if (extendMonths > 0) {
+        const negocioObj = await strapi.documents('api::negocio.negocio').findOne({ documentId: negocio });
+        if (negocioObj) {
+          const now = new Date();
+          const validUntil = negocioObj.premium_valid_until ? new Date(negocioObj.premium_valid_until) : new Date();
+          const baseDate = validUntil < now ? now : validUntil;
+          baseDate.setMonth(baseDate.getMonth() + extendMonths);
+
+          await strapi.documents('api::negocio.negocio').update({
+            documentId: negocio,
+            data: {
+              is_premium: true,
+              premium_valid_until: baseDate.toISOString()
+            },
+            status: 'draft'
+          });
+          await strapi.documents('api::negocio.negocio').update({
+            documentId: negocio,
+            data: {
+              is_premium: true,
+              premium_valid_until: baseDate.toISOString()
+            },
+            status: 'published'
+          });
+        }
+      }
+
+      ctx.send({ success: true, data: newPago });
+    } catch (err) {
+      console.error(err);
+      ctx.badRequest("Error creando pago manual");
+    }
+  },
+
+  async adminDeletePayment(ctx) {
+    try {
+      const { documentId } = ctx.params;
+      await strapi.documents('api::pago.pago').delete({ documentId });
+      ctx.send({ success: true });
+    } catch (err) {
+      console.error(err);
+      ctx.badRequest("Error eliminando pago");
+    }
+  },
 }));
