@@ -84,15 +84,27 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
   // Ya no filtramos localmente, usamos la data que viene del server
   const processedData = useMemo(() => {
     return [...data].sort((a, b) => {
-      const aOwner = a.owner || a.attributes?.owner;
-      const bOwner = b.owner || b.attributes?.owner;
+      const aHasPayments = (a.pagos && a.pagos.length > 0) || (a.attributes?.pagos && a.attributes.pagos.length > 0);
+      const bHasPayments = (b.pagos && b.pagos.length > 0) || (b.attributes?.pagos && b.attributes.pagos.length > 0);
+
       const aPremium = a.is_premium || a.attributes?.is_premium;
       const bPremium = b.is_premium || b.attributes?.is_premium;
 
-      if (aOwner && !bOwner) return -1;
-      if (!aOwner && bOwner) return 1;
+      const aOwner = a.owner || a.attributes?.owner;
+      const bOwner = b.owner || b.attributes?.owner;
+
+      // 1. Priorizar negocios con pagos registrados
+      if (aHasPayments && !bHasPayments) return -1;
+      if (!aHasPayments && bHasPayments) return 1;
+
+      // 2. Luego, priorizar negocios activos (premium)
       if (aPremium && !bPremium) return -1;
       if (!aPremium && bPremium) return 1;
+
+      // 3. Finalmente, priorizar los que tienen dueño asignado
+      if (aOwner && !bOwner) return -1;
+      if (!aOwner && bOwner) return 1;
+      
       return 0;
     });
   }, [data]);
