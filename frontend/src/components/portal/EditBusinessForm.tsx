@@ -16,6 +16,7 @@ import EditBusinessGallery from "./edit-form/EditBusinessGallery";
 import EditBusinessVisualIdentity from "./edit-form/EditBusinessVisualIdentity";
 import EditBusinessRatings from "./edit-form/EditBusinessRatings";
 import EditBusinessPremium from "./edit-form/EditBusinessPremium";
+import EditBusinessOffers from "./edit-form/EditBusinessOffers";
 import ScheduleEditor from "./ScheduleEditor";
 
 interface EditBusinessFormProps {
@@ -448,6 +449,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       />
 
       <div className="max-w-4xl mx-auto space-y-12">
+        <EditBusinessOffers negocioId={negocio.documentId} session={session} />
+
         <EditBusinessIdentity 
           nombre={nombre}
           setNombre={setNombre}

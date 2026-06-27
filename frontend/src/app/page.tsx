@@ -6,6 +6,7 @@ import { fetchFromStrapi } from "@/lib/strapi";
 import HeroCarousel from "@/components/home/HeroCarousel";
 import BusinessGrid from "@/components/home/BusinessGrid";
 import FilterBar from "@/components/home/FilterBar";
+import OffersBanner from "@/components/home/OffersBanner";
 import NavigationFAB from "@/components/layout/NavigationFAB";
 import { motion, AnimatePresence } from "framer-motion";
 import { Negocio, Categoria } from "@/types/strapi";
@@ -359,7 +360,8 @@ function HomeContent() {
       logo: hit.logo || null,
       owner: hit.owner || null,
       latitud: hit.latitud,
-      longitud: hit.longitud
+      longitud: hit.longitud,
+      ofertas: hit.ofertas || []
     })) as Negocio[];
   }, [algoliaHits]);
 
@@ -400,6 +402,7 @@ function HomeContent() {
           categorias={categorias} 
           selectedCategoryDocId={selectedCategoryDocId} 
         />
+        <OffersBanner />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 bg-background">

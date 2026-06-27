@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Heart, User } from "lucide-react";
+import { Search, Heart, User, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function BottomNav() {
@@ -18,6 +18,11 @@ export default function BottomNav() {
       name: "Explora",
       href: "/",
       icon: Search,
+    },
+    {
+      name: "Ofertas",
+      href: "/ofertas",
+      icon: Tag,
     },
     {
       name: "Favoritos",

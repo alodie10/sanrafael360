@@ -694,6 +694,7 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     logo: Schema.Attribute.Media<'images'>;
     longitud: Schema.Attribute.Float;
     nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    ofertas: Schema.Attribute.Relation<'oneToMany', 'api::oferta.oferta'>;
     owner: Schema.Attribute.Relation<
       'oneToOne',
       'plugin::users-permissions.user'
@@ -734,6 +735,51 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     website: Schema.Attribute.String;
     whatsapp: Schema.Attribute.String;
     youtube_url: Schema.Attribute.String;
+  };
+}
+
+export interface ApiOfertaOferta extends Struct.CollectionTypeSchema {
+  collectionName: 'ofertas';
+  info: {
+    description: 'Ofertas promocionales de los negocios';
+    displayName: 'Oferta';
+    pluralName: 'ofertas';
+    singularName: 'oferta';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    activa: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    condiciones: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120;
+      }>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::oferta.oferta'
+    > &
+      Schema.Attribute.Private;
+    negocio: Schema.Attribute.Relation<'manyToOne', 'api::negocio.negocio'>;
+    porcentaje_descuento: Schema.Attribute.Integer;
+    precio_descuento: Schema.Attribute.Float;
+    precio_original: Schema.Attribute.Float;
+    publishedAt: Schema.Attribute.DateTime;
+    tipo_oferta: Schema.Attribute.Enumeration<
+      ['Descuento', 'Promocion2x1', 'Regalo', 'Especial']
+    > &
+      Schema.Attribute.DefaultTo<'Descuento'>;
+    titulo: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    valida_desde: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    valida_hasta: Schema.Attribute.DateTime & Schema.Attribute.Required;
   };
 }
 
@@ -1416,6 +1462,7 @@ declare module '@strapi/strapi' {
       'api::daily-stat.daily-stat': ApiDailyStatDailyStat;
       'api::lead.lead': ApiLeadLead;
       'api::negocio.negocio': ApiNegocioNegocio;
+      'api::oferta.oferta': ApiOfertaOferta;
       'api::pago.pago': ApiPagoPago;
       'api::review.review': ApiReviewReview;
       'api::soporte.soporte': ApiSoporteSoporte;

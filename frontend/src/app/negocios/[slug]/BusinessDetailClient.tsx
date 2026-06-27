@@ -11,6 +11,7 @@ import BusinessActions from "@/components/business/BusinessActions";
 import BusinessGallery from "@/components/business/BusinessGallery";
 import NavigationFAB from "@/components/layout/NavigationFAB";
 import GoogleMap from "@/components/common/GoogleMap";
+import OfferModule from "@/components/business/OfferModule";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -283,6 +284,9 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
                 dangerouslySetInnerHTML={{ __html: negocio.descripcion || "Descubrí la mejor atención y calidad." }} 
               />
             </div>
+
+            <OfferModule ofertas={negocio.ofertas} />
+
             <BookingWidget 
               businessName={negocio.nombre} 
               reservaUrl={negocio.reserva_url}

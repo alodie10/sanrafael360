@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star, Check, Heart, Settings, Crown } from "lucide-react";
+import { Star, Check, Heart, Settings, Crown, Tag } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
@@ -97,8 +97,20 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
             </div>
           )}
 
-          {/* Badges Overlay (Atributos Destacados) */}
+          {/* Badges Overlay (Atributos Destacados & Oferta) */}
           <div className="absolute top-4 left-4 flex flex-col items-start gap-2 z-10">
+            {negocio.ofertas && negocio.ofertas.some(o => o.activa) && (
+              <div className="px-3 py-1 bg-[#FFBF00] rounded-full text-[10px] font-bold text-black shadow-lg flex items-center gap-1 uppercase tracking-widest">
+                <Tag className="w-3 h-3" />
+                {(() => {
+                  const activeOffer = negocio.ofertas.find(o => o.activa);
+                  if (activeOffer?.tipo_oferta === "Promocion2x1") return "2X1";
+                  if (activeOffer?.tipo_oferta === "Regalo") return "REGALO";
+                  if (activeOffer?.porcentaje_descuento) return `-${activeOffer.porcentaje_descuento}%`;
+                  return 'OFERTA';
+                })()}
+              </div>
+            )}
             {negocio.atributos && negocio.atributos.length > 0 && negocio.atributos.slice(0, 2).map((attr: any) => (
               <div key={attr.id || attr.nombre} className="px-3 py-1 bg-black/40 backdrop-blur-md rounded-full text-[10px] font-bold text-white border border-white/20 uppercase tracking-widest shadow-lg">
                 {attr.nombre}

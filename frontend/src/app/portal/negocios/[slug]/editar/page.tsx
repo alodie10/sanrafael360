@@ -27,7 +27,7 @@ export default async function EditBusinessPage(props: any) {
 
   try {
     // REGLA ORO: En Strapi 5, siempre usamos populate para que el formulario tenga los datos
-    const populateParams = "populate[0]=logo&populate[1]=imagen_portada&populate[2]=galeria&populate[3]=schedules&populate[4]=categoria&populate[5]=owner&populate[6]=atributos";
+    const populateParams = "populate[0]=logo&populate[1]=imagen_portada&populate[2]=galeria&populate[3]=schedules&populate[4]=categoria&populate[5]=owner&populate[6]=atributos&populate[7]=ofertas";
     
     // Si es admin, buscamos global. Si no, usamos /me para seguridad
     const endpoint = isAdmin 

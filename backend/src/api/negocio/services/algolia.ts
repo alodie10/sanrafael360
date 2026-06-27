@@ -16,7 +16,7 @@ export const syncNegocioToAlgolia = async (documentId: string) => {
     // Fetch complete negocio data with relations
     const negocioData: any = await strapi.documents('api::negocio.negocio').findOne({
       documentId,
-      populate: ['categoria', 'atributos', 'imagen_portada', 'logo', 'owner']
+      populate: ['categoria', 'atributos', 'imagen_portada', 'logo', 'owner', 'ofertas']
     });
 
     if (!negocioData) {
@@ -56,6 +56,17 @@ export const syncNegocioToAlgolia = async (documentId: string) => {
       imagen_portada: negocioData.imagen_portada?.url ? { url: negocioData.imagen_portada.url } : null,
       logo: negocioData.logo?.url ? { url: negocioData.logo.url } : null,
       owner: negocioData.owner ? { documentId: negocioData.owner.documentId || negocioData.owner.id } : null,
+      ofertas: negocioData.ofertas
+        ?.filter((o: any) => o.activa)
+        .map((o: any) => ({
+          documentId: o.documentId,
+          titulo: o.titulo,
+          tipo_oferta: o.tipo_oferta,
+          porcentaje_descuento: o.porcentaje_descuento,
+          valida_hasta: o.valida_hasta,
+          valida_desde: o.valida_desde,
+          activa: o.activa
+        })) || [],
       _geoloc: negocioData.latitud && negocioData.longitud ? {
         lat: negocioData.latitud,
         lng: negocioData.longitud

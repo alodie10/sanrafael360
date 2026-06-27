@@ -289,6 +289,12 @@
       "multiple": false,
       "required": false,
       "allowedTypes": ["images"]
+    },
+    "ofertas": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::oferta.oferta",
+      "mappedBy": "negocio"
     }
   }
 }
