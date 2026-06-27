@@ -266,11 +266,14 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       const newPago = await strapi.documents('api::pago.pago').create({
         data: {
           monto,
-          estado,
+          estado: estado || 'aprobado',
           fecha_pago,
-          external_reference,
+          external_reference: external_reference || "",
+          mp_preference_id: "manual_" + Date.now(), // Asegurar que sea string
+          mp_payment_id: "manual_" + Date.now(),    // Asegurar que sea string
           negocio
-        }
+        },
+        status: 'published'
       });
 
       // Extender vigencia del negocio si se pidió
