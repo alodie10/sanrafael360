@@ -112,7 +112,7 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
     >
       {topNegocios.map((negocio, index) => (
         <BusinessCard 
-          key={negocio.id} 
+          key={negocio.documentId || `top-${index}`} 
           negocio={negocio} 
           index={index} 
         />
@@ -124,7 +124,7 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
 
       {restNegocios.map((negocio, index) => (
         <BusinessCard 
-          key={negocio.id} 
+          key={negocio.documentId || `rest-${index}`} 
           negocio={negocio} 
           index={index + 4} 
         />

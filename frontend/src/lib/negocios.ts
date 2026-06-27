@@ -17,6 +17,7 @@ export async function getNegocioBySlug(slug: string): Promise<Negocio | null> {
     "populate[galeria][fields][0]=url&" +
     "populate[schedules]=*&" +
     "populate[owner][fields][0]=id&" +
+    "populate[ofertas]=true&" +
     "fields[0]=nombre&fields[1]=descripcion&fields[2]=direccion&fields[3]=telefono&" +
     "fields[4]=whatsapp&fields[5]=website&fields[6]=instagram&fields[7]=facebook&" +
     "fields[8]=latitud&fields[9]=longitud&fields[10]=verificado&fields[11]=reclamar_habilitado&" +

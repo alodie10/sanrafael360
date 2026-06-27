@@ -1,0 +1,58 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ofertas",
+  "info": {
+    "singularName": "oferta",
+    "pluralName": "ofertas",
+    "displayName": "Oferta",
+    "description": "Ofertas promocionales de los negocios"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "titulo": {
+      "type": "string",
+      "required": true
+    },
+    "tipo_oferta": {
+      "type": "enumeration",
+      "enum": ["Descuento", "Promocion2x1", "Regalo", "Especial"],
+      "default": "Descuento"
+    },
+    "precio_original": {
+      "type": "float"
+    },
+    "precio_descuento": {
+      "type": "float"
+    },
+    "porcentaje_descuento": {
+      "type": "integer"
+    },
+    "descripcion": {
+      "type": "string",
+      "maxLength": 120
+    },
+    "valida_desde": {
+      "type": "datetime",
+      "required": true
+    },
+    "valida_hasta": {
+      "type": "datetime",
+      "required": true
+    },
+    "condiciones": {
+      "type": "string"
+    },
+    "activa": {
+      "type": "boolean",
+      "default": false
+    },
+    "negocio": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::negocio.negocio",
+      "inversedBy": "ofertas"
+    }
+  }
+}

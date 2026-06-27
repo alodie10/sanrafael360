@@ -35,6 +35,22 @@ export interface Atributo {
   icono?: string;
 }
 
+export interface Oferta {
+  id: number;
+  documentId: string;
+  titulo: string;
+  tipo_oferta: "Descuento" | "Promocion2x1" | "Regalo" | "Especial";
+  precio_original?: number;
+  precio_descuento?: number;
+  porcentaje_descuento?: number;
+  descripcion?: string;
+  valida_desde: string;
+  valida_hasta: string;
+  condiciones?: string;
+  activa: boolean;
+  negocio?: Negocio;
+}
+
 export interface Negocio {
   id: number;
   documentId: string;
@@ -91,6 +107,7 @@ export interface Negocio {
   galeria_config?: Record<string, any>; // { cropGravity?: string, isInternal?: boolean }
   promocion_activa?: boolean;
   promocion_flyer?: StrapiMedia;
+  ofertas?: Oferta[];
 }
 
 export interface StrapiUser {
