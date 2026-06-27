@@ -166,32 +166,5 @@ export default {
         console.error('Algolia afterDelete sync error:', err);
       }
     }
-  },
-
-  async afterPublish(event: any) {
-    const { result } = event;
-    const docId = result?.documentId || (result?.id && typeof result.id === 'string' ? result.id : undefined);
-    if (docId) {
-      console.log(`[Lifecycle] afterPublish triggered for: ${result.nombre}`);
-      try {
-        await syncNegocioToAlgolia(docId);
-      } catch (err) {
-        console.error('Algolia afterPublish sync error:', err);
-      }
-    }
-  },
-
-  async afterUnpublish(event: any) {
-    const { result } = event;
-    const docId = result?.documentId || (result?.id && typeof result.id === 'string' ? result.id : undefined);
-    if (docId) {
-      console.log(`[Lifecycle] afterUnpublish triggered for: ${result.nombre}`);
-      try {
-        // Al despublicar, lo eliminamos de Algolia para que no salga en búsquedas
-        await deleteNegocioFromAlgolia(docId);
-      } catch (err) {
-        console.error('Algolia afterUnpublish sync error:', err);
-      }
-    }
   }
 };
