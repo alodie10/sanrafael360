@@ -250,10 +250,12 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
                           <UserIcon className="w-5 h-5" />
                         </div>
                         <div>
-                          <div className={`text-sm font-bold transition-colors ${negocio.owner ? 'text-white group-hover:text-primary' : 'text-slate-500'}`}>
-                            {negocio.owner?.email || ((negocio.is_premium && !isExpired) ? "Gestionado por San Rafael 360" : "Sin dueño asignado")}
+                          <div className="text-sm font-bold text-white group-hover:text-primary transition-colors">
+                            {negocio.nombre}
                           </div>
-                          <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest">{negocio.nombre}</div>
+                          <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-0.5">
+                            {negocio.owner?.email || ((negocio.is_premium && !isExpired) ? "Gestionado por SR360" : "Sin dueño asignado")}
+                          </div>
                         </div>
                       </div>
                     </td>
