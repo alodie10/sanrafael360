@@ -83,18 +83,45 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
 
   // Ya no filtramos localmente, usamos la data que viene del server
   const processedData = useMemo(() => {
-    return [...data].sort((a, b) => {
-      const aOwner = a.owner || a.attributes?.owner;
-      const bOwner = b.owner || b.attributes?.owner;
+    const sorted = [...data].sort((a, b) => {
+      const aPagos = a.pagos || a.attributes?.pagos;
+      const bPagos = b.pagos || b.attributes?.pagos;
+
+      // Dependiendo de si viene con .data o es array directo (Strapi 4 vs 5)
+      const aPagosArray = Array.isArray(aPagos) ? aPagos : (aPagos?.data || []);
+      const bPagosArray = Array.isArray(bPagos) ? bPagos : (bPagos?.data || []);
+
+      const aHasPayments = aPagosArray.length > 0;
+      const bHasPayments = bPagosArray.length > 0;
+
       const aPremium = a.is_premium || a.attributes?.is_premium;
       const bPremium = b.is_premium || b.attributes?.is_premium;
 
-      if (aOwner && !bOwner) return -1;
-      if (!aOwner && bOwner) return 1;
+      const aOwner = a.owner || a.attributes?.owner;
+      const bOwner = b.owner || b.attributes?.owner;
+
+      // 1. Priorizar negocios con pagos registrados
+      if (aHasPayments && !bHasPayments) return -1;
+      if (!aHasPayments && bHasPayments) return 1;
+
+      // 2. Luego, priorizar negocios activos (premium)
       if (aPremium && !bPremium) return -1;
       if (!aPremium && bPremium) return 1;
+
+      // 3. Finalmente, priorizar los que tienen dueño asignado
+      if (aOwner && !bOwner) return -1;
+      if (!aOwner && bOwner) return 1;
+      
       return 0;
     });
+
+    console.log("DEBUG SORTING:", sorted.map(n => ({ 
+      nombre: n.nombre || n.attributes?.nombre, 
+      pagos: Array.isArray(n.pagos) ? n.pagos.length : n.pagos?.data?.length,
+      hasPayments: (Array.isArray(n.pagos) ? n.pagos : (n.pagos?.data || [])).length > 0
+    })));
+
+    return sorted;
   }, [data]);
 
   const stats = {
