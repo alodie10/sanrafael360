@@ -219,7 +219,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       documentId
     });
   }),
-    async adminUpdateValidity(ctx) {
+    async modificarVigenciaPortal(ctx) {
     try {
       const { documentId } = ctx.params;
       const { premium_valid_until } = ctx.request.body;
@@ -258,7 +258,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   },
 
     
-  async adminCreatePayment(ctx) {
+  async cargarPagoPortal(ctx) {
     try {
       const { monto, estado, fecha_pago, external_reference, negocio, extendMonths } = ctx.request.body;
       
@@ -311,7 +311,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     }
   },
 
-  async adminDeletePayment(ctx) {
+  async borrarPagoPortal(ctx) {
     try {
       const { documentId } = ctx.params;
       await strapi.documents('api::pago.pago').delete({ documentId });

@@ -67,19 +67,19 @@ export default {
     {
       method: 'POST',
       path: '/negocios/admin/pagos',
-      handler: 'negocio.adminCreatePayment',
+      handler: 'negocio.cargarPagoPortal',
       config: { policies: [], middlewares: [] },
     },
     {
       method: 'DELETE',
       path: '/negocios/admin/pagos/:documentId',
-      handler: 'negocio.adminDeletePayment',
+      handler: 'negocio.borrarPagoPortal',
       config: { policies: [], middlewares: [] },
     },
     {
       method: 'PUT',
       path: '/negocios/admin/vigencia/:documentId',
-      handler: 'negocio.adminUpdateValidity',
+      handler: 'negocio.modificarVigenciaPortal',
       config: { policies: [], middlewares: [] },
     },
   ],
