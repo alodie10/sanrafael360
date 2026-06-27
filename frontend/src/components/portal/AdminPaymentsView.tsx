@@ -214,6 +214,17 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
         headers: { Authorization: `Bearer ${jwt}` }
       });
       if (!res.ok) throw new Error("Error eliminando pago");
+      
+      // Actualización optimista para borrar de la UI instantáneamente
+      setSelectedBusiness(prev => {
+        if (!prev) return prev;
+        const currentPagos = Array.isArray(prev.pagos) ? prev.pagos : (prev.pagos?.data || []);
+        return {
+          ...prev,
+          pagos: currentPagos.filter((p: any) => p.documentId !== documentId)
+        };
+      });
+
       setRefreshTrigger(prev => prev + 1);
     } catch (err) {
       console.error("Error eliminando pago:", err);
