@@ -12,21 +12,32 @@ export default function OfferListClient({ initialOfertas }: { initialOfertas: Of
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  // Deduplicar por documentId: Strapi puede devolver draft+published del mismo documento
+  const ofertas = useMemo(() => {
+    const seen = new Set<string>();
+    return initialOfertas.filter(o => {
+      const key = (o as any).documentId || String(o.id);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [initialOfertas]);
+
   // Extract unique categories from offers
   const categories = useMemo(() => {
     const cats = new Map<string, string>();
-    initialOfertas.forEach(o => {
+    ofertas.forEach(o => {
       if (o.negocio?.categoria) {
         cats.set(o.negocio.categoria.documentId, o.negocio.categoria.nombre);
       }
     });
     return Array.from(cats.entries()).map(([id, name]) => ({ id, name }));
-  }, [initialOfertas]);
+  }, [ofertas]);
 
   const filteredOfertas = useMemo(() => {
-    if (!selectedCategory) return initialOfertas;
-    return initialOfertas.filter(o => o.negocio?.categoria?.documentId === selectedCategory);
-  }, [initialOfertas, selectedCategory]);
+    if (!selectedCategory) return ofertas;
+    return ofertas.filter(o => o.negocio?.categoria?.documentId === selectedCategory);
+  }, [ofertas, selectedCategory]);
 
   return (
     <main className="min-h-screen bg-background pb-20 pt-[calc(var(--navbar-height,80px)+20px)]">
