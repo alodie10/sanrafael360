@@ -20,7 +20,7 @@ export default {
     if (documentId) {
       try {
         await strapi.documents('api::oferta.oferta').publish({
-          documentId,
+          documentId: String(documentId),
         });
       } catch (err) {
         strapi.log.error('Error auto-publishing oferta:', err);
@@ -40,12 +40,12 @@ export default {
       const { result } = event;
       if (result && result.documentId) {
         const fullOferta = await strapi.documents('api::oferta.oferta').findOne({
-          documentId: result.documentId,
+          documentId: String(result.documentId),
           populate: ['negocio']
         });
         
         if (fullOferta && fullOferta.negocio) {
-          negocioId = fullOferta.negocio.documentId || fullOferta.negocio.id;
+          negocioId = String(fullOferta.negocio.documentId || fullOferta.negocio.id);
         }
       }
     }
@@ -59,12 +59,12 @@ export default {
     const documentId = event.params.where?.documentId || event.params.where?.id;
     if (documentId) {
       const fullOferta = await strapi.documents('api::oferta.oferta').findOne({
-        documentId: documentId,
+        documentId: String(documentId),
         populate: ['negocio']
       });
 
       if (fullOferta && fullOferta.negocio) {
-        event.state.negocioId = fullOferta.negocio.documentId || fullOferta.negocio.id;
+        event.state.negocioId = String(fullOferta.negocio.documentId || fullOferta.negocio.id);
       }
     }
   },
