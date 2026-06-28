@@ -1,6 +1,15 @@
 export default {
   routes: [
     {
+      method: 'DELETE',
+      path: '/negocios/:negocioId/ofertas/:ofertaId',
+      handler: 'negocio.deleteOferta',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
       method: 'POST',
       path: '/negocios/:documentId/algolia-sync',
       handler: 'negocio.algoliaSync',

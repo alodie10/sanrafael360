@@ -60,6 +60,33 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     return { data: data || [] }; 
   },
 
+  deleteOferta: asyncHandler(async (ctx) => {
+    const user = ctx.state.user;
+    if (!user) return ctx.unauthorized();
+    const { negocioId, ofertaId } = ctx.params;
+    if (!negocioId || !ofertaId) return ctx.badRequest('negocioId y ofertaId requeridos');
+
+    const { syncNegocioToAlgolia } = require('../services/algolia');
+
+    // 1. Borrar la oferta
+    try {
+      await strapi.documents('api::oferta.oferta').delete({ documentId: String(ofertaId) });
+    } catch (err: any) {
+      strapi.log.error('[deleteOferta] Error al borrar oferta:', err);
+      return ctx.internalServerError('Error al eliminar la oferta');
+    }
+
+    // 2. Sincronizar Algolia de forma síncrona (espera a que termine antes de responder)
+    try {
+      await syncNegocioToAlgolia(String(negocioId));
+    } catch (err: any) {
+      strapi.log.warn('[deleteOferta] Oferta borrada pero error en Algolia sync:', err);
+      // No fallamos el request — la oferta ya fue borrada
+    }
+
+    return ctx.send({ success: true });
+  }),
+
   algoliaSync: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();

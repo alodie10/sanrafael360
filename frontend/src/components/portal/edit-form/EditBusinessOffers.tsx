@@ -90,7 +90,8 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
     
     try {
       const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-      const res = await fetch(`${strapiUrl}/api/ofertas/${documentId}`, {
+      // Endpoint atómico: borra la oferta Y sincroniza Algolia en el mismo request
+      const res = await fetch(`${strapiUrl}/api/negocios/${negocioId}/ofertas/${documentId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${session.jwt}` }
       });
@@ -98,11 +99,6 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
       if (res.ok) {
         toast.success("Oferta eliminada");
         fetchOfertas();
-        // Forzar sync en Algolia para que la tarjeta del negocio actualice el tag inmediatamente
-        fetch(`${strapiUrl}/api/negocios/${negocioId}/algolia-sync`, {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${session.jwt}` }
-        }).catch(() => {}); // fire-and-forget, no bloqueamos si falla
       } else {
         toast.error("Error al eliminar la oferta");
       }
