@@ -13,14 +13,18 @@ export const syncNegocioToAlgolia = async (documentId: string) => {
   }
 
   try {
-    // Fetch complete negocio data with relations
     const negocioData: any = await strapi.documents('api::negocio.negocio').findOne({
       documentId,
+      status: 'published',
       populate: ['categoria', 'atributos', 'imagen_portada', 'logo', 'owner', 'ofertas']
     });
 
     if (!negocioData) {
-       console.warn(`[Algolia] Negocio with ID ${documentId} not found.`);
+       console.log(`[Algolia] Negocio with ID ${documentId} not found or not published. Deleting from Algolia.`);
+       await client.deleteObject({
+         indexName: INDEX_NAME,
+         objectID: documentId,
+       });
        return;
     }
 
