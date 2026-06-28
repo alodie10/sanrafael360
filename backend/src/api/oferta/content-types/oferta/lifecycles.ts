@@ -12,8 +12,7 @@ function extractNegocioId(data: any): string | null {
   return null;
 }
 
-// Flag global para evitar loops: el afterUpdate que dispara el publish
-// no debe intentar publicar de nuevo
+// Guarda los documentIds que estamos publicando para evitar loops afterCreate -> publish -> afterUpdate -> publish
 const publishingSet = new Set<string>();
 
 export default {
@@ -22,7 +21,7 @@ export default {
     const documentId = result?.documentId ? String(result.documentId) : null;
     const negocioId = extractNegocioId(event.params.data);
 
-    // Fire-and-forget: no bloqueamos el request del portal
+    // Fire-and-forget: retornamos inmediatamente al portal y procesamos en background
     setImmediate(async () => {
       if (documentId && !publishingSet.has(documentId)) {
         publishingSet.add(documentId);
@@ -50,7 +49,7 @@ export default {
     const { result } = event;
     const documentId = result?.documentId ? String(result.documentId) : null;
 
-    // Si este update fue disparado por nuestro propio publish, no hacemos nada
+    // Si este update fue disparado por nuestro propio publish(), lo ignoramos
     if (documentId && publishingSet.has(documentId)) {
       return;
     }
@@ -72,9 +71,10 @@ export default {
     }
 
     if (negocioId) {
+      const nId = negocioId;
       setImmediate(async () => {
         try {
-          await syncNegocioToAlgolia(negocioId as string);
+          await syncNegocioToAlgolia(nId);
         } catch (err) {
           strapi.log.error('[Oferta Lifecycle] Error syncing Algolia after update:', err);
         }
@@ -102,80 +102,14 @@ export default {
   async afterDelete(event: any) {
     const negocioId = event.state?.negocioId;
     if (negocioId) {
+      const nId = String(negocioId);
       setImmediate(async () => {
         try {
-          await syncNegocioToAlgolia(String(negocioId));
+          await syncNegocioToAlgolia(nId);
         } catch (err) {
           strapi.log.error('[Oferta Lifecycle] Error syncing Algolia after delete:', err);
         }
       });
-    }
-  }
-};
-
-
-export default {
-  async afterCreate(event: any) {
-    const { result } = event;
-    const documentId = result?.documentId;
-    
-    // En Strapi 5, usamos la Document Service API para auto-publicar
-    if (documentId) {
-      try {
-        await strapi.documents('api::oferta.oferta').publish({
-          documentId: String(documentId),
-        });
-      } catch (err) {
-        strapi.log.error('Error auto-publishing oferta:', err);
-      }
-    }
-
-    const negocioId = extractNegocioId(event.params.data);
-    if (negocioId) {
-      await syncNegocioToAlgolia(String(negocioId));
-    }
-  },
-
-  async afterUpdate(event: any) {
-    let negocioId = extractNegocioId(event.params.data);
-    
-    if (!negocioId) {
-      const { result } = event;
-      if (result && result.documentId) {
-        const fullOferta = await strapi.documents('api::oferta.oferta').findOne({
-          documentId: String(result.documentId),
-          populate: ['negocio']
-        });
-        
-        if (fullOferta && fullOferta.negocio) {
-          negocioId = String(fullOferta.negocio.documentId || fullOferta.negocio.id);
-        }
-      }
-    }
-
-    if (negocioId) {
-      await syncNegocioToAlgolia(String(negocioId));
-    }
-  },
-
-  async beforeDelete(event: any) {
-    const documentId = event.params.where?.documentId || event.params.where?.id;
-    if (documentId) {
-      const fullOferta = await strapi.documents('api::oferta.oferta').findOne({
-        documentId: String(documentId),
-        populate: ['negocio']
-      });
-
-      if (fullOferta && fullOferta.negocio) {
-        event.state.negocioId = String(fullOferta.negocio.documentId || fullOferta.negocio.id);
-      }
-    }
-  },
-
-  async afterDelete(event: any) {
-    const negocioId = event.state?.negocioId;
-    if (negocioId) {
-      await syncNegocioToAlgolia(String(negocioId));
     }
   }
 };
