@@ -36,7 +36,7 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
   const fetchOfertas = async () => {
     try {
       const res = await fetchFromStrapi(
-        `ofertas?filters[negocio][documentId][$eq]=${negocioId}&sort=publishedAt:desc&status=published`,
+        `ofertas?filters[negocio][documentId][$eq]=${negocioId}&filters[publishedAt][$notNull]=true&sort=publishedAt:desc`,
         { headers: { Authorization: `Bearer ${session.jwt}` } }
       );
       setOfertas(res.data || []);

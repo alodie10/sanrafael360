@@ -17,7 +17,7 @@ export default function OffersBanner() {
       try {
         // Traemos todas las ofertas activas con su negocio para deduplicar
         const res = await fetchFromStrapi(
-          "ofertas?filters[activa][$eq]=true&status=published&populate[negocio][fields][0]=documentId&pagination[pageSize]=100"
+          "ofertas?filters[activa][$eq]=true&filters[publishedAt][$notNull]=true&populate[negocio][fields][0]=documentId&pagination[pageSize]=100"
         );
         const ofertas = res.data || [];
         // Contamos negocios únicos (un negocio puede tener varias ofertas)
