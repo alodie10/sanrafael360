@@ -123,8 +123,7 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
           valida_hasta: validaHasta ? new Date(validaHasta).toISOString() : null,
           activa,
           negocio: negocioId, // Relation
-          publishedAt: new Date().toISOString(), // Auto-publish for Strapi < 5.x compatibility
-          status: 'published' // Auto-publish for Strapi 5.x
+          publishedAt: new Date().toISOString() // Auto-publish for Strapi < 5.x compatibility
         }
       };
 
