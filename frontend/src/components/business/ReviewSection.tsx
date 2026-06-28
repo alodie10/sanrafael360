@@ -36,7 +36,7 @@ export default function ReviewSection({ negocioId, ownerId, initialRating = 0, i
 
   const fetchReviews = async () => {
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
       const res = await fetch(`${strapiUrl}/api/reviews?filters[negocio][documentId][$eq]=${negocioId}&populate=autor&sort=createdAt:desc`, {
         cache: 'no-store'
       });
@@ -72,7 +72,7 @@ export default function ReviewSection({ negocioId, ownerId, initialRating = 0, i
 
     setSubmitting(true);
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
       const res = await fetch(`${strapiUrl}/api/reviews`, {
         method: 'POST',
         headers: {

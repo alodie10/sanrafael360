@@ -36,7 +36,7 @@ export default function EditBusinessAttributes({
     setIsCreating(true);
     
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
       // Formatear slug simple
       const slug = newTag.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
       

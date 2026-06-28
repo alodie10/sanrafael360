@@ -58,7 +58,7 @@ export default function PortalStats() {
   const loadStats = async () => {
     setData(prev => ({ ...prev, loading: true }));
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
       const strapiToken = (session as any)?.jwt || process.env.STRAPI_API_TOKEN;
       
       let url = `${strapiUrl}/api/negocios/stats/summary`;

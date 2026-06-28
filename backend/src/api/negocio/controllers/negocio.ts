@@ -314,7 +314,21 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   async borrarPagoPortal(ctx) {
     try {
       const { documentId } = ctx.params;
-      await strapi.documents('api::pago.pago').delete({ documentId });
+      
+      // Strapi 5 uses alphanumeric documentId, but legacy clients might send numeric id
+      let targetDocumentId = documentId;
+      if (!isNaN(Number(documentId))) {
+        // It's a numeric ID, fetch the documentId first
+        const pago = await strapi.db.query('api::pago.pago').findOne({
+          where: { id: Number(documentId) }
+        });
+        if (!pago) {
+          return ctx.notFound("Pago no encontrado");
+        }
+        targetDocumentId = pago.documentId;
+      }
+      
+      await strapi.documents('api::pago.pago').delete({ documentId: targetDocumentId });
       ctx.send({ success: true });
     } catch (err) {
       console.error(err);

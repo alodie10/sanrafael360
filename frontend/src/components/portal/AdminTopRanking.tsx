@@ -12,7 +12,7 @@ export default function AdminTopRanking({ jwt }: { jwt: string }) {
   useEffect(() => {
     const fetchTop = async () => {
       try {
-        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
         const res = await fetch(`${strapiUrl}/api/negocios?sort[0]=views:desc&pagination[limit]=5&fields[0]=nombre&fields[1]=slug&fields[2]=views`, {
           headers: { Authorization: `Bearer ${jwt}` },
           cache: 'no-store'

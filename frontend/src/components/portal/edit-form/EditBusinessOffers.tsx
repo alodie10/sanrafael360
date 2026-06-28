@@ -80,7 +80,7 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
     if (!confirm("¿Seguro que deseas eliminar esta oferta?")) return;
     
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
       const res = await fetch(`${strapiUrl}/api/ofertas/${documentId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${session.jwt}` }
@@ -105,7 +105,7 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
 
     setIsSaving(true);
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
       const method = editingOferta ? "PUT" : "POST";
       const endpoint = editingOferta 
         ? `${strapiUrl}/api/ofertas/${editingOferta.documentId}`
@@ -122,7 +122,9 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
           valida_desde: validaDesde ? new Date(validaDesde).toISOString() : null,
           valida_hasta: validaHasta ? new Date(validaHasta).toISOString() : null,
           activa,
-          negocio: negocioId // Relation
+          negocio: negocioId, // Relation
+          publishedAt: new Date().toISOString(), // Auto-publish for Strapi < 5.x compatibility
+          status: 'published' // Auto-publish for Strapi 5.x
         }
       };
 

@@ -216,12 +216,12 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
       if (!res.ok) throw new Error("Error eliminando pago");
       
       // Actualización optimista para borrar de la UI instantáneamente
-      setSelectedBusiness(prev => {
+      setSelectedBusiness((prev: any) => {
         if (!prev) return prev;
         const currentPagos = Array.isArray(prev.pagos) ? prev.pagos : (prev.pagos?.data || []);
         return {
           ...prev,
-          pagos: currentPagos.filter((p: any) => p.documentId !== documentId)
+          pagos: currentPagos.filter((p: any) => (p.documentId || p.id) !== documentId)
         };
       });
 
@@ -609,7 +609,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
                             {pago.estado || 'aprobado'}
                           </span>
                           <button 
-                            onClick={() => handleDeletePayment(pago.documentId)}
+                            onClick={() => handleDeletePayment(pago.documentId || pago.id)}
                             className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                             title="Eliminar Pago"
                           >

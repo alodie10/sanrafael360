@@ -201,7 +201,7 @@ function HomeContent() {
         const { results } = await client.search({
           requests: [
             {
-              indexName: 'negocios',
+              indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME || (process.env.NODE_ENV === 'production' ? 'negocios' : 'negocios_dev'),
               query: fullQuery,
               hitsPerPage: 100,
             }

@@ -18,7 +18,7 @@ export default async function EditBusinessPage(props: any) {
     redirect("/login");
   }
 
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "https://sanrafael360-production.up.railway.app";
+  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
   const userEmail = session.user?.email;
   const isAdmin = session.user?.role?.toLowerCase() === 'admin' || ADMIN_EMAILS.includes(userEmail?.toLowerCase() || "");
   

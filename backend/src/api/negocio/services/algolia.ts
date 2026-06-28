@@ -4,7 +4,7 @@ const APP_ID = process.env.ALGOLIA_APP_ID || '';
 const ADMIN_KEY = process.env.ALGOLIA_ADMIN_KEY || '';
 
 const client = (APP_ID && ADMIN_KEY) ? algoliasearch(APP_ID, ADMIN_KEY) : null;
-const INDEX_NAME = 'negocios';
+const INDEX_NAME = process.env.ALGOLIA_INDEX_NAME || (process.env.NODE_ENV === 'production' ? 'negocios' : 'negocios_dev');
 
 export const syncNegocioToAlgolia = async (documentId: string) => {
   if (!client) {
