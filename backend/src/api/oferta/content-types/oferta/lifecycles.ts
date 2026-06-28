@@ -1,6 +1,14 @@
 import { syncNegocioToAlgolia } from '../../../negocio/services/algolia';
 
 export default {
+  async beforeCreate(event: any) {
+    event.params.data.publishedAt = new Date();
+  },
+  async beforeUpdate(event: any) {
+    if (!event.params.data.publishedAt) {
+      event.params.data.publishedAt = new Date();
+    }
+  },
   async afterCreate(event: any) {
     const negocioId = event.params.data?.negocio;
     if (negocioId) {
