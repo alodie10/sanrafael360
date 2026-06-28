@@ -5,6 +5,7 @@ import SessionProvider from "@/components/providers/SessionProvider";
 import Navbar from "@/components/layout/Navbar";
 import MasterBar from "@/components/layout/MasterBar";
 import SmartAppBanner from "@/components/layout/SmartAppBanner";
+import IOSInstallPrompt from "@/components/layout/IOSInstallPrompt";
 import BottomNav from "@/components/layout/BottomNav";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -84,6 +85,7 @@ export default function RootLayout({
               {children}
               <BottomNav />
               <SmartAppBanner />
+              <IOSInstallPrompt />
               <SpeedInsights />
               <Suspense fallback={null}>
                 <MetaPixel />
