@@ -35,9 +35,25 @@ export default {
         }
       }
 
-      if (negocioId) {
+      // Intentamos obtener el negocioId del payload primero, si no, lo buscamos en DB
+      let resolvedNegocioId = negocioId;
+      if (!resolvedNegocioId && documentId) {
         try {
-          await syncNegocioToAlgolia(negocioId);
+          const fullOferta = await strapi.documents('api::oferta.oferta').findOne({
+            documentId,
+            populate: ['negocio'],
+          });
+          if (fullOferta?.negocio) {
+            resolvedNegocioId = String(fullOferta.negocio.documentId || fullOferta.negocio.id);
+          }
+        } catch (err) {
+          strapi.log.error('[Oferta Lifecycle] Error resolving negocio after create:', err);
+        }
+      }
+
+      if (resolvedNegocioId) {
+        try {
+          await syncNegocioToAlgolia(resolvedNegocioId);
         } catch (err) {
           strapi.log.error('[Oferta Lifecycle] Error syncing Algolia after create:', err);
         }
