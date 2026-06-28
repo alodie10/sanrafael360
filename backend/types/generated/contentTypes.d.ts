@@ -771,7 +771,7 @@ export interface ApiOfertaOferta extends Struct.CollectionTypeSchema {
     precio_original: Schema.Attribute.Float;
     publishedAt: Schema.Attribute.DateTime;
     tipo_oferta: Schema.Attribute.Enumeration<
-      ['Descuento', 'Promocion2x1', 'Regalo', 'Especial']
+      ['Descuento', 'Promocion2x1', 'Regalo', 'Especial', 'Experiencia']
     > &
       Schema.Attribute.DefaultTo<'Descuento'>;
     titulo: Schema.Attribute.String & Schema.Attribute.Required;
