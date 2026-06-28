@@ -42,6 +42,7 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: clip;
   }
 }
 
@@ -100,8 +101,8 @@ body {
 }
 
 /* Soporte para notch/safe areas (iPhone X+, Android con punch hole) */
-.safe-top    { padding-top: env(safe-area-inset-top); }
-.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-top, .pt-safe { padding-top: env(safe-area-inset-top); }
+.safe-bottom, .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 
 /* Modo Standalone (cuando está instalada como app) */
 @media (display-mode: standalone) {

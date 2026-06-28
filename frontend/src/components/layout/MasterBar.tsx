@@ -19,12 +19,15 @@ export default function MasterBar() {
   // Controlar la variable CSS de la altura del MasterBar
   useEffect(() => {
     if (showMasterBar) {
-      document.documentElement.style.setProperty('--master-bar-height', '40px'); // h-10 es 40px
+      document.documentElement.style.setProperty('--master-bar-height', 'calc(40px + env(safe-area-inset-top, 0px))');
+      document.documentElement.style.setProperty('--navbar-safe-pt', '0px');
     } else {
       document.documentElement.style.setProperty('--master-bar-height', '0px');
+      document.documentElement.style.setProperty('--navbar-safe-pt', 'env(safe-area-inset-top, 0px)');
     }
     return () => {
       document.documentElement.style.setProperty('--master-bar-height', '0px');
+      document.documentElement.style.setProperty('--navbar-safe-pt', 'env(safe-area-inset-top, 0px)');
     };
   }, [showMasterBar]);
 
@@ -33,7 +36,7 @@ export default function MasterBar() {
 
   return (
     <>
-      <div className="fixed top-[var(--app-banner-height,0px)] left-0 right-0 z-[100] bg-black border-b border-white/10 h-10 flex items-center px-4 md:px-8 justify-between backdrop-blur-xl bg-black/90">
+      <div className="fixed top-[var(--app-banner-height,0px)] left-0 right-0 z-[100] bg-black border-b border-white/10 h-10 pt-safe flex items-center px-4 md:px-8 justify-between backdrop-blur-xl bg-black/90 box-content">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <ShieldCheck className={`w-3.5 h-3.5 ${isAdmin ? 'text-primary' : 'text-emerald-400'}`} />

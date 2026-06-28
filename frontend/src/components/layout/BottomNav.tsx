@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 export default function BottomNav() {
   const pathname = usePathname();
 
-  // No mostrar en la vista de portal de negocios para dueños, ni login
-  if (pathname.startsWith('/portal') || pathname === '/login' || pathname === '/registro') {
+  // No mostrar en sub-vistas del portal (admin/negocios), ni en login
+  if ((pathname.startsWith('/portal') && pathname !== '/portal') || pathname === '/login' || pathname === '/registro') {
     return null;
   }
 

@@ -201,7 +201,7 @@ function NavbarInner() {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "left-0 right-0 z-[100] transition-all duration-300 top-[calc(var(--app-banner-height,0px)+var(--master-bar-height,0px))]",
+        "left-0 right-0 z-[100] transition-all duration-300 top-[calc(var(--app-banner-height,0px)+var(--master-bar-height,0px))] pt-[var(--navbar-safe-pt,env(safe-area-inset-top,0px))]",
         scrolled
           ? "fixed bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl"
           : "relative md:fixed bg-transparent border-b border-transparent"
