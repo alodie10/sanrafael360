@@ -17,7 +17,7 @@
     },
     "tipo_oferta": {
       "type": "enumeration",
-      "enum": ["Descuento", "Promocion2x1", "Regalo", "Especial"],
+      "enum": ["Descuento", "Promocion2x1", "Regalo", "Especial", "Experiencia"],
       "default": "Descuento"
     },
     "precio_original": {

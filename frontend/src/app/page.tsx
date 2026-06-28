@@ -209,8 +209,8 @@ function HomeContent() {
         });
         
         // Aseguramos que los Premium aparezcan primero en los resultados locales
-        const hits = results[0]?.hits || [];
-        const sortedHits = hits.sort((a, b) => {
+        const hits = (results[0] as any)?.hits || [];
+        const sortedHits = hits.sort((a: any, b: any) => {
           if (a.is_premium && !b.is_premium) return -1;
           if (!a.is_premium && b.is_premium) return 1;
           return 0;

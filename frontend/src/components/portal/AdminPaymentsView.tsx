@@ -105,7 +105,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
         const json = await res.json();
         console.log(`DEBUG: Strapi devolvió ${json.data?.length || 0} negocios`);
         if (selectedBusiness) {
-          const check = json.data.find(b => b.id === selectedBusiness.id);
+          const check = json.data.find((b: any) => b.id === selectedBusiness.id);
           console.log("DEBUG: Refresh fetched selected business pagos:", check?.pagos?.length || (check?.pagos?.data?.length || 0));
         }
         setData(json.data || []);
@@ -158,7 +158,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
       setRefreshTrigger(prev => prev + 1);
       
       // Optimistic update para que se vea inmediato en pantalla
-      setSelectedBusiness(prev => {
+      setSelectedBusiness((prev: any) => {
         if (!prev) return prev;
         const currentPagos = Array.isArray(prev.pagos) ? [...prev.pagos] : [...(prev.pagos?.data || [])];
         return {
@@ -198,7 +198,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
       alert("Guardado OK! Vuelve a recargar si la fecha salta.");
     } catch (err) {
       console.error(err);
-      alert("Error crítico al actualizar: " + err.message);
+      alert("Error crítico al actualizar: " + (err as Error).message);
     } finally {
       setIsUpdatingDate(false);
     }
@@ -589,7 +589,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
                     <p className="text-center text-slate-500 italic text-sm py-4">No hay pagos registrados.</p>
                   ) : (
                     (Array.isArray(selectedBusiness.pagos) ? selectedBusiness.pagos : (selectedBusiness.pagos.data || []))
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                     .map((pago: any) => (
                       <div key={pago.id || pago.documentId} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/[0.04] transition-colors">
                         <div className="flex items-center gap-4">

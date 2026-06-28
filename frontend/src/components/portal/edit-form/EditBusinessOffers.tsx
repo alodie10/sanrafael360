@@ -20,7 +20,7 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
 
   // Form states
   const [titulo, setTitulo] = useState("");
-  const [tipoOferta, setTipoOferta] = useState<"Descuento" | "Promocion2x1" | "Regalo" | "Especial">("Descuento");
+  const [tipoOferta, setTipoOferta] = useState<"Descuento" | "Promocion2x1" | "Regalo" | "Especial" | "Experiencia">("Descuento");
   const [descripcion, setDescripcion] = useState("");
   const [precioOriginal, setPrecioOriginal] = useState<number | "">("");
   const [precioDescuento, setPrecioDescuento] = useState<number | "">("");
@@ -274,6 +274,7 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
                     <option value="Promocion2x1">2x1</option>
                     <option value="Regalo">Regalo con Compra</option>
                     <option value="Especial">Promoción Especial</option>
+                    <option value="Experiencia">Experiencia (degustación, tour, etc.)</option>
                   </select>
                 </div>
 

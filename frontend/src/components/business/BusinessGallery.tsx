@@ -229,72 +229,76 @@ function MediaGallery({ items, youtubeUrl, businessName }: { items: any[]; youtu
 
       {/* Modal Fullscreen para reproducir multimedia */}
       <AnimatePresence>
-        {activeIndex !== null && parsedItems[activeIndex] && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-black flex items-center justify-center p-4 md:p-12"
-            onClick={closeFullscreen}
-          >
-            {/* Controles: Cerrar */}
-            <button
+        {activeIndex !== null && (() => {
+          const activeItem = parsedItems[activeIndex];
+          if (!activeItem) return null;
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] bg-black flex items-center justify-center p-4 md:p-12"
               onClick={closeFullscreen}
-              className="absolute top-4 right-4 z-50 w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-              aria-label="Cerrar multimedia"
             >
-              <X className="w-6 h-6" />
-            </button>
+              {/* Controles: Cerrar */}
+              <button
+                onClick={closeFullscreen}
+                className="absolute top-4 right-4 z-50 w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                aria-label="Cerrar multimedia"
+              >
+                <X className="w-6 h-6" />
+              </button>
 
-            {/* Controles: Flechas (solo si hay más de 1 item) */}
-            {parsedItems.length > 1 && (
-              <>
-                <button
-                  onClick={prevSlide}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 z-50 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-                  aria-label="Anterior"
-                >
-                  <ChevronLeft className="w-8 h-8 -ml-1" />
-                </button>
-                <button
-                  onClick={nextSlide}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 z-50 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-                  aria-label="Siguiente"
-                >
-                  <ChevronRight className="w-8 h-8 -mr-1" />
-                </button>
-              </>
-            )}
+              {/* Controles: Flechas (solo si hay más de 1 item) */}
+              {parsedItems.length > 1 && (
+                <>
+                  <button
+                    onClick={prevSlide}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-50 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                    aria-label="Anterior"
+                  >
+                    <ChevronLeft className="w-8 h-8 -ml-1" />
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-50 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                    aria-label="Siguiente"
+                  >
+                    <ChevronRight className="w-8 h-8 -mr-1" />
+                  </button>
+                </>
+              )}
 
-            {/* Media player/viewer */}
-            {parsedItems[activeIndex].isVideo ? (
-              <motion.video
-                ref={fullscreenVideoRef}
-                key={parsedItems[activeIndex].optimizedMediaUrl}
-                src={parsedItems[activeIndex].optimizedMediaUrl}
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="w-full h-full max-h-screen object-contain"
-                controls
-                autoPlay
-                playsInline
-                onClick={(e) => e.stopPropagation()}
-              />
-            ) : (
-              <motion.img
-                key={parsedItems[activeIndex].optimizedMediaUrl}
-                src={parsedItems[activeIndex].optimizedMediaUrl}
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="w-full h-full max-h-screen object-contain"
-                alt="Imagen en pantalla completa"
-                onClick={(e) => e.stopPropagation()}
-              />
-            )}
-          </motion.div>
-        )}
+              {/* Media player/viewer */}
+              {activeItem.isVideo ? (
+                <motion.video
+                  ref={fullscreenVideoRef}
+                  key={activeItem.optimizedMediaUrl}
+                  src={activeItem.optimizedMediaUrl}
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  className="w-full h-full max-h-screen object-contain"
+                  controls
+                  autoPlay
+                  playsInline
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <motion.img
+                  key={activeItem.optimizedMediaUrl}
+                  src={activeItem.optimizedMediaUrl}
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  className="w-full h-full max-h-screen object-contain"
+                  alt="Imagen en pantalla completa"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              )}
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
     </>
   );

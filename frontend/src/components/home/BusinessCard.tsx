@@ -106,6 +106,8 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
                   const activeOffer = negocio.ofertas.find(o => o.activa);
                   if (activeOffer?.tipo_oferta === "Promocion2x1") return "2X1";
                   if (activeOffer?.tipo_oferta === "Regalo") return "REGALO";
+                  if (activeOffer?.tipo_oferta === "Especial") return "ESPECIAL";
+                  if (activeOffer?.tipo_oferta === "Experiencia") return "EXPERIENCIA";
                   if (activeOffer?.porcentaje_descuento) return `-${activeOffer.porcentaje_descuento}%`;
                   return 'OFERTA';
                 })()}

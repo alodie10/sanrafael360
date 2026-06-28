@@ -39,7 +39,7 @@ export interface Oferta {
   id: number;
   documentId: string;
   titulo: string;
-  tipo_oferta: "Descuento" | "Promocion2x1" | "Regalo" | "Especial";
+  tipo_oferta: "Descuento" | "Promocion2x1" | "Regalo" | "Especial" | "Experiencia";
   precio_original?: number;
   precio_descuento?: number;
   porcentaje_descuento?: number;

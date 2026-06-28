@@ -12,6 +12,7 @@ interface BusinessGridProps {
   loading?: boolean;
   onClearFilters?: () => void;
   filterFavorites?: boolean;
+  emptyMessage?: string;
 }
 
 const container = {
@@ -31,7 +32,7 @@ const item = {
 
 import { useFavorites } from "@/context/FavoritesContext";
 
-export default function BusinessGrid({ negocios, loading = false, onClearFilters, filterFavorites = false }: BusinessGridProps) {
+export default function BusinessGrid({ negocios, loading = false, onClearFilters, filterFavorites = false, emptyMessage }: BusinessGridProps) {
   const { isFavorite } = useFavorites();
   const [visibleCount, setVisibleCount] = useState(16);
   const observerTarget = useRef<HTMLDivElement>(null);
