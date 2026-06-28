@@ -60,6 +60,22 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     return { data: data || [] }; 
   },
 
+  algoliaSync: asyncHandler(async (ctx) => {
+    const user = ctx.state.user;
+    if (!user) return ctx.unauthorized();
+    const { documentId } = ctx.params;
+    if (!documentId) return ctx.badRequest('documentId requerido');
+
+    const { syncNegocioToAlgolia } = require('../services/algolia');
+    try {
+      await syncNegocioToAlgolia(String(documentId));
+      return ctx.send({ success: true });
+    } catch (err: any) {
+      strapi.log.error('[algoliaSync] Error:', err);
+      return ctx.internalServerError('Error al sincronizar con Algolia');
+    }
+  }),
+
   portalUpdate: asyncHandler(async (ctx) => {
     const { id } = ctx.params;
     const user = ctx.state.user;

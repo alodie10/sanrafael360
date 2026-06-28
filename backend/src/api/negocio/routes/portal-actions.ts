@@ -1,6 +1,15 @@
 export default {
   routes: [
     {
+      method: 'POST',
+      path: '/negocios/:documentId/algolia-sync',
+      handler: 'negocio.algoliaSync',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
       method: 'GET',
       path: '/negocios/favoritos/me',
       handler: 'negocio.getFavorites',
