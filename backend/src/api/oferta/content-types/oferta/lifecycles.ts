@@ -1,35 +1,50 @@
 import { syncNegocioToAlgolia } from '../../../negocio/services/algolia';
 
+function extractNegocioId(data: any): string | null {
+  if (!data?.negocio) return null;
+  if (typeof data.negocio === 'string') return data.negocio;
+  if (data.negocio.connect && Array.isArray(data.negocio.connect) && data.negocio.connect.length > 0) {
+    return data.negocio.connect[0].documentId || data.negocio.connect[0].id || null;
+  }
+  if (data.negocio.documentId) return data.negocio.documentId;
+  if (data.negocio.id) return data.negocio.id;
+  return null;
+}
+
 export default {
-  async beforeCreate(event: any) {
-    event.params.data.publishedAt = new Date();
-  },
-  async beforeUpdate(event: any) {
-    if (!event.params.data.publishedAt) {
-      event.params.data.publishedAt = new Date();
-    }
-  },
   async afterCreate(event: any) {
-    const negocioId = event.params.data?.negocio;
+    const { result } = event;
+    const documentId = result?.documentId;
+    
+    // En Strapi 5, usamos la Document Service API para auto-publicar
+    if (documentId) {
+      try {
+        await strapi.documents('api::oferta.oferta').publish({
+          documentId,
+        });
+      } catch (err) {
+        strapi.log.error('Error auto-publishing oferta:', err);
+      }
+    }
+
+    const negocioId = extractNegocioId(event.params.data);
     if (negocioId) {
       await syncNegocioToAlgolia(String(negocioId));
     }
   },
 
   async afterUpdate(event: any) {
-    // Si el negocio viene en el payload, usamos ese
-    let negocioId = event.params.data?.negocio;
+    let negocioId = extractNegocioId(event.params.data);
     
-    // Si no viene en el payload, lo buscamos en la DB (en estado draft)
     if (!negocioId) {
       const { result } = event;
       if (result && result.documentId) {
         const fullOferta = await strapi.documents('api::oferta.oferta').findOne({
           documentId: result.documentId,
-          populate: ['negocio'],
-          status: 'draft'
+          populate: ['negocio']
         });
-        if (fullOferta?.negocio) {
+        
+        if (fullOferta && fullOferta.negocio) {
           negocioId = fullOferta.negocio.documentId || fullOferta.negocio.id;
         }
       }
@@ -45,12 +60,7 @@ export default {
     if (documentId) {
       const fullOferta = await strapi.documents('api::oferta.oferta').findOne({
         documentId: documentId,
-        populate: ['negocio'],
-        status: 'published'
-      }) || await strapi.documents('api::oferta.oferta').findOne({
-        documentId: documentId,
-        populate: ['negocio'],
-        status: 'draft'
+        populate: ['negocio']
       });
 
       if (fullOferta && fullOferta.negocio) {
