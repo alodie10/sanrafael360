@@ -15,10 +15,19 @@ export default function OffersBanner() {
 
     const fetchCount = async () => {
       try {
-        const res = await fetchFromStrapi("ofertas?filters[activa][$eq]=true&pagination[pageSize]=1");
-        const count = res.meta?.pagination?.total || 0;
-        if (count > 0) {
-          setOffersCount(count);
+        // Traemos todas las ofertas activas con su negocio para deduplicar
+        const res = await fetchFromStrapi(
+          "ofertas?filters[activa][$eq]=true&status=published&populate[negocio][fields][0]=documentId&pagination[pageSize]=100"
+        );
+        const ofertas = res.data || [];
+        // Contamos negocios únicos (un negocio puede tener varias ofertas)
+        const negociosUnicos = new Set(
+          ofertas
+            .map((o: any) => o.negocio?.documentId)
+            .filter(Boolean)
+        ).size;
+        if (negociosUnicos > 0) {
+          setOffersCount(negociosUnicos);
           setIsVisible(true);
         }
       } catch (e) {

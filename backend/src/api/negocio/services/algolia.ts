@@ -16,7 +16,16 @@ export const syncNegocioToAlgolia = async (documentId: string) => {
     const negocioData: any = await strapi.documents('api::negocio.negocio').findOne({
       documentId,
       status: 'published',
-      populate: ['categoria', 'atributos', 'imagen_portada', 'logo', 'owner', 'ofertas']
+      populate: {
+        categoria: true,
+        atributos: true,
+        imagen_portada: true,
+        logo: true,
+        owner: true,
+        ofertas: {
+          filters: { publishedAt: { $notNull: true } }
+        }
+      }
     });
 
     if (!negocioData) {
