@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, Suspense, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,15 +27,11 @@ function NavbarInner() {
   const [localidad, setLocalidad] = useState("San Rafael, Mendoza");
 
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const autocompleteRef = useRef<any>(null);
 
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
-
-  // --- Google Places Autocomplete (State Ref) ---
-  const [locationInput, setLocationInput] = useState<HTMLInputElement | null>(null);
 
   // Visibilidad del search bar:
   const isHome = pathname === "/";
@@ -42,53 +39,65 @@ function NavbarInner() {
   const showSearchBarMobile = isHome && !scrolled && !mobileSearchCollapsed;
   const showSearchBar = showSearchBarDesktop || showSearchBarMobile;
 
+  // --- Google Places (nueva API 2025) ---
+  const [locationValue, setLocationValue] = useState("San Rafael, Mendoza");
+  const [locationSuggestions, setLocationSuggestions] = useState<Array<{
+    placePrediction: { text: { toString: () => string }; toPlace: () => { fetchFields: (o: { fields: string[] }) => Promise<{ place: any }> } }
+  }>>([]);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const placesLibRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sessionTokenRef = useRef<any>(null);
+  const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locationFieldRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (!showSearchBar || !locationInput) return;
-
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) return;
+    if (!apiKey || placesLibRef.current) return;
 
-    let isMounted = true;
     const loader = new Loader({ apiKey, version: "weekly", libraries: ["places", "marker", "maps"], language: "es" });
-    
-    loader.load().then((google) => {
-      if (!isMounted || !locationInput.isConnected) return;
-      if (!(locationInput instanceof HTMLInputElement)) return;
-      
-      try {
-        const bounds = new google.maps.LatLngBounds(
-          new google.maps.LatLng(-36.2, -70.3),
-          new google.maps.LatLng(-33.8, -67.2)
-        );
-        
-        const autocomplete = new google.maps.places.Autocomplete(locationInput, {
-          componentRestrictions: { country: "ar" },
-          types: [],
-          fields: ["formatted_address", "geometry"],
-          bounds,
-          strictBounds: true,
-        });
-        
-        autocompleteRef.current = autocomplete;
-        
-        autocomplete.addListener("place_changed", () => {
-          const place = autocomplete.getPlace();
-          if (place.formatted_address) {
-            let clean = place.formatted_address.split(",")[0]
-              .replace(/M560\d/g, "").replace(/RN\d+/g, "").replace(/RP\d+/g, "").trim();
-            setLocalidad(clean || place.formatted_address.split(",")[0]);
-          }
-        });
-      } catch (err) {
-        console.error("Google Autocomplete initialization error:", err);
-      }
-    }).catch(() => {});
+    loader.importLibrary("places").then((placesLib) => {
+      placesLibRef.current = placesLib;
+      sessionTokenRef.current = new placesLib.AutocompleteSessionToken();
+      console.log("[Navbar] Places library loaded OK", Object.keys(placesLib));
+    }).catch((e) => console.error("[Navbar] Places load error:", e));
+  }, []);
 
-    return () => {
-      isMounted = false;
-      autocompleteRef.current = null;
-    };
-  }, [showSearchBar, locationInput]);
+  const fetchLocationSuggestions = useCallback(async (value: string) => {
+    const placesLib = placesLibRef.current;
+    if (!placesLib || value.length < 3) { setLocationSuggestions([]); return; }
+    console.log("[Navbar] calling API, AutocompleteSuggestion:", !!placesLib.AutocompleteSuggestion);
+    try {
+      const { suggestions } = await placesLib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+        input: value,
+        includedRegionCodes: ["ar"],
+        sessionToken: sessionTokenRef.current,
+      });
+      console.log("[Navbar] suggestions:", suggestions?.length, suggestions);
+      setLocationSuggestions(suggestions ?? []);
+      setShowLocationDropdown((suggestions ?? []).length > 0);
+    } catch (e) { console.error("[Navbar] fetchAutocompleteSuggestions error:", e); }
+  }, []);
+
+  const handleLocationInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocationValue(value);
+    console.log("[Navbar] typing:", value, "placesLib:", !!placesLibRef.current);
+    if (locationDebounceRef.current) clearTimeout(locationDebounceRef.current);
+    locationDebounceRef.current = setTimeout(() => fetchLocationSuggestions(value), 300);
+  };
+
+  const handleLocationSelect = async (suggestion: typeof locationSuggestions[number]) => {
+    setShowLocationDropdown(false);
+    const place = suggestion.placePrediction.toPlace();
+    const { place: p } = await place.fetchFields({ fields: ["displayName", "formattedAddress"] });
+    const clean = (p.formattedAddress ?? p.displayName ?? "").split(",")[0].trim();
+    setLocationValue(clean || suggestion.placePrediction.text.toString().split(",")[0]);
+    setLocalidad(clean || suggestion.placePrediction.text.toString().split(",")[0]);
+    if (placesLibRef.current) sessionTokenRef.current = new placesLibRef.current.AutocompleteSessionToken();
+  };
+
 
   // --- Cargar categorías ---
   useEffect(() => {
@@ -98,8 +107,10 @@ function NavbarInner() {
   }, []);
 
   useEffect(() => {
+    const l = searchParams.get("l") || "San Rafael, Mendoza";
     setSearchQuery(searchParams.get("q") || "");
-    setLocalidad(searchParams.get("l") || "San Rafael, Mendoza");
+    setLocalidad(l);
+    setLocationValue(l);
     setMobileSearchCollapsed(!!(searchParams.get("q") || searchParams.get("cat")));
   }, []);
 
@@ -107,8 +118,10 @@ function NavbarInner() {
     const handleSync = (e: Event) => {
       const customEvent = e as CustomEvent;
       if (customEvent.detail) {
+        const l = customEvent.detail.l || "San Rafael, Mendoza";
         setSearchQuery(customEvent.detail.q || "");
-        setLocalidad(customEvent.detail.l || "San Rafael, Mendoza");
+        setLocalidad(l);
+        setLocationValue(l);
         setMobileSearchCollapsed(!!(customEvent.detail.q || customEvent.detail.cat));
       }
     };
@@ -196,6 +209,7 @@ function NavbarInner() {
   // Ya calculados arriba para el Autocomplete
 
   return (
+    <>
     <nav
       ref={navRef}
       onMouseEnter={handleMouseEnter}
@@ -368,7 +382,7 @@ function NavbarInner() {
             >
               <div className="bg-black/40 backdrop-blur-md border-t border-white/5 pb-4">
                 <div className="px-4 pt-4 flex flex-col max-w-4xl mx-auto w-full">
-                  <div className="flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl overflow-hidden w-full shadow-2xl">
+                  <div className="relative flex flex-col md:flex-row items-stretch bg-zinc-900/90 border border-white/10 rounded-xl w-full shadow-2xl">
                     {/* Qué buscas */}
                     <div className="flex-1 flex items-center gap-3 px-5 py-4 border-b md:border-b-0 md:border-r border-white/10 relative group">
                       <Search className="w-5 h-5 text-slate-500" />
@@ -404,25 +418,25 @@ function NavbarInner() {
                       )}
                     </div>
                     {/* Dónde */}
-                    <div className="flex-1 flex items-center gap-3 px-5 py-4 relative group">
+                    <div ref={locationFieldRef} className="flex-1 flex items-center gap-3 px-5 py-4 relative group">
                       <MapPin className="w-5 h-5 text-slate-500" />
                       <input
-                        ref={setLocationInput}
                         type="text"
                         placeholder="Localidad"
-                        value={localidad}
-                        onChange={(e) => setLocalidad(e.target.value)}
+                        value={locationValue}
+                        onChange={handleLocationInput}
                         onFocus={(e) => e.target.select()}
+                        onBlur={() => setTimeout(() => setShowLocationDropdown(false), 150)}
                         onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                         className="bg-transparent border-none outline-none w-full text-white text-base focus:ring-0 font-medium pr-8"
                       />
-                      {localidad !== "San Rafael, Mendoza" && (
-                        <button onClick={() => setLocalidad("San Rafael, Mendoza")} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all">
+                      {locationValue !== "San Rafael, Mendoza" && (
+                        <button onClick={() => { setLocationValue("San Rafael, Mendoza"); setLocalidad("San Rafael, Mendoza"); setShowLocationDropdown(false); }} className="absolute right-3 p-1 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all">
                           <X className="w-4 h-4" />
                         </button>
                       )}
                     </div>
-                    <button onClick={handleSearch} className="bg-white hover:bg-zinc-200 text-black px-10 py-4 md:py-0 font-heading font-black uppercase tracking-widest transition-all active:scale-95">
+                    <button onClick={handleSearch} className="bg-white hover:bg-zinc-200 text-black px-10 py-4 md:py-0 font-heading font-black uppercase tracking-widest transition-all active:scale-95 rounded-b-xl md:rounded-b-none md:rounded-r-xl">
                       BUSCAR
                     </button>
                   </div>
@@ -433,6 +447,34 @@ function NavbarInner() {
         </AnimatePresence>
       </div>
     </nav>
+    {/* Portal: dropdown fuera del overflow-hidden del motion.div */}
+    {showLocationDropdown && locationSuggestions.length > 0 && typeof document !== "undefined" &&
+      createPortal(
+        <ul
+          style={{
+            position: "fixed",
+            top: (locationFieldRef.current?.getBoundingClientRect().bottom ?? 0) + 4,
+            left: locationFieldRef.current?.getBoundingClientRect().left ?? 0,
+            width: locationFieldRef.current?.getBoundingClientRect().width ?? 300,
+            zIndex: 9999,
+          }}
+          className="bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl"
+        >
+          {locationSuggestions.map((s, i) => (
+            <li
+              key={i}
+              onMouseDown={() => handleLocationSelect(s)}
+              className="flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:bg-white/10 cursor-pointer transition-colors"
+            >
+              <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+              {s.placePrediction.text.toString()}
+            </li>
+          ))}
+        </ul>,
+        document.body
+      )
+    }
+    </>
   );
 }
 
