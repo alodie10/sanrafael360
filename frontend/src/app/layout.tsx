@@ -68,6 +68,24 @@ import { FavoritesProvider } from "@/context/FavoritesContext";
 import MetaPixel from "@/components/layout/MetaPixel";
 import { Suspense } from "react";
 
+// Schema.org WebSite — habilita el Sitelinks Searchbox de Google
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "San Rafael 360",
+  url: "https://www.sanrafael360.com",
+  description:
+    "El directorio definitivo de negocios, restaurantes, hoteles y atracciones de San Rafael, Mendoza.",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: "https://www.sanrafael360.com/?q={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -76,6 +94,10 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${inter.variable} ${outfit.variable} ${playfair.variable}`}>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
         <Toaster richColors position="top-right" />
         <SessionProvider>
           <FavoritesProvider>
