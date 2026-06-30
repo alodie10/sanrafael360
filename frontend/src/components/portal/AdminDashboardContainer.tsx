@@ -156,6 +156,15 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
                 </span>
               )}
             </button>
+
+            <button 
+              onClick={() => setActiveTab('discovery')}
+              className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'discovery' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+            >
+              <Search className="w-4 h-4" /> 
+              <span>Importar desde Places</span>
+            </button>
+
             
             <button 
               onClick={() => setActiveTab('support')}
