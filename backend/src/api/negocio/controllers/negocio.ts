@@ -53,6 +53,18 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     return ctx.send({ success: true, data: stats });
   }),
 
+  getStatsTimeseries: asyncHandler(async (ctx) => {
+    const user = ctx.state.user;
+    if (!user) return ctx.unauthorized();
+    const isAdmin = user.role?.name?.toLowerCase() === 'admin' || ADMIN_EMAILS.includes(user.email?.toLowerCase());
+    const { period = '30d' } = ctx.query as { period?: string };
+    const data = await strapi.service('api::negocio.negocio').getStatsTimeseries(
+      isAdmin ? undefined : user.id,
+      period as string
+    );
+    return ctx.send({ success: true, data });
+  }),
+
   me: async (ctx) => {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();

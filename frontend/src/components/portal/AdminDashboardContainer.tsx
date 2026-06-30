@@ -25,6 +25,7 @@ import ActivityLogView from "./ActivityLogView";
 import AdminPaymentsView from "./AdminPaymentsView";
 import PortalStats from "./PortalStats";
 import AdminTopRanking from "./AdminTopRanking";
+import AdminStatsChart from "./AdminStatsChart";
 import { CreditCard } from "lucide-react";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
@@ -183,11 +184,14 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
           {/* Main Content Area */}
           <div className="lg:col-span-3 space-y-8 min-w-0">
             {activeTab === 'stats' && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-12">
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
                 <div>
                   <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Rendimiento General de la Plataforma</h2>
                   <PortalStats />
                 </div>
+
+                {/* Gráfico de serie de tiempo */}
+                <AdminStatsChart jwt={session.jwt as string} />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <AdminTopRanking jwt={session.jwt} />
