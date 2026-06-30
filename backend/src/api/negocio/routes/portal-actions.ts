@@ -100,5 +100,14 @@ export default {
       handler: 'negocio.modificarVigenciaPortal',
       config: { policies: [], middlewares: [] },
     },
+    {
+      method: 'POST',
+      path: '/negocios/admin/reset-stats-backfill',
+      handler: 'negocio.resetStatsBackfill',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };

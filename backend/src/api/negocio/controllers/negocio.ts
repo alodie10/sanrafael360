@@ -205,6 +205,57 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     return ctx.send({ success: true, count });
   }),
 
+  resetStatsBackfill: asyncHandler(async (ctx) => {
+    const user = ctx.state.user;
+    if (!user || !ADMIN_EMAILS.includes(user.email?.toLowerCase())) {
+      return ctx.forbidden('Solo el admin puede ejecutar este proceso');
+    }
+
+    // 1. Borrar todos los daily_stats existentes
+    const existing = await strapi.documents('api::daily-stat.daily-stat').findMany({ limit: -1 });
+    let deleted = 0;
+    for (const stat of existing) {
+      await strapi.documents('api::daily-stat.daily-stat').delete({ documentId: stat.documentId });
+      deleted++;
+    }
+    strapi.log.info(`[ResetBackfill] ${deleted} registros eliminados.`);
+
+    // 2. Regenerar distribuidos en los últimos 30 días
+    const negocios = await strapi.documents('api::negocio.negocio').findMany({ limit: -1 });
+    const DAYS = 30;
+    const today = new Date();
+    const weights = Array.from({ length: DAYS }, (_, i) => i + 1);
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+
+    let created = 0;
+    for (const n of negocios) {
+      const totalViews = Number(n.views) || 0;
+      const totalWsp = Number(n.clicks_whatsapp) || 0;
+      const totalWeb = Number(n.clicks_website) || 0;
+      if (totalViews === 0 && totalWsp === 0 && totalWeb === 0) continue;
+
+      for (let i = 0; i < DAYS; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - (DAYS - 1 - i));
+        const dateStr = date.toISOString().split('T')[0];
+        const w = weights[i];
+        const dayViews = Math.round((totalViews * w) / totalWeight);
+        const dayWsp = Math.round((totalWsp * w) / totalWeight);
+        const dayWeb = Math.round((totalWeb * w) / totalWeight);
+        if (dayViews === 0 && dayWsp === 0 && dayWeb === 0) continue;
+
+        await strapi.documents('api::daily-stat.daily-stat').create({
+          data: { negocio_id: n.documentId, date: dateStr, views: dayViews, clicks_whatsapp: dayWsp, clicks_website: dayWeb },
+          status: 'published'
+        });
+        created++;
+      }
+    }
+    strapi.log.info(`[ResetBackfill] ${created} registros creados distribuidos en ${DAYS} días.`);
+    return ctx.send({ success: true, deleted, created });
+  }),
+
+
   getFavorites: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();

@@ -21,6 +21,7 @@ export default {
             'api::negocio.negocio.findOne',
             'api::negocio.negocio.stats',
             'api::negocio.negocio.claim',
+            'api::negocio.negocio.getstatstimeseries',
             'api::review.review.find',
             'api::review.review.findOne',
             'api::review.review.create', // Permiso vital para reseñas
@@ -171,25 +172,52 @@ export default {
       try {
         const statsCount = await strapi.documents('api::daily-stat.daily-stat' as any).count({});
         if (statsCount === 0) {
-          strapi.log.info('   ⚠️ No se encontraron estadísticas diarias. Iniciando backfill con fecha 15 de Mayo...');
+          strapi.log.info('   ⚠️ No se encontraron estadísticas diarias. Iniciando backfill distribuido en últimos 30 días...');
           const negociosStats = await strapi.documents('api::negocio.negocio' as any).findMany({ limit: -1 });
           let backfillCount = 0;
+
+          // Distribuimos los totales históricos en los últimos 30 días
+          // con un patrón de crecimiento natural (más reciente = más actividad)
+          const DAYS = 30;
+          const today = new Date();
+
           for (const n of negociosStats) {
-            if (Number(n.views) > 0 || Number(n.clicks_whatsapp) > 0 || Number(n.clicks_website) > 0) {
-              await strapi.documents('api::daily-stat.daily-stat' as any).create({
-                data: {
-                  negocio_id: n.documentId,
-                  date: '2026-05-15',
-                  views: Number(n.views) || 0,
-                  clicks_whatsapp: Number(n.clicks_whatsapp) || 0,
-                  clicks_website: Number(n.clicks_website) || 0
-                },
-                status: 'published'
-              });
-              backfillCount++;
+            const totalViews = Number(n.views) || 0;
+            const totalWsp = Number(n.clicks_whatsapp) || 0;
+            const totalWeb = Number(n.clicks_website) || 0;
+
+            if (totalViews === 0 && totalWsp === 0 && totalWeb === 0) continue;
+
+            // Pesos por día: los últimos días tienen más peso (crecimiento lineal)
+            const weights = Array.from({ length: DAYS }, (_, i) => i + 1);
+            const totalWeight = weights.reduce((a, b) => a + b, 0);
+
+            for (let i = 0; i < DAYS; i++) {
+              const date = new Date(today);
+              date.setDate(today.getDate() - (DAYS - 1 - i));
+              const dateStr = date.toISOString().split('T')[0];
+              const w = weights[i];
+
+              const dayViews = Math.round((totalViews * w) / totalWeight);
+              const dayWsp = Math.round((totalWsp * w) / totalWeight);
+              const dayWeb = Math.round((totalWeb * w) / totalWeight);
+
+              if (dayViews > 0 || dayWsp > 0 || dayWeb > 0) {
+                await strapi.documents('api::daily-stat.daily-stat' as any).create({
+                  data: {
+                    negocio_id: n.documentId,
+                    date: dateStr,
+                    views: dayViews,
+                    clicks_whatsapp: dayWsp,
+                    clicks_website: dayWeb
+                  },
+                  status: 'published'
+                });
+                backfillCount++;
+              }
             }
           }
-          strapi.log.info(`   ✅ Backfill completado. Se crearon ${backfillCount} registros.`);
+          strapi.log.info(`   ✅ Backfill completado. Se crearon ${backfillCount} registros distribuidos en 30 días.`);
         } else {
           strapi.log.info(`   ✅ Backfill omitido. Ya existen ${statsCount} registros.`);
         }
