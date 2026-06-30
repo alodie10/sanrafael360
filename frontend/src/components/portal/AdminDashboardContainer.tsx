@@ -187,11 +187,12 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
                 <div>
                   <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Rendimiento General de la Plataforma</h2>
-                  <PortalStats />
+                  
+                  {/* Gráfico de serie de tiempo — arriba */}
+                  <AdminStatsChart jwt={session.jwt as string} />
                 </div>
 
-                {/* Gráfico de serie de tiempo */}
-                <AdminStatsChart jwt={session.jwt as string} />
+                <PortalStats />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <AdminTopRanking jwt={session.jwt} />
