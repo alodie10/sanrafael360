@@ -117,6 +117,16 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
             </button>
 
             <button 
+              onClick={() => setActiveTab('payments')}
+              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'payments' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+            >
+              <div className="flex items-center gap-3">
+                <CreditCard className="w-4 h-4" /> 
+                <span>Suscripciones y Pagos</span>
+              </div>
+            </button>
+
+            <button 
               onClick={() => setActiveTab('claims')}
               className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'claims' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
             >
@@ -129,26 +139,6 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
                   {claims.length}
                 </span>
               )}
-            </button>
-
-            <button 
-              onClick={() => setActiveTab('discovery')}
-              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'discovery' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
-            >
-              <div className="flex items-center gap-3">
-                <Search className="w-4 h-4" /> 
-                <span>Importar Places</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => setActiveTab('payments')}
-              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'payments' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
-            >
-              <div className="flex items-center gap-3">
-                <CreditCard className="w-4 h-4" /> 
-                <span>Suscripciones y Pagos</span>
-              </div>
             </button>
 
             <button 
