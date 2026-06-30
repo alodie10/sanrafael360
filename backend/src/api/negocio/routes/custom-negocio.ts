@@ -11,6 +11,11 @@ export default {
       handler: 'negocio.getStatsSummary',
     },
     {
+      method: 'GET',
+      path: '/negocios/stats/timeseries',
+      handler: 'negocio.getStatsTimeseries',
+    },
+    {
       method: 'POST',
       path: '/negocios/:id/stats',
       handler: 'api::negocio.negocio.incrementStats',

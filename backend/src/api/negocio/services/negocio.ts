@@ -371,6 +371,68 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     return { summary, breakdown: breakdownWithScore };
   },
 
+  async getStatsTimeseries(userId?: number, period: string = '30d') {
+    // Calcular rango de fechas
+    const days = period === '7d' ? 7 : period === '90d' ? 90 : 30;
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - (days - 1));
+
+    const startISO = startDate.toISOString().split('T')[0];
+    const endISO = endDate.toISOString().split('T')[0];
+
+    // Si hay userId, solo incluir negocios del propietario
+    let negocioIds: string[] | undefined;
+    if (userId) {
+      const negocios = await (strapi.documents('api::negocio.negocio') as any).findMany({
+        filters: { owner: userId },
+        fields: ['documentId'],
+        limit: -1,
+      });
+      negocioIds = negocios.map((n: any) => n.documentId);
+      if (negocioIds!.length === 0) return [];
+    }
+
+    // Consultar daily stats en el rango
+    const filters: any = {
+      date: { $gte: startISO, $lte: endISO },
+    };
+    if (negocioIds) {
+      filters.negocio_id = { $in: negocioIds };
+    }
+
+    const rawStats = await strapi.documents('api::daily-stat.daily-stat').findMany({
+      filters,
+      limit: -1,
+    });
+
+    // Agrupar por fecha sumando todos los negocios
+    const byDate: Record<string, { views: number; clicks_whatsapp: number; clicks_website: number }> = {};
+    rawStats.forEach((stat: any) => {
+      const d = stat.date; // "YYYY-MM-DD"
+      if (!byDate[d]) byDate[d] = { views: 0, clicks_whatsapp: 0, clicks_website: 0 };
+      byDate[d].views += Number(stat.views) || 0;
+      byDate[d].clicks_whatsapp += Number(stat.clicks_whatsapp) || 0;
+      byDate[d].clicks_website += Number(stat.clicks_website) || 0;
+    });
+
+    // Rellenar todos los días del rango (incluso los vacíos) para curva continua
+    const result = [];
+    const cursor = new Date(startDate);
+    while (cursor <= endDate) {
+      const key = cursor.toISOString().split('T')[0];
+      result.push({
+        date: key,
+        views: byDate[key]?.views ?? 0,
+        clicks_whatsapp: byDate[key]?.clicks_whatsapp ?? 0,
+        clicks_website: byDate[key]?.clicks_website ?? 0,
+      });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return result;
+  },
+
   async incrementStats(id: string, type: 'view' | 'whatsapp' | 'website') {
     let negocio = await strapi.documents('api::negocio.negocio').findOne({ documentId: id });
     if (!negocio) {
