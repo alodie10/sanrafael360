@@ -76,11 +76,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9, // Las categorías son páginas de aterrizaje importantes
     }));
 
+  // FIX SEO: El home no cambia a diario. Usar new Date() siempre causa que
+  // Google vea el sitemap como "siempre actualizado" lo que puede reducir la
+  // credibilidad de la señal lastModified. Usamos una fecha fija + revisión semanal.
+  const BUILD_DATE = new Date("2025-07-01T00:00:00Z");
+
   return [
     {
       url: "https://www.sanrafael360.com",
-      lastModified: new Date(),
-      changeFrequency: "daily" as const,
+      lastModified: BUILD_DATE,
+      changeFrequency: "weekly" as const,
       priority: 1.0,
     },
     // NOTA: /negocios no se incluye porque next.config.ts tiene un redirect 301 → /

@@ -195,10 +195,45 @@ export function LocalBusinessSchema({ negocio }: LocalBusinessSchemaProps) {
   // Limpiar campos undefined para un JSON limpio
   const cleanSchema = JSON.parse(JSON.stringify(schema));
 
+  // BreadcrumbList — muestra la jerarquía del sitio en los resultados de Google
+  // Formato: San Rafael 360 > [Categoría] > [Nombre del Negocio]
+  const breadcrumbItems: Array<{ name: string; url: string }> = [
+    { name: "San Rafael 360", url: "https://www.sanrafael360.com" },
+  ];
+
+  if (negocio.categoria?.slug && negocio.categoria?.nombre) {
+    breadcrumbItems.push({
+      name: negocio.categoria.nombre,
+      url: `https://www.sanrafael360.com/categoria/${negocio.categoria.slug}`,
+    });
+  }
+
+  breadcrumbItems.push({
+    name: negocio.nombre,
+    url: canonicalUrl,
+  });
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbItems.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(cleanSchema) }}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(cleanSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+    </>
   );
 }
