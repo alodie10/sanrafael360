@@ -33,6 +33,21 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<'all' | 'premium' | 'expired' | 'expiring'>('premium');
+  // Filtro de mes para recaudación: formato "YYYY-MM" o "" para todo
+  const [revenueMonth, setRevenueMonth] = useState("");
+
+  // Genera las últimas 12 opciones mes/año para el selector
+  const monthOptions = useMemo(() => {
+    const opts: { value: string; label: string }[] = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+      opts.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
+    }
+    return opts;
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -110,7 +125,19 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
   }, [data]);
 
   const stats = {
-    total: data.reduce((acc, curr) => acc + (curr.pagos?.filter((p: any) => p.estado === 'aprobado').reduce((sum: number, p: any) => sum + p.monto, 0) || 0), 0),
+    total: data.reduce((acc, curr) => {
+      const pagosAprobados = curr.pagos?.filter((p: any) => {
+        if (p.estado !== 'aprobado') return false;
+        // Si hay filtro de mes, comparar la fecha del pago
+        if (revenueMonth) {
+          const pagoDate = new Date(p.createdAt || p.fecha_pago || p.updatedAt);
+          const pagoYYYYMM = `${pagoDate.getFullYear()}-${String(pagoDate.getMonth() + 1).padStart(2, '0')}`;
+          return pagoYYYYMM === revenueMonth;
+        }
+        return true;
+      }) || [];
+      return acc + pagosAprobados.reduce((sum: number, p: any) => sum + p.monto, 0);
+    }, 0),
     active: data.filter(n => {
       const validUntil = n.premium_valid_until ? new Date(n.premium_valid_until) : null;
       return n.is_premium && (!validUntil || validUntil > new Date());
@@ -120,6 +147,38 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* Filtro de Mes para Recaudación */}
+      <div className="bg-zinc-950/40 border border-white/5 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h3 className="text-white font-bold text-lg">Filtro de Recaudación</h3>
+          <p className="text-sm text-zinc-400">Filtrá el total recaudado por mes para ver el ingreso de cada período.</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-zinc-400 whitespace-nowrap">Mes:</label>
+            <select
+              value={revenueMonth}
+              onChange={(e) => setRevenueMonth(e.target.value)}
+              className="bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 [color-scheme:dark] min-w-[180px]"
+            >
+              <option value="">— Todo el historial —</option>
+              {monthOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          {revenueMonth && (
+            <button
+              onClick={() => setRevenueMonth("")}
+              className="text-sm text-primary hover:text-white transition-colors"
+            >
+              Limpiar
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Header & Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
         {loading && (
@@ -133,7 +192,11 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
               <TrendingUp className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <p className="text-slate-400 text-[10px] uppercase tracking-[0.2em] font-black">Total Recaudado</p>
+              <p className="text-slate-400 text-[10px] uppercase tracking-[0.2em] font-black">
+                {revenueMonth
+                  ? `Recaudado en ${monthOptions.find(o => o.value === revenueMonth)?.label || revenueMonth}`
+                  : 'Total Recaudado (histórico)'}
+              </p>
               <h3 className="text-2xl font-black text-white">$ {stats.total.toLocaleString()}</h3>
             </div>
           </div>
