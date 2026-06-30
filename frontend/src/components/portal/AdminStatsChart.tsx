@@ -118,16 +118,18 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
   );
 
   const svgRef = useRef<SVGSVGElement>(null);
-  const [dims, setDims] = useState({ width: 600, height: 220 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dims, setDims] = useState({ width: 600, height: 260 });
 
-  // Resize observer
+  // Resize observer — usa containerRef directo para medir desde el primer render
   useEffect(() => {
-    const el = svgRef.current?.parentElement;
+    const el = containerRef.current;
     if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      const { width } = entries[0].contentRect;
-      setDims({ width: Math.max(width, 300), height: 220 });
-    });
+    const measure = () => {
+      setDims({ width: el.getBoundingClientRect().width || el.offsetWidth, height: 260 });
+    };
+    measure(); // medir inmediatamente
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
@@ -278,9 +280,9 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
       </div>
 
       {/* Chart */}
-      <div className="relative px-2 pb-4 pt-2">
+      <div ref={containerRef} className="relative pb-4 pt-2 w-full">
         {loading ? (
-          <div className="h-[220px] flex items-center justify-center">
+          <div className="h-[260px] flex items-center justify-center">
             <div className="flex gap-1.5">
               {[0, 1, 2].map((i) => (
                 <div
@@ -292,7 +294,7 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
             </div>
           </div>
         ) : data.length === 0 ? (
-          <div className="h-[220px] flex items-center justify-center text-zinc-600 text-sm font-serif italic">
+          <div className="h-[260px] flex items-center justify-center text-zinc-600 text-sm font-serif italic">
             Sin datos para este período
           </div>
         ) : (
@@ -300,7 +302,7 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
             ref={svgRef}
             width={dims.width}
             height={dims.height}
-            className="w-full overflow-visible cursor-crosshair"
+            className="w-full overflow-visible cursor-crosshair block"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
           >
@@ -336,9 +338,9 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
                   />
                   <text
                     x={dims.width - 2}
-                    y={y - 3}
-                    fill="rgba(255,255,255,0.2)"
-                    fontSize={9}
+                    y={y - 4}
+                    fill="rgba(255,255,255,0.3)"
+                    fontSize={11}
                     textAnchor="end"
                   >
                     {val}
@@ -413,8 +415,8 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
                   key={idx}
                   x={x}
                   y={dims.height}
-                  fill="rgba(255,255,255,0.25)"
-                  fontSize={9}
+                  fill="rgba(255,255,255,0.35)"
+                  fontSize={11}
                   textAnchor="middle"
                 >
                   {formatDateLabel(data[idx].date, period)}
