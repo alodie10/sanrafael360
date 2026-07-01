@@ -44,11 +44,21 @@ export default function BusinessGallery({ negocio, isValidPremium }: BusinessGal
   // Si no hay media interna ni youtube, no renderizar la sección
   if (mediaItems.length === 0 && !negocio.youtube_url) return null;
 
-  return <MediaGallery items={mediaItems} youtubeUrl={negocio.youtube_url} businessName={negocio.nombre} />;
+  return <MediaGallery items={mediaItems} youtubeUrl={negocio.youtube_url} businessName={negocio.nombre} galeriaConfig={negocio.galeria_config || {}} />;
+}
+
+/** Aplica rotación Cloudinary a una URL (a_90, a_180, a_270). */
+function applyCloudinaryRotation(url: string, degrees: number): string {
+  if (!degrees || !url?.includes('res.cloudinary.com')) return url;
+  const parts = url.split('/upload/');
+  if (parts.length !== 2) return url;
+  if (parts[1].startsWith(`a_${degrees}/`)) return url;
+  const withoutPrev = parts[1].replace(/^a_\d+\//, '');
+  return `${parts[0]}/upload/a_${degrees}/${withoutPrev}`;
 }
 
 /** Componente interno para manejar hooks (evitar early returns antes de hooks) */
-function MediaGallery({ items, youtubeUrl, businessName }: { items: any[]; youtubeUrl?: string; businessName: string }) {
+function MediaGallery({ items, youtubeUrl, businessName, galeriaConfig }: { items: any[]; youtubeUrl?: string; businessName: string; galeriaConfig: Record<string, any> }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fullscreenVideoRef = useRef<HTMLVideoElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -122,6 +132,8 @@ function MediaGallery({ items, youtubeUrl, businessName }: { items: any[]; youtu
     if (!originalUrl) return null;
     
     const isVideo = media.mime?.startsWith('video/') || originalUrl.match(/\.(mp4|m4v|webm|ogg|mov)$/i);
+    const rotation = galeriaConfig[media.id?.toString()]?.rotation || 0;
+    const rotationPrefix = rotation > 0 ? `a_${rotation}/` : '';
     let thumbnailUrl = "";
     let optimizedMediaUrl = "";
 
@@ -130,8 +142,8 @@ function MediaGallery({ items, youtubeUrl, businessName }: { items: any[]; youtu
       thumbnailUrl = optimizeCloudinaryUrl(urlAsGif, "f_auto,q_auto,c_fill,w_400,h_400,so_0,du_3");
       optimizedMediaUrl = optimizeCloudinaryUrl(originalUrl, "f_auto,q_auto");
     } else {
-      thumbnailUrl = optimizeCloudinaryUrl(originalUrl, "f_auto,q_auto,c_fill,w_400,h_400");
-      optimizedMediaUrl = optimizeCloudinaryUrl(originalUrl, "f_auto,q_auto,w_1920"); // max 1920px
+      thumbnailUrl = optimizeCloudinaryUrl(originalUrl, `${rotationPrefix}f_auto,q_auto,c_fill,w_400,h_400`);
+      optimizedMediaUrl = optimizeCloudinaryUrl(originalUrl, `${rotationPrefix}f_auto,q_auto,w_1920`);
     }
 
     return { id: media.id || i, isVideo, thumbnailUrl, optimizedMediaUrl };

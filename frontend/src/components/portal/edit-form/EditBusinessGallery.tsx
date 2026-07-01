@@ -1,7 +1,19 @@
 "use client";
 
-import { Image as ImageIcon, Video, X, Upload, Loader2 } from "lucide-react";
+import { Image as ImageIcon, Video, X, Upload, Loader2, RotateCw } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
+
+/** Aplica rotación Cloudinary a una URL (a_90, a_180, a_270). Server-side, sin canvas. */
+function applyCloudinaryRotation(url: string, degrees: number): string {
+  if (!degrees || !url?.includes('res.cloudinary.com')) return url;
+  const parts = url.split('/upload/');
+  if (parts.length !== 2) return url;
+  // Si ya tiene esa rotación, no duplicar
+  if (parts[1].startsWith(`a_${degrees}/`)) return url;
+  // Quitar rotación previa si existe
+  const withoutPrev = parts[1].replace(/^a_\d+\//, '');
+  return `${parts[0]}/upload/a_${degrees}/${withoutPrev}`;
+}
 
 interface EditBusinessGalleryProps {
   existingGallery: any[];
@@ -49,7 +61,11 @@ export default function EditBusinessGallery({
               {isVideo ? (
                 <video src={getStrapiMedia(photo.url) || undefined} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted />
               ) : (
-                <img src={getStrapiMedia(photo.url) || undefined} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="" />
+                <img 
+                  src={applyCloudinaryRotation(getStrapiMedia(photo.url) || '', galeriaConfig[photo.id.toString()]?.rotation || 0) || undefined} 
+                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
+                  alt="" 
+                />
               )}
               {isVideo && (
                 <div className="absolute top-2 left-2 p-1.5 bg-black/40 backdrop-blur-md rounded-lg border border-white/10">
@@ -65,6 +81,22 @@ export default function EditBusinessGallery({
               
               {!isVideo && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md p-2 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Botón de rotación */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = galeriaConfig[photo.id.toString()] || { cropGravity: 'g_auto', isInternal: false };
+                      const current_rot = current.rotation || 0;
+                      const next_rot = (current_rot + 90) % 360;
+                      setGaleriaConfig({ ...galeriaConfig, [photo.id.toString()]: { ...current, rotation: next_rot } });
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 mb-2 py-1 bg-white/10 hover:bg-white/20 rounded-md text-white text-[10px] font-bold uppercase tracking-wider transition-colors"
+                    title="Rotar 90°"
+                  >
+                    <RotateCw className="w-3 h-3" />
+                    Rotar {(galeriaConfig[photo.id.toString()]?.rotation || 0) > 0 ? `(${galeriaConfig[photo.id.toString()]?.rotation}°)` : ''}
+                  </button>
+
                   <label className="flex items-center gap-2 mb-2 cursor-pointer text-xs text-white">
                     <input 
                       type="checkbox" 

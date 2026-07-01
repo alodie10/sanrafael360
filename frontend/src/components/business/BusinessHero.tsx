@@ -24,11 +24,12 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
   }
 
   // Armar lista de imágenes: Portada + Galería (si es premium)
-  const images: { url: string, cropGravity: string }[] = [];
+  const images: { url: string, cropGravity: string, rotation: number }[] = [];
   if (coverUrl) {
     images.push({ 
       url: getStrapiMedia(coverUrl)!, 
-      cropGravity: negocio.crop_gravity || "g_auto" 
+      cropGravity: negocio.crop_gravity || "g_auto",
+      rotation: 0
     });
   }
   if (isValidPremium && negocio.galeria && negocio.galeria.length > 0) {
@@ -42,19 +43,21 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
         const configStr = negocio.galeria_config?.[img.id];
         let cropGravity = negocio.crop_gravity || "g_auto";
         let isInternal = false;
+        let rotation = 0;
         
         if (typeof configStr === 'string') {
            cropGravity = configStr;
         } else if (configStr) {
            cropGravity = configStr.cropGravity || cropGravity;
            isInternal = configStr.isInternal === true;
+           rotation = configStr.rotation || 0;
         }
 
         if (isInternal) return;
 
         const url = getStrapiMedia(img.url)!;
         if (!images.find(i => i.url === url)) {
-          images.push({ url, cropGravity });
+          images.push({ url, cropGravity, rotation });
         }
       }
     });
@@ -111,7 +114,9 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
       >
         {/* Imágenes del carrusel — brillo completo, sin oscurecer */}
         {images.length > 0 ? (
-          images.map(({ url: imgUrl, cropGravity }, index) => (
+          images.map(({ url: imgUrl, cropGravity, rotation }, index) => {
+            const rotPrefix = rotation > 0 ? `a_${rotation}/` : '';
+            return (
             <motion.div
               key={imgUrl}
               initial={{ opacity: 0 }}
@@ -124,22 +129,23 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
                 {/* Mobile: Crop más vertical */}
                 <source 
                   media="(max-width: 768px)" 
-                  srcSet={optimizeCloudinaryUrl(imgUrl, `c_fill,ar_4:5,${cropGravity},w_800,f_auto,q_auto`)} 
+                  srcSet={optimizeCloudinaryUrl(imgUrl, `${rotPrefix}c_fill,ar_4:5,${cropGravity},w_800,f_auto,q_auto`)} 
                 />
                 {/* Desktop: Crop ultrawide para el banner de la PC */}
                 <source 
                   media="(min-width: 769px)" 
-                  srcSet={optimizeCloudinaryUrl(imgUrl, `c_fill,ar_21:9,${cropGravity},w_1600,f_auto,q_auto`)} 
+                  srcSet={optimizeCloudinaryUrl(imgUrl, `${rotPrefix}c_fill,ar_21:9,${cropGravity},w_1600,f_auto,q_auto`)} 
                 />
                 {/* Fallback */}
                 <img
-                  src={optimizeCloudinaryUrl(imgUrl, "f_auto,q_auto")}
+                  src={optimizeCloudinaryUrl(imgUrl, `${rotPrefix}f_auto,q_auto`)}
                   alt={`${negocio.nombre} - Foto ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
               </picture>
             </motion.div>
-          ))
+            );
+          })
         ) : (
           <div className="w-full h-full bg-slate-900" />
         )}
