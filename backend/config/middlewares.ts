@@ -73,7 +73,13 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Middlewar
     },
   },
   'strapi::session',
-  'strapi::favicon',
+  {
+    name: 'strapi::favicon',
+    config: {
+      path: './public/favicon.png',
+      maxAge: 86400000,
+    },
+  },
   'strapi::public',
 ];
 
