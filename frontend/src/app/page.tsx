@@ -445,11 +445,7 @@ function HomeContent() {
                 ? "No encontramos negocios exactos, probá buscar con otras palabras o sinónimos."
                 : "No hay negocios en esta categoría."
             }
-            onClearFilters={() => {
-              setSelectedCategoryDocId(null);
-              setUserLocation(null);
-              router.push(pathname, { scroll: false });
-            }}
+            onClearFilters={() => handleSelectCategory(null)}
           />
         </section>
       </div>
