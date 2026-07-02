@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader } from "@googlemaps/js-api-loader";
 import { Star, StarHalf, Loader2, Quote } from "lucide-react";
+import { importGoogleMapsLibrary } from "@/lib/google-maps";
 import { cn } from "@/lib/utils";
 
 interface GooglePlacesReviewsProps {
@@ -49,25 +49,17 @@ export default function GooglePlacesReviews({ googlePlaceId, className }: Google
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey || !googlePlaceId) {
+    if (!googlePlaceId) {
       setLoading(false);
       return;
     }
 
     let cancelled = false;
 
-    const loader = new Loader({
-      apiKey,
-      version: "weekly",
-      libraries: ["places"],
-      language: "es",
-    });
-
     (async () => {
       try {
         setLoading(true);
-        const placesLib = await loader.importLibrary("places");
+        const placesLib = await importGoogleMapsLibrary("places");
         if (cancelled) return;
 
         const place = new placesLib.Place({ id: googlePlaceId });

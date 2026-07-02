@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Loader } from "@googlemaps/js-api-loader";
 import { MapPin, Loader2 } from "lucide-react";
+import { importGoogleMapsLibrary, getGoogleMapsLoader } from "@/lib/google-maps";
 
 interface AddressAutocompleteProps {
   initialValue?: string;
@@ -56,19 +56,11 @@ export default function AddressAutocomplete({
 
   // Cargar la librería de Places con la nueva API
   useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) return;
+    if (!getGoogleMapsLoader()) return;
 
     let isMounted = true;
 
-    const loader = new Loader({
-      apiKey,
-      version: "weekly",
-      libraries: ["places", "marker", "maps"],
-      language: "es",
-    });
-
-    loader.importLibrary("places").then((placesLib) => {
+    importGoogleMapsLibrary("places").then((placesLib) => {
       if (!isMounted) return;
       placesLibRef.current = placesLib;
       // Crear token de sesión para agrupar requests y optimizar costos

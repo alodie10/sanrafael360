@@ -11,7 +11,7 @@ import Logo from "@/components/common/Logo";
 import { useSession, signOut } from "next-auth/react";
 import { Categoria } from "@/types/strapi";
 import { fetchFromStrapi } from "@/lib/strapi";
-import { Loader } from "@googlemaps/js-api-loader";
+import { importGoogleMapsLibrary, getGoogleMapsLoader } from "@/lib/google-maps";
 
 function NavbarInner() {
   const navRef = useRef<HTMLElement>(null);
@@ -53,11 +53,9 @@ function NavbarInner() {
   const locationFieldRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey || placesLibRef.current) return;
+    if (!getGoogleMapsLoader() || placesLibRef.current) return;
 
-    const loader = new Loader({ apiKey, version: "weekly", libraries: ["places", "marker", "maps"], language: "es" });
-    loader.importLibrary("places").then((placesLib) => {
+    importGoogleMapsLibrary("places").then((placesLib) => {
       placesLibRef.current = placesLib;
       sessionTokenRef.current = new placesLib.AutocompleteSessionToken();
       console.log("[Navbar] Places library loaded OK", Object.keys(placesLib));

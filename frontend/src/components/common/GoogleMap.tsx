@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader } from "@googlemaps/js-api-loader";
-import { isGoogleMapsApiKeyConfigured } from "@/lib/google-maps";
+import { getGoogleMapsLoader } from "@/lib/google-maps";
 
 interface GoogleMapProps {
   lat: number;
@@ -17,20 +16,11 @@ export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    
-    if (!isGoogleMapsApiKeyConfigured(apiKey)) {
+    const loader = getGoogleMapsLoader();
+    if (!loader) {
       setError("API Key de Google Maps no configurada. Revisá NEXT_PUBLIC_GOOGLE_MAPS_API_KEY en frontend/.env");
       return;
     }
-
-    // Regla 3: Unificación de versión y librerías en todo el proyecto
-    const loader = new Loader({
-      apiKey,
-      version: "weekly",
-      libraries: ["places", "marker", "maps"],
-      language: "es",
-    });
 
     let isMounted = true;
 
