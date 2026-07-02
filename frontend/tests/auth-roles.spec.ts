@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { EPHEMERAL_TEST_PASSWORD } from './test-env';
 
 test.describe('Flujo de Autenticación y Roles', () => {
   const testEmail = `test_pro_${Date.now()}@example.com`;
@@ -10,7 +11,7 @@ test.describe('Flujo de Autenticación y Roles', () => {
     // 2. Llenar el formulario
     await page.fill('input[type="text"]', 'Test Propietario');
     await page.fill('input[type="email"]', testEmail);
-    await page.fill('input[type="password"]', 'DcaDca_01');
+    await page.fill('input[type="password"]', EPHEMERAL_TEST_PASSWORD);
 
     // 3. Seleccionar rol Propietario
     await page.click('text=💼 Propietario');

@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
+import { requireTestCredentials, requireAdminTestCredentials } from './test-env';
 
 const SLUG = 'after-house';
 const CREDS = {
-  user: { email: 'argendeli01@gmail.com', pass: 'DcaDca_01' },
-  admin: { email: 'diegocristianalonso@gmail.com', pass: 'DcaDca_01' }
+  get user() { return requireTestCredentials(); },
+  get admin() { return requireAdminTestCredentials(); },
 };
 
 test.describe('Workflow de Reclamo', () => {
@@ -24,7 +25,7 @@ test.describe('Workflow de Reclamo', () => {
     // 2. User Login
     await page.goto('/login');
     await page.fill('input[type="email"]', CREDS.user.email);
-    await page.fill('input[type="password"]', CREDS.user.pass);
+    await page.fill('input[type="password"]', CREDS.user.password);
     await page.click('button[type="submit"]');
     await page.waitForURL('/portal');
 
@@ -49,7 +50,7 @@ test.describe('Workflow de Reclamo', () => {
     // 4. Admin Login
     await page.goto('/login');
     await page.fill('input[type="email"]', CREDS.admin.email);
-    await page.fill('input[type="password"]', CREDS.admin.pass);
+    await page.fill('input[type="password"]', CREDS.admin.password);
     await page.click('button[type="submit"]');
     // Wait for login to settle and go to admin manually
     await page.waitForURL(url => url.pathname.startsWith('/portal'));

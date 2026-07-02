@@ -1,15 +1,17 @@
 
 import { test, expect } from '@playwright/test';
+import { requireTestCredentials } from './test-env';
 
 test.describe('Google Maps Synchronization E2E', () => {
   test.beforeEach(async ({ page }) => {
+    const { email, password } = requireTestCredentials();
     // 1. Configurar baseUrl si no está en config
     const baseUrl = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
     
     // 2. Login
     await page.goto(`${baseUrl}/login`);
-    await page.fill('input[type="email"]', 'argendeli01@gmail.com');
-    await page.fill('input[type="password"]', 'DcaDca_01');
+    await page.fill('input[type="email"]', email);
+    await page.fill('input[type="password"]', password);
     await page.click('button[type="submit"]');
     
     // Esperar a estar en el portal

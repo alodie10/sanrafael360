@@ -28,14 +28,27 @@ fi
 echo -e "${YELLOW}🔄 Sincronizando con el repositorio remoto...${NC}"
 git pull origin develop
 
-# 4. Confirmación final
+# 4. Gates de calidad (Sprint 0 — CI-02)
+echo -e "${YELLOW}🧪 Ejecutando tests rápidos (unit + integration)...${NC}"
+if ! npm run test:fast; then
+    echo -e "${RED}❌ Error: test:fast falló. Corrige los tests antes de promocionar.${NC}"
+    exit 1
+fi
+
+echo -e "${YELLOW}🏗️ Verificando build completo (backend + frontend)...${NC}"
+if ! npm run build:all; then
+    echo -e "${RED}❌ Error: build:all falló. Corrige el build antes de promocionar.${NC}"
+    exit 1
+fi
+
+# 5. Confirmación final
 read -p "¿Estás seguro de que quieres subir estos cambios a PRODUCCIÓN? (s/n): " confirm
 if [[ $confirm != [sS] ]]; then
     echo -e "${RED}❌ Promoción cancelada por el usuario.${NC}"
     exit 1
 fi
 
-# 5. Proceso de Fusión (Merge)
+# 6. Proceso de Fusión (Merge)
 echo -e "${YELLOW}🔀 Fusionando develop -> master...${NC}"
 git checkout master
 git merge develop
@@ -51,7 +64,7 @@ else
     exit 1
 fi
 
-# 6. Volver a develop
+# 7. Volver a develop
 echo -e "${YELLOW}↩️ Volviendo a la rama develop para continuar el desarrollo...${NC}"
 git checkout develop
 echo -e "${GREEN}👍 Listo. Workspace restaurado en develop.${NC}"

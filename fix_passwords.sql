@@ -1,1 +1,5 @@
-UPDATE up_users SET password = '$2a$10$EE5pc3FPcVP7205kAyJQmOSFG7LPMLWjKlVXK.qAF.RN2FXc9S9em' WHERE email IN ('argendeli01@gmail.com', 'diegocristianalonso@gmail.com');
+-- Plantilla para resetear passwords en entorno LOCAL.
+-- Genera un hash bcrypt y reemplaza HASH_AQUI:
+--   node -e "const b=require('bcryptjs'); b.hash('tu_password',10).then(console.log)"
+--
+-- UPDATE up_users SET password = 'HASH_AQUI' WHERE email IN ('usuario1@example.com', 'usuario2@example.com');

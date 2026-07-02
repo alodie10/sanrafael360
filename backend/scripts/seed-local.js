@@ -2,11 +2,23 @@ const strapi = require('@strapi/strapi');
 
 async function main() {
   console.log('--- SEEDING START ---');
+
+  const pass = process.env.SEED_USER_PASSWORD;
+  const emails = (process.env.SEED_USER_EMAILS || '')
+    .split(',')
+    .map((email) => email.trim())
+    .filter(Boolean);
+
+  if (!pass || emails.length === 0) {
+    console.error(
+      '❌ Define SEED_USER_PASSWORD y SEED_USER_EMAILS (emails separados por coma) antes de ejecutar.'
+    );
+    process.exit(1);
+  }
+
   const app = await strapi().load();
 
   try {
-    const pass = 'DcaDca_01';
-    const emails = ['argendeli01@gmail.com', 'diegocristianalonso@gmail.com'];
     const role = (await app.service('plugin::users-permissions.role').find()).find(r => r.type === 'authenticated');
 
     for (const email of emails) {
@@ -28,13 +40,14 @@ async function main() {
         data: { nombre: 'After House', slug: 'after-house', estado_reclamo: 'ninguno' },
         status: 'published'
       });
-      console.log('✅ After House Created');
+      console.log('✅ Negocio after-house creado');
     }
-    console.log('--- SEEDING COMPLETE ---');
-  } catch (err) {
-    console.error('❌ FATAL:', err.message);
   } finally {
-    process.exit(0);
+    await app.destroy();
   }
 }
-main();
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

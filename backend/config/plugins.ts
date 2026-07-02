@@ -1,12 +1,13 @@
+import { requireEnv } from './required-env';
 
 export default ({ env }) => ({
   upload: {
     config: {
       provider: 'cloudinary',
       providerOptions: {
-        cloud_name: env('CLOUDINARY_NAME', 'dg0msu8ru'),
-        api_key: env('CLOUDINARY_KEY', '517598867933172'),
-        api_secret: env('CLOUDINARY_SECRET', '6frfOJz7L7V_x-GEjttlfkibYRQ'),
+        cloud_name: requireEnv(env, 'CLOUDINARY_NAME'),
+        api_key: requireEnv(env, 'CLOUDINARY_KEY'),
+        api_secret: requireEnv(env, 'CLOUDINARY_SECRET'),
       },
       actionOptions: {
         upload: {},
@@ -19,14 +20,14 @@ export default ({ env }) => ({
   },
   'users-permissions': {
     config: {
-      jwtSecret: env('JWT_SECRET', 'a_very_secure_random_secret_fallback_123'),
+      jwtSecret: requireEnv(env, 'JWT_SECRET'),
     },
   },
   email: {
     config: {
       provider: 'strapi-provider-email-resend',
       providerOptions: {
-        apiKey: env('RESEND_API_KEY', 're_placeholder'),
+        apiKey: requireEnv(env, 'RESEND_API_KEY'),
       },
       settings: {
         defaultFrom: env('RESEND_DEFAULT_FROM', 'no-reply@sanrafael360.com'),

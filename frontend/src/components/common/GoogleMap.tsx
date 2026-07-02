@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Loader } from "@googlemaps/js-api-loader";
+import { isGoogleMapsApiKeyConfigured } from "@/lib/google-maps";
 
 interface GoogleMapProps {
   lat: number;
@@ -18,8 +19,8 @@ export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     
-    if (!apiKey) {
-      setError("Falta la API Key de Google Maps");
+    if (!isGoogleMapsApiKeyConfigured(apiKey)) {
+      setError("API Key de Google Maps no configurada. Revisá NEXT_PUBLIC_GOOGLE_MAPS_API_KEY en frontend/.env");
       return;
     }
 

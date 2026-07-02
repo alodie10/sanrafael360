@@ -51,7 +51,7 @@ export default {
       handler: 'negocio.adminPendingClaims',
       config: {
         policies: [],
-        middlewares: [],
+        middlewares: ['global::require-admin'],
       },
     },
     {
@@ -60,7 +60,7 @@ export default {
       handler: 'negocio.adminResolveClaim',
       config: {
         policies: [],
-        middlewares: [],
+        middlewares: ['global::require-admin'],
       },
     },
     {
@@ -68,9 +68,8 @@ export default {
       path: '/negocios/:slug/test-reset',
       handler: 'negocio.resetClaimForTest',
       config: {
-        auth: false,
         policies: [],
-        middlewares: [],
+        middlewares: ['global::require-admin'],
       },
     },
     {
@@ -79,26 +78,26 @@ export default {
       handler: 'negocio.backfillStats',
       config: {
         policies: [],
-        middlewares: [],
+        middlewares: ['global::require-admin'],
       },
     },
     {
       method: 'POST',
       path: '/negocios/admin/pagos',
       handler: 'negocio.cargarPagoPortal',
-      config: { policies: [], middlewares: [] },
+      config: { policies: [], middlewares: ['global::require-admin'] },
     },
     {
       method: 'DELETE',
       path: '/negocios/admin/pagos/:documentId',
       handler: 'negocio.borrarPagoPortal',
-      config: { policies: [], middlewares: [] },
+      config: { policies: [], middlewares: ['global::require-admin'] },
     },
     {
       method: 'PUT',
       path: '/negocios/admin/vigencia/:documentId',
       handler: 'negocio.modificarVigenciaPortal',
-      config: { policies: [], middlewares: [] },
+      config: { policies: [], middlewares: ['global::require-admin'] },
     },
     {
       method: 'POST',
@@ -106,7 +105,7 @@ export default {
       handler: 'negocio.resetStatsBackfill',
       config: {
         policies: [],
-        middlewares: [],
+        middlewares: ['global::require-admin'],
       },
     },
   ],

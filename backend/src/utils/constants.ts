@@ -1,4 +1,4 @@
-export const ADMIN_EMAILS = [
-  'diegocristianalonso@gmail.com', 
-  'mlauralodi@gmail.com'
-];
+import { getAdminEmails } from './admin-access';
+
+/** @deprecated Usar getAdminEmails() desde admin-access.ts */
+export const ADMIN_EMAILS = getAdminEmails();

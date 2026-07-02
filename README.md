@@ -25,8 +25,10 @@ Para asegurar que el sitio funcione perfectamente en condiciones de red móvil (
 
 ### Ejecutar Tests Localmente
 1. Instalar dependencias: `npm install`
-2. Ejecutar suite de navegación: `npx playwright test`
-3. Ejecutar test de descubrimiento (scraper): `npx playwright test backend/tests/discovery.spec.ts`
+2. Configurar credenciales de test: copiar `frontend/.env.test.local.example` → `frontend/.env.test.local`
+3. Ejecutar suite E2E: `cd frontend && npm run test:e2e`
+4. Ejecutar tests unitarios backend: `npm run test:unit`
+5. Ejecutar test de descubrimiento: `cd backend && npx playwright test tests/integration/discovery.spec.ts`
 
 *Nota: Los tests están configurados para validar navegación, instanciación de mapas y visualización de portlets en dispositivos móviles.*
 
@@ -44,7 +46,8 @@ Para asegurar que el sitio funcione perfectamente en condiciones de red móvil (
 1. Importa el repositorio en Vercel.
 2. Selecciona el directorio raíz o `/frontend` como base.
 3. Agrega las variables de entorno:
-   - `NEXT_PUBLIC_STRAPI_API_URL`: URL de tu backend en Railway.
+   - `NEXT_PUBLIC_STRAPI_URL`: URL de tu backend en Railway (sin `/api`).
+   - `NEXTAUTH_SECRET`: Secreto para sesiones (debe coincidir con el backend).
    - `STRAPI_API_TOKEN`: Token de API generado en el panel de Strapi.
 
 ---

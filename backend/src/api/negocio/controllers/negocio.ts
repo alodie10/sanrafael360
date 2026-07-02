@@ -2,7 +2,7 @@ import { factories } from '@strapi/strapi';
 import { asyncHandler } from '../../../utils/asyncHandler';
 import { ValidationError } from '../../../utils/errors';
 import { createNegocioRepository } from '../repositories/negocio-repository';
-import { ADMIN_EMAILS } from '../../../utils/constants';
+import { getAdminEmails, userHasAdminAccess, resolveAdminUser, isAdminEmail } from '../../../utils/admin-access';
 
 export default factories.createCoreController('api::negocio.negocio', ({ strapi }) => ({
   async find(ctx) {
@@ -47,7 +47,8 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   getStatsSummary: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
-    const isAdmin = user.role?.name?.toLowerCase() === 'admin' || ADMIN_EMAILS.includes(user.email?.toLowerCase());
+    const fullUser = await resolveAdminUser(strapi, user);
+    const isAdmin = userHasAdminAccess(fullUser);
     const { startDate, endDate } = ctx.query;
     const stats = await strapi.service('api::negocio.negocio').getPortalStats(isAdmin ? undefined : user.id, startDate as string, endDate as string);
     return ctx.send({ success: true, data: stats });
@@ -56,7 +57,8 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   getStatsTimeseries: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
-    const isAdmin = user.role?.name?.toLowerCase() === 'admin' || ADMIN_EMAILS.includes(user.email?.toLowerCase());
+    const fullUser = await resolveAdminUser(strapi, user);
+    const isAdmin = userHasAdminAccess(fullUser);
     const { period = '30d' } = ctx.query as { period?: string };
     const data = await strapi.service('api::negocio.negocio').getStatsTimeseries(
       isAdmin ? undefined : user.id,
@@ -122,7 +124,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     
     let fullUser;
     if (isApiToken) {
-      fullUser = { email: ADMIN_EMAILS[0], role: { name: 'Admin' }, id: -1 };
+      fullUser = { email: getAdminEmails()[0], role: { name: 'Admin' }, id: -1 };
     } else {
       if (!user) return ctx.unauthorized();
       fullUser = await strapi.query('plugin::users-permissions.user').findOne({
@@ -138,25 +140,12 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   }),
 
   adminPendingClaims: asyncHandler(async (ctx) => {
-    const user = ctx.state.user;
-    if (!user) return ctx.unauthorized();
-    const fullUser = await strapi.query('plugin::users-permissions.user').findOne({
-      where: { id: user.id },
-      populate: ['role']
-    });
-    const userRole = fullUser?.role?.name?.toLowerCase();
-    const isAdmin = userRole === 'admin' || userRole === 'super admin' || ADMIN_EMAILS.includes(fullUser?.email?.toLowerCase());
-    if (!isAdmin) return ctx.forbidden();
     const repo = createNegocioRepository(strapi);
     const data = await repo.findPendingClaims(['owner', 'logo', 'documentacion_reclamo']);
     return ctx.send({ success: true, data });
   }),
 
   adminResolveClaim: asyncHandler(async (ctx) => {
-    const user = ctx.state.user;
-    const userRole = user?.role?.name?.toLowerCase();
-    const isAdmin = userRole === 'admin' || userRole === 'super admin' || ADMIN_EMAILS.includes(user?.email?.toLowerCase());
-    if (!user || !isAdmin) return ctx.forbidden();
     const { id } = ctx.params;
     const { decision, motivo } = ctx.request.body;
     if (!decision) throw new ValidationError('Decisión requerida');
@@ -166,9 +155,6 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
 
   resetClaimForTest: asyncHandler(async (ctx) => {
     const { slug } = ctx.params;
-    if (process.env.NODE_ENV === 'production' && !ADMIN_EMAILS.includes(ctx.state.user?.email?.toLowerCase())) {
-       return ctx.forbidden('Solo el admin puede resetear en produccion');
-    }
     await strapi.service('api::negocio.negocio').resetClaim(slug);
     return ctx.send({ success: true, message: `Reset exitoso para ${slug}` });
   }),
@@ -182,9 +168,6 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   }),
 
   backfillStats: asyncHandler(async (ctx) => {
-    if (process.env.NODE_ENV === 'production' && !ADMIN_EMAILS.includes(ctx.state.user?.email?.toLowerCase())) {
-       return ctx.forbidden('Solo el admin');
-    }
     const negocios = await strapi.documents('api::negocio.negocio').findMany({ limit: -1 });
     let count = 0;
     for (const n of negocios) {
@@ -206,11 +189,6 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   }),
 
   resetStatsBackfill: asyncHandler(async (ctx) => {
-    const user = ctx.state.user;
-    if (!user || !ADMIN_EMAILS.includes(user.email?.toLowerCase())) {
-      return ctx.forbidden('Solo el admin puede ejecutar este proceso');
-    }
-
     // 1. Borrar todos los daily_stats existentes
     const existing = await strapi.documents('api::daily-stat.daily-stat').findMany({ limit: -1 });
     let deleted = 0;

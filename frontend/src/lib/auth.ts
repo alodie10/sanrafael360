@@ -1,7 +1,26 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { ADMIN_EMAILS } from "@/lib/admin-emails";
 
-export const ADMIN_EMAILS = ['diegocristianalonso@gmail.com', 'mlauralodi@gmail.com'];
+export { ADMIN_EMAILS } from "@/lib/admin-emails";
+
+function resolveAuthSecret(): string {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (secret) return secret;
+
+  if (process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT_TEST === '1') {
+    return 'test-only-nextauth-secret-not-for-production';
+  }
+
+  // NEXTAUTH_SECRET no se expone al bundle del cliente (no es NEXT_PUBLIC_*).
+  if (typeof window !== 'undefined') {
+    return '';
+  }
+
+  throw new Error(
+    'NEXTAUTH_SECRET es obligatorio. Agrégalo en frontend/.env.local (ver .env.example).'
+  );
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -64,5 +83,5 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, 
   },
-  secret: process.env.NEXTAUTH_SECRET || "default_development_secret_only",
+  secret: resolveAuthSecret(),
 };

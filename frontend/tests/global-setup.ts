@@ -1,11 +1,12 @@
 import { chromium, FullConfig } from '@playwright/test';
 import path from 'path';
+import { requireTestCredentials } from './test-env';
 
 /**
  * Global Setup: Autenticación Única para Todos los Browsers
  *
  * Este script corre UNA sola vez antes de toda la suite.
- * Hace login con credenciales reales → guarda las cookies en un archivo JSON.
+ * Hace login con credenciales de entorno → guarda las cookies en un archivo JSON.
  * Todos los proyectos (Chromium, Mobile Safari) inyectan ese storageState
  * en cada test, evitando el login manual y los falsos negativos de WebKit.
  */
@@ -14,8 +15,7 @@ export const ADMIN_STORAGE_STATE_PATH = path.join(__dirname, '.auth/admin.json')
 
 async function globalSetup(config: FullConfig) {
   const { baseURL } = config.projects[0].use;
-  const testEmail = process.env.TEST_USER_EMAIL || 'argendeli01@gmail.com';
-  const testPassword = process.env.TEST_USER_PASSWORD || 'DcaDca_01';
+  const { email: testEmail, password: testPassword } = requireTestCredentials();
 
   const browser = await chromium.launch();
   const page = await browser.newPage();

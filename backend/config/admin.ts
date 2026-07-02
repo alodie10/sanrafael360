@@ -1,19 +1,20 @@
 import type { Core } from '@strapi/strapi';
+import { requireEnv } from './required-env';
 
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Admin => ({
   auth: {
-    secret: env('ADMIN_JWT_SECRET', 'sr360_admin_jwt_secret_v1_fallback'),
+    secret: requireEnv(env, 'ADMIN_JWT_SECRET'),
   },
   apiToken: {
-    salt: env('API_TOKEN_SALT', 'sr360_api_token_salt_v1_fallback'),
+    salt: requireEnv(env, 'API_TOKEN_SALT'),
   },
   transfer: {
     token: {
-      salt: env('TRANSFER_TOKEN_SALT', 'sr360_transfer_token_salt_v1_fallback'),
+      salt: requireEnv(env, 'TRANSFER_TOKEN_SALT'),
     },
   },
   secrets: {
-    encryptionKey: env('ENCRYPTION_KEY', 'sr360_encryption_key_v1_fallback'),
+    encryptionKey: requireEnv(env, 'ENCRYPTION_KEY'),
   },
   flags: {
     nps: env.bool('FLAG_NPS', true),

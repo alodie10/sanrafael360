@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Clock, ShieldCheck } from "lucide-react";
-import { ADMIN_EMAILS } from "@/lib/auth";
+import { ADMIN_EMAILS } from "@/lib/admin-emails";
 
 // Sub-components extracted for optimization
 import EditBusinessHeader from "./edit-form/EditBusinessHeader";

@@ -22,8 +22,13 @@ export default factories.createCoreController('api::pago.pago', ({ strapi }) => 
 
   /**
    * Endpoint especial para SIMULAR un éxito de pago en LOCAL
+   * Bloqueado en producción (SEC-02).
    */
   async simulateSuccess(ctx) {
+    if (process.env.NODE_ENV === 'production') {
+      return ctx.forbidden('La simulación de pagos está deshabilitada en producción');
+    }
+
     try {
       const { externalReference } = ctx.request.body;
       if (!externalReference) return ctx.badRequest('externalReference requerido');
