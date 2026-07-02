@@ -28,18 +28,19 @@ RUN npm install -w backend --include=dev && npm cache clean --force
 COPY backend/ ./backend/
 WORKDIR /opt/backend
 
-# Railway inyecta variables del servicio como build-args solo si están declaradas con ARG.
-# strapi build carga config/*.ts y ejecuta requireEnv() — sin esto el build falla en Docker.
-ARG ADMIN_JWT_SECRET
-ARG API_TOKEN_SALT
-ARG TRANSFER_TOKEN_SALT
-ARG ENCRYPTION_KEY
-ARG APP_KEYS
-ARG JWT_SECRET
-ARG CLOUDINARY_NAME
-ARG CLOUDINARY_KEY
-ARG CLOUDINARY_SECRET
-ARG RESEND_API_KEY
+# Railway inyecta variables del servicio como build-args cuando coinciden con ARG.
+# Si no llegan al build (bug/timing de Railway), usamos placeholders solo para compilar.
+# En runtime, Railway inyecta las variables reales al contenedor (npm start).
+ARG ADMIN_JWT_SECRET=build-placeholder
+ARG API_TOKEN_SALT=build-placeholder
+ARG TRANSFER_TOKEN_SALT=build-placeholder
+ARG ENCRYPTION_KEY=build-placeholder
+ARG APP_KEYS=build-key-1,build-key-2,build-key-3,build-key-4
+ARG JWT_SECRET=build-placeholder
+ARG CLOUDINARY_NAME=build-placeholder
+ARG CLOUDINARY_KEY=build-placeholder
+ARG CLOUDINARY_SECRET=build-placeholder
+ARG RESEND_API_KEY=build-placeholder
 
 ENV ADMIN_JWT_SECRET=$ADMIN_JWT_SECRET \
     API_TOKEN_SALT=$API_TOKEN_SALT \
