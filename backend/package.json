@@ -20,10 +20,10 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@strapi/plugin-cloud": "5.40.0",
-    "@strapi/plugin-users-permissions": "5.40.0",
-    "@strapi/provider-upload-cloudinary": "5.40.0",
-    "@strapi/strapi": "5.40.0",
+    "@strapi/plugin-cloud": "5.50.0",
+    "@strapi/plugin-users-permissions": "5.50.0",
+    "@strapi/provider-upload-cloudinary": "5.50.0",
+    "@strapi/strapi": "5.50.0",
     "algoliasearch": "^5.55.1",
     "better-sqlite3": "12.6.2",
     "cloudinary": "^2.5.1",
@@ -42,7 +42,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "typescript": "^5",
-    "vitest": "^1.0.0"
+    "vitest": "^3.2.6"
   },
   "engines": {
     "node": ">=20.0.0 <=24.x.x",
