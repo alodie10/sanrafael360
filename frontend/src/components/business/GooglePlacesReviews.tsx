@@ -17,7 +17,31 @@ interface GoogleReview {
   rating: number;
   relative_time_description: string;
   text: string;
-  time: number;
+}
+
+type PlaceReview = {
+  rating?: number;
+  text?: string;
+  relativePublishTimeDescription?: string;
+  authorAttribution?: {
+    displayName?: string;
+    uri?: string;
+    photoURI?: string;
+  };
+};
+
+function mapPlaceReviews(rawReviews: PlaceReview[]): GoogleReview[] {
+  return rawReviews
+    .filter((r) => (r.rating ?? 0) >= 4)
+    .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+    .map((r) => ({
+      author_name: r.authorAttribution?.displayName ?? "Usuario",
+      author_url: r.authorAttribution?.uri,
+      profile_photo_url: r.authorAttribution?.photoURI,
+      rating: r.rating ?? 0,
+      relative_time_description: r.relativePublishTimeDescription ?? "",
+      text: r.text ?? "",
+    }));
 }
 
 export default function GooglePlacesReviews({ googlePlaceId, className }: GooglePlacesReviewsProps) {
@@ -31,40 +55,36 @@ export default function GooglePlacesReviews({ googlePlaceId, className }: Google
       return;
     }
 
+    let cancelled = false;
+
     const loader = new Loader({
       apiKey,
       version: "weekly",
-      libraries: ["places", "marker", "maps"],
-      language: "es"
+      libraries: ["places"],
+      language: "es",
     });
 
-    loader.load().then((google) => {
-      const dummy = document.createElement("div");
-      const service = new google.maps.places.PlacesService(dummy);
-      
-      setLoading(true);
-      service.getDetails(
-        {
-          placeId: googlePlaceId,
-          fields: ["reviews"]
-        },
-        (place: any, status: any) => {
-          setLoading(false);
-          if (status === google.maps.places.PlacesServiceStatus.OK && place?.reviews) {
-            // Quedarnos solo con reseñas de 4 o 5 estrellas
-            const positiveReviews = (place.reviews as GoogleReview[]).filter(r => r.rating >= 4);
-            
-            // Ordenar de mayor a menor rating para asegurar que las de 5 salgan primero
-            const sortedReviews = positiveReviews.sort((a, b) => b.rating - a.rating);
-            
-            setReviews(sortedReviews);
-          }
-        }
-      );
-    }).catch((err) => {
-      console.error("Error loading Google Maps API for reviews:", err);
-      setLoading(false);
-    });
+    (async () => {
+      try {
+        setLoading(true);
+        const placesLib = await loader.importLibrary("places");
+        if (cancelled) return;
+
+        const place = new placesLib.Place({ id: googlePlaceId });
+        await place.fetchFields({ fields: ["reviews"] });
+        if (cancelled) return;
+
+        setReviews(mapPlaceReviews((place.reviews ?? []) as PlaceReview[]));
+      } catch (err) {
+        console.error("Error loading Google reviews:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [googlePlaceId]);
 
   const renderStars = (rating: number) => {

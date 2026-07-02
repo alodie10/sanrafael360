@@ -91,12 +91,12 @@ COPY --from=build /opt/node_modules ../node_modules
 COPY --from=build /opt/backend/dist ./
 COPY --from=build /opt/backend/package.json ./
 COPY --from=build /opt/backend/public ./public
+COPY backend/docker-entrypoint.sh ./docker-entrypoint.sh
 
 ENV PATH /opt/node_modules/.bin:/opt/backend/node_modules/.bin:$PATH
 
-RUN chown -R node:node /opt/backend
+RUN chown -R node:node /opt/backend && chmod +x ./docker-entrypoint.sh
 USER node
 EXPOSE 1337
-# Strapi envs are normally provided by Railway, but we ensure the port is 1337
 ENV PORT=1337
-CMD ["npm", "start"]
+CMD ["./docker-entrypoint.sh"]
