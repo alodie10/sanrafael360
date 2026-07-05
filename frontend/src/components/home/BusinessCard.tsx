@@ -61,23 +61,16 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
   }
 
   return (
-    <div className="relative h-full group">
+    <div className="relative z-0 isolate h-full group">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: index * 0.1 }}
         viewport={{ once: true }}
-        className="relative group flex flex-col gap-3 w-full h-full"
+        className="relative z-0 isolate flex flex-col gap-3 w-full h-full"
       >
-        {/* Link principal que cubre toda la tarjeta */}
-        <Link 
-          href={`/negocios/${businessSlug}`} 
-          className="absolute inset-0 z-10 rounded-[1.5rem]"
-          aria-label={`Ver ${negocio.nombre}`}
-        />
-
-        {/* Portada Cuadrada (1:1) */}
-        <div className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden bg-slate-800 z-0">
+        {/* Portada Cuadrada (1:1) — acciones dentro para que overflow-hidden las recorte al scroll */}
+        <div className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden bg-slate-800">
           {coverUrl ? (
             <>
               <motion.div className="w-full h-full relative transition-transform duration-1000 group-hover:scale-110 opacity-70">
@@ -97,8 +90,14 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
             </div>
           )}
 
+          <Link
+            href={`/negocios/${businessSlug}`}
+            className="absolute inset-0 z-10 rounded-[1.5rem]"
+            aria-label={`Ver ${negocio.nombre}`}
+          />
+
           {/* Badges Overlay (Atributos Destacados & Oferta) */}
-          <div className="absolute top-4 left-4 flex flex-col items-start gap-2 z-10">
+          <div className="absolute top-4 left-4 flex flex-col items-start gap-2 z-20 pointer-events-none">
             {negocio.ofertas && negocio.ofertas.some(o => o.activa) && (
               <div className="px-3 py-1 bg-[#FFBF00] rounded-full text-[10px] font-bold text-black shadow-lg flex items-center gap-1 uppercase tracking-widest">
                 <Tag className="w-3 h-3" />
@@ -119,57 +118,57 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
               </div>
             ))}
           </div>
+
+          {/* Acciones (corazón, premium, gestionar) — recortadas por overflow-hidden */}
+          <div className="absolute top-4 right-4 z-30 flex flex-col items-center gap-3">
+            {/* Heart / Favorito */}
+            <button 
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 hover:scale-110 active:scale-95 transition-all drop-shadow-lg"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!session) {
+                  setShowLoginModal(true);
+                } else {
+                  toggleFavorite(businessId);
+                }
+              }}
+            >
+              <Heart 
+                className={cn(
+                  "w-6 h-6 transition-colors",
+                  isFav 
+                    ? "fill-red-500 text-red-500 stroke-red-500" 
+                    : "text-white fill-black/40 stroke-white stroke-[2]"
+                )} 
+              />
+            </button>
+
+            {/* Corona Premium */}
+            {isValidPremium && (
+              <div 
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-amber-500/30 drop-shadow-lg"
+                title="Socio Premium"
+              >
+                <Crown className="w-5 h-5 text-amber-400 fill-amber-400/20" />
+              </div>
+            )}
+
+            {/* Gestionar */}
+            {canManage && (
+              <Link 
+                href={`/portal/negocios/${businessSlug}/editar`}
+                className="w-10 h-10 bg-primary/90 text-black rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-black/10"
+                title="Gestionar negocio"
+              >
+                <Settings className="w-5 h-5" />
+              </Link>
+            )}
+          </div>
         </div>
 
-        {/* Actions Container (Top Right) - MOVED OUTSIDE FOR Z-INDEX */}
-        <div className="absolute top-4 right-4 z-20 flex flex-col items-center gap-3">
-          {/* Heart / Favorito */}
-          <button 
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 hover:scale-110 active:scale-95 transition-all drop-shadow-lg"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (!session) {
-                setShowLoginModal(true);
-              } else {
-                toggleFavorite(businessId);
-              }
-            }}
-          >
-            <Heart 
-              className={cn(
-                "w-6 h-6 transition-colors",
-                isFav 
-                  ? "fill-red-500 text-red-500 stroke-red-500" 
-                  : "text-white fill-black/40 stroke-white stroke-[2]"
-              )} 
-            />
-          </button>
-
-          {/* Corona Premium */}
-          {isValidPremium && (
-            <div 
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-amber-500/30 drop-shadow-lg"
-              title="Socio Premium"
-            >
-              <Crown className="w-5 h-5 text-amber-400 fill-amber-400/20" />
-            </div>
-          )}
-
-          {/* Gestionar */}
-          {canManage && (
-            <Link 
-              href={`/portal/negocios/${businessSlug}/editar`}
-              className="w-10 h-10 bg-primary/90 text-black rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-black/10 relative z-30"
-              title="Gestionar negocio"
-            >
-              <Settings className="w-5 h-5" />
-            </Link>
-          )}
-        </div>
-
-        {/* Información (fuera de la foto) */}
-        <div className="flex flex-col gap-1 px-1">
+        {/* Información (fuera de la foto) — también clickeable */}
+        <Link href={`/negocios/${businessSlug}`} className="flex flex-col gap-1 px-1 relative z-0">
           <div className="flex items-start justify-between gap-4">
             <h3 className="text-base font-bold text-white pr-2">
               {negocio.nombre}
@@ -204,7 +203,7 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
               <span className="font-medium text-white/30">$</span>
             )}
           </div>
-        </div>
+        </Link>
       </motion.div>
 
       {/* Login Modal para Favoritos */}

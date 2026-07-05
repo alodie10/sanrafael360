@@ -61,7 +61,8 @@
 
   .sticky-filter-bar {
     position: sticky;
-    z-index: 40;
+    z-index: 50;
+    isolation: isolate;
     /* Usa la altura real del Navbar, publicada dinámicamente por el componente.
        Fallback: 72px mobile / 80px desktop si el JS aún no ejecutó. */
     top: calc(var(--navbar-height, 72px) + var(--master-bar-height, 0px) + var(--app-banner-height, 0px));

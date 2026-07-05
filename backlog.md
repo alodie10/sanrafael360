@@ -165,8 +165,13 @@ El proyecto tiene bases sólidas (Strapi 5 + Next.js, flujo `develop → master`
 
 Para discutir juntos, propongo agrupar en **sprints de impacto**:
 
-### Sprint 0 — "Cerrar ventanas" ✅ Validado localmente
+### Sprint 0 — "Cerrar ventanas" ✅ Validado localmente + prod
 SEC-01, SEC-02, SEC-07, SEC-08, CI-01, CI-02, DOC-01
+
+### Dev confiable (jul 2026)
+- Home en `NODE_ENV=development` busca en **Strapi local**, no Algolia (`search-config.ts`, `search-negocios.ts`)
+- Evita 404 ficticios (ej. `catemu` en Algolia pero no en SQLite local)
+- Override: `NEXT_PUBLIC_USE_ALGOLIA_IN_DEV=true` para probar Algolia en local
 
 ### Sprint 1 — "Blindar pagos y admin" 🔄 En progreso
 SEC-03, SEC-04, SEC-05, SEC-06, BE-05, BE-06, SEC-09, FE-10
