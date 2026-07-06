@@ -58,20 +58,12 @@ export default function PortalStats() {
   const loadStats = async () => {
     setData(prev => ({ ...prev, loading: true }));
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-      const strapiToken = (session as any)?.jwt || process.env.STRAPI_API_TOKEN;
-      
-      let url = `${strapiUrl}/api/negocios/stats/summary`;
+      let url = '/api/portal/stats';
       if (startDate && endDate) {
-        url += `?startDate=${startDate}&endDate=${endDate}`;
+        url += `?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
       }
-      
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${strapiToken}`
-        },
-        cache: 'no-store'
-      });
+
+      const response = await fetch(url, { cache: 'no-store' });
       
       if (!response.ok) throw new Error(`Error en API: ${response.status}`);
       

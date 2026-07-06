@@ -6,7 +6,7 @@ export default {
       handler: 'api::lead.lead.convert',
       config: {
         policies: [],
-        middlewares: [],
+        middlewares: ['global::require-admin'],
       },
     },
   ],

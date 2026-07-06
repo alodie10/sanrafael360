@@ -1,65 +1,57 @@
 import { factories } from '@strapi/strapi';
+import { asyncHandler } from '../../../utils/asyncHandler';
+import { ValidationError } from '../../../utils/errors';
 
 export default factories.createCoreController('api::pago.pago', ({ strapi }) => ({
-  /**
-   * Crea una preferencia de pago para un negocio
-   */
-  async createPreference(ctx) {
-    try {
-      const { negocioId, planType } = ctx.request.body;
+  createPreference: asyncHandler(async (ctx) => {
+    const { negocioId, planType } = ctx.request.body;
 
-      if (!negocioId) {
-        return ctx.badRequest('negocioId es requerido');
-      }
-
-      const result = await strapi.service('api::pago.pago').createPreference(negocioId, planType);
-      return ctx.send({ success: true, data: result });
-    } catch (err: any) {
-      strapi.log.error(err);
-      return ctx.internalServerError(err.message);
+    if (!negocioId) {
+      throw new ValidationError('negocioId es requerido');
     }
-  },
+
+    const result = await strapi.service('api::pago.pago').createPreference(negocioId, planType);
+    ctx.send({ success: true, data: result });
+  }),
 
   /**
    * Endpoint especial para SIMULAR un éxito de pago en LOCAL
    * Bloqueado en producción (SEC-02).
    */
-  async simulateSuccess(ctx) {
+  simulateSuccess: asyncHandler(async (ctx) => {
     if (process.env.NODE_ENV === 'production') {
-      return ctx.forbidden('La simulación de pagos está deshabilitada en producción');
+      ctx.forbidden('La simulación de pagos está deshabilitada en producción');
+      return;
     }
 
-    try {
-      const { externalReference } = ctx.request.body;
-      if (!externalReference) return ctx.badRequest('externalReference requerido');
-      
-      const result = await strapi.service('api::pago.pago').handlePaymentSuccess(externalReference, 'SIMULATED_PAYMENT_123');
-      return ctx.send(result);
-    } catch (err: any) {
-      return ctx.internalServerError(err.message);
+    const { externalReference } = ctx.request.body;
+    if (!externalReference) {
+      throw new ValidationError('externalReference requerido');
     }
-  },
+
+    const result = await strapi
+      .service('api::pago.pago')
+      .handlePaymentSuccess(externalReference, 'SIMULATED_PAYMENT_' + Date.now());
+    ctx.send(result);
+  }),
 
   /**
-   * Recibe notificaciones de Mercado Pago (Webhook)
+   * Recibe notificaciones de Mercado Pago (Webhook).
+   * Firma validada por middleware global::mercadopago-webhook (SEC-03).
    */
-  async webhook(ctx) {
-    try {
-      const { query } = ctx;
-      const paymentId = query.id || ctx.request.body.data?.id;
-      const type = query.type || ctx.request.body.type;
+  webhook: asyncHandler(async (ctx) => {
+    const { query } = ctx;
+    const paymentId = query.id || query['data.id'] || ctx.request.body?.data?.id;
+    const type = query.type || query.topic || ctx.request.body?.type;
 
-      if (type === 'payment' && paymentId) {
-        strapi.log.info(`[MP Webhook] Recibido pago ID: ${paymentId}. Validando...`);
-        
-        // Llamamos al servicio para que hable con MP y actualice el negocio
-        await strapi.service('api::pago.pago').processPaymentNotification(paymentId);
-      }
-
-      return ctx.send({ received: true });
-    } catch (err: any) {
-      strapi.log.error(`[MP Webhook Error] ${err.message}`);
-      return ctx.send({ received: true }); // MP exige un 200/OK siempre
+    if ((type === 'payment' || query.topic === 'payment') && paymentId) {
+      strapi.log.info(`[MP Webhook] Notificación de pago ID: ${paymentId}`);
+      await strapi.service('api::pago.pago').processPaymentNotification(String(paymentId));
+    } else {
+      strapi.log.info(`[MP Webhook] Notificación ignorada (type=${type ?? 'n/a'})`);
     }
-  }
+
+    // MP requiere 200 para dejar de reintentar
+    ctx.send({ received: true });
+  }),
 }));

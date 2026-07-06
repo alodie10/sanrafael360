@@ -19,13 +19,23 @@ export default {
       },
     },
     {
+      method: 'GET',
+      path: '/pagos/webhook',
+      handler: 'pago.webhook',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['global::mercadopago-webhook'],
+      },
+    },
+    {
       method: 'POST',
       path: '/pagos/webhook',
       handler: 'pago.webhook',
       config: {
-        auth: false, // MP necesita entrar sin login
+        auth: false,
         policies: [],
-        middlewares: [],
+        middlewares: ['global::mercadopago-webhook'],
       },
     },
     {
@@ -35,7 +45,7 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: [],
+        middlewares: ['global::mercadopago-webhook'],
       },
     },
   ],

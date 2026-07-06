@@ -267,7 +267,7 @@ function NavbarInner() {
                   <Heart className="w-4 h-4 text-red-500" />
                   Mis Favoritos
                 </Link>
-                <button onClick={() => signOut()} className="text-white/70 hover:text-white text-sm font-bold transition-colors flex items-center gap-2">
+                <button onClick={() => signOut({ callbackUrl: "/" })} className="text-white/70 hover:text-white text-sm font-bold transition-colors flex items-center gap-2">
                   <LogOut className="w-4 h-4 text-rose-500" />
                   Salir
                 </button>
@@ -338,7 +338,7 @@ function NavbarInner() {
                   </Link>
                 ) : (
                   <button
-                    onClick={() => { signOut(); setIsMenuOpen(false); }}
+                    onClick={() => { signOut({ callbackUrl: "/" }); setIsMenuOpen(false); }}
                     className="w-full flex items-center gap-3 text-white/70 hover:text-white py-3 border-b border-white/[0.06] text-sm font-bold transition-colors"
                   >
                     <LogOut className="w-4 h-4 text-rose-500" />

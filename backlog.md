@@ -173,13 +173,8 @@ SEC-01, SEC-02, SEC-07, SEC-08, CI-01, CI-02, DOC-01
 - Evita 404 ficticios (ej. `catemu` en Algolia pero no en SQLite local)
 - Override: `NEXT_PUBLIC_USE_ALGOLIA_IN_DEV=true` para probar Algolia en local
 
-### Sprint 1 — "Blindar pagos y admin" 🔄 En progreso
+### Sprint 1 — "Blindar pagos y admin" ✅ Completado (local)
 SEC-03, SEC-04, SEC-05, SEC-06, BE-05, BE-06, SEC-09, FE-10
-- ✅ SEC-04: middleware `require-admin` en rutas admin
-- ✅ SEC-05: `register-cloudinary` requiere admin
-- ✅ SEC-06: rate-limit en `POST /negocios/:id/stats`
-- ✅ BE-06: `ADMIN_EMAILS` desde env (`admin-access.ts`)
-- ⏳ SEC-03, BE-05, SEC-09, FE-10 pendientes
 
 ### Sprint 2 — "CI confiable" (2–3 días)
 QA-01, QA-02, QA-03, QA-05, CI-03, DOC-02, DOC-03

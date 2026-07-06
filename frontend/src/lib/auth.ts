@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { ADMIN_EMAILS } from "@/lib/admin-emails";
+import { exchangeGoogleAccessToken } from "@/lib/strapi-google-auth";
 
 export { ADMIN_EMAILS } from "@/lib/admin-emails";
 
@@ -40,29 +41,21 @@ export const authOptions: NextAuthOptions = {
       : []),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-      
-      if (account?.provider === 'google') {
+    async jwt({ token, account }) {
+      if (account?.provider === 'google' && account.access_token) {
         try {
-          const res = await fetch(`${strapiUrl}/api/auth/google/callback?access_token=${account.access_token}`);
-          
-          if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}));
-            token.jwt = null;
-            token.id = null;
-            token.error = `Strapi Error ${res.status}: ${errorData.error?.message || 'Handshake fallido'}`;
-          } else {
-            const data = await res.json();
-            if (data.jwt) {
-              token.jwt = data.jwt;
-              token.id = data.user.id.toString();
-              const isSovereignAdmin = ADMIN_EMAILS.includes(data.user.email?.toLowerCase());
-              token.role = isSovereignAdmin ? 'Admin' : 'Authenticated';
-            }
+          const data = await exchangeGoogleAccessToken(account.access_token);
+
+          if (data.jwt) {
+            token.jwt = data.jwt;
+            token.id = data.user.id.toString();
+            const isSovereignAdmin = ADMIN_EMAILS.includes(data.user.email?.toLowerCase() ?? '');
+            token.role = isSovereignAdmin ? 'Admin' : 'Authenticated';
           }
-        } catch (e: any) {
-          token.error = `Error de red: ${e.message}`;
+        } catch (e: unknown) {
+          token.jwt = null;
+          token.id = null;
+          token.error = e instanceof Error ? e.message : 'Error de autenticación con Strapi';
         }
       }
       return token;
