@@ -62,7 +62,7 @@ export default function BusinessSidebar({
                 </a>
               )}
             </div>
-            <div className="h-56 rounded-3xl overflow-hidden border border-white/10 relative">
+            <div className="h-56 rounded-3xl overflow-hidden border border-white/10 relative" data-testid="map-section">
               {isValidPremium ? (
                 negocio.latitud && negocio.longitud ? (
                   <GoogleMap lat={negocio.latitud} lng={negocio.longitud} title={negocio.nombre} />
@@ -94,7 +94,7 @@ export default function BusinessSidebar({
 
           {/* Horarios (RF-07) — RESTRINGIDO A PREMIUM (ETAPA 4) */}
           {(negocio.horarios_texto || (negocio.schedules && negocio.schedules.length > 0)) && (
-            <div className="pt-6 border-t border-white/5">
+            <div className="pt-6 border-t border-white/5" data-testid="business-hours-section">
               <div className="flex items-center gap-3 mb-4 text-primary">
                 <Clock className="w-4 h-4" />
                 <span className="text-xs font-black uppercase tracking-widest">Horarios</span>

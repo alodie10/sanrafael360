@@ -11,7 +11,10 @@
     "test:unit": "cd backend && npm run test:unit",
     "test:integration": "cd backend && npm run test:integration",
     "test:fast": "npm run test:unit && npm run test:integration",
+    "test:e2e:setup": "cd frontend && npm run test:e2e:setup",
     "test:e2e": "cd frontend && npm run test:e2e",
+    "test:e2e:smoke": "cd frontend && npm run test:e2e:smoke",
+    "test:e2e:smoke:local": "cd frontend && npm run test:e2e:smoke:local",
     "test:e2e:headed": "cd frontend && npm run test:e2e:headed",
     "test:all": "npm run test:fast && npm run test:e2e"
   },

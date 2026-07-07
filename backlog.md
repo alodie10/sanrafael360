@@ -176,8 +176,15 @@ SEC-01, SEC-02, SEC-07, SEC-08, CI-01, CI-02, DOC-01
 ### Sprint 1 — "Blindar pagos y admin" ✅ Completado (local)
 SEC-03, SEC-04, SEC-05, SEC-06, BE-05, BE-06, SEC-09, FE-10
 
-### Sprint 2 — "CI confiable" (2–3 días)
+### Sprint 2 — "CI confiable" 🔄 En progreso
 QA-01, QA-02, QA-03, QA-05, CI-03, DOC-02, DOC-03
+- ✅ QA-02: `data-testid` en login, nav, portal, mapa, claim
+- ✅ QA-01: specs alineados con UI actual (Bienvenido, Mi Propiedad, redirect admin)
+- ✅ QA-05: workflow `ci.yml` (lint + test:fast + build + smoke E2E)
+- ✅ CI-03: workflow `smoke-production.yml` en push a `master`
+- ✅ QA-03: E2E smoke en CI sin auth; suite completa vía `workflow_dispatch`
+- ✅ DOC-02: `frontend/.env.example`
+- ✅ DOC-03: vars documentadas en `.env.example` y `backend/.env.example`
 
 ### Sprint 3 — "Arquitectura backend" (1–2 semanas)
 BE-01, BE-02, BE-03, BE-04, BE-07 (incremental, módulo por módulo)

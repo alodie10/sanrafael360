@@ -16,7 +16,7 @@ export default function PortalHeader({ userName }: PortalHeaderProps) {
             <LayoutDashboard className="w-7 h-7 text-black" />
           </div>
           <div>
-            <h1 className="text-3xl font-serif font-bold text-white tracking-tight uppercase">Mi Propiedad</h1>
+            <h1 data-testid="portal-title" className="text-3xl font-serif font-bold text-white tracking-tight uppercase">Mi Propiedad</h1>
             <p className="text-primary/60 text-[10px] font-black uppercase tracking-[0.2em] mt-0.5">Centro de Control • San Rafael 360</p>
           </div>
         </div>

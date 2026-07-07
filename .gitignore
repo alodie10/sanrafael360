@@ -39,3 +39,4 @@ id_rsa.pub
 # WhatsApp Bot Sessions
 .wwebjs_auth/
 .vercel
+frontend/tests/.auth/

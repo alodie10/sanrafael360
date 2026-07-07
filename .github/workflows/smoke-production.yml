@@ -1,0 +1,40 @@
+name: Smoke — Production
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  smoke:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    env:
+      SITE_URL: https://www.sanrafael360.com
+      STRAPI_URL: https://sanrafael360-production.up.railway.app
+    steps:
+      - name: Resolve URLs from secrets (optional)
+        run: |
+          if [ -n "${{ secrets.PRODUCTION_SITE_URL }}" ]; then
+            echo "SITE_URL=${{ secrets.PRODUCTION_SITE_URL }}" >> "$GITHUB_ENV"
+          fi
+          if [ -n "${{ secrets.NEXT_PUBLIC_STRAPI_URL }}" ]; then
+            echo "STRAPI_URL=${{ secrets.NEXT_PUBLIC_STRAPI_URL }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Frontend responde (home)
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$SITE_URL")
+          echo "HTTP $code — $SITE_URL"
+          test "$code" = "200"
+
+      - name: Strapi categorías públicas
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$STRAPI_URL/api/categorias")
+          echo "HTTP $code — $STRAPI_URL/api/categorias"
+          test "$code" = "200"
+
+      - name: Strapi negocios públicos
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$STRAPI_URL/api/negocios?pagination[pageSize]=1")
+          echo "HTTP $code — $STRAPI_URL/api/negocios"
+          test "$code" = "200"

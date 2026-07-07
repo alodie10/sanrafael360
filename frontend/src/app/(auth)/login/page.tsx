@@ -4,6 +4,8 @@ import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+const showTestLogin = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === "1";
+
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,8 +19,8 @@ function LoginForm() {
     setError("");
 
     const res = await signIn("credentials", {
-      identifier: email,
-      password: password,
+      email,
+      password,
       redirect: false,
     });
 
@@ -36,9 +38,17 @@ function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg border border-gray-100 dark:bg-gray-900 mx-auto">
+    <div
+      data-testid="login-page"
+      className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg border border-gray-100 dark:bg-gray-900 mx-auto"
+    >
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-heading font-bold text-gray-900 dark:text-white">Bienvenido</h1>
+        <h1
+          data-testid="login-title"
+          className="text-3xl font-heading font-bold text-gray-900 dark:text-white"
+        >
+          Bienvenido
+        </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Iniciá sesión para guardar tus favoritos y gestionar tu negocio.
         </p>
@@ -46,7 +56,8 @@ function LoginForm() {
 
       {error && <p className="text-red-500 text-center text-sm">{error}</p>}
 
-      <button 
+      <button
+        data-testid="login-google-button"
         onClick={() => signIn("google", { callbackUrl })}
         className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all text-gray-700 dark:text-gray-300 font-bold shadow-sm"
       >
@@ -58,6 +69,37 @@ function LoginForm() {
         </svg>
         Continuar con Google
       </button>
+
+      {showTestLogin && (
+        <form onSubmit={handleSubmit} className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-6">
+          <p className="text-xs text-center text-gray-400 uppercase tracking-widest">Solo tests E2E</p>
+          <input
+            data-testid="login-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="email@test.com"
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent"
+            autoComplete="username"
+          />
+          <input
+            data-testid="login-password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="password"
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent"
+            autoComplete="current-password"
+          />
+          <button
+            data-testid="login-submit"
+            type="submit"
+            className="w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-black font-bold rounded-xl"
+          >
+            Ingresar (test)
+          </button>
+        </form>
+      )}
     </div>
   );
 }

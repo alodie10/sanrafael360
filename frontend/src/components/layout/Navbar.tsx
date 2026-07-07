@@ -278,7 +278,7 @@ function NavbarInner() {
               Ofertas
             </Link>
             {pathname !== "/contacto" && (
-              <Link href="/contacto" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">
+              <Link href="/contacto" data-testid="nav-contact-link" className="bg-primary text-black px-6 py-2.5 rounded-full font-black text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,191,0,0.3)]">
                 Vende aquí
               </Link>
             )}
@@ -306,6 +306,7 @@ function NavbarInner() {
 
             {/* Hamburger */}
             <button
+              data-testid="nav-menu-toggle"
               onClick={() => setIsMenuOpen((v) => !v)}
               className="p-2 rounded-full text-white hover:bg-white/10 transition-all"
               aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}

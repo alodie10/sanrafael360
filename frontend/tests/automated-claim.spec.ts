@@ -2,65 +2,54 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 import { requireTestCredentials, requireAdminTestCredentials } from './test-env';
+import { loginWithTestCredentials } from './auth-helper';
 
 const SLUG = 'after-house';
-const CREDS = {
-  get user() { return requireTestCredentials(); },
-  get admin() { return requireAdminTestCredentials(); },
-};
 
 test.describe('Workflow de Reclamo', () => {
+  test.beforeEach(() => {
+    test.skip(
+      !!process.env.CI,
+      'Requiere Strapi local con endpoint test-reset (no disponible en CI).'
+    );
+  });
+
   test('ciclo completo: reset, reclamo con archivo y verificacion admin', async ({ page, request }) => {
-    // 1. Reset
-    const STRAPI_URL = 'http://localhost:1337';
-    console.log(`Resetting ${SLUG}...`);
+    const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+    const { email: userEmail, password: userPassword } = requireTestCredentials();
+    const { email: adminEmail, password: adminPassword } = requireAdminTestCredentials();
+
     let resetRes;
-    for(let i=0; i<3; i++) {
-        resetRes = await request.post(`${STRAPI_URL}/api/negocios/${SLUG}/test-reset`);
-        if (resetRes.ok()) break;
-        await page.waitForTimeout(2000);
+    for (let i = 0; i < 3; i++) {
+      resetRes = await request.post(`${strapiUrl}/api/negocios/${SLUG}/test-reset`);
+      if (resetRes.ok()) break;
+      await page.waitForTimeout(2000);
     }
     expect(resetRes?.ok()).toBeTruthy();
 
-    // 2. User Login
-    await page.goto('/login');
-    await page.fill('input[type="email"]', CREDS.user.email);
-    await page.fill('input[type="password"]', CREDS.user.password);
-    await page.click('button[type="submit"]');
-    await page.waitForURL('/portal');
+    await loginWithTestCredentials(page, userEmail, userPassword);
 
-    // 3. Reclamar con archivo
     await page.goto(`/negocios/${SLUG}`);
     await page.waitForLoadState('networkidle');
-    // Force reload to bypass Next.js cache for the fresh reset state
     await page.reload({ waitUntil: 'networkidle' });
-    const claimBtn = page.getByRole('button', { name: /reclamar perfil/i });
+
+    const claimBtn = page.getByTestId('claim-profile-button');
     await expect(claimBtn).toBeVisible({ timeout: 10000 });
     await claimBtn.click();
     await page.fill('textarea', 'Test adjunto');
-    
+
     const file = path.join(__dirname, 'test-val.txt');
     fs.writeFileSync(file, 'Validacion de propiedad dummy');
     await page.setInputFiles('input[type="file"]', file);
 
-    page.on('dialog', d => d.accept());
+    page.on('dialog', (d) => d.accept());
     await page.click('button:has-text("Enviar Solicitud")');
     await expect(page.getByText(/pendiente/i)).toBeVisible();
 
-    // 4. Admin Login
-    await page.goto('/login');
-    await page.fill('input[type="email"]', CREDS.admin.email);
-    await page.fill('input[type="password"]', CREDS.admin.password);
-    await page.click('button[type="submit"]');
-    // Wait for login to settle and go to admin manually
-    await page.waitForURL(url => url.pathname.startsWith('/portal'));
+    await loginWithTestCredentials(page, adminEmail, adminPassword);
     await page.goto('/portal/admin');
 
-    // 5. Verificar Doc
-    // Use heading role for more robust matching in the admin list
     await expect(page.getByRole('heading', { name: /after house/i })).toBeVisible();
-    const link = page.getByRole('link', { name: /validar archivo/i });
-    await expect(link).toBeVisible({ timeout: 10000 });
-    console.log('Success: Attachment link "Validar Archivo" found in admin!');
+    await expect(page.getByRole('link', { name: /validar archivo/i })).toBeVisible({ timeout: 10000 });
   });
 });

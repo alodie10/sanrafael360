@@ -197,7 +197,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
   }
 
   return (
-    <main className="min-h-screen bg-background pb-20">
+    <main data-testid="business-detail-page" className="min-h-screen bg-background pb-20">
       <NavigationFAB isVisible={showScrollTop} type="back" onClick={() => router.back()} />
 
       <BusinessHero negocio={negocio} businessStatus={businessStatus} />
@@ -222,6 +222,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
               </div>
             </div>
             <button
+              data-testid="claim-profile-button"
               onClick={() => {
                 if (!session) router.push(`/registro?claim=${slug}`);
                 else setShowClaimModal(true);

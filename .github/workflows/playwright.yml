@@ -1,33 +1,51 @@
-name: Playwright Tests
+name: Playwright — Full E2E
+
 on:
-  pull_request:
-    branches: [ develop ]
   workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'URL del frontend (preview o staging)'
+        required: false
+        default: ''
+
 jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     env:
+      PLAYWRIGHT_TEST: '1'
+      NEXT_PUBLIC_PLAYWRIGHT_TEST: '1'
+      PLAYWRIGHT_TEST_BASE_URL: ${{ inputs.base_url || secrets.PLAYWRIGHT_TEST_BASE_URL || 'https://www.sanrafael360.com' }}
       NEXT_PUBLIC_STRAPI_URL: ${{ secrets.NEXT_PUBLIC_STRAPI_URL }}
-      STRAPI_URL: ${{ secrets.STRAPI_URL }}
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      NEXTAUTH_URL: ${{ inputs.base_url || secrets.PLAYWRIGHT_TEST_BASE_URL || 'https://www.sanrafael360.com' }}
       TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
       TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      TEST_ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}
+      TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-        cache: 'npm'
-        cache-dependency-path: 'package-lock.json'
-    - name: Install dependencies
-      run: cd frontend && npm install
-    - name: Install Playwright Browsers
-      run: cd frontend && npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: cd frontend && npx playwright test
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: frontend/playwright-report/
-        retention-days: 30
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: cd frontend && npx playwright install --with-deps chromium
+
+      - name: Run full Playwright suite
+        run: cd frontend && npx playwright test --project=chromium-auth --project=chromium-integration
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-full-report
+          path: frontend/playwright-report/
+          retention-days: 30

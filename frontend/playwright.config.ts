@@ -1,40 +1,29 @@
 import { defineConfig, devices } from '@playwright/test';
 import path from 'path';
 
-/**
- * Playwright Configuration — San Rafael 360
- * 
- * Arquitectura de autenticación:
- * - Un proyecto "setup" hace login UNA vez y guarda el storageState.
- * - Todos los browsers (Chromium, Mobile Safari) inyectan ese state directamente.
- * - Esto elimina los falsos negativos de cookies virtualizadas en WebKit.
- * 
- * Ver: https://playwright.dev/docs/auth#basic-shared-account-in-all-tests
- */
-
 const authFile = path.join(__dirname, 'tests', '.auth', 'user.json');
+
+const testEnv = {
+  PLAYWRIGHT_TEST: '1',
+  NEXT_PUBLIC_PLAYWRIGHT_TEST: '1',
+};
+
+const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === '1';
 
 export default defineConfig({
   testDir: './tests',
   globalSetup: './tests/global-setup.ts',
-
-  /* Run tests in files in parallel */
   fullyParallel: false,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Global timeout per test */
   timeout: 60000,
-  /* Retry on CI only */
   retries: process.env.CI ? 2 : 1,
-  /* Parallel workers */
   workers: 1,
-  /* Reporter */
-  reporter: 'list',
+  reporter: process.env.CI ? [['github'], ['list']] : 'list',
 
-  /* Shared settings for all projects */
   use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL ||
-             (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'),
+    baseURL:
+      process.env.PLAYWRIGHT_TEST_BASE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'),
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'off',
@@ -43,28 +32,41 @@ export default defineConfig({
   },
 
   projects: [
-    // ------------------------------------------------------------------
-    // Chromium (Desktop): usa el storageState del global setup
-    // ------------------------------------------------------------------
     {
-      name: 'chromium',
+      name: 'chromium-smoke',
+      testMatch: /navigation\.spec\.ts|empty-state\.spec\.ts/,
+      grep: /@smoke/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'chromium-auth',
+      testMatch: /(?!google-sync|automated-claim).*\.spec\.ts/,
+      grepInvert: /@smoke/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: authFile,
       },
     },
-
-    // ------------------------------------------------------------------
-    // Mobile Safari (WebKit): inyecta el mismo storageState
-    // Esto resuelve el problema de cookies virtualizadas en WebKit
-    // ------------------------------------------------------------------
-
+    {
+      name: 'chromium-integration',
+      testMatch: /google-sync\.spec\.ts|automated-claim\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: authFile,
+      },
+    },
   ],
 
-  /* Dev server (solo en CI) */
-  webServer: process.env.CI ? {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-  } : undefined,
+  webServer: skipWebServer
+    ? undefined
+    : {
+        command: 'npm run dev',
+        url: 'http://localhost:3000',
+        reuseExistingServer: !process.env.CI,
+        timeout: 120000,
+        env: {
+          ...process.env,
+          ...testEnv,
+        },
+      },
 });
