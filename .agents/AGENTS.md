@@ -5,6 +5,7 @@
 **TODO el desarrollo se hace en el ambiente local/dev. Solo Diego toca producción.**
 
 - El agente NUNCA ejecuta comandos que afecten producción directamente (Railway, Strapi prod, Algolia prod index).
+- El agente **NUNCA** ejecuta `git push` a `master`. Todos los push a producción los hace Diego manualmente.
 - El agente propone los cambios, los construye en dev, los verifica, y luego Diego decide cuándo y cómo promover a prod.
 - Cualquier script, migración o cambio de configuración se ejecuta primero en dev y se documenta antes de sugerir aplicarlo en prod.
 

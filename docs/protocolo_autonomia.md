@@ -13,6 +13,10 @@ Para asegurar la agilidad del desarrollo, el equipo de Antigravity opera bajo un
 - **Identidad de Marca**: Cambios en logos, paletas de colores principales o tono de comunicación primario.
 - **Funcionalidad Crítica**: Nuevas funcionalidades no contempladas en el Master Plan inicial.
 
+### 3. Push a `master` (producción)
+- **Solo Diego** ejecuta push a `master` y promociones a producción (`promote.sh` o push directo).
+- Los agentes pueden commitear si el usuario lo pide, pero **nunca** deben correr `git push origin master`.
+
 ---
 
 ## Definición de "Tarea Finalizada" (DoD)
