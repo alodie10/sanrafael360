@@ -7,7 +7,7 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: [],
+        middlewares: ['api::pago.pago-preference-validator', 'global::require-payments-enabled'],
       },
     },
     {
@@ -16,6 +16,7 @@ export default {
       handler: 'pago.simulateSuccess',
       config: {
         auth: false,
+        middlewares: ['global::require-payments-enabled'],
       },
     },
     {
@@ -25,7 +26,7 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: ['global::mercadopago-webhook'],
+        middlewares: ['global::require-payments-enabled', 'global::mercadopago-webhook'],
       },
     },
     {
@@ -35,7 +36,7 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: ['global::mercadopago-webhook'],
+        middlewares: ['global::require-payments-enabled', 'global::mercadopago-webhook'],
       },
     },
     {
@@ -45,7 +46,7 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: ['global::mercadopago-webhook'],
+        middlewares: ['global::require-payments-enabled', 'global::mercadopago-webhook'],
       },
     },
   ],
