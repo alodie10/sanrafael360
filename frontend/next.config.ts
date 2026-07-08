@@ -59,7 +59,9 @@ export default withPWA({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  disable: process.env.NODE_ENV === "development",
+  // PWA habilitado solo en Vercel. En local/GitHub Actions el build falla en algunos entornos (terser renderChunk).
+  // Esto no afecta el runtime en prod; en Vercel sí queda activo.
+  disable: process.env.NODE_ENV === "development" || !process.env.VERCEL,
   fallbacks: {
     document: "/offline",
   },

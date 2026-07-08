@@ -8,13 +8,15 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   async find(ctx) {
     const { data, meta } = await super.find(ctx);
     if (data && Array.isArray(data)) {
-      await Promise.all(data.map(async (item) => {
-        const fullItem = await strapi.documents('api::negocio.negocio').findOne({
-          documentId: item.documentId,
-          populate: ['owner']
-        });
-        if (fullItem?.owner) item.owner = { id: fullItem.owner.id };
-      }));
+      await Promise.all(
+        data.map(async (item) => {
+          const fullItem = await strapi.documents('api::negocio.negocio').findOne({
+            documentId: item.documentId,
+            populate: ['owner'],
+          });
+          if (fullItem?.owner) item.owner = { id: fullItem.owner.id };
+        })
+      );
     }
     return { data, meta };
   },
@@ -23,14 +25,15 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     const response = await super.findOne(ctx);
     if (!response) return response;
     const { data, meta } = response;
-    
+
     if (data) {
       const fullItem = await strapi.documents('api::negocio.negocio').findOne({
         documentId: data.documentId,
-        populate: ['owner']
+        populate: ['owner'],
       });
       if (fullItem?.owner) data.owner = { id: fullItem.owner.id };
     }
+
     return { data, meta };
   },
 
@@ -67,12 +70,12 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     return ctx.send({ success: true, data });
   }),
 
-  me: async (ctx) => {
+  me: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
     const data = await strapi.service('api::negocio.negocio').getOwnerNegocios(user.id);
-    return { data: data || [] }; 
-  },
+    return { data: data || [] };
+  }),
 
   deleteOferta: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
