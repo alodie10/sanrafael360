@@ -1,5 +1,8 @@
 import crypto from 'crypto';
 import { factories } from '@strapi/strapi';
+import { createLeadRepository } from '../repositories/lead-repository';
+import { createNegocioRepository } from '../../negocio/repositories/negocio-repository';
+import { createUserRepository } from '../../../repositories/user-repository';
 import { NotFoundError, ValidationError } from '../../../utils/errors';
 
 type StrapiUser = {
@@ -9,93 +12,13 @@ type StrapiUser = {
   role?: { id: number };
 };
 
-async function findLeadByDocumentId(strapi: any, documentId: string) {
-  const lead = await strapi.documents('api::lead.lead').findOne({ documentId });
-  if (!lead) throw new NotFoundError('Lead');
-  return lead;
-}
-
-async function findPropietarioRole(strapi: any) {
-  return strapi.db.query('plugin::users-permissions.role').findOne({
-    where: { name: 'Propietario' },
-  });
-}
-
-async function findOrCreatePropietarioUser(strapi: any, email: string): Promise<StrapiUser> {
-  const userEmail = email.toLowerCase().trim();
-  const propietarioRole = await findPropietarioRole(strapi);
-
-  let user = await strapi.db.query('plugin::users-permissions.user').findOne({
-    where: { email: userEmail },
-  });
-
-  if (!user) {
-    return strapi.db.query('plugin::users-permissions.user').create({
-      data: {
-        username: userEmail,
-        email: userEmail,
-        password: crypto.randomBytes(20).toString('hex'),
-        confirmed: true,
-        role: propietarioRole?.id || 1,
-        provider: 'local',
-      },
-    });
-  }
-
-  await strapi.db.query('plugin::users-permissions.user').update({
-    where: { id: user.id },
-    data: { role: propietarioRole?.id || user.role },
-  });
-
-  return user;
-}
-
-async function assignOwnerToNegocio(strapi: any, negocioDocumentId: string, user: StrapiUser) {
-  const negocio = await strapi.documents('api::negocio.negocio').findOne({
-    documentId: negocioDocumentId,
-    populate: ['owner'],
-  });
-
-  if (!negocio) throw new NotFoundError('Negocio');
-  if (negocio.owner) {
-    throw new ValidationError(`El negocio "${negocio.nombre}" ya tiene un dueño asignado.`);
-  }
-
-  await strapi.documents('api::negocio.negocio').update({
-    documentId: negocioDocumentId,
-    data: {
-      owner: user.documentId || user.id,
-      reclamar_habilitado: true,
-      verificado: true,
-      estado_reclamo: 'aprobado',
-    },
-  });
-
-  await strapi.documents('api::negocio.negocio').publish({ documentId: negocioDocumentId });
-
-  return negocio;
-}
-
-async function markLeadConverted(strapi: any, leadDocumentId: string, negocioDocumentId: string) {
-  await strapi.documents('api::lead.lead').update({
-    documentId: leadDocumentId,
-    data: {
-      estado: 'convertido',
-      negocio_vinculado: negocioDocumentId,
-    },
-  });
-}
-
 async function sendWelcomeAccessEmail(strapi: any, user: StrapiUser) {
   const resetPasswordToken = crypto.randomBytes(64).toString('hex');
+  const userRepo = createUserRepository(strapi);
 
-  await strapi.db.query('plugin::users-permissions.user').update({
-    where: { id: user.id },
-    data: { resetPasswordToken },
-  });
+  await userRepo.setResetPasswordToken(user.id, resetPasswordToken);
 
   const pluginStore = strapi.store({ type: 'plugin', name: 'users-permissions' });
-  const emailSettings: any = await pluginStore.get({ key: 'email' });
   const advancedSettings: any = await pluginStore.get({ key: 'advanced' });
 
   let resetLink =
@@ -126,10 +49,38 @@ async function sendWelcomeAccessEmail(strapi: any, user: StrapiUser) {
 
 export default factories.createCoreService('api::lead.lead', ({ strapi }) => ({
   async convertLead(leadDocumentId: string, negocioDocumentId: string) {
-    const lead = await findLeadByDocumentId(strapi, leadDocumentId);
-    const user = await findOrCreatePropietarioUser(strapi, lead.email);
-    await assignOwnerToNegocio(strapi, negocioDocumentId, user);
-    await markLeadConverted(strapi, leadDocumentId, negocioDocumentId);
+    const leadRepo = createLeadRepository(strapi);
+    const negocioRepo = createNegocioRepository(strapi);
+    const userRepo = createUserRepository(strapi);
+
+    const lead = await leadRepo.findByDocumentId(leadDocumentId);
+    if (!lead) throw new NotFoundError('Lead');
+
+    const propietarioRole = await userRepo.findPropietarioRole();
+    const roleId = propietarioRole?.id || 1;
+
+    let user = await userRepo.findByEmail(lead.email);
+    if (!user) {
+      user = await userRepo.createPropietarioUser(lead.email, roleId);
+    } else {
+      await userRepo.updateRole(user.id, roleId);
+      user = { ...user, role: { id: roleId } };
+    }
+
+    const negocio = await negocioRepo.findById(negocioDocumentId, ['owner']);
+    if (!negocio) throw new NotFoundError('Negocio');
+    if (negocio.owner) {
+      throw new ValidationError(`El negocio "${negocio.nombre}" ya tiene un dueño asignado.`);
+    }
+
+    await negocioRepo.update(negocioDocumentId, {
+      owner: user.documentId || user.id,
+      reclamar_habilitado: true,
+      verificado: true,
+      estado_reclamo: 'aprobado',
+    });
+    await negocioRepo.publish(negocioDocumentId);
+    await leadRepo.markConverted(leadDocumentId, negocioDocumentId);
 
     try {
       await sendWelcomeAccessEmail(strapi, user);

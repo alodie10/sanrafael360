@@ -176,7 +176,7 @@ SEC-01, SEC-02, SEC-07, SEC-08, CI-01, CI-02, DOC-01
 ### Sprint 1 — "Blindar pagos y admin" ✅ Completado (local)
 SEC-03, SEC-04, SEC-05, SEC-06, BE-05, BE-06, SEC-09, FE-10
 
-### Sprint 2 — "CI confiable" 🔄 En progreso
+### Sprint 2 — "CI confiable" ✅ Completado
 QA-01, QA-02, QA-03, QA-05, CI-03, DOC-02, DOC-03
 - ✅ QA-02: `data-testid` en login, nav, portal, mapa, claim
 - ✅ QA-01: specs alineados con UI actual (Bienvenido, Mi Propiedad, redirect admin)
@@ -186,8 +186,12 @@ QA-01, QA-02, QA-03, QA-05, CI-03, DOC-02, DOC-03
 - ✅ DOC-02: `frontend/.env.example`
 - ✅ DOC-03: vars documentadas en `.env.example` y `backend/.env.example`
 
-### Sprint 3 — "Arquitectura backend" (1–2 semanas)
+### Sprint 3 — "Arquitectura backend" 🔄 En progreso
 BE-01, BE-02, BE-03, BE-04, BE-07 (incremental, módulo por módulo)
+- ✅ **Fase 3A (lead):** `lead-repository`, `user-repository`, service refactorizado, `asyncHandler` en convert
+- ✅ **Fase 3B (review):** `review-repository`, service con sync de rating, `asyncHandler` en create, validator
+- ✅ **Fase 3C (actividad):** `actividad-repository`, service, `asyncHandler`, errores ya no se tragan (BE-12)
+- ⏳ Pendiente: `pago` repository, `feed`/`discovery` controllers, BE-07 unificación Document Service
 
 ### Sprint 4 — "Frontend SSR y performance" (1–2 semanas)
 FE-01, FE-02, FE-03, FE-07, FE-08, FE-04
