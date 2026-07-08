@@ -768,7 +768,7 @@ export interface ApiOfertaOferta extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     descripcion: Schema.Attribute.String &
       Schema.Attribute.SetMinMaxLength<{
-        maxLength: 120;
+        maxLength: 280;
       }>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<

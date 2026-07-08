@@ -31,7 +31,7 @@
     },
     "descripcion": {
       "type": "string",
-      "maxLength": 120
+      "maxLength": 280
     },
     "valida_desde": {
       "type": "datetime",

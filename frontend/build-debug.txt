@@ -1,0 +1,33 @@
+
+> frontend@1.1.0 build
+> next build --webpack
+
+▲ Next.js 16.2.10 (webpack)
+- Environments: .env.local, .env
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for client (static)...
+ ○ (pwa) Service worker: /Users/diego/Documents/GitHub/sanrafael360/frontend/public/sw.js
+ ○ (pwa)   URL: /sw.js
+ ○ (pwa)   Scope: /
+ ○ (pwa) This app will fallback to these precached routes when fetching from the cache and the network fails:
+ ○ (pwa)   Documents (pages): /offline
+ ○ (pwa) Custom runtimeCaching array found, using it instead of the default one.
+Failed to compile.
+
+Unexpected early exit. This happens when Promises returned by plugins cannot resolve. Unfinished hook action(s) on exit:
+(terser) renderChunk
+(terser) renderChunk
+
+
+> Build failed because of webpack errors
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path /Users/diego/Documents/GitHub/sanrafael360/frontend
+npm error workspace frontend@1.1.0
+npm error location /Users/diego/Documents/GitHub/sanrafael360/frontend
+npm error command failed
+npm error command sh -c next build --webpack

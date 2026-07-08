@@ -61,12 +61,14 @@ export default function OfferCard({ oferta, index = 0 }: { oferta: Oferta, index
       </div>
 
       {/* Contenido */}
-      <div className="flex flex-col p-5 flex-1 relative z-20 bg-slate-900">
-        <h4 className="text-xl font-bold text-white leading-tight mb-1">{oferta.titulo}</h4>
-        <p className="text-primary text-xs font-bold uppercase tracking-wider mb-3">En {negocio.nombre}</p>
+      <div className="flex flex-col p-5 flex-1 min-h-0 overflow-hidden relative z-20 bg-slate-900">
+        <h4 className="text-xl font-bold text-white leading-tight mb-1 line-clamp-2 break-words">{oferta.titulo}</h4>
+        <p className="text-primary text-xs font-bold uppercase tracking-wider mb-3 truncate">En {negocio.nombre}</p>
         
         {oferta.descripcion && (
-          <p className="text-slate-400 text-sm line-clamp-2 mb-4 flex-1">{oferta.descripcion}</p>
+          <p className="text-slate-400 text-sm line-clamp-3 mb-4 flex-1 min-h-0 break-words overflow-hidden">
+            {oferta.descripcion}
+          </p>
         )}
 
         <div className="flex items-end justify-between mt-auto pt-4 border-t border-white/10">

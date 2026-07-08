@@ -5,6 +5,7 @@ import { Tag, Plus, Edit2, Trash2, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Oferta } from "@/types/strapi";
 import { fetchFromStrapi } from "@/lib/strapi";
+import { OFERTA_DESCRIPCION_MAX } from "@/lib/oferta-constants";
 
 interface EditBusinessOffersProps {
   negocioId: string;
@@ -112,6 +113,9 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
     e.preventDefault();
     if (!titulo) return toast.error("El título es obligatorio");
     if (!validaDesde || !validaHasta) return toast.error("Las fechas de validez son obligatorias");
+    if (descripcion.length > OFERTA_DESCRIPCION_MAX) {
+      return toast.error(`La descripción no puede superar ${OFERTA_DESCRIPCION_MAX} caracteres (tenés ${descripcion.length}).`);
+    }
 
     setIsSaving(true);
     try {
@@ -150,8 +154,13 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
         setIsModalOpen(false);
         fetchOfertas();
       } else {
-        const errorData = await res.json();
-        toast.error(errorData.error?.message || "Error al guardar");
+        const errorData = await res.json().catch(() => ({}));
+        const message =
+          errorData.error?.message ||
+          errorData.error?.details?.errors?.[0]?.message ||
+          (typeof errorData.error === "string" ? errorData.error : null) ||
+          `Error al guardar (${res.status})`;
+        toast.error(message);
       }
     } catch (error) {
       console.error(error);
@@ -279,11 +288,17 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Descripción</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Descripción
+                    <span className={`ml-2 font-normal normal-case ${descripcion.length > OFERTA_DESCRIPCION_MAX ? "text-rose-400" : "text-slate-500"}`}>
+                      ({descripcion.length}/{OFERTA_DESCRIPCION_MAX})
+                    </span>
+                  </label>
                   <textarea 
                     value={descripcion} 
                     onChange={e => setDescripcion(e.target.value)}
                     placeholder="Detalles de la oferta..."
+                    maxLength={OFERTA_DESCRIPCION_MAX}
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FFBF00]/50 min-h-[100px] resize-none"
                   />
                 </div>

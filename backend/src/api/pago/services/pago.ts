@@ -1,6 +1,10 @@
 import { factories } from '@strapi/strapi';
 import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
 
+// Anti-race en memoria para evitar dobles activaciones/creaciones si llegan webhooks simultáneos.
+// Nota: esto no reemplaza un unique index en BD, pero reduce el riesgo en la práctica.
+const inFlightMpPaymentIds = new Set<string>();
+
 export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
   /**
    * Genera una preferencia de pago en Mercado Pago
@@ -108,7 +112,13 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
   ) {
     const paymentIdStr = String(paymentId);
 
-    if (await this.isPaymentAlreadyApproved(paymentIdStr)) {
+    // Dedupe por mp_payment_id (aunque exista en otro estado).
+    const existing = await strapi.documents('api::pago.pago').findMany({
+      filters: { mp_payment_id: paymentIdStr },
+      limit: 1,
+    });
+
+    if (existing[0]?.estado === 'aprobado') {
       strapi.log.info(`[PagoSuccess] Pago ${paymentIdStr} ya estaba aprobado — skip`);
       return { success: true, duplicate: true };
     }
@@ -127,14 +137,18 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
     // 1. Obtener configuración para ver cuántos días sumar
     const config = await strapi.documents('api::suscripcion-config.suscripcion-config').findFirst();
     
-    // Buscamos el pago para ver qué plan era
-    const pagoPendiente = await strapi.documents('api::pago.pago').findMany({
-      filters: { external_reference: externalReference, estado: 'pendiente' },
-      sort: 'createdAt:desc',
-      limit: 1
-    });
+    // Buscamos el pago para ver qué plan era (priorizamos el existente por mp_payment_id).
+    const pagoForPlan = existing[0] ?? (
+      await strapi.documents('api::pago.pago').findMany({
+        filters: { external_reference: externalReference, estado: 'pendiente' },
+        sort: 'createdAt:desc',
+        limit: 1,
+      })
+    )[0];
 
-    const isSemestral = pagoPendiente[0]?.monto >= (config?.precio_semestral || 50000);
+    const isSemestral = pagoForPlan?.monto != null
+      ? pagoForPlan.monto >= (config?.precio_semestral || 50000)
+      : false;
     const diasSumar = isSemestral 
       ? (config?.dias_semestral || 180) 
       : (config?.dias_mensual || 30);
@@ -158,29 +172,51 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
     const mpDetails = mpPayload != null ? JSON.parse(JSON.stringify(mpPayload)) : undefined;
 
     // 4. Actualizamos el registro del pago
-    if (pagoPendiente.length > 0) {
+    if (existing.length > 0) {
       await strapi.documents('api::pago.pago').update({
-        documentId: pagoPendiente[0].documentId,
+        documentId: existing[0].documentId,
         data: {
           estado: 'aprobado',
           mp_payment_id: paymentIdStr,
           fecha_pago: now,
-          ...(mpDetails ? { detalles_mp: mpDetails } : {}),
-        },
-      });
-    } else {
-      await strapi.documents('api::pago.pago').create({
-        data: {
-          monto: 0,
-          estado: 'aprobado',
-          mp_payment_id: paymentIdStr,
           external_reference: externalReference,
-          fecha_pago: now,
           negocio: negocio.id,
           publishedAt: now,
           ...(mpDetails ? { detalles_mp: mpDetails } : {}),
         },
       });
+    } else {
+      // Fallback: si no existe aún, intentamos encontrar uno pendiente por external_reference.
+      const pagoPendiente = await strapi.documents('api::pago.pago').findMany({
+        filters: { external_reference: externalReference, estado: 'pendiente' },
+        sort: 'createdAt:desc',
+        limit: 1,
+      });
+
+      if (pagoPendiente.length > 0) {
+        await strapi.documents('api::pago.pago').update({
+          documentId: pagoPendiente[0].documentId,
+          data: {
+            estado: 'aprobado',
+            mp_payment_id: paymentIdStr,
+            fecha_pago: now,
+            ...(mpDetails ? { detalles_mp: mpDetails } : {}),
+          },
+        });
+      } else {
+        await strapi.documents('api::pago.pago').create({
+          data: {
+            monto: 0,
+            estado: 'aprobado',
+            mp_payment_id: paymentIdStr,
+            external_reference: externalReference,
+            fecha_pago: now,
+            negocio: negocio.id,
+            publishedAt: now,
+            ...(mpDetails ? { detalles_mp: mpDetails } : {}),
+          },
+        });
+      }
     }
 
     strapi.log.info(`[PagoSuccess] Negocio ${negocio.nombre} ahora es PREMIUM hasta ${validUntil.toLocaleDateString()}`);
@@ -198,6 +234,13 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
       strapi.log.info(`[MP Service] Pago ${paymentIdStr} ya procesado — idempotencia OK`);
       return { duplicate: true };
     }
+
+    // Anti race: si otro request ya está procesando este mp_payment_id, evitamos duplicar.
+    if (inFlightMpPaymentIds.has(paymentIdStr)) {
+      strapi.log.info(`[MP Service] Pago ${paymentIdStr} en vuelo — skip (anti-race)`);
+      return { duplicate: true, inFlight: true };
+    }
+    inFlightMpPaymentIds.add(paymentIdStr);
 
     const accessToken = process.env.MP_ACCESS_TOKEN;
     if (!accessToken) throw new Error('MP_ACCESS_TOKEN no configurado');
@@ -223,6 +266,8 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
     } catch (error: any) {
       strapi.log.error(`[MP Service Error] Error al consultar pago ${paymentIdStr}: ${error.message}`);
       throw error;
+    } finally {
+      inFlightMpPaymentIds.delete(paymentIdStr);
     }
   },
 

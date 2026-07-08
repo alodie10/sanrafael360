@@ -28,10 +28,12 @@ export default function OfferModule({ ofertas }: { ofertas?: Oferta[] }) {
       </div>
       
       <div className="flex justify-between items-start gap-4">
-        <div className="flex-1">
-          <h4 className="text-white font-bold text-lg leading-tight">{activeOffer.titulo}</h4>
+        <div className="flex-1 min-w-0">
+          <h4 className="text-white font-bold text-lg leading-tight break-words">{activeOffer.titulo}</h4>
           {activeOffer.descripcion && (
-            <p className="text-slate-300 text-sm mt-1.5 leading-relaxed">{activeOffer.descripcion}</p>
+            <p className="text-slate-300 text-sm mt-1.5 leading-relaxed break-words whitespace-pre-wrap">
+              {activeOffer.descripcion}
+            </p>
           )}
         </div>
         

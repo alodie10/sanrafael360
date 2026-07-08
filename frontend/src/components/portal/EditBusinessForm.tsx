@@ -229,16 +229,23 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ folder: "sanrafael360_galeria" }),
       });
-      const { signature, timestamp, api_key, cloud_name, folder } = await signRes.json();
+      const signData = await signRes.json().catch(() => ({}));
+      if (!signRes.ok) {
+        throw new Error(signData.error || "No se pudo autorizar la subida (sesión o Cloudinary en servidor)");
+      }
 
-      // 2. Subir directo a Cloudinary
+      const { signature, timestamp, api_key, cloud_name, folder } = signData;
+      if (!signature || !api_key || !cloud_name) {
+        throw new Error("Respuesta de firma Cloudinary incompleta");
+      }
+
+      // 2. Subir directo a Cloudinary (/video/upload — no enviar resource_type en el body)
       const formData = new FormData();
       formData.append("file", file);
       formData.append("api_key", api_key);
       formData.append("timestamp", String(timestamp));
       formData.append("signature", signature);
       formData.append("folder", folder);
-      formData.append("resource_type", "video");
 
       const uploadRes = await fetch(
         `https://api.cloudinary.com/v1_1/${cloud_name}/video/upload`,
