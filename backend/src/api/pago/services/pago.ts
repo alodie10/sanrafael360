@@ -1,5 +1,8 @@
 import { factories } from '@strapi/strapi';
 import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
+import { createNegocioRepository } from '../../negocio/repositories/negocio-repository';
+import { createPagoRepository } from '../repositories/pago-repository';
+import { NotFoundError } from '../../../utils/errors';
 
 // Anti-race en memoria para evitar dobles activaciones/creaciones si llegan webhooks simultáneos.
 // Nota: esto no reemplaza un unique index en BD, pero reduce el riesgo en la práctica.
@@ -10,46 +13,44 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
    * Genera una preferencia de pago en Mercado Pago
    */
   async createPreference(negocioId: string, planType: string = 'Mensual') {
+    const pagoRepo = createPagoRepository(strapi);
+    const negocioRepo = createNegocioRepository(strapi);
+
     strapi.log.info(`[MP] Iniciando preferencia para NegocioID: ${negocioId}, Plan: ${planType}`);
     const accessToken = process.env.MP_ACCESS_TOKEN;
-    const appUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const backendUrl = process.env.BACKEND_URL || "http://localhost:1337";
-    
+    const appUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:1337';
+
     strapi.log.info(`[MP DIAGNOSTIC] Token Presente: ${!!accessToken}`);
     strapi.log.info(`[MP DIAGNOSTIC] FRONTEND_URL: ${appUrl}`);
     strapi.log.info(`[MP DIAGNOSTIC] BACKEND_URL: ${backendUrl}`);
-    
+
     if (!accessToken) {
-      strapi.log.error("[MP ERROR] MP_ACCESS_TOKEN is missing in environment variables!");
-      throw new Error('Mercado Pago Access Token no configurado en variables de entorno (MP_ACCESS_TOKEN)');
+      strapi.log.error('[MP ERROR] MP_ACCESS_TOKEN is missing in environment variables!');
+      throw new Error(
+        'Mercado Pago Access Token no configurado en variables de entorno (MP_ACCESS_TOKEN)'
+      );
     }
 
     const client = new MercadoPagoConfig({ accessToken });
     const preference = new Preference(client);
 
-    const negocio = await strapi.documents('api::negocio.negocio').findOne({
-      documentId: negocioId,
-    });
+    const negocio = await negocioRepo.findById(negocioId);
+    if (!negocio) throw new NotFoundError('Negocio');
 
-    if (!negocio) throw new Error('Negocio no encontrado');
-
-    // 1. Obtener configuración de precios y modo prueba
-    const config = await strapi.documents('api::suscripcion-config.suscripcion-config').findFirst();
+    const config = await pagoRepo.findSubscriptionConfig();
     const isTestMode = config?.modo_prueba || false;
-    const amount = planType === 'Semestral' 
-      ? (config?.precio_semestral || 50000) 
-      : (config?.precio_mensual || 1200);
+    const amount =
+      planType === 'Semestral'
+        ? config?.precio_semestral || 50000
+        : config?.precio_mensual || 1200;
 
-    // 2. Si estamos en modo prueba, simulamos el éxito de inmediato
     if (isTestMode) {
       strapi.log.info(`[MP SIMULATION] Modo prueba activo. Simulando éxito para ${negocio.nombre}`);
-      
-      // Activamos el negocio directamente (como si el webhook hubiera llegado)
       await this.handlePaymentSuccess(negocio.documentId, 'SIMULATED_PAYMENT_' + Date.now());
-      
       return {
         id: 'simulated_id',
-        init_point: `${appUrl}/portal?payment=success&simulated=true`
+        init_point: `${appUrl}/portal?payment=success&simulated=true`,
       };
     }
 
@@ -74,22 +75,20 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
           notification_url: `${backendUrl}/api/pagos/webhook`,
           external_reference: negocio.documentId,
           metadata: {
-            plan_type: planType
-          }
+            plan_type: planType,
+          },
         },
       });
 
       strapi.log.info(`[MP] Preferencia creada (${planType}): ${result.id} por $${amount}`);
-      
-      await strapi.documents('api::pago.pago').create({
-        data: {
-          monto: amount,
-          estado: 'pendiente',
-          mp_preference_id: result.id,
-          negocio: negocio.id,
-          external_reference: negocio.documentId,
-          publishedAt: new Date(),
-        }
+
+      await pagoRepo.create({
+        monto: amount,
+        estado: 'pendiente',
+        mp_preference_id: result.id,
+        negocio: negocio.id,
+        external_reference: negocio.documentId,
+        publishedAt: new Date(),
       });
 
       return result;
@@ -110,116 +109,78 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
     paymentId: string,
     mpPayload?: unknown
   ) {
+    const pagoRepo = createPagoRepository(strapi);
+    const negocioRepo = createNegocioRepository(strapi);
     const paymentIdStr = String(paymentId);
 
-    // Dedupe por mp_payment_id (aunque exista en otro estado).
-    const existing = await strapi.documents('api::pago.pago').findMany({
-      filters: { mp_payment_id: paymentIdStr },
-      limit: 1,
-    });
+    const existingRows = await pagoRepo.findByMpPaymentId(paymentIdStr);
+    const existing = existingRows[0];
 
-    if (existing[0]?.estado === 'aprobado') {
+    if (existing?.estado === 'aprobado') {
       strapi.log.info(`[PagoSuccess] Pago ${paymentIdStr} ya estaba aprobado — skip`);
       return { success: true, duplicate: true };
     }
 
     strapi.log.info(`[PagoSuccess] Activando premium para negocio: ${externalReference}`);
 
-    const negocio = await strapi.documents('api::negocio.negocio').findOne({
-      documentId: externalReference,
-    });
-
+    const negocio = await negocioRepo.findById(externalReference);
     if (!negocio) {
       strapi.log.error(`[PagoSuccess] Negocio ${externalReference} no encontrado`);
       return;
     }
 
-    // 1. Obtener configuración para ver cuántos días sumar
-    const config = await strapi.documents('api::suscripcion-config.suscripcion-config').findFirst();
-    
-    // Buscamos el pago para ver qué plan era (priorizamos el existente por mp_payment_id).
-    const pagoForPlan = existing[0] ?? (
-      await strapi.documents('api::pago.pago').findMany({
-        filters: { external_reference: externalReference, estado: 'pendiente' },
-        sort: 'createdAt:desc',
-        limit: 1,
-      })
-    )[0];
+    const config = await pagoRepo.findSubscriptionConfig();
+    const pagoForPlan =
+      existing ?? (await pagoRepo.findPendingByExternalReference(externalReference));
 
-    const isSemestral = pagoForPlan?.monto != null
-      ? pagoForPlan.monto >= (config?.precio_semestral || 50000)
-      : false;
-    const diasSumar = isSemestral 
-      ? (config?.dias_semestral || 180) 
-      : (config?.dias_mensual || 30);
+    const isSemestral =
+      pagoForPlan?.monto != null
+        ? pagoForPlan.monto >= (config?.precio_semestral || 50000)
+        : false;
+    const diasSumar = isSemestral
+      ? config?.dias_semestral || 180
+      : config?.dias_mensual || 30;
 
-    // 2. Calculamos fechas
     const now = new Date();
     const validUntil = new Date();
     validUntil.setDate(now.getDate() + diasSumar);
 
-    // 3. Actualizamos el negocio a Premium
-    await strapi.documents('api::negocio.negocio').update({
-      documentId: externalReference,
-      data: {
-        is_premium: true,
-        premium_since: now,
-        premium_valid_until: validUntil,
-        publishedAt: now,
-      }
+    await negocioRepo.update(externalReference, {
+      is_premium: true,
+      premium_since: now,
+      premium_valid_until: validUntil,
+      publishedAt: now,
     });
 
     const mpDetails = mpPayload != null ? JSON.parse(JSON.stringify(mpPayload)) : undefined;
+    const approvedData = {
+      estado: 'aprobado' as const,
+      mp_payment_id: paymentIdStr,
+      fecha_pago: now,
+      external_reference: externalReference,
+      negocio: negocio.id,
+      publishedAt: now,
+      ...(mpDetails ? { detalles_mp: mpDetails } : {}),
+    };
 
-    // 4. Actualizamos el registro del pago
-    if (existing.length > 0) {
-      await strapi.documents('api::pago.pago').update({
-        documentId: existing[0].documentId,
-        data: {
-          estado: 'aprobado',
-          mp_payment_id: paymentIdStr,
-          fecha_pago: now,
-          external_reference: externalReference,
-          negocio: negocio.id,
-          publishedAt: now,
-          ...(mpDetails ? { detalles_mp: mpDetails } : {}),
-        },
-      });
+    if (existing) {
+      await pagoRepo.update(existing.documentId, approvedData);
     } else {
-      // Fallback: si no existe aún, intentamos encontrar uno pendiente por external_reference.
-      const pagoPendiente = await strapi.documents('api::pago.pago').findMany({
-        filters: { external_reference: externalReference, estado: 'pendiente' },
-        sort: 'createdAt:desc',
-        limit: 1,
-      });
+      const pagoPendiente = await pagoRepo.findPendingByExternalReference(externalReference);
 
-      if (pagoPendiente.length > 0) {
-        await strapi.documents('api::pago.pago').update({
-          documentId: pagoPendiente[0].documentId,
-          data: {
-            estado: 'aprobado',
-            mp_payment_id: paymentIdStr,
-            fecha_pago: now,
-            ...(mpDetails ? { detalles_mp: mpDetails } : {}),
-          },
-        });
+      if (pagoPendiente) {
+        await pagoRepo.update(pagoPendiente.documentId, approvedData);
       } else {
-        await strapi.documents('api::pago.pago').create({
-          data: {
-            monto: 0,
-            estado: 'aprobado',
-            mp_payment_id: paymentIdStr,
-            external_reference: externalReference,
-            fecha_pago: now,
-            negocio: negocio.id,
-            publishedAt: now,
-            ...(mpDetails ? { detalles_mp: mpDetails } : {}),
-          },
+        await pagoRepo.create({
+          monto: 0,
+          ...approvedData,
         });
       }
     }
 
-    strapi.log.info(`[PagoSuccess] Negocio ${negocio.nombre} ahora es PREMIUM hasta ${validUntil.toLocaleDateString()}`);
+    strapi.log.info(
+      `[PagoSuccess] Negocio ${negocio.nombre} ahora es PREMIUM hasta ${validUntil.toLocaleDateString()}`
+    );
     return { success: true, negocio: negocio.nombre };
   },
 
@@ -227,6 +188,7 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
    * Consulta a MP por un pago específico y lo procesa (idempotente por mp_payment_id).
    */
   async processPaymentNotification(paymentId: string) {
+    const pagoRepo = createPagoRepository(strapi);
     const paymentIdStr = String(paymentId);
 
     const alreadyProcessed = await this.isPaymentAlreadyApproved(paymentIdStr);
@@ -235,7 +197,6 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
       return { duplicate: true };
     }
 
-    // Anti race: si otro request ya está procesando este mp_payment_id, evitamos duplicar.
     if (inFlightMpPaymentIds.has(paymentIdStr)) {
       strapi.log.info(`[MP Service] Pago ${paymentIdStr} en vuelo — skip (anti-race)`);
       return { duplicate: true, inFlight: true };
@@ -258,13 +219,17 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
           await this.handlePaymentSuccess(externalReference, paymentIdStr, data);
         }
       } else {
-        strapi.log.info(`[MP Service] Pago ${paymentIdStr} tiene estado: ${data.status}. No se activa nada.`);
+        strapi.log.info(
+          `[MP Service] Pago ${paymentIdStr} tiene estado: ${data.status}. No se activa nada.`
+        );
         await this.updatePaymentStatusFromMp(paymentIdStr, data);
       }
 
       return { processed: true, status: data.status };
     } catch (error: any) {
-      strapi.log.error(`[MP Service Error] Error al consultar pago ${paymentIdStr}: ${error.message}`);
+      strapi.log.error(
+        `[MP Service Error] Error al consultar pago ${paymentIdStr}: ${error.message}`
+      );
       throw error;
     } finally {
       inFlightMpPaymentIds.delete(paymentIdStr);
@@ -272,20 +237,15 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
   },
 
   async isPaymentAlreadyApproved(mpPaymentId: string): Promise<boolean> {
-    const existing = await strapi.documents('api::pago.pago').findMany({
-      filters: { mp_payment_id: mpPaymentId, estado: 'aprobado' },
-      limit: 1,
-    });
-    return existing.length > 0;
+    const pagoRepo = createPagoRepository(strapi);
+    const existing = await pagoRepo.findApprovedByMpPaymentId(mpPaymentId);
+    return existing != null;
   },
 
   async updatePaymentStatusFromMp(mpPaymentId: string, mpData: unknown) {
-    const rows = await strapi.documents('api::pago.pago').findMany({
-      filters: { mp_payment_id: mpPaymentId },
-      limit: 1,
-    });
-
-    if (rows.length === 0) return;
+    const pagoRepo = createPagoRepository(strapi);
+    const row = (await pagoRepo.findByMpPaymentId(mpPaymentId))[0];
+    if (!row) return;
 
     const payload = mpData as { status?: string };
     const estadoMap = {
@@ -296,14 +256,11 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
     } as const;
     const mpStatus = payload.status ?? '';
     const mapped = estadoMap[mpStatus as keyof typeof estadoMap];
-    const estado = mapped ?? rows[0].estado;
+    const estado = mapped ?? row.estado;
 
-    await strapi.documents('api::pago.pago').update({
-      documentId: rows[0].documentId,
-      data: {
-        estado,
-        detalles_mp: JSON.parse(JSON.stringify(mpData)),
-      },
+    await pagoRepo.update(row.documentId, {
+      estado,
+      detalles_mp: JSON.parse(JSON.stringify(mpData)),
     });
   },
 }));
