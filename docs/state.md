@@ -1,11 +1,20 @@
 # San Rafael 360 - Estado del Proyecto
 
-**Última actualización:** 2026-07-08
+**Última actualización:** 2026-07-08 (prod desplegada)
 
-## Estado listo para promoción
-El workspace local no tiene cambios funcionales pendientes: solo hay actualizaciones de documentación en `CLAUDE.md`, `.agents/AGENTS.md` y `docs/protocolo_autonomia.md` para dejar explícito que Diego es quien hace manualmente los push a `master`.
+## Estado en producción
+- Push a `master` realizado manualmente por Diego.
+- Build en producción (Railway + Vercel) compiló correctamente.
+- Commits desplegados: `7dbdfd8` (Sprint 3 pago-repository) + `a3822df` (docs de estado y regla push manual).
 
-La rama local está en `master` y coincide con `origin/master` en `7dbdfd8` (`Sprint 3: pago-repository y documentación de avances.`). Eso significa que, desde este workspace, no hay código nuevo sin commitear que esté esperando verificación antes de promoción.
+## Sprint 3 — punto de corte
+**Completado y en prod:** repositories de `lead`, `review`, `actividad`, `pago` + capas `asyncHandler`/validators donde aplica.
+
+**Pendiente para próxima sesión:**
+1. `daily-stat` repository
+2. Refactor `feed` / `discovery` (fat controllers)
+3. `asyncHandler` en métodos admin portal restantes
+4. BE-07 incremental en `negocio` (favorites, `db.query`)
 
 ## Verificación ejecutada hoy
 - `npm run build:all` ejecutado en la raíz del monorepo.
@@ -22,18 +31,13 @@ La rama local está en `master` y coincide con `origin/master` en `7dbdfd8` (`Sp
   No bloquearon el build, pero quedan como deuda técnica separada.
 - Next.js mantiene el warning de deprecación de `middleware` hacia `proxy`.
 
-## Recomendación de promoción
-Se puede considerar **GO con cautela** para promoción del snapshot ya versionado en `master`, porque:
-- no hay cambios de código local sin verificar,
-- el build integral del monorepo pasó,
-- y las advertencias actuales no bloquearon compilación ni parecen nuevas regresiones de esta sesión.
+## Smoke manual sugerido (opcional)
+Validar en runtime: `/ofertas`, `/sitemap.xml`, portal de negocio, flujo de pago (si pagos habilitados).
 
-No se ejecutó deploy ni push desde este entorno. La promoción real sigue siendo manual por Diego.
-
-## Siguiente paso exacto para retomar mañana
-1. Si Diego decide promover, hacer el push/deploy manual habitual del commit `7dbdfd8`.
-2. Después del deploy, validar en producción las rutas dinámicas `ofertas`, `sitemap.xml` y el acceso al panel/portal para confirmar que el comportamiento en runtime coincide con el build local.
-3. En la próxima sesión de desarrollo, tomar como primer trabajo técnico la revisión de los warnings de `Dynamic server usage` en `frontend` para decidir si deben seguir dinámicos o si conviene cambiar estrategia de render/cache.
+## Siguiente sesión de desarrollo
+1. Arrancar con `daily-stat` repository (P0 del cierre parcial Sprint 3).
+2. Continuar feed/discovery + `asyncHandler` gaps.
+3. Al cerrar: `npm run test:fast` + `build:all` + actualizar `AVANCES.md`/`backlog.md`.
 
 ---
 *Este estado resume lo verificado localmente y deja una continuidad directa para la próxima sesión.*
