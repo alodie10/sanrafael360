@@ -35,6 +35,7 @@ jobs:
 
       - name: Strapi negocios públicos
         run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" "$STRAPI_URL/api/negocios?pagination[pageSize]=1")
+          # -g (--globoff): sin esto curl interpreta [pageSize] como rango y falla con exit 3
+          code=$(curl -g -s -o /dev/null -w "%{http_code}" "$STRAPI_URL/api/negocios?pagination[pageSize]=1")
           echo "HTTP $code — $STRAPI_URL/api/negocios"
           test "$code" = "200"
