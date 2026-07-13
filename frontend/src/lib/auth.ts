@@ -105,10 +105,12 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      (session as any).jwt = token.jwt as string;
-      (session as any).user.id = token.id as string;
-      (session as any).user.role = token.role as string;
-      (session as any).error = token.error as string;
+      session.jwt = token.jwt ?? undefined;
+      if (session.user) {
+        session.user.id = token.id ?? undefined;
+        session.user.role = token.role;
+      }
+      session.error = token.error;
       return session;
     }
   },

@@ -13,6 +13,12 @@ import { cn } from "@/lib/utils";
 import { getCategoryIcon } from "@/lib/icons";
 import { Categoria } from "@/types/strapi";
 import Link from "next/link";
+import {
+  isMainCategoria,
+  isSubcategoriaOf,
+  resolveParentDocumentId,
+  resolveParentSlug,
+} from "@/lib/categoria-utils";
 
 interface FilterBarProps {
   categorias: Categoria[];
@@ -103,19 +109,15 @@ function PillCarousel({ children, arrowAlign = "center" }: { children: React.Rea
  */
 export default function FilterBar({ categorias, selectedCategoryDocId }: FilterBarProps) {
   // Categorías principales (sin parent)
-  const mainCategorias = categorias.filter((c) => {
-    if (!c.parent) return true;
-    if (typeof c.parent === 'object' && !(c.parent as any).documentId) return true;
-    return false;
-  });
+  const mainCategorias = categorias.filter(isMainCategoria);
 
   // Lógica de subcategorías
   const selectedCategory = categorias.find(c => c.documentId === selectedCategoryDocId);
-  const activeParentId = selectedCategory?.parent?.documentId || selectedCategory?.documentId;
-  const subcategorias = categorias.filter(c => {
-    const pId = c.parent?.documentId || (c.parent as any)?.data?.documentId;
-    return pId === activeParentId;
-  });
+  const activeParentId =
+    resolveParentDocumentId(selectedCategory?.parent) || selectedCategory?.documentId;
+  const subcategorias = activeParentId
+    ? categorias.filter(c => isSubcategoriaOf(c, activeParentId))
+    : [];
   const showSubcategories = subcategorias.length > 0 && selectedCategoryDocId !== null;
 
   if (mainCategorias.length === 0) return null;
@@ -125,7 +127,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId }: FilterB
     const isAll = cat === null;
     const isActive = isAll ? selectedCategoryDocId === null : (
       selectedCategoryDocId === cat.documentId ||
-      (selectedCategory?.parent?.documentId === cat.documentId)
+      resolveParentDocumentId(selectedCategory?.parent) === cat.documentId
     );
     const Icon = isAll ? LayoutGrid : getCategoryIcon(cat.nombre);
     const label = isAll ? "Todos" : cat.nombre;
@@ -175,7 +177,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId }: FilterB
           >
             <PillCarousel>
               <Link
-                href={`/categoria/${(selectedCategory?.parent as any)?.slug || selectedCategory?.slug || activeParentId}`}
+                href={`/categoria/${resolveParentSlug(selectedCategory?.parent) || selectedCategory?.slug || activeParentId}`}
                 className={cn(
                   "flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-all border",
                   selectedCategoryDocId === activeParentId

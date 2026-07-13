@@ -7,6 +7,22 @@ import { Oferta } from "@/types/strapi";
 import { fetchFromStrapi } from "@/lib/strapi";
 import { OFERTA_DESCRIPCION_MAX } from "@/lib/oferta-constants";
 
+const TIPO_OFERTA_VALUES = [
+  "Descuento",
+  "Promocion2x1",
+  "Regalo",
+  "Especial",
+  "Experiencia",
+] as const;
+
+type TipoOferta = (typeof TIPO_OFERTA_VALUES)[number];
+
+function parseTipoOferta(value: string): TipoOferta {
+  return (TIPO_OFERTA_VALUES as readonly string[]).includes(value)
+    ? (value as TipoOferta)
+    : "Descuento";
+}
+
 interface EditBusinessOffersProps {
   negocioId: string;
   session: any;
@@ -21,7 +37,7 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
 
   // Form states
   const [titulo, setTitulo] = useState("");
-  const [tipoOferta, setTipoOferta] = useState<"Descuento" | "Promocion2x1" | "Regalo" | "Especial" | "Experiencia">("Descuento");
+  const [tipoOferta, setTipoOferta] = useState<TipoOferta>("Descuento");
   const [descripcion, setDescripcion] = useState("");
   const [precioOriginal, setPrecioOriginal] = useState<number | "">("");
   const [precioDescuento, setPrecioDescuento] = useState<number | "">("");
@@ -276,7 +292,7 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Tipo de Oferta *</label>
                   <select 
                     value={tipoOferta}
-                    onChange={e => setTipoOferta(e.target.value as any)}
+                    onChange={e => setTipoOferta(parseTipoOferta(e.target.value))}
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FFBF00]/50"
                   >
                     <option value="Descuento">Descuento Ponderado</option>

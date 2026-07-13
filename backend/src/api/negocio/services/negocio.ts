@@ -3,6 +3,7 @@ import { createDailyStatRepository } from '../../daily-stat/repositories/daily-s
 import { createNegocioRepository } from '../repositories/negocio-repository';
 import { ADMIN_EMAILS } from '../../../utils/constants';
 import { NotFoundError, ValidationError, ForbiddenError } from '../../../utils/errors';
+import { assertNegocioClaimable } from '../../../utils/claim-validation';
 import { logActivity } from '../../../utils/strapi-utils';
 import { getAdminClaimEmail, getOwnerResolutionEmail } from './templates/email-templates';
 import { DiscoveryService } from '../../../services/discovery-service';
@@ -13,8 +14,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
   async claimNegocio(id: string, user: any, bodyData: any, files: any) {
     const repo = createNegocioRepository(strapi);
     const negocio = await repo.findById(id, ['owner']);
-    if (!negocio) throw new NotFoundError('Negocio');
-    if (negocio.owner && negocio.estado_reclamo !== 'ninguno') throw new ValidationError('El negocio ya tiene un reclamo activo');
+    assertNegocioClaimable(negocio);
 
     const updated = await repo.update(id, { 
       estado_reclamo: 'pendiente', 

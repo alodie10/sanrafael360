@@ -16,7 +16,7 @@ export default function OfferListClient({ initialOfertas }: { initialOfertas: Of
   const ofertas = useMemo(() => {
     const seen = new Set<string>();
     return initialOfertas.filter(o => {
-      const key = (o as any).documentId || String(o.id);
+      const key = o.documentId || String(o.id);
       if (seen.has(key)) return false;
       seen.add(key);
       return true;

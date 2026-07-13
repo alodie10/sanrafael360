@@ -22,7 +22,7 @@ export default function SmartAppBanner() {
     // 2. Comprobar si se está navegando desde dentro de la propia App instalada (TWA/PWA)
     const isStandalone = 
       window.matchMedia("(display-mode: standalone)").matches || 
-      (window.navigator as any).standalone || 
+      window.navigator.standalone || 
       document.referrer.includes("android-app://");
 
     if (isStandalone) {

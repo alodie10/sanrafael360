@@ -22,8 +22,20 @@ export interface Categoria {
   descripcion?: string;
   imagen_portada?: StrapiMedia;
   negocios?: Negocio[];
-  parent?: Categoria;
+  /** Puede venir poblado o como wrapper `data` según el nivel de populate de Strapi. */
+  parent?: Categoria | StrapiRelationRef;
   subcategorias?: Categoria[];
+}
+
+/** Relación Strapi con distintos niveles de población (v4 attributes / v5 data). */
+export interface StrapiRelationRef {
+  documentId?: string;
+  slug?: string;
+  data?: {
+    documentId?: string;
+    slug?: string;
+    attributes?: { documentId?: string; slug?: string };
+  };
 }
 
 export interface Atributo {

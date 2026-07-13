@@ -1,7 +1,7 @@
 # Avances — San Rafael 360
 
 > Registro de trabajo completado. El backlog activo vive en [`backlog.md`](./backlog.md).  
-> Auditoría inicial: 2 de julio de 2026 · Última actualización: 8 de julio de 2026
+> Auditoría inicial: 2 de julio de 2026 · Última actualización: 13 de julio de 2026
 
 ---
 
@@ -14,10 +14,10 @@
 | 1 | Blindar pagos y admin | ✅ Completado |
 | 2 | CI confiable | ✅ Completado |
 | 3 | Arquitectura backend | ✅ Completado |
-| 4 | Frontend SSR y performance | ⏳ Pendiente |
-| 5 | Calidad sostenible | ⏳ Pendiente |
+| 4 | Frontend SSR y performance | ✅ Completado |
+| 5 | Calidad sostenible (tipos + tests) | ✅ Completado |
 
-**Siguiente foco recomendado:** cerrar Sprint 3 (`pago` repository + `feed`/`discovery`) y luego Sprint 4 (SSR home/portal).
+**Siguiente foco recomendado:** residual P2 — FE-03 (`getStrapiUrl()`), FE-09 (`getSiteUrl()`), boundaries por segmento. Ver [`backlog.md`](./backlog.md).
 
 ---
 
@@ -73,7 +73,7 @@
 
 ---
 
-## Sprint 3 — "Arquitectura backend" 🔄
+## Sprint 3 — "Arquitectura backend" ✅
 
 ### Completado
 
@@ -98,9 +98,41 @@ Queda `db.query` en `negocio-repository.uploadFile` (plugin upload) y `media-res
 
 ---
 
-## Sprint 4 — Frontend SSR y performance ⏳ Siguiente
+## Sprint 4 — "Frontend SSR y performance" ✅
 
-## Producto / histórico ✅
+Promovido a prod 2026-07-13 (`develop` = `master` en `ddccaa9`).
+
+| ID | Descripción | Evidencia |
+|----|-------------|-----------|
+| FE-01 | Home como Server Component + client leaf | `app/page.tsx`, `components/home/HomeClient.tsx` |
+| FE-02 | `fetchFromStrapi` respeta `cache` / `next.revalidate` | `lib/strapi.ts` |
+| FE-04 | Boundaries globales | `app/error.tsx`, `loading.tsx`, `not-found.tsx` |
+| FE-07 | Portal sin waterfall inicial (stats, negocios, precios) | `lib/portal.ts`, `app/portal/page.tsx`, `PortalStats.tsx` |
+| FE-08 | Categorías una vez en layout server | `lib/categorias.ts`, `app/layout.tsx`, `Navbar.tsx` |
+| — | Next.js 16: `middleware.ts` → `proxy.ts` | `src/proxy.ts` |
+| — | Resiliencia dev: `127.0.0.1`, fallback Algolia, favoritos sin 500 | `lib/strapi.ts`, `search-config.ts`, `api/favoritos/route.ts` |
+| — | `getSiteUrl()` en metadata principal | `lib/site.ts`, `app/layout.tsx` |
+
+### Residual P2 (no bloquea cierre)
+
+- **FE-03** parcial: `getStrapiUrl()` existe; ~20 archivos aún con URL inline.
+- **FE-09** parcial: sitemap, robots, schemas con URL hardcodeada.
+- **FE-04** parcial: sin boundaries por segmento (`/portal`, `/categoria`).
+- Build local: warnings en `/ofertas` y `sitemap.xml` sin Strapi levantado.
+
+---
+
+## Sprint 5 — "Calidad sostenible" ✅
+
+| ID | Descripción | Estado |
+|----|-------------|--------|
+| FE-05 | Typecheck en build Next (`ignoreBuildErrors: false`) | ✅ |
+| FE-06 | Augmentation NextAuth + 0 `as any` en frontend | ✅ |
+| QA-04 | Tests backend pagos/claims/admin | ✅ 31 tests unitarios |
+
+**Utilidades extraídas:** `pago-plan.ts`, `premium-vigencia.ts`, `claim-validation.ts`, `payment-success-handler.ts`, `categoria-utils.ts`
+
+---
 
 | ID | Descripción |
 |----|-------------|

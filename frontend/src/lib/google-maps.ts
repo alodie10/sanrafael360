@@ -9,6 +9,26 @@ export function isGoogleMapsApiKeyConfigured(key?: string): boolean {
 
 const GOOGLE_MAPS_LIBRARIES = ["places", "marker", "maps"] as const;
 
+/** Subset tipado de la Places Library (nueva API) usado en el frontend. */
+export interface GooglePlacesLibrary {
+  Place: new (opts: { id: string }) => {
+    fetchFields: (opts: { fields: string[] }) => Promise<void>;
+    reviews?: unknown[];
+  };
+  AutocompleteSessionToken: new () => unknown;
+  AutocompleteSuggestion: {
+    fetchAutocompleteSuggestions: (
+      opts: Record<string, unknown>
+    ) => Promise<{ suggestions: unknown[] }>;
+  };
+}
+
+type GoogleMapsLibraryMap = {
+  places: GooglePlacesLibrary;
+  marker: unknown;
+  maps: unknown;
+};
+
 let loaderInstance: Loader | null = null;
 
 /**
@@ -34,10 +54,10 @@ export function getGoogleMapsLoader(): Loader | null {
 
 export async function importGoogleMapsLibrary<K extends (typeof GOOGLE_MAPS_LIBRARIES)[number]>(
   library: K
-) {
+): Promise<GoogleMapsLibraryMap[K]> {
   const loader = getGoogleMapsLoader();
   if (!loader) {
     throw new Error("Google Maps API key no configurada");
   }
-  return loader.importLibrary(library);
+  return loader.importLibrary(library) as Promise<GoogleMapsLibraryMap[K]>;
 }

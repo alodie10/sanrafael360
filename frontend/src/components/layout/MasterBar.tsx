@@ -10,7 +10,7 @@ export default function MasterBar() {
   const { data: session } = useSession();
   const pathname = usePathname();
 
-  const userRole = (session as any)?.user?.role;
+  const userRole = session?.user?.role;
   const isAdmin = userRole === 'Admin';
   const isOwner = userRole === 'Propietario' || userRole === 'Authenticated';
   

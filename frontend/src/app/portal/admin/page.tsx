@@ -43,7 +43,7 @@ export default async function AdminDashboardPage() {
   }
 
   // Whitelist de Admins
-  const userRole = (session as any).user?.role?.toLowerCase();
+  const userRole = session.user?.role?.toLowerCase();
   const isAuthorized = userRole === 'admin' || userRole === 'super admin' || ADMIN_EMAILS.includes(session.user?.email || "");
 
   if (!isAuthorized) {

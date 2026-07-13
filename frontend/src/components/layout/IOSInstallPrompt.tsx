@@ -15,7 +15,7 @@ export default function IOSInstallPrompt() {
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
     const isStandalone = 
       window.matchMedia("(display-mode: standalone)").matches || 
-      (window.navigator as any).standalone;
+      window.navigator.standalone;
 
     // Verificar si ya la cerró antes
     const dismissed = localStorage.getItem("sr360_ios_prompt_dismissed");

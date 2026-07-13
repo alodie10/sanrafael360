@@ -2,6 +2,7 @@ import { createNegocioRepository } from '../repositories/negocio-repository';
 import { createPagoRepository } from '../../pago/repositories/pago-repository';
 import { createUserRepository } from '../../../repositories/user-repository';
 import { NotFoundError } from '../../../utils/errors';
+import { resolveVigenciaUpdate } from '../../../utils/premium-vigencia';
 
 function normalizeFavorito(negocio: any) {
   return {
@@ -53,16 +54,7 @@ export function createPortalAdminService(strapi: any) {
 
     async updateVigencia(negocioDocumentId: string, premium_valid_until: string | null) {
       const negocioRepo = createNegocioRepository(strapi);
-      const is_premium = premium_valid_until
-        ? new Date(premium_valid_until) >= new Date(new Date().setHours(0, 0, 0, 0))
-        : false;
-
-      let validUntilISO: string | null = null;
-      if (premium_valid_until) {
-        const d = new Date(premium_valid_until);
-        d.setHours(12, 0, 0, 0);
-        validUntilISO = d.toISOString();
-      }
+      const { is_premium, validUntilISO } = resolveVigenciaUpdate(premium_valid_until);
 
       await negocioRepo.updateDraftAndPublished(negocioDocumentId, {
         is_premium,

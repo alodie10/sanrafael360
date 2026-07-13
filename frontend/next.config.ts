@@ -3,7 +3,7 @@ import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   turbopack: {},   // Silencia la advertencia, pero el build usa webpack (requerido por next-pwa)
   images: {
@@ -107,4 +107,5 @@ export default withPWA({
       },
     ],
   },
-})(nextConfig);
+// Monorepo: withPWA resuelve NextConfig desde el hoisted package (tipos incompatibles).
+})(nextConfig as Parameters<ReturnType<typeof withPWA>>[0]);

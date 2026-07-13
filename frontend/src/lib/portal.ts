@@ -31,7 +31,9 @@ export interface SuscripcionPrices {
 
 function normalizePortalStats(response: Record<string, unknown>): PortalStatsPayload {
   const payload = (response.data as Record<string, unknown>) || response;
-  const summary = (payload.summary as PortalStatsSummary) || (payload as PortalStatsSummary);
+  const summary =
+    (payload.summary as PortalStatsSummary) ||
+    (payload as unknown as PortalStatsSummary);
   const breakdown = (payload.breakdown as PortalStatsBreakdown[]) || [];
 
   return {

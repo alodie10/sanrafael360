@@ -61,6 +61,7 @@ export async function searchNegociosFromStrapi(params: HomeSearchParams): Promis
 
 function mapAlgoliaHit(hit: Record<string, unknown>): Negocio {
   return {
+    id: typeof hit.id === "number" ? hit.id : 0,
     documentId: hit.objectID as string,
     slug: hit.slug as string,
     nombre: hit.nombre as string,

@@ -7,8 +7,8 @@ import { useEffect } from "react";
 const FB_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "717295573214072";
 
 export const pageview = () => {
-  if (typeof window !== "undefined" && (window as any).fbq) {
-    (window as any).fbq("track", "PageView");
+  if (typeof window !== "undefined" && window.fbq) {
+    window.fbq("track", "PageView");
   }
 };
 

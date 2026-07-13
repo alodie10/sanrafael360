@@ -3,6 +3,7 @@ import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
 import { createNegocioRepository } from '../../negocio/repositories/negocio-repository';
 import { createPagoRepository } from '../repositories/pago-repository';
 import { NotFoundError } from '../../../utils/errors';
+import { processPaymentSuccess } from '../../../services/payment-success-handler';
 
 // Anti-race en memoria para evitar dobles activaciones/creaciones si llegan webhooks simultáneos.
 // Nota: esto no reemplaza un unique index en BD, pero reduce el riesgo en la práctica.
@@ -109,79 +110,16 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
     paymentId: string,
     mpPayload?: unknown
   ) {
-    const pagoRepo = createPagoRepository(strapi);
-    const negocioRepo = createNegocioRepository(strapi);
-    const paymentIdStr = String(paymentId);
-
-    const existingRows = await pagoRepo.findByMpPaymentId(paymentIdStr);
-    const existing = existingRows[0];
-
-    if (existing?.estado === 'aprobado') {
-      strapi.log.info(`[PagoSuccess] Pago ${paymentIdStr} ya estaba aprobado — skip`);
-      return { success: true, duplicate: true };
-    }
-
-    strapi.log.info(`[PagoSuccess] Activando premium para negocio: ${externalReference}`);
-
-    const negocio = await negocioRepo.findById(externalReference);
-    if (!negocio) {
-      strapi.log.error(`[PagoSuccess] Negocio ${externalReference} no encontrado`);
-      return;
-    }
-
-    const config = await pagoRepo.findSubscriptionConfig();
-    const pagoForPlan =
-      existing ?? (await pagoRepo.findPendingByExternalReference(externalReference));
-
-    const isSemestral =
-      pagoForPlan?.monto != null
-        ? pagoForPlan.monto >= (config?.precio_semestral || 50000)
-        : false;
-    const diasSumar = isSemestral
-      ? config?.dias_semestral || 180
-      : config?.dias_mensual || 30;
-
-    const now = new Date();
-    const validUntil = new Date();
-    validUntil.setDate(now.getDate() + diasSumar);
-
-    await negocioRepo.update(externalReference, {
-      is_premium: true,
-      premium_since: now,
-      premium_valid_until: validUntil,
-      publishedAt: now,
-    });
-
-    const mpDetails = mpPayload != null ? JSON.parse(JSON.stringify(mpPayload)) : undefined;
-    const approvedData = {
-      estado: 'aprobado' as const,
-      mp_payment_id: paymentIdStr,
-      fecha_pago: now,
-      external_reference: externalReference,
-      negocio: negocio.id,
-      publishedAt: now,
-      ...(mpDetails ? { detalles_mp: mpDetails } : {}),
-    };
-
-    if (existing) {
-      await pagoRepo.update(existing.documentId, approvedData);
-    } else {
-      const pagoPendiente = await pagoRepo.findPendingByExternalReference(externalReference);
-
-      if (pagoPendiente) {
-        await pagoRepo.update(pagoPendiente.documentId, approvedData);
-      } else {
-        await pagoRepo.create({
-          monto: 0,
-          ...approvedData,
-        });
-      }
-    }
-
-    strapi.log.info(
-      `[PagoSuccess] Negocio ${negocio.nombre} ahora es PREMIUM hasta ${validUntil.toLocaleDateString()}`
+    return processPaymentSuccess(
+      {
+        pagoRepo: createPagoRepository(strapi),
+        negocioRepo: createNegocioRepository(strapi),
+      },
+      strapi.log,
+      externalReference,
+      paymentId,
+      mpPayload
     );
-    return { success: true, negocio: negocio.nombre };
   },
 
   /**

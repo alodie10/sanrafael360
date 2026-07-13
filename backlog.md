@@ -8,40 +8,28 @@
 
 ## P1 — Alto impacto
 
-### Frontend SSR y performance (Sprint 4 — en curso)
+### Sprint 5 — Calidad sostenible ✅
 
-| ID | Problema | Acción | Esfuerzo |
-|----|----------|--------|----------|
-| FE-01 | Home entera es `"use client"` (~470 líneas) | Server Component + client leaves | L |
-| FE-02 | `fetchFromStrapi` fuerza `cache: 'no-store'` | Respetar opciones del caller | S |
-| FE-03 | URL Strapi duplicada en 30+ archivos | Centralizar en `getStrapiUrl()` | M |
-| FE-04 | Sin `error.tsx`, `loading.tsx`, `not-found.tsx` | Boundaries globales y por segmento | M |
-| FE-07 | Portal: server fetch + re-fetch client (waterfall) | Fetch inicial en server page | M |
-| FE-08 | Navbar re-fetch categorías en cada ruta | Fetch una vez en layout server | M |
+| ID | Problema | Acción | Esfuerzo | Estado |
+|----|----------|--------|----------|--------|
+| FE-05 | `ignoreBuildErrors: true` en Next config | Habilitar typecheck; corregir incremental | L | ✅ |
+| FE-06 | 50+ `as any`; tipos NextAuth incompletos | Completar augmentation + genéricos Strapi | L | ✅ |
+| QA-04 | Backend sin cobertura pagos/claims/admin | Vitest services + integration críticas | L | ✅ |
 
 ### Frontend — resto P1
 
 | ID | Problema | Acción | Esfuerzo |
 |----|----------|--------|----------|
-| FE-05 | `ignoreBuildErrors: true` en Next config | Habilitar typecheck; corregir incremental | L |
-| FE-06 | 50+ `as any`; tipos NextAuth incompletos | Completar augmentation + genéricos Strapi | L |
-| FE-09 | URL del sitio hardcodeada | Usar `NEXTAUTH_URL` o `NEXT_PUBLIC_SITE_URL` | S |
 | FE-11 | Login con flujo credentials muerto | Eliminar UI muerta o añadir CredentialsProvider | S |
 | FE-12 | API layer fragmentada | Crear `lib/api/` con métodos tipados | L |
 
-### Backend — deuda post-Sprint 3 (P2)
+### Backend — deuda post-Sprint 3 (P2 elevado)
 
 | ID | Problema | Acción | Esfuerzo |
 |----|----------|--------|----------|
 | BE-08 | `index.ts` bootstrap ~330 líneas con migraciones | Migraciones a scripts one-shot | M |
 | BE-09 | Algolia sincroniza 2–3× por publish | Un solo path event-driven | M |
 | BE-10 | Funciones >50 líneas (`updatePortal`, `getPortalStats`) | Refactor en sub-servicios | M |
-
-### Tests y CI
-
-| ID | Problema | Acción | Esfuerzo |
-|----|----------|--------|----------|
-| QA-04 | Backend sin cobertura pagos/claims/admin | Vitest services + integration críticas | L |
 
 ### Documentación
 
@@ -55,6 +43,15 @@
 ---
 
 ## P2 — Deuda técnica
+
+### Frontend — residual Sprint 4
+
+| ID | Problema | Acción | Esfuerzo |
+|----|----------|--------|----------|
+| FE-03 | URL Strapi duplicada en ~20 archivos | Migrar a `getStrapiUrl()` | M |
+| FE-04 | Sin boundaries por segmento | `error.tsx` en `/portal`, `/categoria` | S |
+| FE-09 | URL del sitio hardcodeada (sitemap, robots, schemas) | Extender `getSiteUrl()` | S |
+| FE-25 | Build warnings `/ofertas` y `sitemap.xml` sin Strapi | `revalidate` o `dynamic` explícito | S |
 
 ### Backend
 
@@ -71,14 +68,14 @@
 | BE-19 | URLs prod hardcodeadas en feed, emails, scripts | `FRONTEND_URL` / `PUBLIC_URL` env | S |
 | BE-20 | Dockerfile instala Playwright en imagen prod | Quitar Playwright de prod | M |
 
-### Frontend
+### Frontend — resto P2
 
 | ID | Problema | Acción | Esfuerzo |
 |----|----------|--------|----------|
 | FE-13 | Algolia pide 100 hits por filtro | Reducir `hitsPerPage`; prefetch inicial | S |
 | FE-14 | `framer-motion` en 26 archivos | CSS transitions; dynamic import | M |
 | FE-15 | `<img>` raw en hero/galería | Migrar a `next/image` con `sizes`/`priority` | M |
-| FE-16 | `console.log` debug en `strapi.ts` | Eliminar logs de producción | S |
+| FE-16 | `console.log` debug disperso | Eliminar logs de producción | S |
 | FE-17 | `maximumScale: 1` bloquea zoom | Remover restricción viewport | S |
 | FE-18 | Formularios sin `<label htmlFor>` | Labels visibles o `sr-only` | M |
 | FE-19 | Botones icon-only sin `aria-label` | Audit controles interactivos | S |
@@ -118,16 +115,13 @@
 ## Secuencia recomendada
 
 ```
-Sprint 3 (en curso)  →  Sprint 4 (SSR)  →  Sprint 5 (tipos + tests backend)
-         ↓
-    commit cambios locales (lead/review/actividad repos)
+Sprint 4 (SSR) ✅  →  Sprint 5 (tipos + tests)  →  residual FE-03/FE-09 (P2)
 ```
 
-### Próximo paso concreto
+### Próximo paso concreto (P2 — residual)
 
-1. **Commitear** el trabajo local de Sprint 3 (repositories `lead`, `review`, `actividad`, `user`).
-2. **Refactor `feed`/`discovery`**: repositories + `asyncHandler`.
-3. **Paralelo opcional:** FE-02 + FE-09 (quick wins frontend, 1–2 h).
+1. **FE-03** — migrar URLs Strapi duplicadas a `getStrapiUrl()`.
+2. **FE-09** — extender `getSiteUrl()` en sitemap, robots y schemas.
 
 ---
 

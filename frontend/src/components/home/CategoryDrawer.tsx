@@ -6,6 +6,7 @@ import { X, LayoutGrid, ChevronRight, ChevronLeft } from "lucide-react";
 import { Categoria } from "@/types/strapi";
 import { getCategoryIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { isMainCategoria, isSubcategoriaOf } from "@/lib/categoria-utils";
 
 interface CategoryDrawerProps {
   isOpen: boolean;
@@ -24,27 +25,11 @@ export default function CategoryDrawer({
 }: CategoryDrawerProps) {
   const [view, setView] = useState<{ type: 'main' | 'sub', parentId: string | null }>({ type: 'main', parentId: null });
 
-  // Función robusta para encontrar subcategorías
   const getSubcategories = (parentId: string) => {
-    return categorias.filter(c => {
-      const p = c.parent;
-      if (!p) return false;
-      
-      // Strapi 5 puede devolver el parent de varias formas según el nivel de población
-      const pDocId = (p as any).documentId || (p as any).data?.documentId || (p as any).data?.attributes?.documentId;
-      return pDocId === parentId;
-    });
+    return categorias.filter(c => isSubcategoriaOf(c, parentId));
   };
 
-  const mainCategorias = categorias.filter((c) => {
-    // Es principal si no tiene padre
-    if (!c.parent) return true;
-    
-    // O si el padre no tiene documentId (significa que el campo existe pero está vacío)
-    const p = c.parent as any;
-    const pDocId = p.documentId || p.data?.documentId;
-    return !pDocId;
-  });
+  const mainCategorias = categorias.filter(isMainCategoria);
 
   const handleCategoryClick = (cat: Categoria) => {
     const subs = getSubcategories(cat.documentId);

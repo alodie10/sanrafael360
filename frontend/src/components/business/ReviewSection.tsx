@@ -56,9 +56,9 @@ export default function ReviewSection({ negocioId, ownerId, initialRating = 0, i
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const jwt = (session as any)?.jwt;
-    const userId = (session as any)?.user?.id;
-    const sessionError = (session as any)?.error;
+    const jwt = session?.jwt;
+    const userId = session?.user?.id;
+    const sessionError = session?.error;
 
     console.log("🚀 [INTENTO DE ENVÍO]:", { jwt: !!jwt, userId, status, sessionError });
     

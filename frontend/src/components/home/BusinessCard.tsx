@@ -29,10 +29,10 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
   const businessSlug = negocio.slug || negocio.documentId;
   const businessId = negocio.documentId;
 
-  const sessionUserId = String((session as any)?.user?.id || "");
+  const sessionUserId = String(session?.user?.id || "");
   const ownerId = String(negocio.owner?.id || negocio.owner?.documentId || "");
   
-  const isAdmin = (session as any)?.user?.role === 'Admin';
+  const isAdmin = session?.user?.role === 'Admin';
   const isOwner = sessionUserId && ownerId && sessionUserId === ownerId;
   const canManage = isAdmin || isOwner;
   
