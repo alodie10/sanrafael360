@@ -13,7 +13,7 @@
 | Dev confiable | Búsqueda local en desarrollo | ✅ Completado |
 | 1 | Blindar pagos y admin | ✅ Completado |
 | 2 | CI confiable | ✅ Completado |
-| 3 | Arquitectura backend | 🔄 En progreso (4 de 6 módulos) |
+| 3 | Arquitectura backend | 🔄 En progreso (~85%) |
 | 4 | Frontend SSR y performance | ⏳ Pendiente |
 | 5 | Calidad sostenible | ⏳ Pendiente |
 
@@ -84,16 +84,18 @@
 | 3C | `actividad` | `actividad-repository`, service, `asyncHandler`, errores propagados (BE-12) |
 | 3D | `pago` | `pago-repository`, service refactorizado, reutiliza `negocio-repository`, `NotFoundError` |
 | 3E | `daily-stat` | `daily-stat-repository`, cableado en `negocio` service/controller e `index.ts` bootstrap |
+| 3F | `feed` | `feed-repository`, `feed-service`, CSV utils, controller con `asyncHandler` |
+| 3G | `discovery` | `discovery-sync` service, `parse-google-hours` util, validator, `asyncHandler` |
 
-**Repositories existentes:** `negocio`, `lead`, `user`, `review`, `actividad`, `pago`, `daily-stat` (7 total).
+**Repositories existentes:** `negocio`, `lead`, `user`, `review`, `actividad`, `pago`, `daily-stat`, `feed` (8 total).
 
 **`asyncHandler` aplicado en:** `negocio`, `lead`, `review`, `actividad`, `pago`, `oauth`.
 
 ### Pendiente (ver backlog)
 
-- Refactor `feed` / `discovery` controllers
 - BE-07: unificar Document Service API (aún hay `db.query` en `negocio`)
-- Validators para rutas `pago`, `discovery`, ops admin restantes
+- `asyncHandler` en métodos admin portal restantes de `negocio` y `media-restorer`
+- Validators para ops admin restantes
 
 ---
 

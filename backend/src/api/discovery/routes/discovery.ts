@@ -7,7 +7,7 @@ export default {
       handler: 'discovery.googleSync',
       config: {
         policies: [],
-        middlewares: [],
+        middlewares: ['api::discovery.discovery-google-validator'],
       },
     },
   ],
