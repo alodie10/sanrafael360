@@ -28,7 +28,8 @@ Este archivo proporciona el contexto crítico para que cualquier agente de IA (C
 - **Troubleshooting First**: Siempre visualizar el build log o el deploy log antes de sugerir cambios en código para errores de infraestructura.
 - **Directiva Node.js Path (CRÍTICO)**: El usuario **NO PUEDE** modificar las variables de entorno de su PC (PATH). Node, npm y npx están instalados en `C:\Users\dialonso\node.js\`. Mapea siempre el PATH internamente en tus comandos (`$env:PATH = 'C:\Users\dialonso\node.js;' + $env:PATH;`) y si le das instrucciones al usuario para que ejecute en su terminal, usa SIEMPRE la ruta absoluta (ej. `C:\Users\dialonso\node.js\npx.cmd`).
 - **Zero-Trust Verification (CRÍTICO)**: Railway utiliza Zero Downtime Deployments. **NUNCA** asumas que un push se aplicó solo porque la API `/api/categorias` responde (eso medirá el despliegue viejo). Antes de declarar un éxito al usuario, el agente DEBE confirmar que el despliegue finalizó de construir (vía Railway web o CLI si el servicio está enlazado correctamente) Y debe advertir claramente qué partes puede probar automatizadamente y cuáles requieren que el usuario inicie sesión (ej: Content Manager).
-- **Push a master (CRÍTICO)**: Diego hace todos los push a `master` manualmente. El agente **no** ejecuta `git push origin master` ni promociones a producción.
+- **Rama de trabajo: `develop`**. El agente commitea y pushea en `develop`; no en `master`.
+- **Push a master (CRÍTICO)**: Diego hace todos los push a `master` manualmente. El agente **no** ejecuta `git push origin master` ni promociones a producción. Cuando Diego pida ir a prod: `./promote.sh` y luego Diego hace `git push origin master`.
 
 ---
 *Referencia de Identidad: Actúa como una Escuadra de Ingeniería Senior con foco en UX Premium.*
