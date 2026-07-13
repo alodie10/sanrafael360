@@ -3,18 +3,18 @@ import { asyncHandler } from '../../../utils/asyncHandler';
 import { ValidationError } from '../../../utils/errors';
 import { createDailyStatRepository } from '../../daily-stat/repositories/daily-stat-repository';
 import { createNegocioRepository } from '../repositories/negocio-repository';
-import { getAdminEmails, userHasAdminAccess, resolveAdminUser, isAdminEmail } from '../../../utils/admin-access';
+import { createPortalAdminService } from '../services/portal-admin';
+import { createUserRepository } from '../../../repositories/user-repository';
+import { getAdminEmails, userHasAdminAccess, resolveAdminUser } from '../../../utils/admin-access';
 
 export default factories.createCoreController('api::negocio.negocio', ({ strapi }) => ({
   async find(ctx) {
     const { data, meta } = await super.find(ctx);
+    const negocioRepo = createNegocioRepository(strapi);
     if (data && Array.isArray(data)) {
       await Promise.all(
         data.map(async (item) => {
-          const fullItem = await strapi.documents('api::negocio.negocio').findOne({
-            documentId: item.documentId,
-            populate: ['owner'],
-          });
+          const fullItem = await negocioRepo.findById(item.documentId, ['owner']);
           if (fullItem?.owner) item.owner = { id: fullItem.owner.id };
         })
       );
@@ -26,12 +26,10 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     const response = await super.findOne(ctx);
     if (!response) return response;
     const { data, meta } = response;
+    const negocioRepo = createNegocioRepository(strapi);
 
     if (data) {
-      const fullItem = await strapi.documents('api::negocio.negocio').findOne({
-        documentId: data.documentId,
-        populate: ['owner'],
-      });
+      const fullItem = await negocioRepo.findById(data.documentId, ['owner']);
       if (fullItem?.owner) data.owner = { id: fullItem.owner.id };
     }
 
@@ -131,10 +129,7 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       fullUser = { email: getAdminEmails()[0], role: { name: 'Admin' }, id: -1 };
     } else {
       if (!user) return ctx.unauthorized();
-      fullUser = await strapi.query('plugin::users-permissions.user').findOne({
-        where: { id: user.id },
-        populate: ['role']
-      });
+      fullUser = await createUserRepository(strapi).findWithRole(user.id);
     }
     
     const body = ctx.request.body;
@@ -152,7 +147,6 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   adminResolveClaim: asyncHandler(async (ctx) => {
     const { id } = ctx.params;
     const { decision, motivo } = ctx.request.body;
-    if (!decision) throw new ValidationError('Decisión requerida');
     const result = await strapi.service('api::negocio.negocio').resolveClaim(id, decision, motivo);
     return ctx.send({ success: true, data: result });
   }),
@@ -237,186 +231,45 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   getFavorites: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
-    
-    const dbUser = await strapi.db.query('plugin::users-permissions.user').findOne({
-      where: { id: user.id },
-      populate: { 
-        favoritos: {
-          populate: ['categoria', 'imagen_portada', 'owner']
-        }
-      }
-    });
-    
-    const favList = (dbUser?.favoritos || []).map((n: any) => ({
-      ...n,
-      // strapi.db.query devuelve document_id (snake_case), normalizar para el frontend
-      documentId: n.documentId || n.document_id,
-      categoria: n.categoria ? { ...n.categoria, documentId: n.categoria.documentId || n.categoria.document_id } : null,
-    }));
-    
-    return ctx.send({
-      success: true,
-      data: favList
-    });
+
+    const data = await createPortalAdminService(strapi).getFavoritesForUser(user.id);
+    return ctx.send({ success: true, data });
   }),
 
   toggleFavorite: asyncHandler(async (ctx) => {
     const user = ctx.state.user;
     if (!user) return ctx.unauthorized();
-    
+
     const { documentId } = ctx.params;
     if (!documentId) throw new ValidationError('Negocio documentId es requerido');
 
-    const negocio = await strapi.db.query('api::negocio.negocio').findOne({
-      where: { documentId }
-    });
-    if (!negocio) return ctx.notFound('Negocio no encontrado');
-
-    const dbUser = await strapi.db.query('plugin::users-permissions.user').findOne({
-      where: { id: user.id },
-      populate: ['favoritos'],
-    });
-
-    const favorites = dbUser?.favoritos || [];
-    const negocioId = Number(negocio.id);
-    const isFavorited = favorites.some((f: any) => Number(f.id) === negocioId);
-
-    let newFavoritesIds = favorites.map((f: any) => Number(f.id));
-
-    if (isFavorited) {
-      // Remover del array
-      newFavoritesIds = newFavoritesIds.filter(id => id !== negocioId);
-    } else {
-      // Agregar al array
-      newFavoritesIds.push(negocioId);
-    }
-
-    await strapi.entityService.update('plugin::users-permissions.user', user.id, {
-      data: { 
-        favoritos: newFavoritesIds
-      }
-    });
-
-    return ctx.send({
-      success: true,
-      action: isFavorited ? 'removed' : 'added',
-      documentId
-    });
+    const result = await createPortalAdminService(strapi).toggleFavorite(user.id, documentId);
+    return ctx.send({ success: true, ...result });
   }),
-    async modificarVigenciaPortal(ctx) {
-    try {
-      const { documentId } = ctx.params;
-      const { premium_valid_until } = ctx.request.body;
-      
-      const is_premium = premium_valid_until ? (new Date(premium_valid_until) >= new Date(new Date().setHours(0,0,0,0))) : false;
 
-      let validUntilISO = null;
-      if (premium_valid_until) {
-         const d = new Date(premium_valid_until);
-         d.setHours(12, 0, 0, 0); // Evitar problemas de timezone
-         validUntilISO = d.toISOString();
-      }
+  modificarVigenciaPortal: asyncHandler(async (ctx) => {
+    const { documentId } = ctx.params;
+    const { premium_valid_until } = ctx.request.body;
+    await createPortalAdminService(strapi).updateVigencia(documentId, premium_valid_until ?? null);
+    return ctx.send({ success: true });
+  }),
 
-      await strapi.documents('api::negocio.negocio').update({
-        documentId,
-        data: {
-          is_premium,
-          premium_valid_until: validUntilISO
-        },
-        status: 'draft'
-      });
-      await strapi.documents('api::negocio.negocio').update({
-        documentId,
-        data: {
-          is_premium,
-          premium_valid_until: validUntilISO
-        },
-        status: 'published'
-      });
+  cargarPagoPortal: asyncHandler(async (ctx) => {
+    const { monto, estado, fecha_pago, external_reference, negocio, extendMonths } = ctx.request.body;
+    const newPago = await createPortalAdminService(strapi).createManualPago({
+      monto,
+      estado,
+      fecha_pago,
+      external_reference,
+      negocio,
+      extendMonths,
+    });
+    return ctx.send({ success: true, data: newPago });
+  }),
 
-      ctx.send({ success: true });
-    } catch (err) {
-      console.error(err);
-      ctx.badRequest("Error actualizando vigencia");
-    }
-  },
-
-    
-  async cargarPagoPortal(ctx) {
-    try {
-      const { monto, estado, fecha_pago, external_reference, negocio, extendMonths } = ctx.request.body;
-      
-      // Crear el pago
-      const newPago = await strapi.documents('api::pago.pago').create({
-        data: {
-          monto,
-          estado: estado || 'aprobado',
-          fecha_pago,
-          external_reference: external_reference || "",
-          mp_preference_id: "manual_" + Date.now(), // Asegurar que sea string
-          mp_payment_id: "manual_" + Date.now(),    // Asegurar que sea string
-          negocio
-        },
-        status: 'published'
-      });
-
-      // Extender vigencia del negocio si se pidió
-      if (extendMonths > 0) {
-        const negocioObj = await strapi.documents('api::negocio.negocio').findOne({ documentId: negocio });
-        if (negocioObj) {
-          const now = new Date();
-          const validUntil = negocioObj.premium_valid_until ? new Date(negocioObj.premium_valid_until) : new Date();
-          const baseDate = validUntil < now ? now : validUntil;
-          baseDate.setMonth(baseDate.getMonth() + extendMonths);
-
-          await strapi.documents('api::negocio.negocio').update({
-            documentId: negocio,
-            data: {
-              is_premium: true,
-              premium_valid_until: baseDate.toISOString()
-            },
-            status: 'draft'
-          });
-          await strapi.documents('api::negocio.negocio').update({
-            documentId: negocio,
-            data: {
-              is_premium: true,
-              premium_valid_until: baseDate.toISOString()
-            },
-            status: 'published'
-          });
-        }
-      }
-
-      ctx.send({ success: true, data: newPago });
-    } catch (err) {
-      console.error(err);
-      ctx.badRequest("Error creando pago manual");
-    }
-  },
-
-  async borrarPagoPortal(ctx) {
-    try {
-      const { documentId } = ctx.params;
-      
-      // Strapi 5 uses alphanumeric documentId, but legacy clients might send numeric id
-      let targetDocumentId = documentId;
-      if (!isNaN(Number(documentId))) {
-        // It's a numeric ID, fetch the documentId first
-        const pago = await strapi.db.query('api::pago.pago').findOne({
-          where: { id: Number(documentId) }
-        });
-        if (!pago) {
-          return ctx.notFound("Pago no encontrado");
-        }
-        targetDocumentId = pago.documentId;
-      }
-      
-      await strapi.documents('api::pago.pago').delete({ documentId: targetDocumentId });
-      ctx.send({ success: true });
-    } catch (err) {
-      console.error(err);
-      ctx.badRequest("Error eliminando pago");
-    }
-  },
+  borrarPagoPortal: asyncHandler(async (ctx) => {
+    const { documentId } = ctx.params;
+    await createPortalAdminService(strapi).deletePago(documentId);
+    return ctx.send({ success: true });
+  }),
 }));

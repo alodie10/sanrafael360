@@ -6,21 +6,9 @@
 
 ---
 
-## En curso — Sprint 3: cierre final
-
-| ID | Problema | Acción | Esfuerzo |
-|----|----------|--------|----------|
-| BE-07 | APIs mezcladas (`documents`, `db.query`, `entityService`) en `negocio` | Estandarizar Document Service vía repositories | M |
-| BE-02 | `asyncHandler` gaps en admin portal + `media-restorer` | Extender handlers restantes | S |
-| BE-04 | Validators admin ops sin body validation | Añadir validators admin | M |
-
-**Orden sugerido:** `asyncHandler` gaps → BE-07 favorites → validators admin → cerrar Sprint 3.
-
----
-
 ## P1 — Alto impacto
 
-### Frontend SSR y performance (Sprint 4)
+### Frontend SSR y performance (Sprint 4 — en curso)
 
 | ID | Problema | Acción | Esfuerzo |
 |----|----------|--------|----------|
@@ -41,7 +29,7 @@
 | FE-11 | Login con flujo credentials muerto | Eliminar UI muerta o añadir CredentialsProvider | S |
 | FE-12 | API layer fragmentada | Crear `lib/api/` con métodos tipados | L |
 
-### Backend — resto P1
+### Backend — deuda post-Sprint 3 (P2)
 
 | ID | Problema | Acción | Esfuerzo |
 |----|----------|--------|----------|
@@ -73,6 +61,7 @@
 | ID | Problema | Acción | Esfuerzo |
 |----|----------|--------|----------|
 | BE-11 | `throw new Error()` genérico en services | Usar errores tipados (`NotFoundError`, etc.) | S |
+| BE-07 | `db.query` residual en upload plugin | Repository upload cuando se toque | S |
 | BE-13 | Repository negocio incluye lógica de email | Mover a `NotificationService` | S |
 | BE-14 | Lógica pesada en lifecycles | Lifecycles emiten eventos; services async | M |
 | BE-15 | Fecha hardcodeada `2026-05-15` en backfill stats | Fecha dinámica o eliminar endpoint debug | S |

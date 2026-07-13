@@ -73,6 +73,17 @@ export class PagoRepository {
   async update(documentId: string, data: UpdatePagoData) {
     return this.strapi.documents('api::pago.pago').update({ documentId, data });
   }
+
+  async findByNumericId(id: number): Promise<PagoRecord | null> {
+    const row = await this.strapi.db.query('api::pago.pago').findOne({
+      where: { id },
+    });
+    return row ?? null;
+  }
+
+  async delete(documentId: string) {
+    return this.strapi.documents('api::pago.pago').delete({ documentId });
+  }
 }
 
 export const createPagoRepository = (strapi: any) => new PagoRepository(strapi);

@@ -13,7 +13,7 @@
 | Dev confiable | Búsqueda local en desarrollo | ✅ Completado |
 | 1 | Blindar pagos y admin | ✅ Completado |
 | 2 | CI confiable | ✅ Completado |
-| 3 | Arquitectura backend | 🔄 En progreso (~85%) |
+| 3 | Arquitectura backend | ✅ Completado |
 | 4 | Frontend SSR y performance | ⏳ Pendiente |
 | 5 | Calidad sostenible | ⏳ Pendiente |
 
@@ -86,18 +86,19 @@
 | 3E | `daily-stat` | `daily-stat-repository`, cableado en `negocio` service/controller e `index.ts` bootstrap |
 | 3F | `feed` | `feed-repository`, `feed-service`, CSV utils, controller con `asyncHandler` |
 | 3G | `discovery` | `discovery-sync` service, `parse-google-hours` util, validator, `asyncHandler` |
+| 3H | Cierre Sprint 3 | `portal-admin` service, favorites vía repos, validators admin, `asyncHandler` gaps |
 
-**Repositories existentes:** `negocio`, `lead`, `user`, `review`, `actividad`, `pago`, `daily-stat`, `feed` (8 total).
+**Repositories:** `negocio`, `lead`, `user`, `review`, `actividad`, `pago`, `daily-stat`, `feed` (8 total).
 
-**`asyncHandler` aplicado en:** `negocio`, `lead`, `review`, `actividad`, `pago`, `oauth`.
+### Nota BE-07 residual (Sprint 5 / P2)
 
-### Pendiente (ver backlog)
+Queda `db.query` en `negocio-repository.uploadFile` (plugin upload) y `media-restorer` (upload file). No bloquea cierre de Sprint 3.
 
-- BE-07: unificar Document Service API (aún hay `db.query` en `negocio`)
-- `asyncHandler` en métodos admin portal restantes de `negocio` y `media-restorer`
-- Validators para ops admin restantes
+**`asyncHandler` aplicado en:** todos los custom controllers excepto `find`/`findOne` core (requieren `super` directo).
 
 ---
+
+## Sprint 4 — Frontend SSR y performance ⏳ Siguiente
 
 ## Producto / histórico ✅
 

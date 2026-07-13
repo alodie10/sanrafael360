@@ -60,7 +60,7 @@ export default {
       handler: 'negocio.adminResolveClaim',
       config: {
         policies: [],
-        middlewares: ['global::require-admin'],
+        middlewares: ['global::require-admin', 'api::negocio.admin-resolve-claim-validator'],
       },
     },
     {
@@ -85,7 +85,7 @@ export default {
       method: 'POST',
       path: '/negocios/admin/pagos',
       handler: 'negocio.cargarPagoPortal',
-      config: { policies: [], middlewares: ['global::require-admin'] },
+      config: { policies: [], middlewares: ['global::require-admin', 'api::negocio.admin-pago-validator'] },
     },
     {
       method: 'DELETE',
@@ -97,7 +97,7 @@ export default {
       method: 'PUT',
       path: '/negocios/admin/vigencia/:documentId',
       handler: 'negocio.modificarVigenciaPortal',
-      config: { policies: [], middlewares: ['global::require-admin'] },
+      config: { policies: [], middlewares: ['global::require-admin', 'api::negocio.admin-vigencia-validator'] },
     },
     {
       method: 'POST',

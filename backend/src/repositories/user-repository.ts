@@ -10,10 +10,28 @@ type StrapiUser = {
 export class UserRepository {
   constructor(private readonly strapi: any) {}
 
-  async findById(userId: number, populate: string[] = []) {
+  async findById(userId: number, populate: Record<string, unknown> | string[] = []) {
     return this.strapi.db.query('plugin::users-permissions.user').findOne({
       where: { id: userId },
       populate,
+    });
+  }
+
+  async findWithRole(userId: number) {
+    return this.findById(userId, ['role']);
+  }
+
+  async findWithFavoritos(userId: number) {
+    return this.findById(userId, {
+      favoritos: {
+        populate: ['categoria', 'imagen_portada', 'owner'],
+      },
+    });
+  }
+
+  async updateFavoritos(userId: number, favoritoIds: number[]) {
+    return this.strapi.entityService.update('plugin::users-permissions.user', userId, {
+      data: { favoritos: favoritoIds },
     });
   }
 

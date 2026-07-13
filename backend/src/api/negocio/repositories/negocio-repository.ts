@@ -34,6 +34,19 @@ export class NegocioRepository {
     });
   }
 
+  async updateDraftAndPublished(documentId: string, data: any) {
+    await this.strapi.documents('api::negocio.negocio').update({
+      documentId,
+      data,
+      status: 'draft',
+    });
+    return this.strapi.documents('api::negocio.negocio').update({
+      documentId,
+      data,
+      status: 'published',
+    });
+  }
+
   async publish(documentId: string) {
     return await this.strapi.documents('api::negocio.negocio').publish({
       documentId,
