@@ -1,4 +1,5 @@
 import { factories } from '@strapi/strapi';
+import { createDailyStatRepository } from '../../daily-stat/repositories/daily-stat-repository';
 import { createNegocioRepository } from '../repositories/negocio-repository';
 import { ADMIN_EMAILS } from '../../../utils/constants';
 import { NotFoundError, ValidationError, ForbiddenError } from '../../../utils/errors';
@@ -314,13 +315,11 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
 
     // Si hay rango de fechas, buscamos en daily-stat
     if (startDate && endDate) {
+      const dailyStatRepo = createDailyStatRepository(strapi);
       const negocioIds = negocios.map((n: any) => n.documentId);
-      const dailyStats = await strapi.documents('api::daily-stat.daily-stat').findMany({
-        filters: {
-          negocio_id: { $in: negocioIds },
-          date: { $gte: startDate, $lte: endDate }
-        },
-        limit: -1
+      const dailyStats = await dailyStatRepo.findMany({
+        negocio_id: { $in: negocioIds },
+        date: { $gte: startDate, $lte: endDate },
       });
 
       // Mapeamos los totales por negocio
@@ -401,10 +400,8 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       filters.negocio_id = { $in: negocioIds };
     }
 
-    const rawStats = await strapi.documents('api::daily-stat.daily-stat').findMany({
-      filters,
-      limit: -1,
-    });
+    const dailyStatRepo = createDailyStatRepository(strapi);
+    const rawStats = await dailyStatRepo.findMany(filters);
 
     // Agrupar por fecha sumando todos los negocios
     const byDate: Record<string, { views: number; clicks_whatsapp: number; clicks_website: number }> = {};
@@ -452,29 +449,21 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     });
 
     // 2. Actualizar Daily Stat
+    const dailyStatRepo = createDailyStatRepository(strapi);
     const today = new Date().toISOString().split('T')[0];
-    const dailyStats = await strapi.documents('api::daily-stat.daily-stat').findMany({
-      filters: { negocio_id: negocio.documentId, date: today },
-      limit: 1
-    });
+    const currentDaily = await dailyStatRepo.findByNegocioAndDate(negocio.documentId, today);
 
-    if (dailyStats && dailyStats.length > 0) {
-      const currentDaily = dailyStats[0];
-      await strapi.documents('api::daily-stat.daily-stat').update({
-        documentId: currentDaily.documentId,
-        data: { [field]: Number(currentDaily[field] || 0) + 1 },
-        status: 'published'
+    if (currentDaily) {
+      await dailyStatRepo.update(currentDaily.documentId, {
+        [field]: Number(currentDaily[field] || 0) + 1,
       });
     } else {
-      await strapi.documents('api::daily-stat.daily-stat').create({
-        data: { 
-          negocio_id: negocio.documentId, 
-          date: today, 
-          views: type === 'view' ? 1 : 0,
-          clicks_whatsapp: type === 'whatsapp' ? 1 : 0,
-          clicks_website: type === 'website' ? 1 : 0
-        },
-        status: 'published'
+      await dailyStatRepo.create({
+        negocio_id: negocio.documentId,
+        date: today,
+        views: type === 'view' ? 1 : 0,
+        clicks_whatsapp: type === 'whatsapp' ? 1 : 0,
+        clicks_website: type === 'website' ? 1 : 0,
       });
     }
 

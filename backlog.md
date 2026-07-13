@@ -11,12 +11,11 @@
 | ID | Problema | Acción | Esfuerzo |
 |----|----------|--------|----------|
 | BE-01 | Fat controllers en `feed`, `discovery`, partes de `negocio` | Extraer repositories; controllers solo orquestan | L |
-| BE-03 | Falta repo `daily-stat` | Crear repository por dominio | S |
 | BE-04 | Validators solo en `lead`, `review` y `pago` | Añadir validators: `discovery`, admin ops | M |
 | BE-07 | APIs mezcladas (`documents`, `db.query`, `entityService`) | Estandarizar Document Service vía repositories | L |
 | BE-02 | `asyncHandler` no cubre todos los custom controllers | Extender a módulos restantes (`feed`, `discovery`, etc.) | M |
 
-**Orden sugerido:** `feed`/`discovery` → `daily-stat` repo → BE-07 incremental en `negocio`.
+**Orden sugerido:** `feed`/`discovery` → BE-07 incremental en `negocio`.
 
 ---
 

@@ -83,14 +83,14 @@
 | 3B | `review` | `review-repository`, sync de rating, `asyncHandler` en create, `review-create-validator` |
 | 3C | `actividad` | `actividad-repository`, service, `asyncHandler`, errores propagados (BE-12) |
 | 3D | `pago` | `pago-repository`, service refactorizado, reutiliza `negocio-repository`, `NotFoundError` |
+| 3E | `daily-stat` | `daily-stat-repository`, cableado en `negocio` service/controller e `index.ts` bootstrap |
 
-**Repositories existentes:** `negocio`, `lead`, `user`, `review`, `actividad`, `pago` (6 total).
+**Repositories existentes:** `negocio`, `lead`, `user`, `review`, `actividad`, `pago`, `daily-stat` (7 total).
 
 **`asyncHandler` aplicado en:** `negocio`, `lead`, `review`, `actividad`, `pago`, `oauth`.
 
 ### Pendiente (ver backlog)
 
-- Repository `daily-stat`
 - Refactor `feed` / `discovery` controllers
 - BE-07: unificar Document Service API (aún hay `db.query` en `negocio`)
 - Validators para rutas `pago`, `discovery`, ops admin restantes

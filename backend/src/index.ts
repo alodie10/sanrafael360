@@ -1,4 +1,5 @@
 import { Core } from '@strapi/strapi';
+import { createDailyStatRepository } from './api/daily-stat/repositories/daily-stat-repository';
 
 export default {
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
@@ -170,7 +171,8 @@ export default {
       // 5. MIGRACIÓN SILENCIOSA: Backfill de Estadísticas a daily-stat
       strapi.log.info('📊 Verificando si es necesario backfill de estadísticas...');
       try {
-        const statsCount = await strapi.documents('api::daily-stat.daily-stat' as any).count({});
+        const dailyStatRepo = createDailyStatRepository(strapi);
+        const statsCount = await dailyStatRepo.count();
         if (statsCount === 0) {
           strapi.log.info('   ⚠️ No se encontraron estadísticas diarias. Iniciando backfill distribuido en últimos 30 días...');
           const negociosStats = await strapi.documents('api::negocio.negocio' as any).findMany({ limit: -1 });
@@ -203,15 +205,12 @@ export default {
               const dayWeb = Math.round((totalWeb * w) / totalWeight);
 
               if (dayViews > 0 || dayWsp > 0 || dayWeb > 0) {
-                await strapi.documents('api::daily-stat.daily-stat' as any).create({
-                  data: {
-                    negocio_id: n.documentId,
-                    date: dateStr,
-                    views: dayViews,
-                    clicks_whatsapp: dayWsp,
-                    clicks_website: dayWeb
-                  },
-                  status: 'published'
+                await dailyStatRepo.create({
+                  negocio_id: n.documentId,
+                  date: dateStr,
+                  views: dayViews,
+                  clicks_whatsapp: dayWsp,
+                  clicks_website: dayWeb,
                 });
                 backfillCount++;
               }

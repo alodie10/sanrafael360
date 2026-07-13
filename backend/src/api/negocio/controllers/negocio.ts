@@ -1,6 +1,7 @@
 import { factories } from '@strapi/strapi';
 import { asyncHandler } from '../../../utils/asyncHandler';
 import { ValidationError } from '../../../utils/errors';
+import { createDailyStatRepository } from '../../daily-stat/repositories/daily-stat-repository';
 import { createNegocioRepository } from '../repositories/negocio-repository';
 import { getAdminEmails, userHasAdminAccess, resolveAdminUser, isAdminEmail } from '../../../utils/admin-access';
 
@@ -171,19 +172,17 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   }),
 
   backfillStats: asyncHandler(async (ctx) => {
+    const dailyStatRepo = createDailyStatRepository(strapi);
     const negocios = await strapi.documents('api::negocio.negocio').findMany({ limit: -1 });
     let count = 0;
     for (const n of negocios) {
       if (Number(n.views) > 0 || Number(n.clicks_whatsapp) > 0 || Number(n.clicks_website) > 0) {
-        await strapi.documents('api::daily-stat.daily-stat').create({
-          data: {
-            negocio_id: n.documentId,
-            date: '2026-05-15',
-            views: Number(n.views) || 0,
-            clicks_whatsapp: Number(n.clicks_whatsapp) || 0,
-            clicks_website: Number(n.clicks_website) || 0
-          },
-          status: 'published'
+        await dailyStatRepo.create({
+          negocio_id: n.documentId,
+          date: '2026-05-15',
+          views: Number(n.views) || 0,
+          clicks_whatsapp: Number(n.clicks_whatsapp) || 0,
+          clicks_website: Number(n.clicks_website) || 0,
         });
         count++;
       }
@@ -192,13 +191,8 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
   }),
 
   resetStatsBackfill: asyncHandler(async (ctx) => {
-    // 1. Borrar todos los daily_stats existentes
-    const existing = await strapi.documents('api::daily-stat.daily-stat').findMany({ limit: -1 });
-    let deleted = 0;
-    for (const stat of existing) {
-      await strapi.documents('api::daily-stat.daily-stat').delete({ documentId: stat.documentId });
-      deleted++;
-    }
+    const dailyStatRepo = createDailyStatRepository(strapi);
+    const deleted = await dailyStatRepo.deleteAll();
     strapi.log.info(`[ResetBackfill] ${deleted} registros eliminados.`);
 
     // 2. Regenerar distribuidos en los últimos 30 días
@@ -225,9 +219,12 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
         const dayWeb = Math.round((totalWeb * w) / totalWeight);
         if (dayViews === 0 && dayWsp === 0 && dayWeb === 0) continue;
 
-        await strapi.documents('api::daily-stat.daily-stat').create({
-          data: { negocio_id: n.documentId, date: dateStr, views: dayViews, clicks_whatsapp: dayWsp, clicks_website: dayWeb },
-          status: 'published'
+        await dailyStatRepo.create({
+          negocio_id: n.documentId,
+          date: dateStr,
+          views: dayViews,
+          clicks_whatsapp: dayWsp,
+          clicks_website: dayWeb,
         });
         created++;
       }
