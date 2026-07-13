@@ -5,33 +5,38 @@ import { useState, useEffect } from "react";
 import { Building2, MapPin, ExternalLink, Crown, CreditCard, Loader2, Settings } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { getStrapiMedia } from "@/lib/strapi";
+import { getStrapiMedia, getStrapiUrl } from "@/lib/strapi";
 import { toast } from "sonner";
+import type { SuscripcionPrices } from "@/lib/portal";
 
 interface BusinessPortalCardProps {
   negocio: any;
+  subscriptionPrices?: SuscripcionPrices | null;
 }
 
-export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps) {
-  const [planType, setPlanType] = useState<'Mensual' | 'Semestral'>('Mensual');
+export default function BusinessPortalCard({
+  negocio,
+  subscriptionPrices = null,
+}: BusinessPortalCardProps) {
+  const [planType, setPlanType] = useState<"Mensual" | "Semestral">("Mensual");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [prices, setPrices] = useState<{ mensual: number, semestral: number } | null>(null);
+  const [prices, setPrices] = useState<SuscripcionPrices | null>(subscriptionPrices);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Cargamos los precios al montar el componente
   useEffect(() => {
     setIsMounted(true);
+    if (subscriptionPrices) return;
+
     const fetchPrices = async () => {
       try {
-        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-        const res = await fetch(`${strapiUrl}/api/suscripcion-config`, {
-          cache: 'no-store'
+        const res = await fetch(`${getStrapiUrl()}/api/suscripcion-config`, {
+          cache: "no-store",
         });
         const json = await res.json();
         if (json.data) {
           setPrices({
             mensual: json.data.precio_mensual,
-            semestral: json.data.precio_semestral
+            semestral: json.data.precio_semestral,
           });
         }
       } catch (err) {
@@ -39,7 +44,7 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
       }
     };
     fetchPrices();
-  }, []);
+  }, [subscriptionPrices]);
 
   // Verificamos si el premium está activo o expirado
   const premiumExpired = negocio.is_premium && negocio.premium_valid_until && new Date(negocio.premium_valid_until) < new Date();
@@ -51,8 +56,7 @@ export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps)
   const handleSubscribe = async () => {
     setIsProcessing(true);
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
-      const res = await fetch(`${strapiUrl}/api/pagos/create-preference`, {
+      const res = await fetch(`${getStrapiUrl()}/api/pagos/create-preference`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

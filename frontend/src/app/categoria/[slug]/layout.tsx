@@ -1,8 +1,9 @@
 import { Metadata } from "next";
 import { ReactNode } from "react";
 import { fetchFromStrapi } from "@/lib/strapi";
+import { getSiteUrl } from "@/lib/site";
 
-const SITE_URL = "https://www.sanrafael360.com";
+const SITE_URL = getSiteUrl();
 
 export async function generateMetadata({
   params,

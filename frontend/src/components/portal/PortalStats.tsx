@@ -10,8 +10,8 @@ import {
   Crown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import type { PortalStatsPayload } from "@/lib/portal";
 
 interface StatCardProps {
   title: string;
@@ -41,16 +41,28 @@ function StatCard({ title, value, label, icon: Icon, trend, color }: StatCardPro
   );
 }
 
-export default function PortalStats() {
-  const { data: session } = useSession();
-  const [data, setData] = useState({
-    views: 0,
-    leads: 0,
-    clicks: 0,
-    score: 0,
-    loading: true
-  });
-  const [breakdown, setBreakdown] = useState<any[]>([]);
+function statsFromPayload(payload: PortalStatsPayload) {
+  const stats = payload.summary;
+  return {
+    views: stats.views || 0,
+    leads: stats.clicks_whatsapp || 0,
+    clicks: stats.clicks_website || 0,
+    score: stats.profileScore || 0,
+    loading: false,
+  };
+}
+
+interface PortalStatsProps {
+  initialStats?: PortalStatsPayload | null;
+}
+
+export default function PortalStats({ initialStats }: PortalStatsProps) {
+  const [data, setData] = useState(() =>
+    initialStats
+      ? statsFromPayload(initialStats)
+      : { views: 0, leads: 0, clicks: 0, score: 0, loading: true }
+  );
+  const [breakdown, setBreakdown] = useState(initialStats?.breakdown || []);
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -68,18 +80,17 @@ export default function PortalStats() {
       if (!response.ok) throw new Error(`Error en API: ${response.status}`);
       
       const res = await response.json();
-      const payload = res.data || {};
-      const stats = payload.summary || payload || { views: 0, clicks_whatsapp: 0, clicks_website: 0, totalNegocios: 0 };
-      const bkd = payload.breakdown || [];
+      const payload = res.data || res;
+      const summary = payload.summary || payload;
 
       setData({
-        views: stats.views || 0,
-        leads: stats.clicks_whatsapp || 0,
-        clicks: stats.clicks_website || 0,
-        score: stats.profileScore || 0,
-        loading: false
+        views: summary.views || 0,
+        leads: summary.clicks_whatsapp || 0,
+        clicks: summary.clicks_website || 0,
+        score: summary.profileScore || 0,
+        loading: false,
       });
-      setBreakdown(bkd);
+      setBreakdown(payload.breakdown || []);
     } catch (e) {
       console.error("Error loading stats:", e);
       setData(prev => ({ ...prev, loading: false }));
@@ -87,8 +98,15 @@ export default function PortalStats() {
   };
 
   useEffect(() => {
-    if (session) loadStats();
-  }, [session, startDate, endDate]);
+    if (!startDate && !endDate) {
+      if (initialStats) {
+        setData(statsFromPayload(initialStats));
+        setBreakdown(initialStats.breakdown);
+        return;
+      }
+    }
+    loadStats();
+  }, [startDate, endDate]);
 
   const stats = [
     {

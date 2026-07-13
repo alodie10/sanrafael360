@@ -8,6 +8,7 @@ import SmartAppBanner from "@/components/layout/SmartAppBanner";
 import IOSInstallPrompt from "@/components/layout/IOSInstallPrompt";
 import BottomNav from "@/components/layout/BottomNav";
 import { Toaster } from "sonner";
+import { getSiteUrl } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -34,8 +35,10 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const siteUrl = getSiteUrl();
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.sanrafael360.com"),
+  metadataBase: new URL(siteUrl),
   alternates: {
     canonical: "/",
   },
@@ -53,7 +56,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "San Rafael 360",
     description: "El directorio definitivo de San Rafael, Mendoza.",
-    url: "https://www.sanrafael360.com",
+    url: siteUrl,
     siteName: "San Rafael 360",
     locale: "es_AR",
     type: "website",
@@ -74,14 +77,14 @@ const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "San Rafael 360",
-  url: "https://www.sanrafael360.com",
+  url: siteUrl,
   description:
     "El directorio definitivo de negocios, restaurantes, hoteles y atracciones de San Rafael, Mendoza.",
   potentialAction: {
     "@type": "SearchAction",
     target: {
       "@type": "EntryPoint",
-      urlTemplate: "https://www.sanrafael360.com/?q={search_term_string}",
+      urlTemplate: `${siteUrl}/?q={search_term_string}`,
     },
     "query-input": "required name=search_term_string",
   },

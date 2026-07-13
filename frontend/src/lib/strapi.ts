@@ -18,6 +18,11 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
 
 export const STRAPI_URL = strapiUrl;
 
+/** URL base de Strapi sin override de desarrollo (server / env). */
+export function getStrapiUrl(): string {
+  return (process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337").replace(/\/$/, "");
+}
+
 function buildFetchInit(
   options: RequestInit,
   headers: Record<string, string>

@@ -1,37 +1,31 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { fetchFromStrapi } from '@/lib/strapi';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { getPortalStats } from "@/lib/portal";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
+  const jwt = (session as { jwt?: string } | null)?.jwt;
 
-  if (!session || !(session as { jwt?: string }).jwt) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!session || !jwt) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    const startDate = searchParams.get("startDate") || undefined;
+    const endDate = searchParams.get("endDate") || undefined;
 
-    let path = 'negocios/stats/summary';
-    if (startDate && endDate) {
-      path += `?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+    const stats = await getPortalStats(jwt, startDate, endDate);
+    if (!stats) {
+      return NextResponse.json({ error: "Error al cargar estadísticas" }, { status: 500 });
     }
 
-    const response = await fetchFromStrapi(path, {
-      headers: {
-        Authorization: `Bearer ${(session as { jwt: string }).jwt}`,
-      },
-      cache: 'no-store',
-    });
-
-    return NextResponse.json(response);
+    return NextResponse.json({ data: stats });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Error al cargar estadísticas';
+    const message = error instanceof Error ? error.message : "Error al cargar estadísticas";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

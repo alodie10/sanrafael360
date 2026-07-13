@@ -2,9 +2,10 @@ import { Metadata } from "next";
 import { ReactNode } from "react";
 import { getNegocioBySlug } from "@/lib/negocios";
 import { LocalBusinessSchema } from "@/components/business/LocalBusinessSchema";
+import { getSiteUrl } from "@/lib/site";
 
-const OG_DEFAULT_IMAGE = "https://www.sanrafael360.com/og-default.jpg";
-const SITE_URL = "https://www.sanrafael360.com";
+const SITE_URL = getSiteUrl();
+const OG_DEFAULT_IMAGE = `${SITE_URL}/og-default.jpg`;
 
 export async function generateMetadata({
   params,
