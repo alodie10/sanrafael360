@@ -10,19 +10,19 @@ import { cn } from "@/lib/utils";
 import Logo from "@/components/common/Logo";
 import { useSession, signOut } from "next-auth/react";
 import { Categoria } from "@/types/strapi";
-import { fetchFromStrapi } from "@/lib/strapi";
 import { importGoogleMapsLibrary, getGoogleMapsLoader } from "@/lib/google-maps";
 
-function NavbarInner() {
+interface NavbarProps {
+  categorias: Categoria[];
+}
+
+function NavbarInner({ categorias }: NavbarProps) {
   const navRef = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [isHoveringNav, setIsHoveringNav] = useState(false);
   // Mobile hamburger menu
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // Mobile: colapsa el search bar luego de buscar/seleccionar categoría
   const [mobileSearchCollapsed, setMobileSearchCollapsed] = useState(false);
-
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [localidad, setLocalidad] = useState("San Rafael, Mendoza");
 
@@ -96,13 +96,6 @@ function NavbarInner() {
     if (placesLibRef.current) sessionTokenRef.current = new placesLibRef.current.AutocompleteSessionToken();
   };
 
-
-  // --- Cargar categorías ---
-  useEffect(() => {
-    fetchFromStrapi("categorias?fields[0]=nombre&fields[1]=slug&populate[parent][fields][0]=documentId&sort=nombre:asc&pagination[pageSize]=100")
-      .then((res) => setCategorias(res.data || []))
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     const l = searchParams.get("l") || "San Rafael, Mendoza";
@@ -477,10 +470,10 @@ function NavbarInner() {
   );
 }
 
-export default function Navbar() {
+export default function Navbar({ categorias }: NavbarProps) {
   return (
     <Suspense fallback={<div className="h-14 md:h-20 bg-black w-full fixed top-0 z-50 border-b border-white/5 shadow-2xl" />}>
-      <NavbarInner />
+      <NavbarInner categorias={categorias} />
     </Suspense>
   );
 }

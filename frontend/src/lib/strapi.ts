@@ -8,40 +8,47 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   if (backendOverride) {
     strapiUrl = backendOverride.endsWith('/') ? backendOverride.slice(0, -1) : backendOverride;
     localStorage.setItem('STRAPI_BACKEND_OVERRIDE', strapiUrl);
-    console.log('--- DEBUG: Backend override activado via URL:', strapiUrl);
   } else {
     const savedOverride = localStorage.getItem('STRAPI_BACKEND_OVERRIDE');
     if (savedOverride) {
       strapiUrl = savedOverride;
-      console.log('--- DEBUG: Usando backend guardado en localStorage:', strapiUrl);
     }
   }
 }
 
 export const STRAPI_URL = strapiUrl;
-console.log('--- DEBUG: Usando STRAPI_URL final:', STRAPI_URL);
+
+function buildFetchInit(
+  options: RequestInit,
+  headers: Record<string, string>
+): RequestInit {
+  const { headers: _ignored, ...rest } = options;
+  const init: RequestInit = { ...rest, headers };
+
+  const hasCacheControl =
+    init.cache !== undefined ||
+    (init as RequestInit & { next?: { revalidate?: number } }).next !== undefined;
+
+  if (!hasCacheControl) {
+    init.cache = "no-store";
+  }
+
+  return init;
+}
 
 export async function fetchFromStrapi(path: string, options: RequestInit = {}) {
   const url = `${STRAPI_URL}/api/${path}`;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...(options.headers as Record<string, string> | undefined),
   };
 
-  let response = await fetch(url, {
-    ...options,
-    headers,
-    cache: 'no-store',
-  });
+  let response = await fetch(url, buildFetchInit(options, headers));
 
   // Token de otro entorno (ej. prod en .env.local) → reintentar con permisos Public
   if (response.status === 401 && headers.Authorization) {
     const { Authorization: _auth, ...publicHeaders } = headers;
-    response = await fetch(url, {
-      ...options,
-      headers: publicHeaders,
-      cache: 'no-store',
-    });
+    response = await fetch(url, buildFetchInit(options, publicHeaders));
   }
 
   if (!response.ok) throw new Error(`Fetch Error: ${response.statusText}`);

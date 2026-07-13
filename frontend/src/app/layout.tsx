@@ -67,6 +67,7 @@ export const metadata: Metadata = {
 import { FavoritesProvider } from "@/context/FavoritesContext";
 import MetaPixel from "@/components/layout/MetaPixel";
 import { Suspense } from "react";
+import { getCategorias } from "@/lib/categorias";
 
 // Schema.org WebSite — habilita el Sitelinks Searchbox de Google
 const websiteSchema = {
@@ -86,11 +87,13 @@ const websiteSchema = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const categorias = await getCategorias();
+
   return (
     <html lang="es" className={`${inter.variable} ${outfit.variable} ${playfair.variable}`}>
       <body>
@@ -103,7 +106,7 @@ export default function RootLayout({
           <FavoritesProvider>
             <div className="app-container font-sans pt-[var(--app-banner-height,0px)]">
               <MasterBar />
-              <Navbar />
+              <Navbar categorias={categorias} />
               {children}
               <BottomNav />
               <SmartAppBanner />

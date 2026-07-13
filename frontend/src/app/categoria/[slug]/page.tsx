@@ -1,3 +1,4 @@
+import { getCategorias } from "@/lib/categorias";
 import { fetchFromStrapi } from "@/lib/strapi";
 import { Negocio, Categoria } from "@/types/strapi";
 import BusinessGrid from "@/components/home/BusinessGrid";
@@ -167,11 +168,7 @@ export default async function CategoriaPage({
 
     if (categoria) {
       // 1.5 Obtener todas las categorías para el FilterBar
-      const allCatRes = await fetchFromStrapi(
-        "categorias?fields[0]=nombre&fields[1]=slug&populate[parent][fields][0]=documentId&sort=nombre:asc&pagination[pageSize]=100",
-        options
-      );
-      categorias = allCatRes.data || [];
+      categorias = await getCategorias(options);
 
       // 2. Obtener negocios de esta categoría (paginando hasta traer todos)
       let page = 1;
