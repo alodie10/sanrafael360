@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { fetchFromStrapi } from "@/lib/strapi";
 import { Categoria } from "@/types/strapi";
 
@@ -8,7 +9,7 @@ const CATEGORIAS_FETCH_OPTIONS: RequestInit = {
   next: { revalidate: 300 },
 };
 
-export async function getCategorias(
+export const getCategorias = cache(async function getCategorias(
   options: RequestInit = {}
 ): Promise<Categoria[]> {
   try {
@@ -20,4 +21,4 @@ export async function getCategorias(
   } catch {
     return [];
   }
-}
+});

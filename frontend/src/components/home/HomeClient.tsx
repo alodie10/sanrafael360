@@ -9,8 +9,12 @@ import OffersBanner from "@/components/home/OffersBanner";
 import NavigationFAB from "@/components/layout/NavigationFAB";
 import { AnimatePresence } from "framer-motion";
 import { Negocio, Categoria } from "@/types/strapi";
-import { shouldUseStrapiSearchForHome } from "@/lib/search-config";
-import { searchNegociosFromStrapi } from "@/lib/search-negocios";
+import { shouldUseStrapiSearchForHome, canUseAlgoliaSearch } from "@/lib/search-config";
+import {
+  searchNegociosFromStrapi,
+  searchNegociosFromAlgolia,
+} from "@/lib/search-negocios";
+import { isStrapiUnreachableError } from "@/lib/strapi";
 import { useRouter, usePathname } from "next/navigation";
 
 const normalizeText = (str: string) => {
@@ -167,78 +171,38 @@ export default function HomeClient({ categorias }: HomeClientProps) {
   useEffect(() => {
     const performSearch = async () => {
       setIsSearching(true);
+      const searchParams = {
+        query: searchQuery,
+        localidad: localidadQuery,
+        categoryDocId: selectedCategoryDocId,
+        categorias,
+      };
+
       try {
         if (shouldUseStrapiSearchForHome()) {
-          const negocios = await searchNegociosFromStrapi({
-            query: searchQuery,
-            localidad: localidadQuery,
-            categoryDocId: selectedCategoryDocId,
-          });
+          try {
+            const negocios = await searchNegociosFromStrapi(searchParams);
+            setSearchResults(negocios);
+            return;
+          } catch (error) {
+            if (!isStrapiUnreachableError(error) || !canUseAlgoliaSearch()) {
+              setSearchResults([]);
+              return;
+            }
+          }
+        }
+
+        if (canUseAlgoliaSearch()) {
+          const negocios = await searchNegociosFromAlgolia(searchParams);
           setSearchResults(negocios);
           return;
         }
 
-        const { algoliasearch } = await import("algoliasearch");
-        const client = algoliasearch(
-          process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || "",
-          process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY || ""
-        );
-
-        let fullQuery = `${searchQuery} ${localidadQuery}`.trim();
-
-        if (selectedCategoryDocId) {
-          const selectedCat = categorias.find((c) => c.documentId === selectedCategoryDocId);
-          if (selectedCat) {
-            fullQuery = `${fullQuery} ${selectedCat.nombre}`.trim();
-          }
-        }
-
-        const { results } = await client.search({
-          requests: [
-            {
-              indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME || "negocios",
-              query: fullQuery,
-              hitsPerPage: 100,
-            },
-          ],
-        });
-
-        const hits = (results[0] as { hits?: Record<string, unknown>[] })?.hits || [];
-        const sortedHits = hits.sort((a, b) => {
-          if (a.is_premium && !b.is_premium) return -1;
-          if (!a.is_premium && b.is_premium) return 1;
-          return 0;
-        });
-
-        setSearchResults(
-          sortedHits.map((hit) => ({
-            documentId: hit.objectID as string,
-            slug: hit.slug as string,
-            nombre: hit.nombre as string,
-            direccion: hit.direccion as string,
-            is_premium: hit.is_premium as boolean,
-            premium_valid_until: hit.premium_valid_until as string,
-            categoria: hit.categoria
-              ? ({ nombre: hit.categoria as string } as Categoria)
-              : undefined,
-            atributos: (hit.atributos_ui as Negocio["atributos"]) || [],
-            price_range: hit.price_range as string,
-            rating: hit.rating as number,
-            review_count: hit.review_count as number,
-            google_rating: hit.google_rating as number,
-            google_review_count: hit.google_review_count as number,
-            tripadvisor_rating: hit.tripadvisor_rating as number,
-            tripadvisor_review_count: hit.tripadvisor_review_count as number,
-            imagen_portada: hit.imagen_portada as Negocio["imagen_portada"],
-            logo: hit.logo as Negocio["logo"],
-            owner: hit.owner as Negocio["owner"],
-            latitud: hit.latitud as number,
-            longitud: hit.longitud as number,
-            ofertas: (hit.ofertas as Negocio["ofertas"]) || [],
-          })) as Negocio[]
-        );
+        setSearchResults([]);
       } catch (e) {
-        console.error("Search error:", e);
+        if (process.env.NODE_ENV === "development") {
+          console.warn("Search unavailable:", e);
+        }
         setSearchResults([]);
       } finally {
         setIsSearching(false);

@@ -6,14 +6,9 @@ export default withAuth({
   },
   pages: {
     signIn: "/login",
-  }
+  },
 });
 
-// Definimos qué rutas requieren autenticación
 export const config = {
-  matcher: [
-    "/portal/:path*",
-    "/dashboard/:path*",
-    "/admin/:path*",
-  ],
+  matcher: ["/portal/:path*", "/dashboard/:path*", "/admin/:path*"],
 };
