@@ -6,7 +6,7 @@
 
 - El agente NUNCA ejecuta comandos que afecten producción directamente (Railway, Strapi prod, Algolia prod index).
 - El agente **NUNCA** ejecuta `git push` a `master`. Todos los push a producción los hace Diego manualmente.
-- El agente propone los cambios, los construye en dev, los verifica, y luego Diego decide cuándo y cómo promover a prod.
+- **Rama de trabajo: `develop`**. Commits del agente van siempre en `develop`. Promoción a prod solo cuando Diego lo pida (`./promote.sh` + push `master` por Diego).
 - Cualquier script, migración o cambio de configuración se ejecuta primero en dev y se documenta antes de sugerir aplicarlo en prod.
 
 ## Modo Planning Obligatorio

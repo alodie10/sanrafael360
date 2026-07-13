@@ -14,8 +14,10 @@ Para asegurar la agilidad del desarrollo, el equipo de Antigravity opera bajo un
 - **Funcionalidad Crítica**: Nuevas funcionalidades no contempladas en el Master Plan inicial.
 
 ### 3. Push a `master` (producción)
-- **Solo Diego** ejecuta push a `master` y promociones a producción (`promote.sh` o push directo).
-- Los agentes pueden commitear si el usuario lo pide, pero **nunca** deben correr `git push origin master`.
+- **Solo Diego** ejecuta `git push origin master` y despliegue a producción.
+- **Desarrollo siempre en `develop`**: commits, pruebas locales y push diario van a `develop`.
+- Promoción: `./promote.sh` (tests + build + merge `develop` → `master` local); luego Diego pushea `master`.
+- Los agentes pueden commitear en `develop` si el usuario lo pide, pero **nunca** `git push origin master`.
 
 ---
 

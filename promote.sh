@@ -54,10 +54,9 @@ git checkout master
 git merge develop
 
 if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✅ Fusión exitosa. Subiendo a PRODUCCIÓN (Railway)...${NC}"
-    git push origin master
-    
-    echo -e "${GREEN}✨ ¡Despliegue completado! La web de producción se está actualizando.${NC}"
+    echo -e "${GREEN}✅ Fusión develop → master completada en local.${NC}"
+    echo -e "${YELLOW}📌 Siguiente paso (manual): Diego ejecuta 'git push origin master' para desplegar a producción.${NC}"
+    echo -e "${YELLOW}   El agente no debe pushear master automáticamente.${NC}"
 else
     echo -e "${RED}❌ Error durante la fusión. Revisa los conflictos manualmente.${NC}"
     git checkout develop
