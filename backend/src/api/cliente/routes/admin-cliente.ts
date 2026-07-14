@@ -2,6 +2,16 @@ export default {
   routes: [
     {
       method: 'GET',
+      path: '/clientes/baja',
+      handler: 'api::cliente.cliente.unsubscribePublic',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'GET',
       path: '/clientes/admin',
       handler: 'api::cliente.cliente.adminList',
       config: {

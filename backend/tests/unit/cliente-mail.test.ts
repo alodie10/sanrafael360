@@ -49,4 +49,12 @@ describe('wrapClienteAvisosEmail', () => {
     expect(html).not.toContain('MAIL DE PRUEBA');
     expect(html).toContain('novedad');
   });
+
+  it('includes unsubscribe link when provided', () => {
+    const html = wrapClienteAvisosEmail('<p>x</p>', {
+      unsubscribeUrl: 'https://www.sanrafael360.com/baja?token=abc',
+    });
+    expect(html).toContain('darte de baja con un clic');
+    expect(html).toContain('https://www.sanrafael360.com/baja?token=abc');
+  });
 });

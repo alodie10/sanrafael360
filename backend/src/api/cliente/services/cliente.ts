@@ -9,9 +9,15 @@ import {
   normalizeClienteEmail,
   type BroadcastAudience,
 } from './cliente-mail-audience';
+import { buildUnsubscribeUrl, verifyUnsubscribeToken } from './unsubscribe-token';
 
 export type { BroadcastAudience };
 export { filterBroadcastRecipients, normalizeClienteEmail } from './cliente-mail-audience';
+export {
+  createUnsubscribeToken,
+  verifyUnsubscribeToken,
+  buildUnsubscribeUrl,
+} from './unsubscribe-token';
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -125,6 +131,33 @@ export default factories.createCoreService('api::cliente.cliente', ({ strapi }) 
     return repo.findNegociosForPicker(search);
   },
 
+  async unsubscribeByToken(token: string) {
+    const documentId = verifyUnsubscribeToken(token);
+    if (!documentId) {
+      throw new ValidationError('Enlace de baja inválido o alterado');
+    }
+
+    const repo = createClienteRepository(strapi);
+    const cliente = await repo.findByDocumentId(documentId);
+    if (!cliente) throw new NotFoundError('Cliente');
+
+    if (cliente.opt_out) {
+      return { ok: true, already: true, email: cliente.email };
+    }
+
+    await repo.update(documentId, { opt_out: true });
+    await logActivity(
+      strapi,
+      'info',
+      'Cliente opt-out',
+      `Baja por link: ${cliente.email}`,
+      undefined,
+      undefined
+    );
+
+    return { ok: true, already: false, email: cliente.email };
+  },
+
   async sendTestMail(input: {
     subject: string;
     bodyHtml: string;
@@ -139,8 +172,12 @@ export default factories.createCoreService('api::cliente.cliente', ({ strapi }) 
       throw new ValidationError('subject, bodyHtml y toEmail son obligatorios');
     }
 
+    const repo = createClienteRepository(strapi);
+    const matching = await repo.findByEmail(toEmail);
+    const unsubscribeUrl = matching ? buildUnsubscribeUrl(matching.documentId) : undefined;
+
     const notifications = createNotificationService(strapi);
-    const html = wrapClienteAvisosEmail(bodyHtml, { isTest: true });
+    const html = wrapClienteAvisosEmail(bodyHtml, { isTest: true, unsubscribeUrl });
 
     const ok = await notifications.sendEmail(
       { to: toEmail, subject: `[PRUEBA] ${subject}`, html },
@@ -156,7 +193,7 @@ export default factories.createCoreService('api::cliente.cliente', ({ strapi }) 
       input.adminUser
     );
 
-    return { ok, to: toEmail, subject };
+    return { ok, to: toEmail, subject, hasUnsubscribeLink: Boolean(unsubscribeUrl) };
   },
 
   async sendBroadcast(input: {
@@ -193,10 +230,13 @@ export default factories.createCoreService('api::cliente.cliente', ({ strapi }) 
     }
 
     const notifications = createNotificationService(strapi);
-    const html = wrapClienteAvisosEmail(bodyHtml, { isTest: false });
 
     const results: Array<{ email: string; ok: boolean }> = [];
     for (const recipient of recipients) {
+      const html = wrapClienteAvisosEmail(bodyHtml, {
+        isTest: false,
+        unsubscribeUrl: buildUnsubscribeUrl(recipient.documentId),
+      });
       const ok = await notifications.sendEmail({
         to: recipient.email,
         subject,

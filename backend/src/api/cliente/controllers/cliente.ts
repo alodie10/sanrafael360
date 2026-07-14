@@ -89,4 +89,10 @@ export default factories.createCoreController('api::cliente.cliente', ({ strapi 
     });
     ctx.send({ data });
   }),
+
+  unsubscribePublic: asyncHandler(async (ctx) => {
+    const token = typeof ctx.query?.token === 'string' ? ctx.query.token : '';
+    const data = await strapi.service('api::cliente.cliente').unsubscribeByToken(token);
+    ctx.send({ data });
+  }),
 }));
