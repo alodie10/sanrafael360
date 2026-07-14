@@ -8,6 +8,26 @@
 
 ## P1 — Alto impacto
 
+### Sprint 6 — Clientes + comunicación (en `develop`)
+
+Contexto: el claim→portal casi no se usa; Diego opera ~15 clientes a mano. Hace falta un directorio comercial + avisos puntuales (Resend), no un CRM grande.
+
+**Decisiones de producto (cerradas):**
+- 1 Cliente = 1 email único; 1 Cliente → 1..N Negocios (relación opcional al inicio).
+- Alta y vínculo **solo manual** (sin auto-crear desde `negocio.email` / `owner`).
+- v1 = directorio + mail (mismo entregable). Todo se prueba en `develop` antes de promote.
+- **Mail de prueba** obligatorio antes de broadcast (enviar solo al admin autenticado / email override de prueba).
+
+| ID | Problema | Acción | Esfuerzo |
+|----|----------|--------|----------|
+| BE-21 | No hay entidad Cliente | CT `cliente`: email unique, nombre, notas, `opt_out`, relación 1:N `negocio` | M | ✅ develop |
+| BE-13 | Emails en `NegocioRepository` | Extraer `NotificationService` (Resend vía plugin); base para broadcast | S | ✅ develop |
+| BE-22 | Sin envío a audiencia de clientes | Service: audiencia (todos / selección / sin `opt_out`), plantilla HTML SR360, log de envío; endpoint admin + **mail de prueba** | M | ✅ develop |
+| FE-26 | Admin sin UI de clientes | Tab `/portal/admin`: CRUD cliente + vincular/desvincular negocios | M | ✅ develop |
+| FE-27 | Admin sin UI de avisos | Compose asunto/cuerpo, preview, **Enviar prueba**, luego broadcast; historial mínimo | M | ✅ develop |
+| QA-10 | Sin tests del módulo | Unit service (opt_out, audiencia, test vs broadcast) + smoke admin gate | S | ✅ unit |
+| DOC-07 | Ops sin procedimiento | Nota corta: cargar clientes, probar mail, broadcast, unsubscribe/`opt_out` | S | ✅ `docs/ops-clientes-avisos.md` |
+
 ### Sprint 5 — Calidad sostenible ✅
 
 | ID | Problema | Acción | Esfuerzo | Estado |
@@ -59,7 +79,7 @@
 |----|----------|--------|----------|
 | BE-11 | `throw new Error()` genérico en services | Usar errores tipados (`NotFoundError`, etc.) | S |
 | BE-07 | `db.query` residual en upload plugin | Repository upload cuando se toque | S |
-| BE-13 | Repository negocio incluye lógica de email | Mover a `NotificationService` | S |
+| BE-13 | Repository negocio incluye lógica de email | Mover a `NotificationService` — **incluido en Sprint 6** | S |
 | BE-14 | Lógica pesada en lifecycles | Lifecycles emiten eventos; services async | M |
 | BE-15 | Fecha hardcodeada `2026-05-15` en backfill stats | Fecha dinámica o eliminar endpoint debug | S |
 | BE-16 | `console.log` disperso | `strapi.log` estructurado | S |
@@ -115,13 +135,13 @@
 ## Secuencia recomendada
 
 ```
-Sprint 4 (SSR) ✅  →  Sprint 5 (tipos + tests)  →  residual FE-03/FE-09 (P2)
+Sprint 4 ✅  →  Sprint 5 ✅  →  Sprint 6 (clientes + mail en develop)  →  DOC residual / FE-23..24
 ```
 
 ### Próximo paso concreto
 
-1. **DOC-02..06** — limpieza docs/env/versiones (S).
-2. **FE-23 / FE-24** — errores visibles en login y portal.
+1. **Sprint 6 en develop** — cargar 1 cliente, mail de prueba, vincular negocio (`docs/ops-clientes-avisos.md`).
+2. Luego: **DOC-02..06**, **FE-23 / FE-24**.
 3. Opcional: FE-12 capa API tipada.
 
 ---

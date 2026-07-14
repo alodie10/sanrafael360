@@ -559,6 +559,41 @@ export interface ApiCategoriaCategoria extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
+  collectionName: 'clientes';
+  info: {
+    description: 'Contacto comercial (1 email) con uno o m\u00E1s negocios';
+    displayName: 'Cliente';
+    pluralName: 'clientes';
+    singularName: 'cliente';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::cliente.cliente'
+    > &
+      Schema.Attribute.Private;
+    negocios: Schema.Attribute.Relation<'oneToMany', 'api::negocio.negocio'>;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    notas: Schema.Attribute.Text;
+    opt_out: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiDailyStatDailyStat extends Struct.CollectionTypeSchema {
   collectionName: 'daily_stats';
   info: {
@@ -651,6 +686,7 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     >;
     clicks_website: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     clicks_whatsapp: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    cliente: Schema.Attribute.Relation<'manyToOne', 'api::cliente.cliente'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1470,6 +1506,7 @@ declare module '@strapi/strapi' {
       'api::actividad.actividad': ApiActividadActividad;
       'api::atributo.atributo': ApiAtributoAtributo;
       'api::categoria.categoria': ApiCategoriaCategoria;
+      'api::cliente.cliente': ApiClienteCliente;
       'api::daily-stat.daily-stat': ApiDailyStatDailyStat;
       'api::lead.lead': ApiLeadLead;
       'api::negocio.negocio': ApiNegocioNegocio;

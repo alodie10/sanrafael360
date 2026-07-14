@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "clientes",
+  "info": {
+    "singularName": "cliente",
+    "pluralName": "clientes",
+    "displayName": "Cliente",
+    "description": "Contacto comercial (1 email) con uno o más negocios"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "email": {
+      "type": "email",
+      "required": true,
+      "unique": true
+    },
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "notas": {
+      "type": "text"
+    },
+    "opt_out": {
+      "type": "boolean",
+      "default": false,
+      "description": "Si es true, no recibe avisos broadcast"
+    },
+    "negocios": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::negocio.negocio",
+      "mappedBy": "cliente"
+    }
+  }
+}

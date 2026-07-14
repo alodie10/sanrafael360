@@ -5,16 +5,13 @@ import {
   ShieldCheck, 
   Users, 
   MessageSquare, 
-  ExternalLink,
-  PlusCircle,
-  LayoutDashboard,
-  AlertCircle,
   History,
   Zap,
-  CheckCircle2,
-  Building2,
   Search,
-  BarChart3
+  BarChart3,
+  CreditCard,
+  Mail,
+  CheckCircle2,
 } from "lucide-react";
 import { getStrapiUrl } from "@/lib/strapi";
 import Link from "next/link";
@@ -27,10 +24,10 @@ import AdminPaymentsView from "./AdminPaymentsView";
 import PortalStats from "./PortalStats";
 import AdminTopRanking from "./AdminTopRanking";
 import AdminStatsChart from "./AdminStatsChart";
-import { CreditCard } from "lucide-react";
+import AdminClientesPanel from "./AdminClientesPanel";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
-  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats' | 'payments'>('payments');
+  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats' | 'payments' | 'clientes'>('payments');
   const [claims, setClaims] = useState(initialClaims);
   const [supportCount, setSupportCount] = useState(0);
   const [leadsCount, setLeadsCount] = useState(0);
@@ -144,6 +141,16 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
             </button>
 
             <button 
+              onClick={() => setActiveTab('clientes')}
+              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'clientes' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+            >
+              <div className="flex items-center gap-3">
+                <Mail className="w-4 h-4" /> 
+                <span>Clientes y avisos</span>
+              </div>
+            </button>
+
+            <button 
               onClick={() => setActiveTab('leads')}
               className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'leads' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
             >
@@ -254,6 +261,13 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
                 <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Suscripciones y Pagos</h2>
                 <AdminPaymentsView jwt={session.jwt as string} />
               </div>
+            )}
+
+            {activeTab === 'clientes' && (
+              <AdminClientesPanel
+                jwt={session.jwt as string}
+                adminEmail={session.user?.email}
+              />
             )}
 
             {activeTab === 'leads' && (

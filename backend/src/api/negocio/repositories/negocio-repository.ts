@@ -1,5 +1,4 @@
 import { Core } from '@strapi/strapi';
-import { ADMIN_EMAILS } from '../../../utils/constants';
 
 export class NegocioRepository {
   private strapi: any;
@@ -106,28 +105,16 @@ export class NegocioRepository {
     }
   }
 
+  /** @deprecated Prefer createNotificationService(strapi).sendEmail */
   async sendEmail(to: string, subject: string, html: string, text?: string) {
-    try {
-      const emailService = this.strapi.plugin('email')?.service('email');
-      if (emailService) {
-        return await emailService.send({
-          to,
-          from: 'San Rafael 360 <no-reply@sanrafael360.com>',
-          subject,
-          html,
-          text,
-        });
-      }
-      this.strapi.log.warn('Servicio de email no disponible en el repositorio');
-    } catch (err: any) {
-      this.strapi.log.error(`[NegocioRepository] Error controlado en sendEmail: ${err.message}`);
-      // No re-lanzamos el error para no colapsar la transacción de negocio
-    }
+    const { createNotificationService } = await import('../../../services/notification-service');
+    return createNotificationService(this.strapi).sendEmail({ to, subject, html, text });
   }
 
+  /** @deprecated Prefer createNotificationService(strapi).sendAdminEmail */
   async sendAdminEmail(subject: string, html: string) {
-    // Enviar a todos los admins definidos
-    return Promise.all(ADMIN_EMAILS.map(email => this.sendEmail(email, subject, html)));
+    const { createNotificationService } = await import('../../../services/notification-service');
+    return createNotificationService(this.strapi).sendAdminEmail(subject, html);
   }
 }
 

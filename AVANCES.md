@@ -16,8 +16,9 @@
 | 3 | Arquitectura backend | ✅ Completado |
 | 4 | Frontend SSR y performance | ✅ Completado |
 | 5 | Calidad sostenible (tipos + tests) | ✅ Completado |
+| 6 | Clientes + avisos Resend (directorio + mail prueba) | 🟡 En `develop` — validar ops antes de promote |
 
-**Siguiente foco recomendado:** DOC-02..06 o FE-23/FE-24 (UX auth/portal). Ver [`backlog.md`](./backlog.md).
+**Siguiente foco recomendado:** Probar Sprint 6 en develop (`docs/ops-clientes-avisos.md`). Luego DOC-02..06 o FE-23/FE-24.
 
 ---
 
@@ -151,6 +152,20 @@ Promovido a prod 2026-07-13 (`develop` = `master` en `ddccaa9`).
 **Qué era:** quedaban pantallas de “olvidé/restablecer contraseña” como si el sitio entrara con email, pero el login real es solo Google (email/clave solo en E2E).
 
 **Qué hicimos:** esas rutas ahora explican “usá Google” + CTA; login copy alineado; robots noindex/disallow; credentials siguen solo para Playwright.
+
+---
+
+## Sprint 6 — Clientes + avisos (en develop, 2026-07-14)
+
+**Producto:** 1 cliente = 1 email; N negocios; alta/vínculo manual; mail de prueba antes de broadcast.
+
+| ID | Evidencia |
+|----|-----------|
+| BE-21 | CT `cliente` + relación en `negocio` |
+| BE-13 / BE-22 | `notification-service.ts`, APIs `/api/clientes/admin/*` |
+| FE-26 / FE-27 | Tab admin `AdminClientesPanel` |
+| QA-10 | `tests/unit/cliente-mail.test.ts` |
+| DOC-07 | `docs/ops-clientes-avisos.md` |
 
 ---
 

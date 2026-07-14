@@ -295,6 +295,13 @@
       "relation": "oneToMany",
       "target": "api::oferta.oferta",
       "mappedBy": "negocio"
+    },
+    "cliente": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cliente.cliente",
+      "inversedBy": "negocios",
+      "description": "Contacto comercial manual (opcional)"
     }
   }
 }

@@ -1,6 +1,7 @@
 import { factories } from '@strapi/strapi';
 import { createDailyStatRepository } from '../../daily-stat/repositories/daily-stat-repository';
 import { createNegocioRepository } from '../repositories/negocio-repository';
+import { createNotificationService } from '../../../services/notification-service';
 import { ADMIN_EMAILS } from '../../../utils/constants';
 import { NotFoundError, ValidationError, ForbiddenError } from '../../../utils/errors';
 import { assertNegocioClaimable } from '../../../utils/claim-validation';
@@ -13,6 +14,7 @@ const discoveryService = new DiscoveryService();
 export default factories.createCoreService('api::negocio.negocio', ({ strapi }) => ({
   async claimNegocio(id: string, user: any, bodyData: any, files: any) {
     const repo = createNegocioRepository(strapi);
+    const notifications = createNotificationService(strapi);
     const negocio = await repo.findById(id, ['owner']);
     assertNegocioClaimable(negocio);
 
@@ -33,10 +35,10 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     }
 
     // Notificación Admin
-    await repo.sendAdminEmail(
+    await notifications.sendAdminEmail(
       `🔔 Nuevo Reclamo de Propiedad: ${negocio.nombre}`,
       getAdminClaimEmail(negocio.nombre, user.email, bodyData.message)
-    ).catch(e => strapi.log.error('Email error (Admin Notify):', e.message));
+    ).catch((e: any) => strapi.log.error('Email error (Admin Notify):', e.message));
 
     await logActivity(strapi, 'info', 'Nuevo Reclamo', `El usuario ${user.email} reclamó el negocio ${negocio.nombre}`, id, user);
     
@@ -238,6 +240,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
 
   async resolveClaim(id: string, decision: string, motivo: string) {
     const repo = createNegocioRepository(strapi);
+    const notifications = createNotificationService(strapi);
     const negocio = await repo.findById(id, ['owner']);
     if (!negocio) throw new NotFoundError('Negocio');
 
@@ -250,8 +253,13 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     const ownerEmail = negocio.owner?.email;
     if (ownerEmail) {
       const subject = isApproved ? '¡Tu reclamo ha sido aprobado!' : 'Información sobre tu reclamo';
-      await repo.sendEmail(ownerEmail, subject, getOwnerResolutionEmail(negocio.nombre, isApproved, motivo))
-        .catch(e => strapi.log.error(`[EmailService] Error enviando a ${ownerEmail}: ${e.message}`));
+      await notifications
+        .sendEmail({
+          to: ownerEmail,
+          subject,
+          html: getOwnerResolutionEmail(negocio.nombre, isApproved, motivo),
+        })
+        .catch((e: any) => strapi.log.error(`[EmailService] Error enviando a ${ownerEmail}: ${e.message}`));
     }
 
     if (negocio.owner?.id) {
