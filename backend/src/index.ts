@@ -30,8 +30,25 @@ export default {
             'api::atributo.atributo.findOne',
             'api::atributo.atributo.create',
             'api::pago.pago.find',
-            'api::pago.pago.findOne'
+            'api::pago.pago.findOne',
           ];
+
+          if (roleType === 'authenticated') {
+            actions.push(
+              'api::cliente.cliente.adminlist',
+              'api::cliente.cliente.admincreate',
+              'api::cliente.cliente.adminupdate',
+              'api::cliente.cliente.admindelete',
+              'api::cliente.cliente.adminlinknegocios',
+              'api::cliente.cliente.adminunlinknegocio',
+              'api::cliente.cliente.adminnegociospicker',
+              'api::cliente.cliente.adminmailtest',
+              'api::cliente.cliente.adminmailbroadcast',
+              'api::lead.lead.convert',
+              'api::lead.lead.find',
+              'api::lead.lead.findOne'
+            );
+          }
 
           for (const action of actions) {
             try {
