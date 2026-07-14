@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MessageSquare, Send, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { getStrapiUrl } from "@/lib/strapi";
 
 interface SupportFormProps {
   negocioId?: string;
@@ -23,7 +24,7 @@ export default function SupportForm({ negocioId, jwt, userEmail, userName }: Sup
     setError(null);
 
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
+      const strapiUrl = getStrapiUrl();
       const res = await fetch(`${strapiUrl}/api/soportes`, {
         method: "POST",
         headers: {

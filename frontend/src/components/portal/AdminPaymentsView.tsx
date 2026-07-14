@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { 
+import {
   CreditCard, 
   Calendar, 
   User as UserIcon, 
@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Plus, X, Trash2, History
 } from "lucide-react";
+import { getStrapiUrl } from "@/lib/strapi";
 // Formateo nativo para evitar dependencias extra
 const formatDate = (dateString: string) => {
   if (!dateString) return "N/A";
@@ -88,7 +89,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+        const strapiUrl = getStrapiUrl();
         
         // Construimos la URL con filtros de servidor para que busque en TODA la base
         // Construimos la URL con filtros de servidor para que busque en TODA la base
@@ -144,7 +145,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
     
     setIsSubmitting(true);
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       
       // 1. Crear el pago
       const pagoData = {
@@ -197,7 +198,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
     if (!selectedBusiness) return;
     setIsUpdatingDate(true);
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       const res = await fetch(`${strapiUrl}/api/negocios/admin/vigencia/${selectedBusiness.documentId}`, {
         method: 'PUT',
         headers: { 
@@ -223,7 +224,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
     if (!confirm("¿Estás seguro de eliminar este pago?")) return;
     
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       const res = await fetch(`${strapiUrl}/api/negocios/admin/pagos/${documentId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${jwt}` }

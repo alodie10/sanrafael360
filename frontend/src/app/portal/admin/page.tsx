@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions, ADMIN_EMAILS } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { 
+import {
   ShieldCheck, 
   Users, 
   MessageSquare, 
@@ -10,13 +10,14 @@ import {
   LayoutDashboard,
   AlertCircle
 } from "lucide-react";
+import { getStrapiUrl } from "@/lib/strapi";
 import AdminClaimCard from "@/components/portal/AdminClaimCard";
 import AdminDashboardContainer from "@/components/portal/AdminDashboardContainer";
 import Link from "next/link";
 
 async function getPendingClaims(jwt: string) {
   try {
-    const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+    const strapiUrl = getStrapiUrl();
     const res = await fetch(`${strapiUrl}/api/negocios/admin/pending-claims`, {
       headers: {
         Authorization: `Bearer ${jwt}`,

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Eye, MessageSquare, MousePointer2, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getStrapiUrl } from "@/lib/strapi";
 
 interface DataPoint {
   date: string;
@@ -139,7 +140,7 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+        const strapiUrl = getStrapiUrl();
         const res = await fetch(
           `${strapiUrl}/api/negocios/stats/timeseries?period=${period}`,
           { headers: { Authorization: `Bearer ${jwt}` }, cache: "no-store" }

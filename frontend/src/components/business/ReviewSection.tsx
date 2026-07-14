@@ -5,6 +5,7 @@ import { Star, MessageSquare, Send, User, Settings } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { getStrapiUrl } from "@/lib/strapi";
 
 interface Review {
   id: number;
@@ -36,7 +37,7 @@ export default function ReviewSection({ negocioId, ownerId, initialRating = 0, i
 
   const fetchReviews = async () => {
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       const res = await fetch(`${strapiUrl}/api/reviews?filters[negocio][documentId][$eq]=${negocioId}&populate=autor&sort=createdAt:desc`, {
         cache: 'no-store'
       });
@@ -72,7 +73,7 @@ export default function ReviewSection({ negocioId, ownerId, initialRating = 0, i
 
     setSubmitting(true);
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       const res = await fetch(`${strapiUrl}/api/reviews`, {
         method: 'POST',
         headers: {

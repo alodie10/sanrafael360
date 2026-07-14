@@ -1,11 +1,10 @@
-
-
+import { getSiteUrl } from "@/lib/site";
 
 export const metadata = {
   title: "Política de Privacidad | San Rafael 360",
   description: "Políticas de privacidad y tratamiento de datos de la plataforma San Rafael 360.",
   alternates: {
-    canonical: "https://www.sanrafael360.com/privacidad",
+    canonical: `${getSiteUrl()}/privacidad`,
   },
 };
 

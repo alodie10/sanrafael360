@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Mail, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { getStrapiUrl } from "@/lib/strapi";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -16,7 +17,7 @@ export default function ForgotPasswordPage() {
     setError(null);
 
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       const res = await fetch(`${strapiUrl}/api/auth/forgot-password`, {
         method: "POST",
         headers: {

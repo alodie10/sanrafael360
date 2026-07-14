@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Tag, Plus, Edit2, Trash2, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Oferta } from "@/types/strapi";
-import { fetchFromStrapi } from "@/lib/strapi";
+import { fetchFromStrapi, getStrapiUrl } from "@/lib/strapi";
 import { OFERTA_DESCRIPCION_MAX } from "@/lib/oferta-constants";
 
 const TIPO_OFERTA_VALUES = [
@@ -106,7 +106,7 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
     if (!confirm("¿Seguro que deseas eliminar esta oferta?")) return;
     
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       // Endpoint atómico: borra la oferta Y sincroniza Algolia en el mismo request
       const res = await fetch(`${strapiUrl}/api/negocios/${negocioId}/ofertas/${documentId}`, {
         method: "DELETE",
@@ -135,7 +135,7 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
 
     setIsSaving(true);
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       const method = editingOferta ? "PUT" : "POST";
       const endpoint = editingOferta 
         ? `${strapiUrl}/api/ofertas/${editingOferta.documentId}`

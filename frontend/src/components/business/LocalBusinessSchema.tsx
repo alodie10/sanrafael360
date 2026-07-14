@@ -1,5 +1,6 @@
 import { Negocio } from "@/types/strapi";
 import { getStrapiMedia } from "@/lib/strapi";
+import { getSiteUrl } from "@/lib/site";
 
 // --- Mapeos ---
 
@@ -92,17 +93,19 @@ interface LocalBusinessSchemaProps {
  * Ver RF-14 del ERS.
  */
 export function LocalBusinessSchema({ negocio }: LocalBusinessSchemaProps) {
+  const siteUrl = getSiteUrl();
   const schemaType = getSchemaType(negocio.categoria?.nombre);
   // Fallback defensivo: si slug es undefined (campo no solicitado a Strapi), usar documentId
   const slugOrId = negocio.slug || negocio.documentId;
-  const canonicalUrl = `https://www.sanrafael360.com/negocios/${slugOrId}`;
+  const canonicalUrl = `${siteUrl}/negocios/${slugOrId}`;
 
   // FIX: usar getStrapiMedia() para garantizar URL absoluta en el JSON-LD.
   // Sin esto, URLs relativas como /uploads/foto.jpg generan schema inválido para Google.
   const rawImageUrl = negocio.imagen_portada?.url || negocio.logo?.url;
+  const ogDefault = `${siteUrl}/og-default.jpg`;
   const imageUrl = rawImageUrl
-    ? (getStrapiMedia(rawImageUrl) ?? "https://www.sanrafael360.com/og-default.jpg")
-    : "https://www.sanrafael360.com/og-default.jpg";
+    ? (getStrapiMedia(rawImageUrl) ?? ogDefault)
+    : ogDefault;
 
   // openingHoursSpecification — formato correcto Schema.org
   const openingHours =
@@ -198,13 +201,13 @@ export function LocalBusinessSchema({ negocio }: LocalBusinessSchemaProps) {
   // BreadcrumbList — muestra la jerarquía del sitio en los resultados de Google
   // Formato: San Rafael 360 > [Categoría] > [Nombre del Negocio]
   const breadcrumbItems: Array<{ name: string; url: string }> = [
-    { name: "San Rafael 360", url: "https://www.sanrafael360.com" },
+    { name: "San Rafael 360", url: siteUrl },
   ];
 
   if (negocio.categoria?.slug && negocio.categoria?.nombre) {
     breadcrumbItems.push({
       name: negocio.categoria.nombre,
-      url: `https://www.sanrafael360.com/categoria/${negocio.categoria.slug}`,
+      url: `${siteUrl}/categoria/${negocio.categoria.slug}`,
     });
   }
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MessageSquare, Clock, CheckCircle2, Send, Loader2, User } from "lucide-react";
+import { getStrapiUrl } from "@/lib/strapi";
 
 export default function AdminSupportInbox({ jwt, onReplySuccess }: { jwt: string, onReplySuccess?: () => void }) {
   const [tickets, setTickets] = useState<any[]>([]);
@@ -15,7 +16,7 @@ export default function AdminSupportInbox({ jwt, onReplySuccess }: { jwt: string
   }, [jwt]);
 
   const fetchTickets = async () => {
-    const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+    const strapiUrl = getStrapiUrl();
     try {
       const res = await fetch(`${strapiUrl}/api/soportes?populate=*&sort=createdAt:desc`, {
         headers: { Authorization: `Bearer ${jwt}` }
@@ -33,7 +34,7 @@ export default function AdminSupportInbox({ jwt, onReplySuccess }: { jwt: string
     if (!respuesta.trim() || isSubmitting) return;
     
     setIsSubmitting(true);
-    const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+    const strapiUrl = getStrapiUrl();
     
     try {
       const res = await fetch(`${strapiUrl}/api/soportes/${documentId}`, {

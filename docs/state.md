@@ -32,10 +32,10 @@ Detalle en [`AVANCES.md`](../AVANCES.md) y [`backlog.md`](../backlog.md).
 
 ---
 
-## Próximo trabajo (P2 — residual post-Sprint 5)
+## Próximo trabajo
 
-1. **FE-03** — Migrar URLs Strapi duplicadas a `getStrapiUrl()`
-2. **FE-09** — Extender `getSiteUrl()` en sitemap/robots/schemas
-3. **FE-04** — `error.tsx` en `/portal`, `/categoria`
+1. **FE-11** — Login credentials (UI muerta o provider)
+2. **DOC-02..06** — alineación docs / env / versiones
+3. Backend residual BE-08..10 si priorizan arquitectura
 
-**Sprint 4 residual (P2):** warnings build ofertas/sitemap sin Strapi.
+**Cerrado 2026-07-14:** FE-03, FE-09, FE-04, FE-25, QA-08 (skip Discovery en CI).

@@ -1,7 +1,13 @@
 import { MetadataRoute } from "next";
 import { fetchFromStrapi } from "@/lib/strapi";
+import { getSiteUrl } from "@/lib/site";
+
+/** Forzar render dinámico: evita warnings de build cuando Strapi no está levantado. */
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const siteUrl = getSiteUrl();
+
   let negocios: any[] = [];
 
   try {
@@ -42,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const negocioUrls: MetadataRoute.Sitemap = negocios
     .filter((n: any) => n.slug && hasMinimumContent(n))
     .map((n: any) => ({
-      url: `https://www.sanrafael360.com/negocios/${n.slug}`,
+      url: `${siteUrl}/negocios/${n.slug}`,
       lastModified: n.updatedAt ? new Date(n.updatedAt) : new Date(),
       changeFrequency: "weekly" as const,
       // Los negocios premium tienen prioridad levemente mayor → Google los recrawlea antes
@@ -70,7 +76,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const categoriaUrls: MetadataRoute.Sitemap = categorias
     .filter((c: any) => c.slug)
     .map((c: any) => ({
-      url: `https://www.sanrafael360.com/categoria/${c.slug}`,
+      url: `${siteUrl}/categoria/${c.slug}`,
       lastModified: c.updatedAt ? new Date(c.updatedAt) : new Date(),
       changeFrequency: "daily" as const,
       priority: 0.9, // Las categorías son páginas de aterrizaje importantes
@@ -83,7 +89,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     {
-      url: "https://www.sanrafael360.com",
+      url: siteUrl,
       lastModified: BUILD_DATE,
       changeFrequency: "weekly" as const,
       priority: 1.0,

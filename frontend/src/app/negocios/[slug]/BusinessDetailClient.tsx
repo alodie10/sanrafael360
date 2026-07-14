@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchFromStrapi } from "@/lib/strapi";
+import { fetchFromStrapi, getStrapiUrl } from "@/lib/strapi";
 
 import BookingWidget from "@/components/business/BookingWidget";
 import ReviewSection from "@/components/business/ReviewSection";
@@ -88,7 +88,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
       const targetId = negocio?.documentId || slug;
       const incrementView = async () => {
         try {
-          const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+          const strapiUrl = getStrapiUrl();
           await fetch(`${strapiUrl}/api/negocios/${targetId}/stats`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -103,7 +103,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
   const trackClick = async (type: 'whatsapp' | 'website' | 'view') => {
     if (!negocio?.documentId) return;
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       await fetch(`${strapiUrl}/api/negocios/${negocio.documentId}/stats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -118,7 +118,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
     if (!session || !negocio) return;
     setIsClaiming(true);
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       const formData = new FormData();
       formData.append("data", JSON.stringify({ message: claimMessage }));
       if (claimFile) formData.append("documentacion_reclamo", claimFile);

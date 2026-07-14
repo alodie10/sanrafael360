@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { 
+import {
   ShieldCheck, 
   Users, 
   MessageSquare, 
@@ -16,6 +16,7 @@ import {
   Search,
   BarChart3
 } from "lucide-react";
+import { getStrapiUrl } from "@/lib/strapi";
 import Link from "next/link";
 import AdminClaimCard from "./AdminClaimCard";
 import AdminSupportInbox from "./AdminSupportInbox";
@@ -41,7 +42,7 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
 
   const fetchCounts = async () => {
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       
       // Conteo de Soporte
       const resSupport = await fetch(`${strapiUrl}/api/soportes?filters[estado][$eq]=pendiente&pagination[limit]=1`, {

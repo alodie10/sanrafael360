@@ -17,7 +17,7 @@
 | 4 | Frontend SSR y performance | ✅ Completado |
 | 5 | Calidad sostenible (tipos + tests) | ✅ Completado |
 
-**Siguiente foco recomendado:** residual P2 — FE-03 (`getStrapiUrl()`), FE-09 (`getSiteUrl()`), boundaries por segmento. Ver [`backlog.md`](./backlog.md).
+**Siguiente foco recomendado:** FE-11 (login credentials), docs DOC-02..06, o BE residual. Ver [`backlog.md`](./backlog.md).
 
 ---
 
@@ -131,6 +131,18 @@ Promovido a prod 2026-07-13 (`develop` = `master` en `ddccaa9`).
 | QA-04 | Tests backend pagos/claims/admin | ✅ 31 tests unitarios |
 
 **Utilidades extraídas:** `pago-plan.ts`, `premium-vigencia.ts`, `claim-validation.ts`, `payment-success-handler.ts`, `categoria-utils.ts`
+
+---
+
+## Residual P2 post–Sprint 5 ✅ (2026-07-14)
+
+| ID | Descripción | Estado |
+|----|-------------|--------|
+| FE-03 | `getStrapiUrl()` en ~19 call sites del frontend | ✅ |
+| FE-09 | `getSiteUrl()` en sitemap, robots, schemas, contacto, privacidad | ✅ |
+| FE-04 | `error.tsx` en `/portal` y `/categoria` | ✅ |
+| FE-25 | `dynamic = "force-dynamic"` en ofertas y sitemap | ✅ |
+| QA-08 | Discovery integration skip salvo `RUN_DISCOVERY_INTEGRATION=1` | ✅ |
 
 ---
 

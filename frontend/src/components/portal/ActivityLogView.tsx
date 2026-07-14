@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { Clock, History, Building2, User as UserIcon, AlertCircle, CheckCircle2, Info, Loader2 } from "lucide-react";
-import { STRAPI_URL } from "@/lib/strapi";
+import { STRAPI_URL, getStrapiUrl } from "@/lib/strapi";
 import { cn } from "@/lib/utils";
 
 interface ActivityLogViewProps {
@@ -26,7 +26,7 @@ export default function ActivityLogView({ jwt, userId }: ActivityLogViewProps) {
 
       console.log(`[ActivityLog] Fetching from ${STRAPI_URL}/api/actividades with JWT starting with: ${jwt.substring(0, 10)}...`);
       
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       try {
         // Populate explícito — populate=* falla con 'Invalid key usuario' en Strapi v5
         // porque users-permissions tiene restricciones en wildcard populate.

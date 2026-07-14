@@ -46,12 +46,12 @@
 
 ### Frontend — residual Sprint 4
 
-| ID | Problema | Acción | Esfuerzo |
-|----|----------|--------|----------|
-| FE-03 | URL Strapi duplicada en ~20 archivos | Migrar a `getStrapiUrl()` | M |
-| FE-04 | Sin boundaries por segmento | `error.tsx` en `/portal`, `/categoria` | S |
-| FE-09 | URL del sitio hardcodeada (sitemap, robots, schemas) | Extender `getSiteUrl()` | S |
-| FE-25 | Build warnings `/ofertas` y `sitemap.xml` sin Strapi | `revalidate` o `dynamic` explícito | S |
+| ID | Problema | Acción | Esfuerzo | Estado |
+|----|----------|--------|----------|--------|
+| FE-03 | URL Strapi duplicada en ~20 archivos | Migrar a `getStrapiUrl()` | M | ✅ |
+| FE-04 | Sin boundaries por segmento | `error.tsx` en `/portal`, `/categoria` | S | ✅ |
+| FE-09 | URL del sitio hardcodeada (sitemap, robots, schemas) | Extender `getSiteUrl()` | S | ✅ |
+| FE-25 | Build warnings `/ofertas` y `sitemap.xml` sin Strapi | `revalidate` o `dynamic` explícito | S | ✅ |
 
 ### Backend
 
@@ -91,7 +91,7 @@
 |----|----------|--------|----------|
 | QA-06 | `e2e/auditoria/` fuera de `testDir` default | Mover bajo `tests/` o proyecto separado | S |
 | QA-07 | `verification.config.ts` huérfano | Eliminar o documentar manual-only | S |
-| QA-08 | `discovery.spec.ts` llama Google Maps real → **CI `develop` rojo** (`test:fast` / job quality). Symptom: `fetch failed`, PageView pixel/favicon no relacionados. Corre en cada push a develop (ej. run `51f2cb7`). | Mock HTTP o skip en CI sin secret; no depender de API externa | M |
+| QA-08 | `discovery.spec.ts` llama Google Maps real → **CI `develop` rojo** | Mock HTTP o skip en CI; `RUN_DISCOVERY_INTEGRATION=1` para live | M | ✅ skip en CI |
 | QA-09 | Cache npm apunta a `frontend/package-lock.json` inexistente | Usar root `package-lock.json` | S |
 | CI-04 | `promote.sh` no verifica deploy post-push | Check deploy status Railway/Vercel | M |
 | CI-05 | Sin procedimiento rollback documentado | Documentar rollback + tags release | S |
@@ -118,10 +118,11 @@
 Sprint 4 (SSR) ✅  →  Sprint 5 (tipos + tests)  →  residual FE-03/FE-09 (P2)
 ```
 
-### Próximo paso concreto (P2 — residual)
+### Próximo paso concreto
 
-1. **FE-03** — migrar URLs Strapi duplicadas a `getStrapiUrl()`.
-2. **FE-09** — extender `getSiteUrl()` en sitemap, robots y schemas.
+1. **FE-11** — login credentials muerto (UI o CredentialsProvider).
+2. Docs rápidas DOC-02..06 si hace falta limpieza.
+3. Opcional: mock HTTP real para Discovery (QA-08 residual live).
 
 ---
 

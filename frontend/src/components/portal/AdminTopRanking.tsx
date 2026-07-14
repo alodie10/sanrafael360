@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Trophy, Eye, ExternalLink, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { getStrapiUrl } from "@/lib/strapi";
 
 export default function AdminTopRanking({ jwt }: { jwt: string }) {
   const [topNegocios, setTopNegocios] = useState<any[]>([]);
@@ -12,7 +13,7 @@ export default function AdminTopRanking({ jwt }: { jwt: string }) {
   useEffect(() => {
     const fetchTop = async () => {
       try {
-        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+        const strapiUrl = getStrapiUrl();
         const res = await fetch(`${strapiUrl}/api/negocios?sort[0]=views:desc&pagination[limit]=5&fields[0]=nombre&fields[1]=slug&fields[2]=views`, {
           headers: { Authorization: `Bearer ${jwt}` },
           cache: 'no-store'

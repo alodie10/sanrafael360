@@ -3,6 +3,7 @@ import { authOptions, ADMIN_EMAILS } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import EditBusinessForm from "@/components/portal/EditBusinessForm";
 import Link from "next/link";
+import { getStrapiUrl } from "@/lib/strapi";
 
 interface EditPageProps {
   params: Promise<{ slug: string }>;
@@ -18,7 +19,7 @@ export default async function EditBusinessPage(props: any) {
     redirect("/login");
   }
 
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+  const strapiUrl = getStrapiUrl();
   const userEmail = session.user?.email;
   const isAdmin = session.user?.role?.toLowerCase() === 'admin' || ADMIN_EMAILS.includes(userEmail?.toLowerCase() || "");
   

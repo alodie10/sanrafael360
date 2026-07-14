@@ -2,8 +2,8 @@ import { fetchFromStrapi } from "@/lib/strapi";
 import { Oferta } from "@/types/strapi";
 import OfferListClient from "./OfferListClient";
 
-// Revalidar cada 60 segundos
-export const revalidate = 60;
+/** Dinámico: evita fallos/warnings de prerender cuando Strapi no responde en build. */
+export const dynamic = "force-dynamic";
 
 export default async function OfertasPage() {
   try {

@@ -1,3 +1,4 @@
+import { getStrapiUrl } from "@/lib/strapi";
 export type StrapiGoogleAuthResponse = {
   jwt: string;
   user: {
@@ -13,7 +14,7 @@ export type StrapiGoogleAuthResponse = {
 export async function exchangeGoogleAccessToken(
   accessToken: string
 ): Promise<StrapiGoogleAuthResponse> {
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+  const strapiUrl = getStrapiUrl();
 
   const res = await fetch(`${strapiUrl}/api/auth/google/exchange`, {
     method: 'POST',

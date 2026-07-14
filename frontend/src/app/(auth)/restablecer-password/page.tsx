@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Lock, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { getStrapiUrl } from "@/lib/strapi";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -34,7 +35,7 @@ function ResetPasswordForm() {
     setError(null);
 
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       const res = await fetch(`${strapiUrl}/api/auth/reset-password`, {
         method: "POST",
         headers: {

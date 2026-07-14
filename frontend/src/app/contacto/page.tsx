@@ -1,18 +1,21 @@
 import { Metadata } from "next";
 import ContactoClient from "./ContactoClient";
+import { getSiteUrl } from "@/lib/site";
+
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   title: "Contacto — Sumá tu Negocio | San Rafael 360",
   description:
     "¿Tenés un negocio en San Rafael, Mendoza? Contactanos para sumarte al directorio más completo de la ciudad y llegar a miles de turistas y residentes.",
   alternates: {
-    canonical: "https://www.sanrafael360.com/contacto",
+    canonical: `${siteUrl}/contacto`,
   },
   openGraph: {
     title: "Contacto — Sumá tu Negocio | San Rafael 360",
     description:
       "Sumate al directorio más completo de San Rafael, Mendoza. Aumentá tu visibilidad y llegá a miles de turistas y residentes.",
-    url: "https://www.sanrafael360.com/contacto",
+    url: `${siteUrl}/contacto`,
     siteName: "San Rafael 360",
     locale: "es_AR",
     type: "website",

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Clock, ShieldCheck } from "lucide-react";
 import { ADMIN_EMAILS } from "@/lib/admin-emails";
+import { getStrapiUrl } from "@/lib/strapi";
 
 // Sub-components extracted for optimization
 import EditBusinessHeader from "./edit-form/EditBusinessHeader";
@@ -106,7 +107,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     if (isAdmin) {
       const fetchCategories = async () => {
         try {
-          const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+          const strapiUrl = getStrapiUrl();
           const res = await fetch(`${strapiUrl}/api/categorias?sort=nombre:asc&pagination[pageSize]=100`);
           const data = await res.json();
           setCategories(data.data || []);
@@ -121,7 +122,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   useEffect(() => {
     const fetchAtributos = async () => {
       try {
-        const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+        const strapiUrl = getStrapiUrl();
         const res = await fetch(`${strapiUrl}/api/atributos?sort=nombre:asc&pagination[pageSize]=100`, {
           headers: { "Authorization": `Bearer ${session.jwt}` }
         });
@@ -325,7 +326,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     syncAbortRef.current = new AbortController();
 
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       const res = await fetch(`${strapiUrl}/api/discovery/google`, {
         method: "POST",
         headers: { 
@@ -373,7 +374,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     setSuccess(false);
 
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       const formData = new FormData();
       
       const payload = {

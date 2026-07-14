@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -7,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/portal/", "/dashboard/", "/admin/", "/api/"],
     },
-    sitemap: "https://www.sanrafael360.com/sitemap.xml",
+    sitemap: `${getSiteUrl()}/sitemap.xml`,
   };
 }

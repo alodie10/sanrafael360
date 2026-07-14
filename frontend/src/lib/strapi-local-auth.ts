@@ -1,3 +1,4 @@
+import { getStrapiUrl } from "@/lib/strapi";
 export type StrapiLocalAuthResponse = {
   jwt: string;
   user: {
@@ -12,7 +13,7 @@ export async function authenticateStrapiLocal(
   identifier: string,
   password: string
 ): Promise<StrapiLocalAuthResponse> {
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+  const strapiUrl = getStrapiUrl();
   const res = await fetch(`${strapiUrl}/api/auth/local`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

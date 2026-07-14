@@ -1,7 +1,21 @@
 import { test, expect } from '@playwright/test';
 import { DiscoveryService } from '../../src/services/discovery-service';
 
+/**
+ * Integration contra Google Maps real.
+ * En CI se saltea salvo RUN_DISCOVERY_INTEGRATION=1 + GOOGLE_MAPS_API_KEY
+ * (QA-08: evitaba falsos rojos en Quality Gates).
+ */
+const runLiveDiscovery =
+  process.env.RUN_DISCOVERY_INTEGRATION === '1' &&
+  Boolean(process.env.GOOGLE_MAPS_API_KEY);
+
 test.describe('Discovery Service Integration', () => {
+  test.skip(
+    !runLiveDiscovery,
+    'Saltar Discovery live en CI/local sin RUN_DISCOVERY_INTEGRATION=1'
+  );
+
   const service = new DiscoveryService();
 
   test.setTimeout(90000);

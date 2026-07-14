@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Tag, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getStrapiUrl } from "@/lib/strapi";
 
 interface EditBusinessAttributesProps {
   atributosSeleccionados: string[];
@@ -36,7 +37,7 @@ export default function EditBusinessAttributes({
     setIsCreating(true);
     
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+      const strapiUrl = getStrapiUrl();
       // Formatear slug simple
       const slug = newTag.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
       

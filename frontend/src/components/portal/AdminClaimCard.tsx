@@ -13,7 +13,7 @@ import {
   ExternalLink,
   Loader2
 } from "lucide-react";
-import { getStrapiMedia } from "@/lib/strapi";
+import { getStrapiMedia, getStrapiUrl } from "@/lib/strapi";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
@@ -35,7 +35,7 @@ export default function AdminClaimCard({ claim, jwt, onResolve }: AdminClaimCard
     setError(null);
 
     try {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || "http://127.0.0.1:1337";
+      const strapiUrl = getStrapiUrl();
       const res = await fetch(`${strapiUrl}/api/negocios/admin/resolve-claim/${claim.documentId}`, {
         method: "POST",
         headers: {
