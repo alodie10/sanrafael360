@@ -33,4 +33,9 @@ describe('unsubscribe-token', () => {
     expect(url.startsWith('https://www.sanrafael360.com/baja?token=')).toBe(true);
     expect(url).toContain(encodeURIComponent(createUnsubscribeToken('doc-123')));
   });
+
+  it('strips accidental leading = from FRONTEND_URL', () => {
+    process.env.FRONTEND_URL = '=http://localhost:3000';
+    expect(buildUnsubscribeUrl('doc-1').startsWith('http://localhost:3000/baja?')).toBe(true);
+  });
 });

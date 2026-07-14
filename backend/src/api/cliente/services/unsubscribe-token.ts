@@ -38,11 +38,16 @@ export function verifyUnsubscribeToken(token: string): string | null {
 }
 
 export function frontendBaseUrl(): string {
-  return (
+  const raw = (
     process.env.FRONTEND_URL ||
     process.env.NEXT_PUBLIC_SITE_URL ||
-    'https://www.sanrafael360.com'
-  ).replace(/\/$/, '');
+    (process.env.NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://www.sanrafael360.com')
+  )
+    .trim()
+    .replace(/^["'=]+|["']+$/g, '')
+    .replace(/\/$/, '');
+
+  return raw || 'http://localhost:3000';
 }
 
 export function buildUnsubscribeUrl(documentId: string): string {
