@@ -16,6 +16,8 @@ import {
   Loader2,
   Undo2,
   Redo2,
+  Trash2,
+  Eraser,
 } from "lucide-react";
 
 type Props = {
@@ -134,8 +136,10 @@ export default function ClienteMailEditor({ value, onChange, "data-testid": test
         },
       }),
       Image.configure({
+        allowBase64: false,
         HTMLAttributes: {
-          style: "max-width:100%;height:auto;border-radius:8px;",
+          style: "max-width:100%;height:auto;border-radius:8px;cursor:pointer;",
+          class: "mail-editor-image",
         },
       }),
     ],
@@ -143,7 +147,7 @@ export default function ClienteMailEditor({ value, onChange, "data-testid": test
     editorProps: {
       attributes: {
         class:
-          "min-h-[180px] max-h-[420px] overflow-y-auto px-4 py-3 text-sm text-white focus:outline-none prose prose-invert prose-sm max-w-none [&_a]:text-primary [&_img]:my-2",
+          "min-h-[180px] max-h-[420px] overflow-y-auto px-4 py-3 text-sm text-white focus:outline-none prose prose-invert prose-sm max-w-none [&_a]:text-primary [&_img]:my-2 [&_img.ProseMirror-selectednode]:outline [&_img.ProseMirror-selectednode]:outline-2 [&_img.ProseMirror-selectednode]:outline-primary",
         ...(testId ? { "data-testid": testId } : {}),
       },
       handlePaste: (_view: EditorView, event: ClipboardEvent) => {
@@ -214,6 +218,46 @@ export default function ClienteMailEditor({ value, onChange, "data-testid": test
     editor.chain().focus().extendMarkRange("link").setLink({ href: trimmed }).run();
   }, [editor]);
 
+  const deleteSelectedImage = useCallback(() => {
+    if (!editor) return;
+    if (editor.isActive("image")) {
+      editor.chain().focus().deleteSelection().run();
+      return;
+    }
+    // Si el cursor está junto a una imagen, intentá borrar el nodo imagen más cercano.
+    editor.chain().focus().command(({ tr, state, dispatch }) => {
+      const { $from } = state.selection;
+      const nodeAfter = $from.nodeAfter;
+      const nodeBefore = $from.nodeBefore;
+      if (nodeAfter?.type.name === "image") {
+        if (dispatch) {
+          tr.delete($from.pos, $from.pos + nodeAfter.nodeSize);
+          dispatch(tr);
+        }
+        return true;
+      }
+      if (nodeBefore?.type.name === "image") {
+        if (dispatch) {
+          tr.delete($from.pos - nodeBefore.nodeSize, $from.pos);
+          dispatch(tr);
+        }
+        return true;
+      }
+      return false;
+    }).run();
+  }, [editor]);
+
+  const resetEditor = useCallback(() => {
+    if (!editor) return;
+    if (!window.confirm("¿Vaciar el cuerpo del aviso y empezar de nuevo?")) return;
+    const empty = "<p></p>";
+    applyingExternal.current = true;
+    editor.commands.setContent(empty, { emitUpdate: false });
+    applyingExternal.current = false;
+    onChange(empty);
+    setError(null);
+  }, [editor, onChange]);
+
   const onPickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -278,6 +322,15 @@ export default function ClienteMailEditor({ value, onChange, "data-testid": test
             <ImagePlus className="w-3.5 h-3.5" />
           )}
         </ToolbarButton>
+        <ToolbarButton
+          title="Quitar imagen seleccionada (o clic en la imagen + este botón)"
+          onClick={deleteSelectedImage}
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </ToolbarButton>
+        <ToolbarButton title="Vaciar editor" onClick={resetEditor}>
+          <Eraser className="w-3.5 h-3.5" />
+        </ToolbarButton>
         <span className="mx-1 h-5 w-px bg-white/10" />
         <ToolbarButton title="Deshacer" onClick={() => editor.chain().focus().undo().run()}>
           <Undo2 className="w-3.5 h-3.5" />
@@ -296,7 +349,7 @@ export default function ClienteMailEditor({ value, onChange, "data-testid": test
       <EditorContent editor={editor} />
       {error && <p className="px-4 py-2 text-xs text-red-300 border-t border-red-500/20">{error}</p>}
       <p className="px-4 py-2 text-[10px] text-zinc-500 border-t border-white/5">
-        Pegá o arrastrá capturas al cuerpo (suben a Cloudinary). También podés usar el botón de imagen.
+        Pegá o arrastrá capturas. Clic en una imagen + ícono de basura para quitarla. El borrador vacía todo el cuerpo.
       </p>
     </div>
   );
