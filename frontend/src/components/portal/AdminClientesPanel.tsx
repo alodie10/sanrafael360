@@ -13,6 +13,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { getStrapiUrl } from "@/lib/strapi";
+import ClienteMailEditor from "./ClienteMailEditor";
 
 type NegocioRef = {
   documentId: string;
@@ -61,6 +62,14 @@ export default function AdminClientesPanel({ jwt, adminEmail }: Props) {
     bodyHtml: "<p>Hola,</p><p>Te contamos una novedad de San Rafael 360…</p>",
   });
   const [mailStatus, setMailStatus] = useState<string | null>(null);
+
+  const bodyIsEmpty = (() => {
+    const text = mail.bodyHtml
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .trim();
+    return text.length === 0;
+  })();
 
   const loadClientes = useCallback(async () => {
     setLoading(true);
@@ -462,11 +471,9 @@ export default function AdminClientesPanel({ jwt, adminEmail }: Props) {
           onChange={(e) => setMail((m) => ({ ...m, subject: e.target.value }))}
           data-testid="cliente-mail-subject"
         />
-        <textarea
-          className="w-full min-h-[160px] rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white font-mono"
-          placeholder="HTML del cuerpo"
+        <ClienteMailEditor
           value={mail.bodyHtml}
-          onChange={(e) => setMail((m) => ({ ...m, bodyHtml: e.target.value }))}
+          onChange={(bodyHtml) => setMail((m) => ({ ...m, bodyHtml }))}
           data-testid="cliente-mail-body"
         />
         <p className="text-[11px] text-zinc-500">
@@ -475,7 +482,7 @@ export default function AdminClientesPanel({ jwt, adminEmail }: Props) {
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
-            disabled={busy || !mail.subject.trim() || !mail.bodyHtml.trim()}
+            disabled={busy || !mail.subject.trim() || bodyIsEmpty}
             onClick={sendTest}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/15 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-40"
             data-testid="cliente-mail-test-btn"
@@ -484,7 +491,7 @@ export default function AdminClientesPanel({ jwt, adminEmail }: Props) {
           </button>
           <button
             type="button"
-            disabled={busy || !mail.subject.trim() || !mail.bodyHtml.trim()}
+            disabled={busy || !mail.subject.trim() || bodyIsEmpty}
             onClick={sendBroadcast}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-40"
             data-testid="cliente-mail-broadcast-btn"

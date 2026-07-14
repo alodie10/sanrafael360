@@ -12,11 +12,16 @@
 ## Flujo recomendado
 1. Crear cliente (email + nombre).
 2. Vincular negocio(s) con el buscador.
-3. Redactar asunto + HTML del aviso.
+3. Redactar asunto + cuerpo con el **editor visual** (negrita, links, imágenes Cloudinary).
 4. **Mail de prueba** (va al email del admin de la sesión, prefijo `[PRUEBA]`).
 5. Revisar el correo en Resend / inbox.
 6. Broadcast: sin checkboxes = todos sin opt-out; con checkboxes = solo selección.
 7. Historial breve también en **Log de actividad** (`Mail prueba` / `Mail broadcast`).
+
+## Editor de avisos
+- TipTap en el panel: no hace falta escribir HTML a mano.
+- Imágenes = URL en Cloudinary (`folder` `sanrafael360_avisos`), no adjuntos MIME.
+- Hace falta `CLOUDINARY_*` en el frontend (misma firma que videos del portal).
 
 ## Requisitos
 - Backend en Railway/`develop` con `RESEND_API_KEY` y `RESEND_DEFAULT_FROM`.
