@@ -4,6 +4,7 @@ import { createLeadRepository } from '../repositories/lead-repository';
 import { createNegocioRepository } from '../../negocio/repositories/negocio-repository';
 import { createUserRepository } from '../../../repositories/user-repository';
 import { NotFoundError, ValidationError } from '../../../utils/errors';
+import { resolveResendFromAddress } from '../../../services/notification-service';
 
 type StrapiUser = {
   id: number;
@@ -29,7 +30,7 @@ async function sendWelcomeAccessEmail(strapi: any, user: StrapiUser) {
 
   await strapi.plugin('email').service('email').send({
     to: user.email,
-    from: `San Rafael 360 <${process.env.RESEND_DEFAULT_FROM || 'no-reply@sanrafael360.com'}>`,
+    from: resolveResendFromAddress(),
     subject: 'Configuración de acceso - San Rafael 360',
     html: `
       <div style="font-family: sans-serif; padding: 25px; border: 1px solid #f0f0f0; border-radius: 12px; max-width: 600px; margin: auto;">

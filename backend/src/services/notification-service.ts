@@ -8,14 +8,22 @@ export type SendEmailInput = {
   text?: string;
 };
 
+/** Resend exige `email` o `Name <email>`. No doblar el formato si el env ya lo trae. */
+export function resolveResendFromAddress(
+  envFrom = process.env.RESEND_DEFAULT_FROM,
+  displayName = 'San Rafael 360'
+): string {
+  const raw = (envFrom || 'no-reply@sanrafael360.com').trim().replace(/^["']|["']$/g, '');
+  if (!raw) return `${displayName} <no-reply@sanrafael360.com>`;
+  if (raw.includes('<') && raw.includes('>')) return raw;
+  return `${displayName} <${raw}>`;
+}
+
 /**
  * Envío de email vía Resend (plugin Strapi).
  * Por defecto no relanza errores (fire-and-forget) para no romper flujos de negocio.
  */
 export function createNotificationService(strapi: Core.Strapi | any) {
-  const fromAddress = () =>
-    `San Rafael 360 <${process.env.RESEND_DEFAULT_FROM || 'no-reply@sanrafael360.com'}>`;
-
   async function sendEmail(
     input: SendEmailInput,
     options: { throwOnError?: boolean } = {}
@@ -31,7 +39,7 @@ export function createNotificationService(strapi: Core.Strapi | any) {
 
       await emailService.send({
         to: input.to,
-        from: fromAddress(),
+        from: resolveResendFromAddress(),
         subject: input.subject,
         html: input.html,
         text: input.text,
