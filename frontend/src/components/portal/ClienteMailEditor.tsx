@@ -5,6 +5,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
+import type { EditorView } from "@tiptap/pm/view";
 import {
   Bold,
   Italic,
@@ -57,6 +58,28 @@ async function uploadImageToCloudinary(file: File): Promise<string> {
   return uploadData.secure_url as string;
 }
 
+function collectImageFiles(data: DataTransfer | null): File[] {
+  if (!data) return [];
+  const files: File[] = [];
+
+  if (data.files?.length) {
+    for (const file of Array.from(data.files)) {
+      if (file.type.startsWith("image/")) files.push(file);
+    }
+  }
+
+  if (files.length === 0 && data.items?.length) {
+    for (const item of Array.from(data.items)) {
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) files.push(file);
+      }
+    }
+  }
+
+  return files;
+}
+
 function ToolbarButton({
   onClick,
   active,
@@ -92,6 +115,7 @@ export default function ClienteMailEditor({ value, onChange, "data-testid": test
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const applyingExternal = useRef(false);
+  const insertImagesRef = useRef<(files: File[]) => Promise<void>>(async () => undefined);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -122,12 +146,50 @@ export default function ClienteMailEditor({ value, onChange, "data-testid": test
           "min-h-[180px] max-h-[420px] overflow-y-auto px-4 py-3 text-sm text-white focus:outline-none prose prose-invert prose-sm max-w-none [&_a]:text-primary [&_img]:my-2",
         ...(testId ? { "data-testid": testId } : {}),
       },
+      handlePaste: (_view: EditorView, event: ClipboardEvent) => {
+        const files = collectImageFiles(event.clipboardData);
+        if (files.length === 0) return false;
+        event.preventDefault();
+        void insertImagesRef.current(files);
+        return true;
+      },
+      handleDrop: (_view: EditorView, event: DragEvent) => {
+        const files = collectImageFiles(event.dataTransfer);
+        if (files.length === 0) return false;
+        event.preventDefault();
+        void insertImagesRef.current(files);
+        return true;
+      },
     },
     onUpdate: ({ editor: ed }) => {
       if (applyingExternal.current) return;
       onChange(ed.getHTML());
     },
   });
+
+  const insertImages = useCallback(
+    async (files: File[]) => {
+      if (!editor || files.length === 0) return;
+      setUploading(true);
+      setError(null);
+      try {
+        for (const file of files) {
+          if (!file.type.startsWith("image/")) continue;
+          const url = await uploadImageToCloudinary(file);
+          editor.chain().focus().setImage({ src: url, alt: file.name || "imagen" }).run();
+        }
+      } catch (err: any) {
+        setError(err.message || "No se pudo subir la imagen");
+      } finally {
+        setUploading(false);
+      }
+    },
+    [editor]
+  );
+
+  useEffect(() => {
+    insertImagesRef.current = insertImages;
+  }, [insertImages]);
 
   useEffect(() => {
     if (!editor) return;
@@ -155,22 +217,12 @@ export default function ClienteMailEditor({ value, onChange, "data-testid": test
   const onPickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (!file || !editor) return;
+    if (!file) return;
     if (!file.type.startsWith("image/")) {
       setError("Solo imágenes (JPG, PNG, WebP…)");
       return;
     }
-
-    setUploading(true);
-    setError(null);
-    try {
-      const url = await uploadImageToCloudinary(file);
-      editor.chain().focus().setImage({ src: url, alt: file.name }).run();
-    } catch (err: any) {
-      setError(err.message || "No se pudo subir la imagen");
-    } finally {
-      setUploading(false);
-    }
+    await insertImages([file]);
   };
 
   if (!editor) {
@@ -244,7 +296,7 @@ export default function ClienteMailEditor({ value, onChange, "data-testid": test
       <EditorContent editor={editor} />
       {error && <p className="px-4 py-2 text-xs text-red-300 border-t border-red-500/20">{error}</p>}
       <p className="px-4 py-2 text-[10px] text-zinc-500 border-t border-white/5">
-        Links e imágenes via Cloudinary (HTTPS). No son adjuntos MIME.
+        Pegá o arrastrá capturas al cuerpo (suben a Cloudinary). También podés usar el botón de imagen.
       </p>
     </div>
   );

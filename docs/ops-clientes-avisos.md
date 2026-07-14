@@ -21,6 +21,7 @@
 ## Editor de avisos
 - TipTap en el panel: no hace falta escribir HTML a mano.
 - Imágenes = URL en Cloudinary (`folder` `sanrafael360_avisos`), no adjuntos MIME.
+- Podés **pegar o arrastrar** capturas al cuerpo del mensaje (además del botón de imagen).
 - Hace falta `CLOUDINARY_*` en el frontend (misma firma que videos del portal).
 
 ## Requisitos
