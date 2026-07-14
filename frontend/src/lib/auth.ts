@@ -19,6 +19,14 @@ function resolveAuthSecret(): string {
     return 'test-only-nextauth-secret-not-for-production';
   }
 
+  // `next build` evalúa route handlers sin secrets de runtime (CI/local sin .env).
+  if (
+    process.env.CI === 'true' ||
+    process.env.NEXT_PHASE === 'phase-production-build'
+  ) {
+    return 'build-time-placeholder-nextauth-secret';
+  }
+
   // NEXTAUTH_SECRET no se expone al bundle del cliente (no es NEXT_PUBLIC_*).
   if (typeof window !== 'undefined') {
     return '';

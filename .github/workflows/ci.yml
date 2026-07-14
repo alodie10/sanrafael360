@@ -37,6 +37,10 @@ jobs:
 
       - name: Production build
         run: npm run build:all
+        env:
+          # Placeholder only for `next build` page collection; runtime uses real secrets in Vercel.
+          NEXTAUTH_SECRET: ci-build-placeholder-nextauth-secret
+          CI: true
 
   e2e-smoke:
     timeout-minutes: 30

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openFirstBusinessFromHome, prepareSmokePage } from './smoke-helpers';
+import { prepareSmokePage } from './smoke-helpers';
 
 test.describe('San Rafael 360 - Critical Flow Validation', () => {
 
