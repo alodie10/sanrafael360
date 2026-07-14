@@ -17,7 +17,7 @@
 | 4 | Frontend SSR y performance | ✅ Completado |
 | 5 | Calidad sostenible (tipos + tests) | ✅ Completado |
 
-**Siguiente foco recomendado:** FE-11 (login credentials), docs DOC-02..06, o BE residual. Ver [`backlog.md`](./backlog.md).
+**Siguiente foco recomendado:** DOC-02..06 o FE-23/FE-24 (UX auth/portal). Ver [`backlog.md`](./backlog.md).
 
 ---
 
@@ -143,6 +143,14 @@ Promovido a prod 2026-07-13 (`develop` = `master` en `ddccaa9`).
 | FE-04 | `error.tsx` en `/portal` y `/categoria` | ✅ |
 | FE-25 | `dynamic = "force-dynamic"` en ofertas y sitemap | ✅ |
 | QA-08 | Discovery integration skip salvo `RUN_DISCOVERY_INTEGRATION=1` | ✅ |
+
+---
+
+## FE-11 — Login credentials ✅ (2026-07-14)
+
+**Qué era:** quedaban pantallas de “olvidé/restablecer contraseña” como si el sitio entrara con email, pero el login real es solo Google (email/clave solo en E2E).
+
+**Qué hicimos:** esas rutas ahora explican “usá Google” + CTA; login copy alineado; robots noindex/disallow; credentials siguen solo para Playwright.
 
 ---
 

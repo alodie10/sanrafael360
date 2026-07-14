@@ -34,8 +34,8 @@ Detalle en [`AVANCES.md`](../AVANCES.md) y [`backlog.md`](../backlog.md).
 
 ## Próximo trabajo
 
-1. **FE-11** — Login credentials (UI muerta o provider)
-2. **DOC-02..06** — alineación docs / env / versiones
+1. **DOC-02..06** — alineación docs / env / versiones
+2. **FE-23 / FE-24** — errores en login y portal vacío vs error
 3. Backend residual BE-08..10 si priorizan arquitectura
 
-**Cerrado 2026-07-14:** FE-03, FE-09, FE-04, FE-25, QA-08 (skip Discovery en CI).
+**Cerrado 2026-07-14:** FE-03, FE-09, FE-04, FE-25, QA-08, FE-11.

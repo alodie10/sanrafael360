@@ -50,7 +50,7 @@ function LoginForm() {
           Bienvenido
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Iniciá sesión para guardar tus favoritos y gestionar tu negocio.
+          Entrá con Google para guardar favoritos y gestionar tu negocio.
         </p>
       </div>
 
@@ -70,6 +70,7 @@ function LoginForm() {
         Continuar con Google
       </button>
 
+      {/* FE-11: email/password solo en E2E. En prod el provider no está registrado. */}
       {showTestLogin && (
         <form onSubmit={handleSubmit} className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-6">
           <p className="text-xs text-center text-gray-400 uppercase tracking-widest">Solo tests E2E</p>

@@ -18,10 +18,10 @@
 
 ### Frontend — resto P1
 
-| ID | Problema | Acción | Esfuerzo |
-|----|----------|--------|----------|
-| FE-11 | Login con flujo credentials muerto | Eliminar UI muerta o añadir CredentialsProvider | S |
-| FE-12 | API layer fragmentada | Crear `lib/api/` con métodos tipados | L |
+| ID | Problema | Acción | Esfuerzo | Estado |
+|----|----------|--------|----------|--------|
+| FE-11 | Login con flujo credentials muerto | Eliminar UI muerta (Google-only); credentials solo E2E | S | ✅ |
+| FE-12 | API layer fragmentada | Crear `lib/api/` con métodos tipados | L | |
 
 ### Backend — deuda post-Sprint 3 (P2 elevado)
 
@@ -120,9 +120,9 @@ Sprint 4 (SSR) ✅  →  Sprint 5 (tipos + tests)  →  residual FE-03/FE-09 (P2
 
 ### Próximo paso concreto
 
-1. **FE-11** — login credentials muerto (UI o CredentialsProvider).
-2. Docs rápidas DOC-02..06 si hace falta limpieza.
-3. Opcional: mock HTTP real para Discovery (QA-08 residual live).
+1. **DOC-02..06** — limpieza docs/env/versiones (S).
+2. **FE-23 / FE-24** — errores visibles en login y portal.
+3. Opcional: FE-12 capa API tipada.
 
 ---
 

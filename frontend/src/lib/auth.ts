@@ -47,6 +47,7 @@ export const authOptions: NextAuthOptions = {
       : []),
     ...(isPlaywrightTestMode()
       ? [
+          // FE-11: credentials solo para E2E. En prod el login público es Google.
           CredentialsProvider({
             id: 'credentials',
             name: 'Credentials',
