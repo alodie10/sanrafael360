@@ -40,3 +40,4 @@ id_rsa.pub
 .wwebjs_auth/
 .vercel
 frontend/tests/.auth/
+backend/test-results/

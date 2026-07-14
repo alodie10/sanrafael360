@@ -91,7 +91,7 @@
 |----|----------|--------|----------|
 | QA-06 | `e2e/auditoria/` fuera de `testDir` default | Mover bajo `tests/` o proyecto separado | S |
 | QA-07 | `verification.config.ts` huérfano | Eliminar o documentar manual-only | S |
-| QA-08 | `discovery.spec.ts` llama Google Maps real | Mock HTTP; renombrar integration | M |
+| QA-08 | `discovery.spec.ts` llama Google Maps real → **CI `develop` rojo** (`test:fast` / job quality). Symptom: `fetch failed`, PageView pixel/favicon no relacionados. Corre en cada push a develop (ej. run `51f2cb7`). | Mock HTTP o skip en CI sin secret; no depender de API externa | M |
 | QA-09 | Cache npm apunta a `frontend/package-lock.json` inexistente | Usar root `package-lock.json` | S |
 | CI-04 | `promote.sh` no verifica deploy post-push | Check deploy status Railway/Vercel | M |
 | CI-05 | Sin procedimiento rollback documentado | Documentar rollback + tags release | S |
