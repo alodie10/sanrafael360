@@ -38,9 +38,20 @@ jobs:
       - name: Production build
         run: npm run build:all
         env:
-          # Placeholder only for `next build` page collection; runtime uses real secrets in Vercel.
-          NEXTAUTH_SECRET: ci-build-placeholder-nextauth-secret
           CI: true
+          # Placeholders solo para compilar en CI (no son secretos de prod).
+          # No usar los valores de BUILD_PLACEHOLDERS en required-env.ts (los rechaza).
+          NEXTAUTH_SECRET: ci-quality-gates-nextauth-secret
+          ADMIN_JWT_SECRET: ci-quality-gates-admin-jwt-secret
+          API_TOKEN_SALT: ci-quality-gates-api-token-salt
+          TRANSFER_TOKEN_SALT: ci-quality-gates-transfer-token-salt
+          ENCRYPTION_KEY: ci-quality-gates-encryption-key
+          APP_KEYS: ci-key-1,ci-key-2,ci-key-3,ci-key-4
+          JWT_SECRET: ci-quality-gates-jwt-secret
+          CLOUDINARY_NAME: ci-cloudinary-name
+          CLOUDINARY_KEY: ci-cloudinary-key
+          CLOUDINARY_SECRET: ci-cloudinary-secret
+          RESEND_API_KEY: ci-resend-api-key
 
   e2e-smoke:
     timeout-minutes: 30
