@@ -22,7 +22,7 @@
 - TipTap en el panel: no hace falta escribir HTML a mano.
 - Imágenes = URL en Cloudinary (`folder` `sanrafael360_avisos`), no adjuntos MIME.
 - Podés **pegar o arrastrar** capturas al cuerpo del mensaje (además del botón de imagen).
-- Hace falta `CLOUDINARY_*` en el frontend (misma firma que videos del portal).
+- Credenciales Cloudinary del frontend deben coincidir con el backend (aliases `CLOUDINARY_CLOUD_NAME/API_*` o `CLOUDINARY_NAME/KEY/SECRET`). `Invalid API key` = keys desfasadas en `frontend/.env`.
 
 ## Requisitos
 - Backend en Railway/`develop` con `RESEND_API_KEY` y `RESEND_DEFAULT_FROM`.

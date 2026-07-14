@@ -2,11 +2,22 @@ import crypto from "crypto";
 
 export type CloudinarySignAlgorithm = "sha1" | "sha256";
 
+function firstEnv(...keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = process.env[key]?.trim().replace(/^["']|["']$/g, "");
+    if (value) return value;
+  }
+  return undefined;
+}
+
+/**
+ * Acepta nombres FE (CLOUDINARY_CLOUD_NAME/API_*) y BE (CLOUDINARY_NAME/KEY/SECRET).
+ */
 export function getCloudinaryServerConfig() {
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
-  const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
-  const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
-  const algorithm = (process.env.CLOUDINARY_SIGNATURE_ALGORITHM?.trim().toLowerCase() === "sha256"
+  const cloudName = firstEnv("CLOUDINARY_CLOUD_NAME", "CLOUDINARY_NAME");
+  const apiKey = firstEnv("CLOUDINARY_API_KEY", "CLOUDINARY_KEY");
+  const apiSecret = firstEnv("CLOUDINARY_API_SECRET", "CLOUDINARY_SECRET");
+  const algorithm = (firstEnv("CLOUDINARY_SIGNATURE_ALGORITHM")?.toLowerCase() === "sha256"
     ? "sha256"
     : "sha1") as CloudinarySignAlgorithm;
 
