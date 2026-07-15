@@ -375,8 +375,22 @@ export default function AdminClientesPanel({ jwt, adminEmail }: Props) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setLinkClienteId(c.documentId)}
-                      className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border border-white/10 text-zinc-300"
+                      onClick={() => {
+                        if (linkClienteId === c.documentId) {
+                          setLinkClienteId(null);
+                          setPickerSearch("");
+                          setPickerResults([]);
+                          return;
+                        }
+                        setLinkClienteId(c.documentId);
+                        setPickerSearch("");
+                        setPickerResults([]);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                        linkClienteId === c.documentId
+                          ? "border-primary/40 text-primary"
+                          : "border-white/10 text-zinc-300"
+                      }`}
                     >
                       Vincular negocio
                     </button>
@@ -410,55 +424,63 @@ export default function AdminClientesPanel({ jwt, adminEmail }: Props) {
                     ))}
                   </div>
                 )}
+                {linkClienteId === c.documentId && (
+                  <div
+                    className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3"
+                    data-testid="cliente-vincular-picker"
+                  >
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+                      <Search className="w-3.5 h-3.5" /> Buscar negocio para vincular
+                    </h4>
+                    <input
+                      className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white"
+                      placeholder="Nombre del negocio…"
+                      value={pickerSearch}
+                      onChange={(e) => searchNegocios(e.target.value)}
+                      autoFocus
+                    />
+                    <ul className="space-y-2">
+                      {pickerResults.map((n) => (
+                        <li
+                          key={n.documentId}
+                          className="flex items-center justify-between gap-3 text-sm text-zinc-200"
+                        >
+                          <span>
+                            {n.nombre}
+                            {n.cliente?.email ? (
+                              <span className="text-amber-400/80 text-xs ml-2">
+                                (ya: {n.cliente.email})
+                              </span>
+                            ) : null}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => linkNegocio(n.documentId)}
+                            className="px-3 py-1.5 rounded-lg bg-primary text-black text-[9px] font-black uppercase"
+                          >
+                            Vincular
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLinkClienteId(null);
+                        setPickerResults([]);
+                        setPickerSearch("");
+                      }}
+                      className="text-[10px] uppercase tracking-widest text-zinc-500"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
         )}
       </section>
-
-      {linkClienteId && (
-        <section className="rounded-[2rem] border border-primary/20 bg-primary/5 p-6 space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-            <Search className="w-3.5 h-3.5" /> Buscar negocio para vincular
-          </h3>
-          <input
-            className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white"
-            placeholder="Nombre del negocio…"
-            value={pickerSearch}
-            onChange={(e) => searchNegocios(e.target.value)}
-          />
-          <ul className="space-y-2">
-            {pickerResults.map((n) => (
-              <li key={n.documentId} className="flex items-center justify-between gap-3 text-sm text-zinc-200">
-                <span>
-                  {n.nombre}
-                  {n.cliente?.email ? (
-                    <span className="text-amber-400/80 text-xs ml-2">(ya: {n.cliente.email})</span>
-                  ) : null}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => linkNegocio(n.documentId)}
-                  className="px-3 py-1.5 rounded-lg bg-primary text-black text-[9px] font-black uppercase"
-                >
-                  Vincular
-                </button>
-              </li>
-            ))}
-          </ul>
-          <button
-            type="button"
-            onClick={() => {
-              setLinkClienteId(null);
-              setPickerResults([]);
-              setPickerSearch("");
-            }}
-            className="text-[10px] uppercase tracking-widest text-zinc-500"
-          >
-            Cancelar
-          </button>
-        </section>
-      )}
 
       <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 space-y-4">
         <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
