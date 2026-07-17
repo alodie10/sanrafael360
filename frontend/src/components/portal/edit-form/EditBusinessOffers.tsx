@@ -6,6 +6,11 @@ import { toast } from "sonner";
 import { Oferta } from "@/types/strapi";
 import { fetchFromStrapi, getStrapiUrl } from "@/lib/strapi";
 import { OFERTA_DESCRIPCION_MAX } from "@/lib/oferta-constants";
+import {
+  dateInputToEndOfDayISO,
+  dateInputToStartOfDayISO,
+  toDateInputValue,
+} from "@/lib/calendar-date";
 
 const TIPO_OFERTA_VALUES = [
   "Descuento",
@@ -96,8 +101,8 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
     setPrecioOriginal(oferta.precio_original || "");
     setPrecioDescuento(oferta.precio_descuento || "");
     setPorcentajeDescuento(oferta.porcentaje_descuento || "");
-    setValidaDesde(oferta.valida_desde ? oferta.valida_desde.split('T')[0] : "");
-    setValidaHasta(oferta.valida_hasta ? oferta.valida_hasta.split('T')[0] : "");
+    setValidaDesde(toDateInputValue(oferta.valida_desde));
+    setValidaHasta(toDateInputValue(oferta.valida_hasta));
     setActiva(oferta.activa ?? true);
     setIsModalOpen(true);
   };
@@ -149,8 +154,8 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
           precio_original: precioOriginal === "" ? null : Number(precioOriginal),
           precio_descuento: precioDescuento === "" ? null : Number(precioDescuento),
           porcentaje_descuento: porcentajeDescuento === "" ? null : Number(porcentajeDescuento),
-          valida_desde: validaDesde ? new Date(validaDesde).toISOString() : null,
-          valida_hasta: validaHasta ? new Date(validaHasta).toISOString() : null,
+          valida_desde: validaDesde ? dateInputToStartOfDayISO(validaDesde) : null,
+          valida_hasta: validaHasta ? dateInputToEndOfDayISO(validaHasta) : null,
           activa,
           negocio: negocioId // Relation
         }

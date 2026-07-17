@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Tag } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
+import { formatCalendarDate } from "@/lib/calendar-date";
 import { Oferta } from "@/types/strapi";
 import Link from "next/link";
 import Image from "next/image";
@@ -14,16 +15,9 @@ export default function OfferCard({ oferta, index = 0 }: { oferta: Oferta, index
   const coverUrl = negocio.imagen_portada?.url || negocio.logo?.url;
   const businessSlug = negocio.slug || negocio.documentId;
 
-  // Simple date format
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString("es-AR", { day: 'numeric', month: 'short' });
-    } catch {
-      return "";
-    }
-  };
-
-  const formattedDate = oferta.valida_hasta ? formatDate(oferta.valida_hasta) : "";
+  const formattedDate = oferta.valida_hasta
+    ? formatCalendarDate(oferta.valida_hasta, { day: "numeric", month: "short" })
+    : "";
 
   return (
     <motion.div

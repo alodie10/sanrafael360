@@ -1,6 +1,7 @@
 "use client";
 
 import { Oferta } from "@/types/strapi";
+import { formatCalendarDate } from "@/lib/calendar-date";
 import { Tag } from "lucide-react";
 
 export default function OfferModule({ ofertas }: { ofertas?: Oferta[] }) {
@@ -8,17 +9,9 @@ export default function OfferModule({ ofertas }: { ofertas?: Oferta[] }) {
   
   if (!activeOffer) return null;
 
-  // Simple date format without date-fns to avoid dependency issues if not installed
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString("es-AR", { day: 'numeric', month: 'long' });
-    } catch {
-      return "";
-    }
-  };
-
-  const formattedDate = activeOffer.valida_hasta ? formatDate(activeOffer.valida_hasta) : "";
+  const formattedDate = activeOffer.valida_hasta
+    ? formatCalendarDate(activeOffer.valida_hasta, { day: "numeric", month: "long" })
+    : "";
 
   return (
     <div className="w-full bg-black/40 backdrop-blur-md border border-white/5 border-l-4 border-l-[#FFBF00] p-4 rounded-r-2xl rounded-l-md shadow-lg mb-6 flex flex-col gap-3">
