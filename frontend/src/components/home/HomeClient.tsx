@@ -257,7 +257,7 @@ export default function HomeClient({ categorias }: HomeClientProps) {
     (localidadQuery !== "" && localidadQuery !== "San Rafael, Mendoza");
 
   return (
-    <main ref={topRef} className="min-h-screen">
+    <main ref={topRef} className="min-h-screen pb-4 md:pb-8">
       <section className="relative h-[25vh] md:h-[35vh] flex flex-col items-center justify-center text-center px-4">
         <HeroCarousel />
       </section>
