@@ -41,7 +41,8 @@ import {
   Scale,
   Calculator,
   PawPrint,
-  Sofa
+  Sofa,
+  Fish
 } from "lucide-react";
 
 /**
@@ -56,6 +57,7 @@ export const iconMap: Record<string, LucideIcon> = {
   "apart": Hotel,
   "posada": Home,
   "host": Users,
+  "pesca": Fish,
   "camping": Mountain,
   "gastron": Utensils,
   "restauran": Utensils,
@@ -160,6 +162,7 @@ export const gradientMap: Record<string, string> = {
   "posada": "from-amber-600 to-yellow-700",
   "viaje": "from-sky-500 to-indigo-600",
   "host": "from-purple-600 to-pink-700",
+  "pesca": "from-cyan-500 to-blue-700",
   "tienda": "from-emerald-500 to-teal-700",
   "ropa": "from-pink-500 to-rose-700",
   "taller": "from-slate-600 to-slate-800",
