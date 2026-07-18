@@ -136,11 +136,65 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   }, []);
 
   // Corrige la orientación EXIF de una imagen usando un canvas y la comprime
+  const isHeicFile = (file: File): boolean => {
+    const name = file.name.toLowerCase();
+    const type = (file.type || "").toLowerCase();
+    return (
+      type === "image/heic" ||
+      type === "image/heif" ||
+      name.endsWith(".heic") ||
+      name.endsWith(".heif")
+    );
+  };
+
+  /** iPhone HEIC → JPEG (Chrome/Firefox no lo decodifican en canvas). */
+  const convertHeicToJpeg = async (file: File): Promise<File> => {
+    const heic2any = (await import("heic2any")).default;
+    const converted = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.9,
+    });
+    const blob = Array.isArray(converted) ? converted[0] : converted;
+    return new File([blob], file.name.replace(/\.[^.]+$/i, ".jpg"), {
+      type: "image/jpeg",
+    });
+  };
+
+  const prepareImageFile = async (file: File): Promise<File | null> => {
+    try {
+      let working = file;
+      if (isHeicFile(file)) {
+        const toastId = toast.loading("Convirtiendo foto HEIC de iPhone…");
+        try {
+          working = await convertHeicToJpeg(file);
+          toast.success("Foto convertida a JPEG", { id: toastId });
+        } catch (err: any) {
+          toast.error(
+            "No se pudo leer el HEIC. En el iPhone: Compartir → Guardar como JPEG, o en Ajustes → Cámara → Formatos → Más compatible.",
+            { id: toastId, duration: 8000 }
+          );
+          console.error("[HEIC convert]", err);
+          return null;
+        }
+      }
+      return await fixImageOrientation(working);
+    } catch (err: any) {
+      toast.error(err?.message || "No se pudo procesar la imagen");
+      return null;
+    }
+  };
+
   const fixImageOrientation = (file: File): Promise<File> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
+      reader.onerror = () => resolve(file);
       reader.onload = (e) => {
         const img = new Image();
+        img.onerror = () => {
+          // Formato no soportado por el navegador (p. ej. HEIC sin convertir)
+          resolve(file);
+        };
         img.onload = () => {
           // Leer orientación EXIF
           const arrayBuffer = e.target?.result as ArrayBuffer;
@@ -273,11 +327,11 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
     if (!files || files.length === 0) return;
 
     if (type === 'logo') {
-      const fixed = await fixImageOrientation(files[0]);
-      setLogoFile(fixed);
+      const fixed = await prepareImageFile(files[0]);
+      if (fixed) setLogoFile(fixed);
     } else if (type === 'cover') {
-      const fixed = await fixImageOrientation(files[0]);
-      setCoverFile(fixed);
+      const fixed = await prepareImageFile(files[0]);
+      if (fixed) setCoverFile(fixed);
     } else if (type === 'gallery') {
       const allFiles = Array.from(files);
       const videoFiles = allFiles.filter(f => f.type.startsWith('video/'));
@@ -288,12 +342,18 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         await uploadVideoToCloudinary(videoFile);
       }
 
-      // Imágenes → flujo normal (con corrección EXIF + compresión)
+      // Imágenes → HEIC→JPEG si hace falta, luego EXIF + compresión
       if (imageFiles.length > 0) {
-        const fixed = await Promise.all(imageFiles.map(f => fixImageOrientation(f)));
-        setNewGalleryFiles((prev: File[]) => [...prev, ...fixed]);
+        const prepared = await Promise.all(imageFiles.map((f) => prepareImageFile(f)));
+        const fixed = prepared.filter((f): f is File => !!f);
+        if (fixed.length > 0) {
+          setNewGalleryFiles((prev: File[]) => [...prev, ...fixed]);
+        }
       }
     }
+
+    // Permite volver a elegir el mismo archivo
+    e.target.value = "";
   };
 
   const removeExistingPhoto = (id: number) => {

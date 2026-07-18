@@ -50,7 +50,10 @@ export default function EditBusinessGallery({
          <ImageIcon className="w-6 h-6 text-blue-400" />
          Galería de Multimedia
       </h2>
-      <p className="text-sm text-slate-400 mb-6 font-medium">Sube hasta <strong className="text-white">20 fotos o videos</strong> para destacar tu comercio en la plataforma.</p>
+      <p className="text-sm text-slate-400 mb-6 font-medium">
+        Sube hasta <strong className="text-white">20 fotos o videos</strong> para destacar tu comercio.
+        Las fotos de iPhone en HEIC se convierten automáticamente a JPEG.
+      </p>
       
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
         {/* Existing Photos */}
