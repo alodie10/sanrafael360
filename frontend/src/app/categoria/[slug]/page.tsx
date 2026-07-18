@@ -5,7 +5,7 @@ import BusinessGrid from "@/components/home/BusinessGrid";
 import FilterBar from "@/components/home/FilterBar";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { notFound } from "next/navigation";
+import { notFound, unstable_rethrow } from "next/navigation";
 
 // ---------------------------------------------------------------------------
 // Generador de contenido editorial por categoría
@@ -214,7 +214,7 @@ export default async function CategoriaPage({
 
   } catch (error: any) {
     // Si el error es de Next.js (notFound/redirect), lo relanzamos
-    if (error?.digest?.startsWith('NEXT_NOT_FOUND')) throw error;
+    unstable_rethrow(error);
     console.error("Error cargando categoría:", error);
   }
 

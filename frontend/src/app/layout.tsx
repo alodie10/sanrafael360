@@ -39,9 +39,8 @@ const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  alternates: {
-    canonical: "/",
-  },
+  // No poner canonical global aquí: se hereda en 404/páginas hijas y genera
+  // "Duplicada sin canónica" / soft-404 apuntando al home en Search Console.
   title: {
     default: "San Rafael 360 — Descubrí la ciudad",
     template: "%s | San Rafael 360",

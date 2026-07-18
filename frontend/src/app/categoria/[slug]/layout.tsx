@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { ReactNode } from "react";
+import { notFound, unstable_rethrow } from "next/navigation";
 import { fetchFromStrapi } from "@/lib/strapi";
 import { getSiteUrl } from "@/lib/site";
 
@@ -22,7 +23,7 @@ export async function generateMetadata({
     const categoria = res.data?.[0];
 
     if (!categoria) {
-      return { title: "Categoría no encontrada | San Rafael 360" };
+      notFound();
     }
 
     const currentYear = new Date().getFullYear();
@@ -53,11 +54,12 @@ export async function generateMetadata({
       },
     };
   } catch (e: any) {
+    unstable_rethrow(e);
     console.error(
       `[SEO Critical Error] generateMetadata para categoría ${slug}:`,
       e.message || e
     );
-    return { title: "San Rafael 360" };
+    return { title: "San Rafael 360", robots: { index: false, follow: true } };
   }
 }
 

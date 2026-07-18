@@ -1,4 +1,4 @@
-export default function GlobalLoading() {
+export default function PortalLoading() {
   return (
     <div className="min-h-[50vh] flex flex-col items-center justify-center gap-6 px-6">
       <div

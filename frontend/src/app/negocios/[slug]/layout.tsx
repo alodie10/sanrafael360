@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { ReactNode } from "react";
+import { notFound, unstable_rethrow } from "next/navigation";
 import { getNegocioBySlug } from "@/lib/negocios";
 import { LocalBusinessSchema } from "@/components/business/LocalBusinessSchema";
 import { getSiteUrl } from "@/lib/site";
@@ -18,7 +19,7 @@ export async function generateMetadata({
     const negocio = await getNegocioBySlug(slug);
 
     if (!negocio) {
-      return { title: "Negocio no encontrado | San Rafael 360" };
+      notFound();
     }
 
     // Título optimizado para CTR local (Intención de búsqueda)
@@ -73,11 +74,12 @@ export async function generateMetadata({
       },
     };
   } catch (e: any) {
+    unstable_rethrow(e);
     console.error(
       `[SEO Critical Error] generateMetadata para ${slug}:`,
       e.message || e
     );
-    return { title: "San Rafael 360" };
+    return { title: "San Rafael 360", robots: { index: false, follow: true } };
   }
 }
 

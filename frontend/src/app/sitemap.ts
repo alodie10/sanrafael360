@@ -73,8 +73,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
   }
 
+  const isPlaceholderCategoriaSlug = (slug: string) =>
+    slug === "categoria" || /^categoria-\d+$/.test(slug);
+
   const categoriaUrls: MetadataRoute.Sitemap = categorias
-    .filter((c: any) => c.slug)
+    .filter((c: any) => c.slug && !isPlaceholderCategoriaSlug(c.slug))
     .map((c: any) => ({
       url: `${siteUrl}/categoria/${c.slug}`,
       lastModified: c.updatedAt ? new Date(c.updatedAt) : new Date(),
