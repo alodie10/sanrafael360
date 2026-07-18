@@ -74,60 +74,104 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
     }
   };
 
+  const slugify = (nombre: string) =>
+    nombre
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+  const findExistingNegocio = async (slug: string, placeId?: string) => {
+    const headers = { Authorization: `Bearer ${jwt}` };
+    const queries: string[] = [
+      `filters[slug][$eq]=${encodeURIComponent(slug)}`,
+    ];
+    if (placeId) {
+      queries.push(`filters[google_place_id][$eq]=${encodeURIComponent(placeId)}`);
+    }
+
+    for (const filter of queries) {
+      const res = await fetch(
+        `${STRAPI_URL}/api/negocios?${filter}&fields[0]=nombre&fields[1]=slug&fields[2]=documentId&pagination[pageSize]=1`,
+        { headers }
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.data?.[0]) return data.data[0] as { nombre: string; slug: string; documentId: string };
+    }
+    return null;
+  };
+
   const handleImport = async () => {
     if (!result || !selectedCategory) return;
     setImporting(true);
     setError(null);
 
     try {
+      const slug = slugify(result.nombre);
+      const existing = await findExistingNegocio(slug, result.place_id);
+      if (existing) {
+        setError(
+          `Este negocio ya está en el directorio (“${existing.nombre}”). Abrí su ficha en el admin o editá /portal/negocios/${existing.slug}/editar — no hace falta reimportarlo.`
+        );
+        return;
+      }
+
       const res = await fetch(`${STRAPI_URL}/api/negocios`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`
+          Authorization: `Bearer ${jwt}`,
         },
         body: JSON.stringify({
           data: {
             nombre: result.nombre,
-            slug: result.nombre
-              .toLowerCase()
-              .normalize('NFD')
-              .replace(/[\u0300-\u036f]/g, '') // Quitar acentos
-              .replace(/[^a-z0-9]+/g, '-')    // Reemplazar todo lo no alfanumérico por guion
-              .replace(/(^-|-$)/g, ''),      // Quitar guiones al inicio o final
+            slug,
             descripcion: `Negocio importado desde Google Maps. Ubicado en ${result.direccion}.`,
             direccion: result.direccion,
             telefono: result.telefono,
             website: result.website,
             google_maps_url: result.google_maps_url,
+            google_place_id: result.place_id,
+            google_rating: result.rating,
+            google_review_count: result.user_ratings_total,
             categoria: selectedCategory,
             reclamar_habilitado: true,
             publishedAt: new Date().toISOString(),
             schedules: result.schedules,
             latitud: result.location?.lat,
             longitud: result.location?.lng,
-            horarios_texto: `Rating Google: ${result.rating} con ${result.user_ratings_total} reseñas.`
-          }
-        })
+            horarios_texto: `Rating Google: ${result.rating} con ${result.user_ratings_total} reseñas.`,
+          },
+        }),
       });
 
-      if (!res.ok) throw new Error("Error al crear el negocio en la base de datos.");
-      const createdData = await res.json();
-      
+      const createdData = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const strapiMsg = createdData?.error?.message || "";
+        if (/unique/i.test(strapiMsg)) {
+          throw new Error(
+            "Ya existe un negocio con ese nombre/slug. Buscalo en el directorio antes de importar de nuevo."
+          );
+        }
+        throw new Error(strapiMsg || "Error al crear el negocio en la base de datos.");
+      }
+
       // Ejecutar Auto-Discovery nativo para descargar fotos y sincronizar reseñas
       if (createdData.data?.documentId) {
         const formData = new FormData();
         formData.append("data", JSON.stringify({ trigger_discovery: true }));
-        
+
         await fetch(`${STRAPI_URL}/api/negocios/${createdData.data.documentId}/portal-update`, {
           method: "PUT",
           headers: {
-            Authorization: `Bearer ${jwt}`
+            Authorization: `Bearer ${jwt}`,
           },
-          body: formData
+          body: formData,
         });
       }
-      
+
       setSuccess(true);
       setResult(null);
       setSearchTerm("");
