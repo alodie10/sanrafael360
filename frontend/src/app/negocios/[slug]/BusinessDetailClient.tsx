@@ -20,6 +20,10 @@ import RatingSources from "@/components/business/RatingSources";
 import GooglePlacesReviews from "@/components/business/GooglePlacesReviews";
 
 import { Negocio } from "@/types/strapi";
+import {
+  getOpenSchedulesForDay,
+  isOpenDuringAnySchedule,
+} from "@/lib/schedules";
 
 export default function BusinessDetailClient({ initialNegocio, slug }: { initialNegocio: Negocio; slug: string }) {
   const [negocio, setNegocio] = useState<Negocio | null>(initialNegocio);
@@ -157,27 +161,17 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
       
       const days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
       const now = new Date();
-      const todaySchedule = negocio.schedules.find((s) => s.day === days[now.getDay()]);
+      const todaySchedules = getOpenSchedulesForDay(
+        negocio.schedules,
+        days[now.getDay()]
+      );
       
-      if (!todaySchedule || todaySchedule.is_closed || !todaySchedule.opening_time || !todaySchedule.closing_time) {
+      if (todaySchedules.length === 0) {
         return { status: "Cerrado", color: "text-red-500 bg-red-500/10 border-red-500/20" };
       }
-      
-      const parseTime = (t: string) => { 
-        if (!t || typeof t !== 'string') return 0;
-        const parts = t.split(":");
-        if (parts.length < 2) return 0;
-        return parseInt(parts[0]) * 60 + parseInt(parts[1]); 
-      };
 
       const cur = now.getHours() * 60 + now.getMinutes();
-      const open = parseTime(todaySchedule.opening_time);
-      const close = parseTime(todaySchedule.closing_time);
-      
-      // Manejo de horarios que cruzan la medianoche (ej: 20:00 a 02:00)
-      const isOpen = close < open 
-        ? (cur >= open || cur <= close) 
-        : (cur >= open && cur <= close);
+      const isOpen = isOpenDuringAnySchedule(todaySchedules, cur);
       
       return isOpen 
         ? { status: "Abierto ahora", color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" }

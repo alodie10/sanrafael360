@@ -5,6 +5,7 @@ import Link from "next/link";
 import GoogleMap from "@/components/common/GoogleMap";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
+import { getOpenSchedulesForDay } from "@/lib/schedules";
 
 interface BusinessSidebarProps {
   negocio: Negocio;
@@ -108,13 +109,20 @@ export default function BusinessSidebar({
                 ) : (
                   <div className="space-y-1.5">
                     {["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].map(day => {
-                      const daySched = negocio.schedules?.find((s: any) => s.day === day);
+                      const daySchedules = getOpenSchedulesForDay(negocio.schedules, day);
+                      const isClosed = daySchedules.length === 0;
                       return (
-                        <div key={day} className="flex justify-between text-[10px]">
+                        <div key={day} className="flex justify-between gap-4 text-[10px]">
                           <span className="text-slate-500">{day}</span>
-                          <span className={cn("font-bold", daySched?.is_closed ? "text-red-400" : "text-slate-300")}>
-                            {daySched?.is_closed ? "Cerrado" : `${daySched?.opening_time?.slice(0,5)} - ${daySched?.closing_time?.slice(0,5)}`}
-                          </span>
+                          <div className={cn("font-bold text-right", isClosed ? "text-red-400" : "text-slate-300")}>
+                            {isClosed
+                              ? "Cerrado"
+                              : daySchedules.map((schedule, index) => (
+                                  <span key={`${day}-${index}`} className="block">
+                                    {schedule.opening_time?.slice(0, 5)} - {schedule.closing_time?.slice(0, 5)}
+                                  </span>
+                                ))}
+                          </div>
                         </div>
                       );
                     })}
