@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <bool name="enableNotification">true</bool>
+    <bool name="enableSiteSettingsShortcut">true</bool>
+    <color name="backgroundColor">#000000</color>
+    <color name="colorPrimary">#FFBF00</color>
+    <color name="colorPrimaryDark">#FFBF00</color>
+    <color name="navigationColor">#FFBF00</color>
+    <color name="navigationColorDark">#FFBF00</color>
+    <color name="navigationDividerColor">#FFBF00</color>
+    <color name="navigationDividerColorDark">#FFBF00</color>
+    <color name="shortcut_background">#F5F5F5</color>
+    <integer name="splashScreenFadeOutDuration">300</integer>
+    <string name="appName" translatable="false">SR360</string>
+    <string name="assetStatements">
+    [{
+        \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+        \"target\": {
+            \"namespace\": \"web\",
+            \"site\": \"https://sanrafael360.com\"
+        }
+    }]
+    
+  </string>
+    <string name="fallbackType" translatable="false">customtabs</string>
+    <string name="fullScopeUrl" translatable="false">https://sanrafael360.com/</string>
+    <string name="generatorApp" translatable="false">PWABuilder</string>
+    <string name="hostName" translatable="false">sanrafael360.com</string>
+    <string name="launchUrl" translatable="false">https://sanrafael360.com/</string>
+    <string name="launcherName" translatable="false">SR360</string>
+    <string name="orientation" translatable="false">portrait-primary</string>
+    <string name="providerAuthority" translatable="false">com.sanrafael360.www.twa.fileprovider</string>
+    <string name="shortcut_name_0" translatable="false">Buscar Restaurantes</string>
+    <string name="shortcut_name_1" translatable="false">Buscar Hoteles</string>
+    <string name="shortcut_short_name_0" translatable="false">Buscar Resta</string>
+    <string name="shortcut_short_name_1" translatable="false">Buscar Hotel</string>
+    <string name="webManifestUrl" translatable="false">https://sanrafael360.com/manifest.json</string>
+</resources>

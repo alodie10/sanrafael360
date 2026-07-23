@@ -1,0 +1,40 @@
+
+Ñ
+;
+android*http://schemas.android.com/apk/res/androidG	shortcuts*Ä
+ºshortcut"…
+*http://schemas.android.com/apk/res/androidshortcutLongLabel@string/shortcut_name_0"(ªŠ„2"
+ ¶€¸østring/shortcut_name_00"H
+*http://schemas.android.com/apk/res/android
+shortcutId	shortcut0(¨Š„"J
+*http://schemas.android.com/apk/res/androidenabledtrue"(€„2:@"’
+*http://schemas.android.com/apk/res/androidshortcutShortLabel@string/shortcut_short_name_0"(©Š„2(
+&¸€¸østring/shortcut_short_name_00"r
+*http://schemas.android.com/apk/res/androidicon@drawable/shortcut_0"(‚€„2
+í€œødrawable/shortcut_00*•
+‹intent"c
+*http://schemas.android.com/apk/res/androiddata*https://sanrafael360.com/?cat=restaurantes(®€„"i
+*http://schemas.android.com/apk/res/androidtargetClass)com.sanrafael360.www.twa.LauncherActivity(¯€„"Z
+*http://schemas.android.com/apk/res/androidtargetPackagecom.sanrafael360.www.twa(¡€„"U
+*http://schemas.android.com/apk/res/androidactionandroid.intent.action.MAIN(­€„ê*o
+g
+categories"Y
+*http://schemas.android.com/apk/res/androidname android.intent.category.LAUNCHER(ƒ€„GØ*¿
+µshortcut"…
+*http://schemas.android.com/apk/res/androidshortcutLongLabel@string/shortcut_name_1"(ªŠ„2"
+ ·€¸østring/shortcut_name_10"H
+*http://schemas.android.com/apk/res/android
+shortcutId	shortcut1(¨Š„"J
+*http://schemas.android.com/apk/res/androidenabledtrue"(€„2:@"’
+*http://schemas.android.com/apk/res/androidshortcutShortLabel@string/shortcut_short_name_1"(©Š„2(
+&¹€¸østring/shortcut_short_name_10"r
+*http://schemas.android.com/apk/res/androidicon@drawable/shortcut_1"(‚€„2
+î€œødrawable/shortcut_10*
+†intent"^
+*http://schemas.android.com/apk/res/androiddata%https://sanrafael360.com/?cat=hoteles(®€„"i
+*http://schemas.android.com/apk/res/androidtargetClass)com.sanrafael360.www.twa.LauncherActivity(¯€„"Z
+*http://schemas.android.com/apk/res/androidtargetPackagecom.sanrafael360.www.twa(¡€„"U
+*http://schemas.android.com/apk/res/androidactionandroid.intent.action.MAIN(­€„å*o
+g
+categories"Y
+*http://schemas.android.com/apk/res/androidname android.intent.category.LAUNCHER(ƒ€„GØG

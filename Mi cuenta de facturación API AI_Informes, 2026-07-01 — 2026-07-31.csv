@@ -1,0 +1,16 @@
+Descripción del servicio,ID de servicio,Descripción del SKU,ID de SKU,Cantidad de uso,Unidad de uso,Costo ($),Programas de ahorros ($),Otros ahorros ($),Subtotal sin redondear ($),Subtotal ($),Cambio porcentual en el subtotal en comparación con el período anterior
+Places API (New),0776-5E2E-55E3,Places API Place Details Enterprise + Atmosphere,EB23-5ECC-F753,"2,229",count,30.72,0.00,0.00,30.725000,30.72,Nuevo
+Places API,213C-9623-1402,Atmosphere Data,D63D-5CC5-302A,"2,188",count,5.94,0.00,0.00,5.940000,5.94,-63%
+Places API,213C-9623-1402,Contact Data,F095-CD01-81B2,"2,120",count,3.36,0.00,0.00,3.360000,3.36,-56%
+Places API (New),0776-5E2E-55E3,Places API Place Details Pro,4ED6-464A-2AFC,2,count,0.00,0.00,0.00,0.000000,0.00,Nuevo
+Places API (New),0776-5E2E-55E3,Autocomplete Requests,4EF4-B17C-B31A,1,count,0.00,0.00,0.00,0.000000,0.00,0%
+Places API,213C-9623-1402,Basic Data,75D4-C522-326B,"2,130",count,0.00,0.00,0.00,0.000000,0.00,0%
+Places API,213C-9623-1402,Places Photo,81E7-85D0-58A7,98,count,0.00,0.00,0.00,0.000000,0.00,-100%
+Geocoding API,0AC2-4B25-C429,Geocoding,BAC8-4E68-E261,216,count,0.00,0.00,0.00,0.000000,0.00,0%
+Places API,213C-9623-1402,Places - Text Search,E95A-86C7-7F47,"1,057",count,0.00,0.00,0.00,0.000000,0.00,0%
+Places API (New),0776-5E2E-55E3,Autocomplete Session Usage,EEA3-417B-DBA1,22,count,0.00,0.00,0.00,0.000000,0.00,0%
+Maps API,1934-AA85-20F9,Dynamic Maps,FAF4-3B2D-51B2,"1,445",count,0.00,0.00,0.00,0.000000,0.00,0%
+Places API,213C-9623-1402,Places Details,FC5C-DF28-543F,"1,131",count,0.00,0.00,0.00,0.000000,0.00,0%
+,,,,,,,,Subtotal,40.025000,40.03
+,,,,,,,,Impuesto,0.000000,0.00
+,,,,,,,,Total,40.025000,40.03
