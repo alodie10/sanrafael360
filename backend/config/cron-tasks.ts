@@ -1,11 +1,11 @@
 /**
  * Cron jobs Strapi 5.
- * Sync de reseñas Google: diario, pero cada negocio solo si cache > 30 días o null.
+ * Sync de reseñas Google: diario, solo premium, si cache > 30 días o null.
  */
 export default {
   syncGoogleReviewsMonthly: {
     task: async ({ strapi }) => {
-      strapi.log.info('[Cron] syncGoogleReviewsMonthly — inicio');
+      strapi.log.info('[Cron] syncGoogleReviewsMonthly — inicio (solo premium)');
       try {
         const result = await strapi
           .service('api::negocio.negocio')

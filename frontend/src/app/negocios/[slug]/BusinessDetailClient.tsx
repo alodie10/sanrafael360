@@ -311,7 +311,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
           </aside>
 
           <div className="lg:col-span-2 space-y-12">
-            {negocio.google_reviews && negocio.google_reviews.length > 0 && (
+            {isValidPremium && negocio.google_reviews && negocio.google_reviews.length > 0 && (
               <GooglePlacesReviews reviews={negocio.google_reviews} />
             )}
             <div id="reviews-section">

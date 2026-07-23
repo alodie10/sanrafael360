@@ -246,7 +246,7 @@
     },
     "google_reviews": {
       "type": "json",
-      "description": "Cache de reseñas de Google Places (sync mensual). Evita Place Details en cada pageview."
+      "description": "Cache de reseñas Google Places (solo premium; sync mensual). Evita Place Details en cada pageview."
     },
     "google_reviews_synced_at": {
       "type": "datetime",

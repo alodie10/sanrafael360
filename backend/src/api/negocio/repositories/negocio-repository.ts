@@ -115,13 +115,14 @@ export class NegocioRepository {
 
     return this.strapi.documents('api::negocio.negocio').findMany({
       filters: {
+        is_premium: { $eq: true },
         google_place_id: { $notNull: true },
         $or: [
           { google_reviews_synced_at: { $null: true } },
           { google_reviews_synced_at: { $lt: cutoffIso } },
         ],
       },
-      fields: ['documentId', 'nombre', 'google_place_id', 'google_reviews_synced_at'],
+      fields: ['documentId', 'nombre', 'google_place_id', 'google_reviews_synced_at', 'is_premium'],
       limit,
       status: 'published',
     });

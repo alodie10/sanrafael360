@@ -100,12 +100,17 @@ export async function syncGoogleReviewsForSlug(
   const repo = createNegocioRepository(strapi);
   const rows = await strapi.documents('api::negocio.negocio').findMany({
     filters: { slug: { $eq: slug } },
-    fields: ['documentId', 'nombre', 'google_place_id', 'google_reviews_synced_at'],
+    fields: ['documentId', 'nombre', 'google_place_id', 'google_reviews_synced_at', 'is_premium'],
     limit: 1,
     status: 'published',
   });
   const negocio = rows[0];
   result.checked = rows.length;
+  if (!negocio?.is_premium) {
+    result.skipped = 1;
+    strapi.log.warn(`[GoogleReviewsSync] Skip no-premium slug=${slug}`);
+    return result;
+  }
   if (!negocio?.google_place_id) {
     result.skipped = 1;
     strapi.log.warn(`[GoogleReviewsSync] Sin place_id para slug=${slug}`);
