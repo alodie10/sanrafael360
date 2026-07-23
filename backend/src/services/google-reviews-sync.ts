@@ -83,6 +83,60 @@ export type SyncGoogleReviewsResult = {
   skipped: number;
 };
 
+export async function syncGoogleReviewsForSlug(
+  strapi: any,
+  slug: string
+): Promise<SyncGoogleReviewsResult> {
+  const result: SyncGoogleReviewsResult = { checked: 0, synced: 0, failed: 0, skipped: 0 };
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  if (!apiKey) {
+    strapi.log.warn('[GoogleReviewsSync] GOOGLE_MAPS_API_KEY ausente — skip');
+    return result;
+  }
+
+  const { createNegocioRepository } = await import(
+    '../api/negocio/repositories/negocio-repository'
+  );
+  const repo = createNegocioRepository(strapi);
+  const rows = await strapi.documents('api::negocio.negocio').findMany({
+    filters: { slug: { $eq: slug } },
+    fields: ['documentId', 'nombre', 'google_place_id', 'google_reviews_synced_at'],
+    limit: 1,
+    status: 'published',
+  });
+  const negocio = rows[0];
+  result.checked = rows.length;
+  if (!negocio?.google_place_id) {
+    result.skipped = 1;
+    strapi.log.warn(`[GoogleReviewsSync] Sin place_id para slug=${slug}`);
+    return result;
+  }
+
+  try {
+    const fetched = await fetchGooglePlaceReviews(negocio.google_place_id, apiKey);
+    const payload: {
+      google_reviews: CachedGoogleReview[];
+      google_reviews_synced_at: string;
+      google_rating?: number;
+      google_review_count?: number;
+    } = {
+      google_reviews: fetched.reviews,
+      google_reviews_synced_at: new Date().toISOString(),
+    };
+    if (fetched.rating !== undefined) payload.google_rating = fetched.rating;
+    if (fetched.reviewCount !== undefined) payload.google_review_count = fetched.reviewCount;
+    await repo.saveGoogleReviewsCache(negocio.documentId, payload);
+    result.synced = 1;
+    strapi.log.info(
+      `[GoogleReviewsSync] OK ${negocio.nombre} (${fetched.reviews.length} reseñas)`
+    );
+  } catch (err: any) {
+    result.failed = 1;
+    strapi.log.error(`[GoogleReviewsSync] FAIL ${negocio.nombre}: ${err?.message || err}`);
+  }
+  return result;
+}
+
 /**
  * Sincroniza negocios con cache stale/null. Máx. 1 llamada Places por negocio / staleDays.
  */

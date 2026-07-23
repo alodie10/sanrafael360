@@ -136,7 +136,12 @@ export class NegocioRepository {
       google_review_count?: number;
     }
   ) {
-    return this.updateDraftAndPublished(documentId, data);
+    // Solo published: evita churn de draft/publish (lifecycle "nuevo" + Algolia delete).
+    return this.strapi.documents('api::negocio.negocio').update({
+      documentId,
+      data,
+      status: 'published',
+    });
   }
 
   /** @deprecated Prefer createNotificationService(strapi).sendEmail */

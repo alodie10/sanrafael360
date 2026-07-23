@@ -1,6 +1,8 @@
 /**
- * One-shot backfill: sync reseñas Google para negocios con cache stale/null.
- * Uso: cd backend && npm run sync:google-reviews
+ * One-shot backfill: sync reseñas Google.
+ * Uso:
+ *   npm run sync:google-reviews
+ *   SYNC_SLUG=aires-de-mar npm run sync:google-reviews
  */
 const { createStrapi } = require('@strapi/strapi');
 
@@ -9,9 +11,10 @@ async function main() {
   const app = createStrapi({ distDir: './dist' });
   await app.load();
 
-  const result = await app
-    .service('api::negocio.negocio')
-    .syncStaleGoogleReviews({ staleDays: 30, limit: 500 });
+  const slug = process.env.SYNC_SLUG?.trim();
+  const result = slug
+    ? await app.service('api::negocio.negocio').syncGoogleReviewsForSlug(slug)
+    : await app.service('api::negocio.negocio').syncStaleGoogleReviews({ staleDays: 30, limit: 500 });
 
   console.log('[sync-google-reviews] Resultado:', result);
   await app.destroy();

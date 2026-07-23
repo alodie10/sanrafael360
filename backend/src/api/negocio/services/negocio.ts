@@ -506,4 +506,9 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     const { syncStaleGoogleReviews } = await import('../../../services/google-reviews-sync');
     return syncStaleGoogleReviews(strapi, opts);
   },
+
+  async syncGoogleReviewsForSlug(slug: string) {
+    const { syncGoogleReviewsForSlug } = await import('../../../services/google-reviews-sync');
+    return syncGoogleReviewsForSlug(strapi, slug);
+  },
 }));
