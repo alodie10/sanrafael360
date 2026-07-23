@@ -91,6 +91,15 @@ export interface Negocio {
   google_rating?: number;
   google_review_count?: number;
   google_place_id?: string;
+  google_reviews?: Array<{
+    author_name: string;
+    author_url?: string;
+    profile_photo_url?: string;
+    rating: number;
+    relative_time_description: string;
+    text: string;
+  }> | null;
+  google_reviews_synced_at?: string | null;
   tripadvisor_rating?: number;
   tripadvisor_review_count?: number;
   tripadvisor_url?: string;

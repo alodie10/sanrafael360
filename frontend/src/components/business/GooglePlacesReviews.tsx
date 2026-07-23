@@ -1,16 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Star, StarHalf, Loader2, Quote } from "lucide-react";
-import { importGoogleMapsLibrary } from "@/lib/google-maps";
+import { Star, StarHalf, Quote } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface GooglePlacesReviewsProps {
-  googlePlaceId: string;
-  className?: string;
-}
-
-interface GoogleReview {
+export interface CachedGoogleReview {
   author_name: string;
   author_url?: string;
   profile_photo_url?: string;
@@ -19,65 +12,14 @@ interface GoogleReview {
   text: string;
 }
 
-type PlaceReview = {
-  rating?: number;
-  text?: string;
-  relativePublishTimeDescription?: string;
-  authorAttribution?: {
-    displayName?: string;
-    uri?: string;
-    photoURI?: string;
-  };
-};
-
-function mapPlaceReviews(rawReviews: PlaceReview[]): GoogleReview[] {
-  return rawReviews
-    .filter((r) => (r.rating ?? 0) >= 4)
-    .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-    .map((r) => ({
-      author_name: r.authorAttribution?.displayName ?? "Usuario",
-      author_url: r.authorAttribution?.uri,
-      profile_photo_url: r.authorAttribution?.photoURI,
-      rating: r.rating ?? 0,
-      relative_time_description: r.relativePublishTimeDescription ?? "",
-      text: r.text ?? "",
-    }));
+interface GooglePlacesReviewsProps {
+  reviews?: CachedGoogleReview[] | null;
+  className?: string;
 }
 
-export default function GooglePlacesReviews({ googlePlaceId, className }: GooglePlacesReviewsProps) {
-  const [reviews, setReviews] = useState<GoogleReview[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!googlePlaceId) {
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    (async () => {
-      try {
-        setLoading(true);
-        const placesLib = await importGoogleMapsLibrary("places");
-        if (cancelled) return;
-
-        const place = new placesLib.Place({ id: googlePlaceId });
-        await place.fetchFields({ fields: ["reviews"] });
-        if (cancelled) return;
-
-        setReviews(mapPlaceReviews((place.reviews ?? []) as PlaceReview[]));
-      } catch (err) {
-        console.error("Error loading Google reviews:", err);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [googlePlaceId]);
+export default function GooglePlacesReviews({ reviews, className }: GooglePlacesReviewsProps) {
+  const list = Array.isArray(reviews) ? reviews : [];
+  if (list.length === 0) return null;
 
   const renderStars = (rating: number) => {
     const stars = [];
@@ -96,17 +38,6 @@ export default function GooglePlacesReviews({ googlePlaceId, className }: Google
     return <div className="flex items-center gap-0.5">{stars}</div>;
   };
 
-  if (loading) {
-    return (
-      <div className={cn("bg-slate-900/40 border border-white/5 rounded-[2.5rem] p-8 flex flex-col items-center justify-center min-h-[200px]", className)}>
-        <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Cargando reseñas de Google...</p>
-      </div>
-    );
-  }
-
-  if (reviews.length === 0) return null;
-
   return (
     <div className={cn("space-y-6", className)}>
       <div className="flex items-center gap-3">
@@ -122,9 +53,9 @@ export default function GooglePlacesReviews({ googlePlaceId, className }: Google
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {reviews.map((rev, idx) => (
+        {list.map((rev, idx) => (
           <a
-            key={idx}
+            key={`${rev.author_name}-${idx}`}
             href={rev.author_url || "#"}
             target="_blank"
             rel="noopener noreferrer"

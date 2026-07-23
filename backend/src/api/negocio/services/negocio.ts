@@ -497,5 +497,13 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       }
     });
     return await strapi.documents('api::negocio.negocio').publish({ documentId: negocio.documentId });
-  }
+  },
+
+  /**
+   * Cache de reseñas Google: 1 Place Details por negocio cada ~30 días (cron).
+   */
+  async syncStaleGoogleReviews(opts: { staleDays?: number; limit?: number } = {}) {
+    const { syncStaleGoogleReviews } = await import('../../../services/google-reviews-sync');
+    return syncStaleGoogleReviews(strapi, opts);
+  },
 }));

@@ -726,6 +726,8 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     google_rating: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
     google_review_count: Schema.Attribute.Integer &
       Schema.Attribute.DefaultTo<0>;
+    google_reviews: Schema.Attribute.JSON;
+    google_reviews_synced_at: Schema.Attribute.DateTime;
     horario_apertura: Schema.Attribute.JSON;
     horarios_texto: Schema.Attribute.String;
     imagen_portada: Schema.Attribute.Media<'images'>;

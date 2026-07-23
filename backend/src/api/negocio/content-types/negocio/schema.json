@@ -244,6 +244,14 @@
     "google_place_id": {
       "type": "string"
     },
+    "google_reviews": {
+      "type": "json",
+      "description": "Cache de reseñas de Google Places (sync mensual). Evita Place Details en cada pageview."
+    },
+    "google_reviews_synced_at": {
+      "type": "datetime",
+      "description": "Última sync de google_reviews desde Places API"
+    },
     "tripadvisor_rating": {
       "type": "float",
       "default": 0

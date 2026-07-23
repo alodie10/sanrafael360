@@ -105,6 +105,40 @@ export class NegocioRepository {
     }
   }
 
+  /**
+   * Negocios con Place ID cuya cache de reseñas nunca se syncó o tiene más de `staleDays`.
+   */
+  async findNeedingGoogleReviewsSync(staleDays = 30, limit = 100) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - staleDays);
+    const cutoffIso = cutoff.toISOString();
+
+    return this.strapi.documents('api::negocio.negocio').findMany({
+      filters: {
+        google_place_id: { $notNull: true },
+        $or: [
+          { google_reviews_synced_at: { $null: true } },
+          { google_reviews_synced_at: { $lt: cutoffIso } },
+        ],
+      },
+      fields: ['documentId', 'nombre', 'google_place_id', 'google_reviews_synced_at'],
+      limit,
+      status: 'published',
+    });
+  }
+
+  async saveGoogleReviewsCache(
+    documentId: string,
+    data: {
+      google_reviews: unknown;
+      google_reviews_synced_at: string;
+      google_rating?: number;
+      google_review_count?: number;
+    }
+  ) {
+    return this.updateDraftAndPublished(documentId, data);
+  }
+
   /** @deprecated Prefer createNotificationService(strapi).sendEmail */
   async sendEmail(to: string, subject: string, html: string, text?: string) {
     const { createNotificationService } = await import('../../../services/notification-service');

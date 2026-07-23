@@ -30,7 +30,7 @@ export async function getNegocioBySlug(slug: string): Promise<Negocio | null> {
     "fields[26]=slug&fields[27]=estado_reclamo&fields[28]=email&" +
     "fields[29]=cta_habilitado&fields[30]=cta_titulo&fields[31]=cta_texto&" +
     "fields[32]=cta_boton_texto&fields[33]=cta_link&fields[34]=cta_tag_confirmacion&fields[35]=cta_tag_sin_comisiones&" +
-    "fields[36]=crop_gravity&fields[37]=galeria_config";
+    "fields[36]=crop_gravity&fields[37]=galeria_config&fields[38]=google_reviews&fields[39]=google_reviews_synced_at";
 
   const strapiToken = process.env.STRAPI_API_TOKEN;
   const options: RequestInit = {

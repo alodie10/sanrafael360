@@ -17,7 +17,8 @@
     "sync-covers": "powershell scripts/sync-covers-forced.ps1",
     "test:unit": "vitest run tests/unit",
     "test:integration": "sh -c 'export GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY:-$(grep ^GOOGLE_MAPS_API_KEY= .env 2>/dev/null | cut -d= -f2- | tr -d \"\\\"\" )}; npx playwright test tests/integration'",
-    "test": "vitest"
+    "test": "vitest",
+    "sync:google-reviews": "tsx scripts/sync-google-reviews.ts"
   },
   "dependencies": {
     "@strapi/plugin-cloud": "5.50.0",

@@ -60,7 +60,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
 
   const loadBusinessData = async () => {
     try {
-      const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo&populate[logo][fields][0]=url&populate[imagen_portada][fields][1]=url&populate[galeria][fields][0]=url&populate[schedules]=*&populate[owner][fields][0]=id&fields[0]=nombre&fields[1]=descripcion&fields[2]=direccion&fields[3]=telefono&fields[4]=whatsapp&fields[5]=website&fields[6]=instagram&fields[7]=facebook&fields[8]=latitud&fields[9]=longitud&fields[10]=verificado&fields[11]=reclamar_habilitado&fields[12]=reserva_url&fields[13]=reserva_habilitada&fields[14]=rating&fields[15]=review_count&fields[16]=is_premium&fields[17]=premium_valid_until&fields[18]=google_rating&fields[19]=google_review_count&fields[20]=google_place_id&fields[21]=tripadvisor_rating&fields[22]=tripadvisor_review_count&fields[23]=tripadvisor_url&fields[24]=cta_habilitado&fields[25]=cta_titulo&fields[26]=cta_texto&fields[27]=cta_boton_texto&fields[28]=cta_link&fields[29]=cta_tag_confirmacion&fields[30]=cta_tag_sin_comisiones";
+      const populate = "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo&populate[logo][fields][0]=url&populate[imagen_portada][fields][1]=url&populate[galeria][fields][0]=url&populate[schedules]=*&populate[owner][fields][0]=id&fields[0]=nombre&fields[1]=descripcion&fields[2]=direccion&fields[3]=telefono&fields[4]=whatsapp&fields[5]=website&fields[6]=instagram&fields[7]=facebook&fields[8]=latitud&fields[9]=longitud&fields[10]=verificado&fields[11]=reclamar_habilitado&fields[12]=reserva_url&fields[13]=reserva_habilitada&fields[14]=rating&fields[15]=review_count&fields[16]=is_premium&fields[17]=premium_valid_until&fields[18]=google_rating&fields[19]=google_review_count&fields[20]=google_place_id&fields[21]=tripadvisor_rating&fields[22]=tripadvisor_review_count&fields[23]=tripadvisor_url&fields[24]=cta_habilitado&fields[25]=cta_titulo&fields[26]=cta_texto&fields[27]=cta_boton_texto&fields[28]=cta_link&fields[29]=cta_tag_confirmacion&fields[30]=cta_tag_sin_comisiones&fields[31]=google_reviews&fields[32]=google_reviews_synced_at";
       const res = await fetchFromStrapi(`negocios?filters[slug][$eq]=${slug}&${populate}`);
       let businessData = res.data?.[0];
       if (!businessData) {
@@ -311,8 +311,8 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
           </aside>
 
           <div className="lg:col-span-2 space-y-12">
-            {negocio.google_place_id && (
-              <GooglePlacesReviews googlePlaceId={negocio.google_place_id} />
+            {negocio.google_reviews && negocio.google_reviews.length > 0 && (
+              <GooglePlacesReviews reviews={negocio.google_reviews} />
             )}
             <div id="reviews-section">
               <ReviewSection 
