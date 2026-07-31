@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   },
   turbopack: {},   // Silencia la advertencia, pero el build usa webpack (requerido por next-pwa)
   images: {
+    // Next 16: hay que declarar explícitamente cualquier quality != 75
+    qualities: [70, 75],
     remotePatterns: [
       {
         protocol: "https",
