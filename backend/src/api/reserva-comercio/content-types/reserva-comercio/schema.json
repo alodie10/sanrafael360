@@ -1,0 +1,107 @@
+{
+  "kind": "collectionType",
+  "collectionName": "reserva_comercios",
+  "info": {
+    "singularName": "reserva-comercio",
+    "pluralName": "reserva-comercios",
+    "displayName": "Reserva Comercio",
+    "description": "Comercio del módulo de reservas (dominio separado del directorio)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "nombre",
+      "required": true
+    },
+    "nombre_publico": {
+      "type": "string"
+    },
+    "activo": {
+      "type": "boolean",
+      "default": true
+    },
+    "timezone": {
+      "type": "string",
+      "default": "America/Argentina/Mendoza"
+    },
+    "duracion_minutos": {
+      "type": "integer",
+      "default": 60,
+      "required": true
+    },
+    "buffer_limpieza_minutos": {
+      "type": "integer",
+      "default": 0
+    },
+    "anticipacion_llegada_minutos": {
+      "type": "integer",
+      "default": 15
+    },
+    "texto_llegada": {
+      "type": "text"
+    },
+    "precio_ars": {
+      "type": "decimal",
+      "required": true
+    },
+    "horario": {
+      "type": "json",
+      "required": true
+    },
+    "cancelacion_horas_minimas": {
+      "type": "integer",
+      "default": 24
+    },
+    "cancelacion_politica": {
+      "type": "json"
+    },
+    "hold_ttl_minutos": {
+      "type": "integer",
+      "default": 15
+    },
+    "mp_token_env": {
+      "type": "string"
+    },
+    "modo_simulacion": {
+      "type": "boolean",
+      "default": false
+    },
+    "logo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "imagen_portada": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "recursos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::reserva-recurso.reserva-recurso",
+      "mappedBy": "comercio"
+    },
+    "reservas": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::reserva.reserva",
+      "mappedBy": "comercio"
+    },
+    "bloqueos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::reserva-bloqueo.reserva-bloqueo",
+      "mappedBy": "comercio"
+    }
+  }
+}

@@ -1,0 +1,216 @@
+import { MercadoPagoConfig, PaymentRefund } from 'mercadopago';
+import { NotFoundError, ValidationError, ForbiddenError } from '../../../utils/errors';
+import { createReservaRepository } from '../repositories/reserva-repository';
+import { createNotificationService } from '../../../services/notification-service';
+import { buildReservaCancelUrl } from './cancel-token';
+import {
+  reservaCancelacionEmail,
+  reservaConfirmacionEmail,
+} from './templates/reserva-email-templates';
+
+type CancelPoliticaTramo = {
+  reembolso_porcentaje?: number;
+  cargo_fijo_ars?: number | null;
+  permitir_self_service?: boolean;
+};
+
+type CancelPolitica = {
+  dentro_ventana?: CancelPoliticaTramo;
+  fuera_ventana?: CancelPoliticaTramo;
+};
+
+function resolveMpToken(envName?: string | null): string | null {
+  if (!envName) return process.env.MP_ACCESS_TOKEN || null;
+  return process.env[envName] || process.env.MP_ACCESS_TOKEN || null;
+}
+
+function hoursUntil(inicioIso: string): number {
+  return (new Date(inicioIso).getTime() - Date.now()) / (1000 * 60 * 60);
+}
+
+function formatCuando(iso: string, timeZone?: string) {
+  return new Intl.DateTimeFormat('es-AR', {
+    dateStyle: 'full',
+    timeStyle: 'short',
+    timeZone: timeZone || 'America/Argentina/Mendoza',
+  }).format(new Date(iso));
+}
+
+function computeRefundAmount(
+  monto: number,
+  tramo: CancelPoliticaTramo | undefined
+): number {
+  const pct = Number(tramo?.reembolso_porcentaje ?? 0);
+  const cargo = Number(tramo?.cargo_fijo_ars ?? 0);
+  const raw = (monto * pct) / 100 - cargo;
+  return Math.max(0, Math.round(raw * 100) / 100);
+}
+
+export async function sendReservaConfirmacionMail(strapi: any, reservaDocumentId: string) {
+  const repo = createReservaRepository(strapi);
+  const reserva = await repo.findByDocumentId(reservaDocumentId, {
+    comercio: true,
+    recurso: true,
+  });
+  if (!reserva?.cliente_email) return false;
+
+  const comercio = reserva.comercio;
+  const cancelUrl =
+    comercio?.slug && reserva.documentId
+      ? buildReservaCancelUrl(reserva.documentId, comercio.slug)
+      : null;
+
+  const mail = reservaConfirmacionEmail({
+    clienteNombre: reserva.cliente_nombre || 'hola',
+    comercioNombre: comercio?.nombre_publico || comercio?.nombre || 'Reservas',
+    recursoNombre: reserva.recurso?.nombre || 'Turno',
+    cuando: formatCuando(reserva.inicio, comercio?.timezone),
+    codigo: reserva.codigo,
+    textoLlegada: comercio?.texto_llegada,
+    cancelUrl,
+  });
+
+  const notifications = createNotificationService(strapi);
+  return notifications.sendEmail({
+    to: reserva.cliente_email,
+    subject: mail.subject,
+    html: mail.html,
+  });
+}
+
+async function refundMercadoPago(params: {
+  strapi: any;
+  accessToken: string;
+  paymentId: string;
+  amount: number;
+  fullRefund: boolean;
+}) {
+  const client = new MercadoPagoConfig({ accessToken: params.accessToken });
+  const refunds = new PaymentRefund(client);
+
+  if (params.fullRefund) {
+    const result = await refunds.total({ payment_id: params.paymentId });
+    return result;
+  }
+
+  return refunds.create({
+    payment_id: params.paymentId,
+    body: { amount: params.amount },
+  });
+}
+
+export async function cancelReserva(params: {
+  strapi: any;
+  reservaDocumentId: string;
+  actor: 'admin' | 'self';
+  comercioSlug?: string;
+}) {
+  const { strapi, reservaDocumentId, actor } = params;
+  const repo = createReservaRepository(strapi);
+  const reserva = await repo.findByDocumentId(reservaDocumentId, {
+    comercio: true,
+    recurso: true,
+  });
+
+  if (!reserva) throw new NotFoundError('Reserva');
+  if (params.comercioSlug && reserva.comercio?.slug !== params.comercioSlug) {
+    throw new NotFoundError('Reserva');
+  }
+
+  if (reserva.estado === 'cancelada') {
+    return { success: true, duplicate: true, reserva, refundAmount: 0 };
+  }
+  if (reserva.estado === 'expirada') {
+    throw new ValidationError('La reserva ya expiró');
+  }
+  if (reserva.estado !== 'confirmada' && reserva.estado !== 'hold') {
+    throw new ValidationError(`No se puede cancelar una reserva en estado ${reserva.estado}`);
+  }
+
+  const comercio = reserva.comercio;
+  if (!comercio) throw new NotFoundError('Comercio de reservas');
+
+  const horasMin = Number(comercio.cancelacion_horas_minimas ?? 24);
+  const horas = hoursUntil(reserva.inicio);
+  const dentroVentana = horas >= horasMin;
+  const politica = (comercio.cancelacion_politica || {}) as CancelPolitica;
+  const tramo = dentroVentana ? politica.dentro_ventana : politica.fuera_ventana;
+
+  if (actor === 'self' && !dentroVentana) {
+    if (tramo?.permitir_self_service !== true) {
+      throw new ForbiddenError(
+        `Solo se puede cancelar online hasta ${horasMin} h antes del turno. Contactá al local.`
+      );
+    }
+  }
+
+  const monto = Number(reserva.monto_ars) || 0;
+  const refundAmount = computeRefundAmount(monto, tramo);
+  const paymentId = reserva.mp_payment_id ? String(reserva.mp_payment_id) : '';
+  const isSimulated = paymentId.startsWith('SIMULATED');
+  const canRefundMp =
+    refundAmount > 0 &&
+    !!paymentId &&
+    !isSimulated &&
+    !reserva.excepcion_sin_pago;
+
+  let mpRefundId: string | null = null;
+  let reembolsoNota: string | null = null;
+
+  if (canRefundMp) {
+    const token = resolveMpToken(comercio.mp_token_env);
+    if (!token) {
+      throw new ValidationError('No hay token MP para reembolsar');
+    }
+    const full = refundAmount >= monto;
+    try {
+      const result: any = await refundMercadoPago({
+        strapi,
+        accessToken: token,
+        paymentId,
+        amount: refundAmount,
+        fullRefund: full,
+      });
+      mpRefundId = result?.id != null ? String(result.id) : `refund_${Date.now()}`;
+      reembolsoNota = full
+        ? 'Se procesó el reembolso total en Mercado Pago.'
+        : `Se procesó un reembolso parcial de $${refundAmount} en Mercado Pago.`;
+    } catch (err: any) {
+      strapi.log.error(`[ReservaCancel] Refund MP falló: ${err.message}`);
+      throw new ValidationError(`No se pudo reembolsar en Mercado Pago: ${err.message}`);
+    }
+  } else if (refundAmount <= 0) {
+    reembolsoNota = 'Esta cancelación no incluye reembolso según la política del comercio.';
+  } else if (isSimulated || reserva.excepcion_sin_pago) {
+    reembolsoNota = 'Reserva sin cobro MP (simulación o walk-in); no hubo reembolso.';
+  }
+
+  const updated = await repo.update(reservaDocumentId, {
+    estado: 'cancelada',
+    cancelada_at: new Date().toISOString(),
+    mp_refund_id: mpRefundId,
+  });
+
+  if (reserva.cliente_email) {
+    const mail = reservaCancelacionEmail({
+      clienteNombre: reserva.cliente_nombre || 'hola',
+      comercioNombre: comercio.nombre_publico || comercio.nombre,
+      codigo: reserva.codigo,
+      reembolsoNota,
+    });
+    const notifications = createNotificationService(strapi);
+    await notifications.sendEmail({
+      to: reserva.cliente_email,
+      subject: mail.subject,
+      html: mail.html,
+    });
+  }
+
+  return {
+    success: true,
+    reserva: updated,
+    refundAmount,
+    mpRefundId,
+    dentroVentana,
+  };
+}

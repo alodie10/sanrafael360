@@ -16,13 +16,14 @@ Encaja con el ERS del directorio: hoy “reservar” suele ser un link externo o
 | [complejidad-y-stack.md](complejidad-y-stack.md) | Qué se reutiliza de SR360 vs qué se construye de cero |
 | [primer-cliente-jaditek.md](primer-cliente-jaditek.md) | Cómo se configura Jaditek como comercio #1 |
 | [alcance-mvp.md](alcance-mvp.md) | Qué entra / qué no entra en la primera versión |
+| [implementation_plan.md](implementation_plan.md) | Plan técnico MVP (datos, capas, spikes, PRs) — requiere OK antes de codear |
 
 ## Relación con el repo Jaditek-SimR
 
 Allí vive el **inventario del local físico** (simuladores, auriculares, competencia, otros componentes).  
 Para **reservas (CMP-01)** ese repo solo apunta acá: la fuente de verdad del motor es **esta carpeta**.
 
-## Estado (30 jul 2026)
+## Estado (31 jul 2026)
 
-Producto definido a nivel de negocio (flujos, 1 h, cancelación 24 h, MP Jaditek, admins Diego y María Laura).  
-**Siguiente:** implementar según [alcance-mvp.md](alcance-mvp.md).
+MVP local en `develop`: datos, grilla, checkout simulado, admin, cancel+mails.  
+Pendiente para prod: token MP Jaditek real, logo/portada, promote por Diego.

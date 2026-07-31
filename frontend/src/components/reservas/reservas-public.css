@@ -1,0 +1,344 @@
+/* Módulo reservas — página pública (Pro Vibe, piel por comercio) */
+
+.rp-page {
+  --rp-ink: #0c0c0b;
+  --rp-paper: #f3efe6;
+  --rp-accent: #e8a317;
+  --rp-muted: rgba(243, 239, 230, 0.72);
+  --rp-busy: rgba(243, 239, 230, 0.12);
+  min-height: 100dvh;
+  background: var(--rp-ink);
+  color: var(--rp-paper);
+  font-family: var(--font-outfit), system-ui, sans-serif;
+}
+
+.rp-hero {
+  position: relative;
+  min-height: min(72dvh, 640px);
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+}
+
+.rp-hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 80% at 50% 0%, #2a2418 0%, transparent 55%),
+    linear-gradient(160deg, #1a1814 0%, #0c0c0b 70%);
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.02);
+  animation: rp-ken 18s ease-in-out infinite alternate;
+}
+
+.rp-hero-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 12, 11, 0.25) 0%,
+    rgba(12, 12, 11, 0.55) 45%,
+    rgba(12, 12, 11, 0.92) 100%
+  );
+}
+
+.rp-hero-content {
+  position: relative;
+  z-index: 1;
+  padding: 2.5rem 1.25rem 2rem;
+  max-width: 720px;
+  animation: rp-rise 0.7s ease-out both;
+}
+
+.rp-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.rp-logo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: rgba(243, 239, 230, 0.08);
+}
+
+.rp-brand-name {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(2rem, 6vw, 3.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.rp-headline {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.15rem, 2.8vw, 1.45rem);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--rp-accent);
+}
+
+.rp-support {
+  margin: 0;
+  max-width: 36ch;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--rp-muted);
+}
+
+.rp-board {
+  padding: 1.5rem 1.25rem 3.5rem;
+  max-width: 960px;
+  margin: 0 auto;
+  animation: rp-rise 0.85s 0.12s ease-out both;
+}
+
+.rp-board-meta {
+  margin-bottom: 1rem;
+}
+
+.rp-meta-line {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(243, 239, 230, 0.55);
+}
+
+.rp-days {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+  scrollbar-width: thin;
+}
+
+.rp-day {
+  flex: 0 0 auto;
+  border: 1px solid rgba(243, 239, 230, 0.16);
+  background: transparent;
+  color: var(--rp-paper);
+  border-radius: 999px;
+  padding: 0.55rem 0.95rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.rp-day:hover {
+  border-color: rgba(232, 163, 23, 0.55);
+}
+
+.rp-day.is-active {
+  background: var(--rp-accent);
+  border-color: var(--rp-accent);
+  color: #1a1408;
+  font-weight: 600;
+}
+
+.rp-empty {
+  color: var(--rp-muted);
+}
+
+.rp-grid {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.rp-grid-head,
+.rp-grid-row {
+  display: grid;
+  grid-template-columns: 4.5rem repeat(auto-fit, minmax(4.5rem, 1fr));
+  gap: 0.4rem;
+  align-items: stretch;
+}
+
+.rp-cell {
+  min-height: 2.75rem;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-size: 0.78rem;
+}
+
+.rp-cell-label {
+  color: rgba(243, 239, 230, 0.5);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rp-cell-time {
+  font-variant-numeric: tabular-nums;
+  color: rgba(243, 239, 230, 0.8);
+  font-weight: 600;
+}
+
+.rp-slot {
+  border: 1px solid transparent;
+  border-radius: 0.65rem;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.rp-slot.is-busy {
+  background: var(--rp-busy);
+  color: rgba(243, 239, 230, 0.28);
+  cursor: not-allowed;
+}
+
+.rp-slot.is-free {
+  background: rgba(232, 163, 23, 0.12);
+  border-color: rgba(232, 163, 23, 0.28);
+  color: var(--rp-paper);
+}
+
+.rp-slot.is-free:hover {
+  transform: translateY(-1px);
+  background: rgba(232, 163, 23, 0.22);
+}
+
+.rp-slot.is-selected {
+  background: var(--rp-accent);
+  border-color: var(--rp-accent);
+  color: #1a1408;
+  font-weight: 700;
+}
+
+.rp-selection {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(243, 239, 230, 0.12);
+  animation: rp-rise 0.35s ease-out both;
+}
+
+.rp-selection > p {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+}
+
+.rp-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  max-width: 420px;
+}
+
+.rp-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(243, 239, 230, 0.55);
+}
+
+.rp-form input {
+  border: 1px solid rgba(243, 239, 230, 0.18);
+  background: rgba(243, 239, 230, 0.04);
+  color: var(--rp-paper);
+  border-radius: 0.65rem;
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+  font-size: 1rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.rp-form input:focus {
+  outline: 2px solid rgba(232, 163, 23, 0.45);
+  outline-offset: 1px;
+}
+
+.rp-cta {
+  border: none;
+  border-radius: 999px;
+  background: var(--rp-accent);
+  color: #1a1408;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.85rem 1.4rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.rp-cta:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.rp-cta:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.rp-error {
+  color: #ff8f8f !important;
+  margin: 0 0 0.75rem !important;
+  font-size: 0.9rem !important;
+}
+
+.rp-status {
+  min-height: 60dvh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+
+.rp-status h1 {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  margin: 0 0 0.75rem;
+}
+
+.rp-status p {
+  margin: 0.35rem 0;
+  color: var(--rp-muted);
+  max-width: 36ch;
+}
+
+.rp-status a {
+  color: var(--rp-accent);
+}
+
+@keyframes rp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rp-ken {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}
+
+@media (max-width: 640px) {
+  .rp-grid-head,
+  .rp-grid-row {
+    grid-template-columns: 3.25rem repeat(4, minmax(3.4rem, 1fr));
+  }
+
+  .rp-cell,
+  .rp-slot {
+    font-size: 0.68rem;
+    min-height: 2.4rem;
+  }
+}

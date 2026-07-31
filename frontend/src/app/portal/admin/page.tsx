@@ -1,19 +1,9 @@
+import Link from "next/link";
 import { getServerSession } from "next-auth/next";
 import { authOptions, ADMIN_EMAILS } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import {
-  ShieldCheck, 
-  Users, 
-  MessageSquare, 
-  ExternalLink,
-  PlusCircle,
-  LayoutDashboard,
-  AlertCircle
-} from "lucide-react";
-import { getStrapiUrl } from "@/lib/strapi";
-import AdminClaimCard from "@/components/portal/AdminClaimCard";
 import AdminDashboardContainer from "@/components/portal/AdminDashboardContainer";
-import Link from "next/link";
+import { getStrapiUrl } from "@/lib/strapi";
 
 async function getPendingClaims(jwt: string) {
   try {
@@ -36,6 +26,7 @@ async function getPendingClaims(jwt: string) {
   }
 }
 
+
 export default async function AdminDashboardPage() {
   const session = await getServerSession(authOptions);
 
@@ -54,9 +45,19 @@ export default async function AdminDashboardPage() {
   const claims = await getPendingClaims(session.jwt as string);
 
   return (
-    <AdminDashboardContainer 
-      session={session} 
-      initialClaims={claims} 
-    />
+    <>
+      <div className="bg-black border-b border-white/10 px-6 py-3">
+        <Link
+          href="/portal/reservas"
+          className="text-xs font-black uppercase tracking-widest text-amber-500 hover:text-amber-400"
+        >
+          Módulo reservas →
+        </Link>
+      </div>
+      <AdminDashboardContainer
+        session={session}
+        initialClaims={claims}
+      />
+    </>
   );
 }

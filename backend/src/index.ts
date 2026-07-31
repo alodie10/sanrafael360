@@ -1,5 +1,6 @@
 import { Core } from '@strapi/strapi';
 import { createDailyStatRepository } from './api/daily-stat/repositories/daily-stat-repository';
+import { seedJaditekReservaComercio } from './api/reserva-comercio/services/seed-jaditek';
 
 export default {
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
@@ -31,6 +32,11 @@ export default {
             'api::atributo.atributo.create',
             'api::pago.pago.find',
             'api::pago.pago.findOne',
+            // Módulo reservas: lectura pública de comercio + recursos (grilla)
+            'api::reserva-comercio.reserva-comercio.find',
+            'api::reserva-comercio.reserva-comercio.findOne',
+            'api::reserva-recurso.reserva-recurso.find',
+            'api::reserva-recurso.reserva-recurso.findOne',
           ];
 
           if (roleType === 'authenticated') {
@@ -346,6 +352,13 @@ export default {
         return result;
       });
       strapi.log.info('✅ Document Service Middleware para Algolia registrado.');
+
+      // 8. SEED MÓDULO RESERVAS — primer cliente Jaditek (idempotente)
+      try {
+        await seedJaditekReservaComercio(strapi);
+      } catch (err: any) {
+        strapi.log.error('❌ Error en seed de reservas Jaditek:', err.message);
+      }
 
     } catch (error) {
       strapi.log.error('❌ Error general en bootstrap:', error);

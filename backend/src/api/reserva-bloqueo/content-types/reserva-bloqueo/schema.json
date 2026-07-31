@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "reserva_bloqueos",
+  "info": {
+    "singularName": "reserva-bloqueo",
+    "pluralName": "reserva-bloqueos",
+    "displayName": "Reserva Bloqueo",
+    "description": "Franja bloqueada (mantenimiento / uso interno); recurso null = todo el comercio"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "inicio": {
+      "type": "datetime",
+      "required": true
+    },
+    "fin": {
+      "type": "datetime",
+      "required": true
+    },
+    "motivo": {
+      "type": "string"
+    },
+    "comercio": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::reserva-comercio.reserva-comercio",
+      "inversedBy": "bloqueos"
+    },
+    "recurso": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::reserva-recurso.reserva-recurso",
+      "inversedBy": "bloqueos"
+    }
+  }
+}

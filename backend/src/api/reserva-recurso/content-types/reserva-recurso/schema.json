@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "reserva_recursos",
+  "info": {
+    "singularName": "reserva-recurso",
+    "pluralName": "reserva-recursos",
+    "displayName": "Reserva Recurso",
+    "description": "Recurso reservable de un comercio (puesto, sala, silla, etc.)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "orden": {
+      "type": "integer",
+      "default": 0
+    },
+    "activo": {
+      "type": "boolean",
+      "default": true
+    },
+    "comercio": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::reserva-comercio.reserva-comercio",
+      "inversedBy": "recursos"
+    },
+    "reservas": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::reserva.reserva",
+      "mappedBy": "recurso"
+    },
+    "bloqueos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::reserva-bloqueo.reserva-bloqueo",
+      "mappedBy": "recurso"
+    }
+  }
+}

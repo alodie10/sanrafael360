@@ -868,6 +868,208 @@ export interface ApiPagoPago extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiReservaBloqueoReservaBloqueo
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'reserva_bloqueos';
+  info: {
+    description: 'Franja bloqueada (mantenimiento / uso interno); recurso null = todo el comercio';
+    displayName: 'Reserva Bloqueo';
+    pluralName: 'reserva-bloqueos';
+    singularName: 'reserva-bloqueo';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    comercio: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::reserva-comercio.reserva-comercio'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    fin: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    inicio: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::reserva-bloqueo.reserva-bloqueo'
+    > &
+      Schema.Attribute.Private;
+    motivo: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    recurso: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::reserva-recurso.reserva-recurso'
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiReservaComercioReservaComercio
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'reserva_comercios';
+  info: {
+    description: 'Comercio del m\u00F3dulo de reservas (dominio separado del directorio)';
+    displayName: 'Reserva Comercio';
+    pluralName: 'reserva-comercios';
+    singularName: 'reserva-comercio';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    anticipacion_llegada_minutos: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<15>;
+    bloqueos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::reserva-bloqueo.reserva-bloqueo'
+    >;
+    buffer_limpieza_minutos: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<0>;
+    cancelacion_horas_minimas: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<24>;
+    cancelacion_politica: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    duracion_minutos: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<60>;
+    hold_ttl_minutos: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<15>;
+    horario: Schema.Attribute.JSON & Schema.Attribute.Required;
+    imagen_portada: Schema.Attribute.Media<'images'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::reserva-comercio.reserva-comercio'
+    > &
+      Schema.Attribute.Private;
+    logo: Schema.Attribute.Media<'images'>;
+    modo_simulacion: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    mp_token_env: Schema.Attribute.String;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    nombre_publico: Schema.Attribute.String;
+    precio_ars: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    recursos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::reserva-recurso.reserva-recurso'
+    >;
+    reservas: Schema.Attribute.Relation<'oneToMany', 'api::reserva.reserva'>;
+    slug: Schema.Attribute.UID<'nombre'> & Schema.Attribute.Required;
+    texto_llegada: Schema.Attribute.Text;
+    timezone: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'America/Argentina/Mendoza'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiReservaRecursoReservaRecurso
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'reserva_recursos';
+  info: {
+    description: 'Recurso reservable de un comercio (puesto, sala, silla, etc.)';
+    displayName: 'Reserva Recurso';
+    pluralName: 'reserva-recursos';
+    singularName: 'reserva-recurso';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    bloqueos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::reserva-bloqueo.reserva-bloqueo'
+    >;
+    comercio: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::reserva-comercio.reserva-comercio'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::reserva-recurso.reserva-recurso'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    reservas: Schema.Attribute.Relation<'oneToMany', 'api::reserva.reserva'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiReservaReserva extends Struct.CollectionTypeSchema {
+  collectionName: 'reservas';
+  info: {
+    description: 'Ocupaci\u00F3n vendible (hold / confirmada / cancelada / expirada)';
+    displayName: 'Reserva';
+    pluralName: 'reservas';
+    singularName: 'reserva';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    cancelada_at: Schema.Attribute.DateTime;
+    cliente_email: Schema.Attribute.Email;
+    cliente_nombre: Schema.Attribute.String;
+    cliente_telefono: Schema.Attribute.String;
+    codigo: Schema.Attribute.String & Schema.Attribute.Unique;
+    comercio: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::reserva-comercio.reserva-comercio'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<
+      ['hold', 'confirmada', 'cancelada', 'expirada']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'hold'>;
+    excepcion_sin_pago: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    fin: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    hold_expires_at: Schema.Attribute.DateTime;
+    inicio: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::reserva.reserva'
+    > &
+      Schema.Attribute.Private;
+    monto_ars: Schema.Attribute.Decimal;
+    mp_payment_id: Schema.Attribute.String;
+    mp_preference_id: Schema.Attribute.String;
+    mp_refund_id: Schema.Attribute.String;
+    origen: Schema.Attribute.Enumeration<['online', 'walk_in', 'admin']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'online'>;
+    publishedAt: Schema.Attribute.DateTime;
+    recurso: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::reserva-recurso.reserva-recurso'
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiReviewReview extends Struct.CollectionTypeSchema {
   collectionName: 'reviews';
   info: {
@@ -1514,6 +1716,10 @@ declare module '@strapi/strapi' {
       'api::negocio.negocio': ApiNegocioNegocio;
       'api::oferta.oferta': ApiOfertaOferta;
       'api::pago.pago': ApiPagoPago;
+      'api::reserva-bloqueo.reserva-bloqueo': ApiReservaBloqueoReservaBloqueo;
+      'api::reserva-comercio.reserva-comercio': ApiReservaComercioReservaComercio;
+      'api::reserva-recurso.reserva-recurso': ApiReservaRecursoReservaRecurso;
+      'api::reserva.reserva': ApiReservaReserva;
       'api::review.review': ApiReviewReview;
       'api::soporte.soporte': ApiSoporteSoporte;
       'api::suscripcion-config.suscripcion-config': ApiSuscripcionConfigSuscripcionConfig;

@@ -1,0 +1,250 @@
+.ra-page {
+  min-height: 100dvh;
+  background: #090908;
+  color: #f2efe6;
+  padding: 2rem 1.25rem 3rem;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+}
+
+.ra-header {
+  max-width: 1100px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.ra-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #e8a317;
+}
+
+.ra-header h1 {
+  margin: 0;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.ra-sub {
+  margin: 0.4rem 0 0;
+  color: rgba(242, 239, 230, 0.55);
+  font-size: 0.9rem;
+}
+
+.ra-sub a {
+  color: #e8a317;
+}
+
+.ra-date label,
+.ra-tools label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(242, 239, 230, 0.5);
+}
+
+.ra-date input,
+.ra-tools input {
+  border: 1px solid rgba(242, 239, 230, 0.18);
+  background: rgba(242, 239, 230, 0.04);
+  color: inherit;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  font: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.ra-error {
+  max-width: 1100px;
+  margin: 0 auto 1rem;
+  color: #ff8f8f;
+}
+
+.ra-panel {
+  max-width: 1100px;
+  margin: 0 auto 1.5rem;
+  border: 1px solid rgba(242, 239, 230, 0.1);
+  border-radius: 1rem;
+  padding: 1.1rem 1rem;
+}
+
+.ra-panel h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+}
+
+.ra-tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ra-grid {
+  display: grid;
+  gap: 0.35rem;
+  overflow-x: auto;
+}
+
+.ra-row {
+  display: grid;
+  grid-template-columns: 4.5rem repeat(4, minmax(7rem, 1fr));
+  gap: 0.35rem;
+  align-items: stretch;
+}
+
+.ra-head {
+  color: rgba(242, 239, 230, 0.45);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ra-time {
+  display: grid;
+  place-items: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.ra-cell {
+  min-height: 2.75rem;
+  border-radius: 0.6rem;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  padding: 0.35rem;
+  text-align: center;
+}
+
+.ra-cell.is-free {
+  background: rgba(232, 163, 23, 0.1);
+  border: 1px solid rgba(232, 163, 23, 0.25);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.ra-cell.is-free:hover {
+  border-color: #e8a317;
+  background: rgba(232, 163, 23, 0.18);
+}
+
+.ra-cell.is-free.is-selected {
+  background: #e8a317;
+  border-color: #e8a317;
+  color: #1a1408;
+  font-weight: 700;
+}
+
+.ra-cell.is-busy {
+  background: rgba(242, 239, 230, 0.06);
+  color: rgba(242, 239, 230, 0.4);
+}
+
+.ra-hint {
+  margin: 0 0 0.85rem;
+  color: rgba(242, 239, 230, 0.55);
+  font-size: 0.9rem;
+}
+
+.ra-action-bar {
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(242, 239, 230, 0.12);
+}
+
+.ra-action-title {
+  margin: 0 0 0.85rem;
+}
+
+.ra-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.ra-btn {
+  border: 1px solid rgba(242, 239, 230, 0.22);
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.55rem 0.95rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.ra-btn.primary {
+  background: #e8a317;
+  border-color: #e8a317;
+  color: #1a1408;
+  font-weight: 700;
+}
+
+.ra-btn.ghost {
+  border-color: transparent;
+  color: rgba(242, 239, 230, 0.55);
+}
+
+.ra-btn:hover:not(:disabled) {
+  border-color: #e8a317;
+}
+
+.ra-action-placeholder {
+  margin-top: 1rem;
+}
+
+.ra-list button {
+  border: 1px solid rgba(242, 239, 230, 0.2);
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.ra-list button:hover {
+  border-color: #e8a317;
+  color: #e8a317;
+}
+
+.ra-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.ra-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  border-bottom: 1px solid rgba(242, 239, 230, 0.08);
+  padding-bottom: 0.55rem;
+}
+
+.ra-list li div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.ra-list span,
+.ra-muted {
+  color: rgba(242, 239, 230, 0.5);
+  font-size: 0.85rem;
+}

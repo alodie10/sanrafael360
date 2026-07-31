@@ -1,0 +1,82 @@
+{
+  "kind": "collectionType",
+  "collectionName": "reservas",
+  "info": {
+    "singularName": "reserva",
+    "pluralName": "reservas",
+    "displayName": "Reserva",
+    "description": "Ocupación vendible (hold / confirmada / cancelada / expirada)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "codigo": {
+      "type": "string",
+      "unique": true
+    },
+    "inicio": {
+      "type": "datetime",
+      "required": true
+    },
+    "fin": {
+      "type": "datetime",
+      "required": true
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["hold", "confirmada", "cancelada", "expirada"],
+      "default": "hold",
+      "required": true
+    },
+    "origen": {
+      "type": "enumeration",
+      "enum": ["online", "walk_in", "admin"],
+      "default": "online",
+      "required": true
+    },
+    "cliente_nombre": {
+      "type": "string"
+    },
+    "cliente_email": {
+      "type": "email"
+    },
+    "cliente_telefono": {
+      "type": "string"
+    },
+    "hold_expires_at": {
+      "type": "datetime"
+    },
+    "monto_ars": {
+      "type": "decimal"
+    },
+    "excepcion_sin_pago": {
+      "type": "boolean",
+      "default": false
+    },
+    "mp_preference_id": {
+      "type": "string"
+    },
+    "mp_payment_id": {
+      "type": "string"
+    },
+    "mp_refund_id": {
+      "type": "string"
+    },
+    "cancelada_at": {
+      "type": "datetime"
+    },
+    "comercio": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::reserva-comercio.reserva-comercio",
+      "inversedBy": "reservas"
+    },
+    "recurso": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::reserva-recurso.reserva-recurso",
+      "inversedBy": "reservas"
+    }
+  }
+}
