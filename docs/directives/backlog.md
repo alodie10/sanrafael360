@@ -1,6 +1,7 @@
 # 📅 Backlog & Mantenimiento Futuro (San Rafael 360)
 
 ## 📅 Tareas Pendientes
+- **Módulo de reservas (suite)**: Producto de turnos + pago (grilla, admin, Mercado Pago), multi-comercio; primer cliente Jaditek Sim Racing. Documentación canónica: [`docs/modulos/reservas/`](../modulos/reservas/README.md). Alcance MVP: [`alcance-mvp.md`](../modulos/reservas/alcance-mvp.md). Relacionado con RF-35/RF-36 del ERS (reservas nativas pendientes).
 - **Migración Google Places** ✅ Completada: Se migró de `google.maps.places.Autocomplete` a la nueva API `AutocompleteSuggestion` (Places API New 2025).
 - **Soporte Multi-Categoría para Negocios**: Implementar relación Many-to-Many en Strapi para que un negocio pertenezca a varias categorías. [Ver Plan de Migración de Categorías](plan_migracion_categorias.md)
 - **Catálogo Meta — Ofertas**: El endpoint `GET /api/feed/meta-offers` ya está en producción. Cuando haya ofertas activas cargadas, crear un segundo catálogo en Meta Commerce Manager usando la URL: `https://sanrafael360-production.up.railway.app/api/feed/meta-offers?token=cc1af15269b2c05bbcb6dc02092e8d6b275c3f9353c1663a647390f3e1247f7b`. Luego crear campaña de conversión con urgencia apuntando a ese catálogo.

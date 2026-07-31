@@ -9,6 +9,7 @@ Toda la inteligencia de negocio, protocolos de decisión y arquitecturas están 
 - [Master Plan: Discovery & UX](./docs/master_plan.md)
 - [Protocolo de Autonomía y DoD](./docs/protocolo_autonomia.md)
 - [Arquitectura del Discovery engine](./docs/discovery_engine_arch.md)
+- **[Módulo de reservas](./docs/modulos/reservas/README.md)** — turnos + Mercado Pago; primer cliente Jaditek Sim Racing
 
 ---
 

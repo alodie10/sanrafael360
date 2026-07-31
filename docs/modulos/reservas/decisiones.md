@@ -1,0 +1,75 @@
+# Decisiones del módulo de reservas (San Rafael 360)
+
+Numeración **RES-DEC-…** para no confundirlas con decisiones del local físico Jaditek (repo Jaditek-SimR).
+
+Formato:
+
+```text
+### AAAA-MM-DD — RES-DEC-número — título
+- Contexto:
+- Decisión:
+- Qué se descartó:
+- Qué sigue:
+```
+
+---
+
+## Decisiones registradas
+
+### 2026-07-30 — RES-DEC-001 — Dueño del producto = suite SR360
+
+- **Contexto:** El motor nació del análisis del local Jaditek, pero el producto es reutilizable.  
+- **Decisión:** Documentación y desarrollo del **módulo de reservas** viven en el repo **sanrafael360** (`docs/modulos/reservas/`). Jaditek Sim Racing es el **primer cliente**, no el dueño del producto.  
+- **Qué se descartó:** Mantener la fuente de verdad del motor solo en el repo del local.  
+- **Qué sigue:** Construir según alcance MVP.
+
+### 2026-07-30 — RES-DEC-002 — Requisitos de reservas
+
+- **Contexto:** Definir qué debe cumplir cualquier comercio cliente.  
+- **Decisión:**  
+  1. Online con **grilla** de disponibilidad.  
+  2. Admin puede crear reserva en persona y **bloquear** tiempo.  
+  3. Reserva **firme solo si está paga** (excepciones solo manuales del admin).  
+- **Qué se descartó:** Tienda online + planilla como único sistema; WhatsApp como cupo; holds sin pagar como camino normal.  
+- **Qué sigue:** Implementación.
+
+### 2026-07-30 — RES-DEC-003 — Se construye (no Bookeo / venue SaaS)
+
+- **Contexto:** Bookeo no integra Mercado Pago; ShiftOS/GTLane no convencen por costo/prestaciones.  
+- **Decisión:** **Desarrollar** el módulo reutilizando patrones de SR360 (Next, Strapi, Postgres, Mercado Pago), con dominio de agenda **separado** del directorio.  
+- **Qué se descartó:** Bookeo como solución completa; depender de un venue SaaS extranjero solo por la agenda.  
+- **Qué sigue:** MVP con primer cliente.
+
+### 2026-07-30 — RES-DEC-004 — Producto multi-comercio; Jaditek = cliente #1
+
+- **Contexto:** No nacer como script de un solo local.  
+- **Decisión:** Módulo vendible con costo aparte; modelo “comercio + recursos”; **Jaditek Sim Racing** es el primer cliente (varios recursos / puestos).  
+- **Qué se descartó:** Hardcodear un único local sin entidad comercio.  
+- **Qué sigue:** Flujos y reglas del cliente #1.
+
+### 2026-07-30 — RES-DEC-005 — Flujos MVP y admins fijos
+
+- **Decisión:**  
+  1. Online: link → disponibilidad → elige → paga → firme.  
+  2. Admin: alta en persona + bloquear tiempo.  
+  3. Admins del MVP del primer cliente: solo **Diego** y **María Laura** (lista fija).  
+- **Qué se descartó (MVP):** muchos roles de empleados de mostrador.  
+- **Qué sigue:** Duraciones y cobro.
+
+### 2026-07-30 — RES-DEC-006 — Turnos 1 h + llegada 15 min antes (cliente Jaditek)
+
+- **Decisión:** Solo turnos de **1 hora**. Comunicar: llegar **15 minutos antes** para charla en el living.  
+- **Qué se descartó (por ahora):** varias duraciones en la grilla.  
+- **Qué sigue:** Cancelación.
+
+### 2026-07-30 — RES-DEC-007 — Cancelación 24 h con reembolso (cliente Jaditek)
+
+- **Decisión:** Cancelar **hasta 24 horas antes** → **reembolso** → liberar hueco.  
+- **Qué se descartó:** Solo WhatsApp sin regla.  
+- **Pendiente:** &lt;24 h y no-show (puede ser admin a mano al inicio).
+
+### 2026-07-30 — RES-DEC-008 — Mercado Pago del comercio Jaditek
+
+- **Decisión:** En el primer cliente, el visitante paga a la **cuenta Mercado Pago de Jaditek** (ellos son el comercio). Reembolsos desde esa cuenta. Sin split plataforma→local.  
+- **Nota:** Otros comercios del módulo: decidir después (su MP vs marketplace).  
+- **Qué sigue:** Implementar MVP.
