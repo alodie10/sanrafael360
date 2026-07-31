@@ -1,10 +1,16 @@
-import { fetchFromStrapi } from "@/lib/strapi";
+import { cache } from "react";
+import { fetchFromStrapi, isStrapiUnreachableError } from "@/lib/strapi";
+import { canUseAlgoliaSearch, shouldUseStrapiSearchForHome } from "@/lib/search-config";
 import { Categoria, Negocio } from "@/types/strapi";
 
 export type HomeSearchParams = {
   query?: string;
   localidad?: string;
   categoryDocId?: string | null;
+};
+
+const HOME_NEGOCIOS_FETCH_OPTIONS: RequestInit = {
+  next: { revalidate: 60 },
 };
 
 function buildNegociosSearchPath({ query, localidad, categoryDocId }: HomeSearchParams): string {
@@ -54,10 +60,41 @@ function buildNegociosSearchPath({ query, localidad, categoryDocId }: HomeSearch
 }
 
 /** Búsqueda de comercios contra el Strapi configurado (local en dev). */
-export async function searchNegociosFromStrapi(params: HomeSearchParams): Promise<Negocio[]> {
-  const res = await fetchFromStrapi(buildNegociosSearchPath(params));
+export async function searchNegociosFromStrapi(
+  params: HomeSearchParams,
+  options: RequestInit = {}
+): Promise<Negocio[]> {
+  const res = await fetchFromStrapi(buildNegociosSearchPath(params), options);
   return (res.data ?? []) as Negocio[];
 }
+
+/**
+ * Carga inicial de la home (Server Component).
+ * Dev: Strapi local con fallback Algolia. Prod: Algolia.
+ */
+export const getHomeNegocios = cache(async function getHomeNegocios(
+  params: HomeSearchParams & { categorias?: Categoria[] } = {}
+): Promise<Negocio[]> {
+  try {
+    if (shouldUseStrapiSearchForHome()) {
+      try {
+        return await searchNegociosFromStrapi(params, HOME_NEGOCIOS_FETCH_OPTIONS);
+      } catch (error) {
+        if (!isStrapiUnreachableError(error) || !canUseAlgoliaSearch()) {
+          return [];
+        }
+      }
+    }
+
+    if (canUseAlgoliaSearch()) {
+      return await searchNegociosFromAlgolia(params);
+    }
+
+    return [];
+  } catch {
+    return [];
+  }
+});
 
 function mapAlgoliaHit(hit: Record<string, unknown>): Negocio {
   return {

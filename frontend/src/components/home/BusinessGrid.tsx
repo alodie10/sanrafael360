@@ -20,7 +20,7 @@ const container = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
+      staggerChildren: 0.04
     }
   }
 };
@@ -115,7 +115,8 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
         <BusinessCard 
           key={negocio.documentId || `top-${index}`} 
           negocio={negocio} 
-          index={index} 
+          index={index}
+          priority={index < 6}
         />
       ))}
       
@@ -127,7 +128,8 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
         <BusinessCard 
           key={negocio.documentId || `rest-${index}`} 
           negocio={negocio} 
-          index={index + 4} 
+          index={index + 4}
+          priority={index + 4 < 6}
         />
       ))}
     </motion.div>

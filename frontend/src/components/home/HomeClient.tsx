@@ -31,24 +31,54 @@ const isPremiumActive = (negocio: Negocio): boolean => {
   return new Date(negocio.premium_valid_until) > new Date();
 };
 
-interface HomeClientProps {
-  categorias: Categoria[];
+function resolveCategoryFromParam(
+  catParam: string | null,
+  categorias: Categoria[]
+): string | null {
+  if (!catParam) return null;
+  const found = categorias.find(
+    (c) =>
+      c.documentId === catParam ||
+      c.slug === catParam ||
+      normalizeText(c.nombre) === normalizeText(catParam)
+  );
+  return found ? found.documentId : null;
 }
 
-export default function HomeClient({ categorias }: HomeClientProps) {
+interface HomeClientProps {
+  categorias: Categoria[];
+  initialNegocios: Negocio[];
+}
+
+export default function HomeClient({ categorias, initialNegocios }: HomeClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const resultsRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
+  const prevFiltersKey = useRef<string | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [localidadQuery, setLocalidadQuery] = useState("");
-  const [selectedCategoryDocId, setSelectedCategoryDocId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("q") || "");
+  const [localidadQuery, setLocalidadQuery] = useState(() => searchParams.get("l") || "");
+  const [selectedCategoryDocId, setSelectedCategoryDocId] = useState<string | null>(() =>
+    resolveCategoryFromParam(
+      searchParams.get("cat") || searchParams.get("categoria"),
+      categorias
+    )
+  );
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [searchResults, setSearchResults] = useState<Negocio[]>([]);
+  const [searchResults, setSearchResults] = useState<Negocio[]>(initialNegocios);
   const [isSearching, setIsSearching] = useState(false);
+
+  const filtersKey = `${searchQuery}|${localidadQuery}|${selectedCategoryDocId ?? ""}`;
+
+  useEffect(() => {
+    setSearchResults(initialNegocios);
+    setIsSearching(false);
+    prevFiltersKey.current = filtersKey;
+  }, [initialNegocios]); // eslint-disable-line react-hooks/exhaustive-deps -- sync SSR payload; filtersKey pinned on that tick
+
 
   const handleSelectCategory = (id: string | null) => {
     setSelectedCategoryDocId(id);
@@ -102,15 +132,7 @@ export default function HomeClient({ categorias }: HomeClientProps) {
 
         setSearchQuery(qVal);
         setLocalidadQuery(lVal);
-
-        if (catVal) {
-          const found = categorias.find(
-            (c) => c.documentId === catVal || c.slug === catVal
-          );
-          setSelectedCategoryDocId(found ? found.documentId : null);
-        } else {
-          setSelectedCategoryDocId(null);
-        }
+        setSelectedCategoryDocId(resolveCategoryFromParam(catVal || null, categorias));
         return;
       }
 
@@ -119,19 +141,9 @@ export default function HomeClient({ categorias }: HomeClientProps) {
       const params = new URLSearchParams(paramsString);
       setSearchQuery(params.get("q") || "");
       setLocalidadQuery(params.get("l") || "");
-
-      const catParam = params.get("cat") || params.get("categoria");
-      if (catParam) {
-        const found = categorias.find(
-          (c) =>
-            c.documentId === catParam ||
-            c.slug === catParam ||
-            normalizeText(c.nombre) === normalizeText(catParam)
-        );
-        setSelectedCategoryDocId(found ? found.documentId : null);
-      } else {
-        setSelectedCategoryDocId(null);
-      }
+      setSelectedCategoryDocId(
+        resolveCategoryFromParam(params.get("cat") || params.get("categoria"), categorias)
+      );
     };
 
     syncFromUrl();
@@ -169,9 +181,18 @@ export default function HomeClient({ categorias }: HomeClientProps) {
   }, [searchParams]);
 
   useEffect(() => {
+    if (prevFiltersKey.current === null) {
+      prevFiltersKey.current = filtersKey;
+      return;
+    }
+    if (prevFiltersKey.current === filtersKey) {
+      return;
+    }
+    prevFiltersKey.current = filtersKey;
+
     const performSearch = async () => {
       setIsSearching(true);
-      const searchParams = {
+      const params = {
         query: searchQuery,
         localidad: localidadQuery,
         categoryDocId: selectedCategoryDocId,
@@ -181,7 +202,7 @@ export default function HomeClient({ categorias }: HomeClientProps) {
       try {
         if (shouldUseStrapiSearchForHome()) {
           try {
-            const negocios = await searchNegociosFromStrapi(searchParams);
+            const negocios = await searchNegociosFromStrapi(params);
             setSearchResults(negocios);
             return;
           } catch (error) {
@@ -193,7 +214,7 @@ export default function HomeClient({ categorias }: HomeClientProps) {
         }
 
         if (canUseAlgoliaSearch()) {
-          const negocios = await searchNegociosFromAlgolia(searchParams);
+          const negocios = await searchNegociosFromAlgolia(params);
           setSearchResults(negocios);
           return;
         }
@@ -211,7 +232,7 @@ export default function HomeClient({ categorias }: HomeClientProps) {
 
     const timer = setTimeout(performSearch, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, localidadQuery, selectedCategoryDocId, categorias]);
+  }, [filtersKey, searchQuery, localidadQuery, selectedCategoryDocId, categorias]);
 
   const scrollToResults = () => {
     resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });

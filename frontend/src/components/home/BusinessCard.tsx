@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Star, Check, Heart, Settings, Crown, Tag } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -15,17 +16,32 @@ const FavoritesModal = dynamic(() => import('../auth/FavoritesModal'), { ssr: fa
 import { toast } from "sonner";
 import { useFavorites } from "@/context/FavoritesContext";
 
+/** Grid: 2 / 3 / 4 / 5 cols — evita pedir variantes de 33–100vw. */
+const CARD_IMAGE_SIZES =
+  "(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw";
+
+const CARD_CLOUDINARY_TRANSFORM = "c_fill,g_auto,w_600,h_600,f_auto,q_auto";
+
 interface BusinessCardProps {
   negocio: Negocio;
   index?: number;
+  priority?: boolean;
 }
 
-export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) {
+export default function BusinessCard({
+  negocio,
+  index = 0,
+  priority = false,
+}: BusinessCardProps) {
   const { data: session } = useSession();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites();
 
   const coverUrl = negocio.imagen_portada?.url;
+  const mediaUrl = getStrapiMedia(coverUrl ?? null);
+  const optimizedCover = mediaUrl
+    ? optimizeCloudinaryUrl(mediaUrl, CARD_CLOUDINARY_TRANSFORM) || mediaUrl
+    : null;
   const businessSlug = negocio.slug || negocio.documentId;
   const businessId = negocio.documentId;
 
@@ -65,20 +81,21 @@ export default function BusinessCard({ negocio, index = 0 }: BusinessCardProps) 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: index * 0.1 }}
+        transition={{ duration: 0.4, delay: Math.min(index, 5) * 0.05 }}
         viewport={{ once: true }}
         className="relative z-0 isolate flex flex-col gap-3 w-full h-full"
       >
         {/* Portada Cuadrada (1:1) — acciones dentro para que overflow-hidden las recorte al scroll */}
         <div className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden bg-slate-800">
-          {coverUrl ? (
+          {optimizedCover ? (
             <>
               <motion.div className="w-full h-full relative transition-transform duration-1000 group-hover:scale-110 opacity-70">
                 <Image
-                  src={getStrapiMedia(coverUrl)!}
+                  src={optimizedCover}
                   alt={negocio.nombre}
                   fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  priority={priority}
+                  sizes={CARD_IMAGE_SIZES}
                   className="object-cover"
                 />
               </motion.div>
