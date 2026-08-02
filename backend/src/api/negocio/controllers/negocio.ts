@@ -51,8 +51,22 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     if (!user) return ctx.unauthorized();
     const fullUser = await resolveAdminUser(strapi, user);
     const isAdmin = userHasAdminAccess(fullUser);
-    const { startDate, endDate } = ctx.query;
-    const stats = await strapi.service('api::negocio.negocio').getPortalStats(isAdmin ? undefined : user.id, startDate as string, endDate as string);
+    const { startDate, endDate, includeNegocios } = ctx.query as {
+      startDate?: string;
+      endDate?: string;
+      includeNegocios?: string;
+    };
+    const stats = await strapi.service('api::negocio.negocio').getPortalStats(
+      isAdmin ? undefined : user.id,
+      startDate as string,
+      endDate as string
+    );
+
+    if (includeNegocios === '1' || includeNegocios === 'true') {
+      const negocios = await strapi.service('api::negocio.negocio').getOwnerNegocios(user.id);
+      return ctx.send({ success: true, data: { ...stats, negocios: negocios || [] } });
+    }
+
     return ctx.send({ success: true, data: stats });
   }),
 
@@ -67,13 +81,6 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
       period as string
     );
     return ctx.send({ success: true, data });
-  }),
-
-  me: asyncHandler(async (ctx) => {
-    const user = ctx.state.user;
-    if (!user) return ctx.unauthorized();
-    const data = await strapi.service('api::negocio.negocio').getOwnerNegocios(user.id);
-    return { data: data || [] };
   }),
 
   deleteOferta: asyncHandler(async (ctx) => {

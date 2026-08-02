@@ -762,6 +762,10 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     rating: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
     reclamar_habilitado: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
+    reserva_comercio: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::reserva-comercio.reserva-comercio'
+    >;
     reserva_habilitada: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<true>;
     reserva_url: Schema.Attribute.String;
@@ -952,6 +956,7 @@ export interface ApiReservaComercioReservaComercio
     modo_simulacion: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     mp_token_env: Schema.Attribute.String;
+    negocio: Schema.Attribute.Relation<'oneToOne', 'api::negocio.negocio'>;
     nombre: Schema.Attribute.String & Schema.Attribute.Required;
     nombre_publico: Schema.Attribute.String;
     precio_ars: Schema.Attribute.Decimal & Schema.Attribute.Required;

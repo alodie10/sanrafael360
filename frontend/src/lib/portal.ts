@@ -50,11 +50,13 @@ function normalizePortalStats(response: Record<string, unknown>): PortalStatsPay
 
 export async function getPortalNegocios(jwt: string) {
   try {
-    const response = await fetchFromStrapi("negocios/me", {
+    // Usa stats/summary (ruta estable). `/negocios/me` choca con findOne :documentId → 404.
+    const response = await fetchFromStrapi("negocios/stats/summary?includeNegocios=1", {
       headers: { Authorization: `Bearer ${jwt}` },
       cache: "no-store",
     });
-    return response.data || [];
+    const payload = response.data || {};
+    return payload.negocios || [];
   } catch {
     return [];
   }

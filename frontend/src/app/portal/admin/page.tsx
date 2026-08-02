@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getServerSession } from "next-auth/next";
 import { authOptions, ADMIN_EMAILS } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -45,19 +44,9 @@ export default async function AdminDashboardPage() {
   const claims = await getPendingClaims(session.jwt as string);
 
   return (
-    <>
-      <div className="bg-black border-b border-white/10 px-6 py-3">
-        <Link
-          href="/portal/reservas"
-          className="text-xs font-black uppercase tracking-widest text-amber-500 hover:text-amber-400"
-        >
-          Módulo reservas →
-        </Link>
-      </div>
-      <AdminDashboardContainer
-        session={session}
-        initialClaims={claims}
-      />
-    </>
+    <AdminDashboardContainer
+      session={session}
+      initialClaims={claims}
+    />
   );
 }

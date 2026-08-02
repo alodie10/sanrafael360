@@ -72,6 +72,8 @@ export async function adminAgenda(strapi: any, slug: string, query: { fecha?: st
       cliente_telefono: r.cliente_telefono,
       monto_ars: r.monto_ars,
       excepcion_sin_pago: r.excepcion_sin_pago,
+      mp_payment_id: r.mp_payment_id || null,
+      mp_refund_id: r.mp_refund_id || null,
       recurso: r.recurso
         ? { documentId: r.recurso.documentId, nombre: r.recurso.nombre }
         : null,
@@ -228,11 +230,28 @@ export async function adminCancelReserva(strapi: any, slug: string, reservaDocum
   });
 }
 
-export async function adminListComercios(strapi: any) {
+export async function adminListComercios(strapi: any, user?: { id: number } | null, asAdmin = false) {
+  const filters: Record<string, unknown> = { activo: { $eq: true } };
+  if (!asAdmin && user?.id) {
+    filters.negocio = { owner: { id: { $eq: user.id } } };
+  } else if (!asAdmin) {
+    return [];
+  }
+
   const rows = await strapi.documents('api::reserva-comercio.reserva-comercio').findMany({
-    filters: { activo: { $eq: true } },
-    fields: ['nombre', 'nombre_publico', 'slug', 'precio_ars', 'duracion_minutos'],
-    populate: { recursos: { fields: ['nombre', 'orden', 'activo'] } },
+    filters,
+    fields: [
+      'nombre',
+      'nombre_publico',
+      'slug',
+      'precio_ars',
+      'duracion_minutos',
+      'modo_simulacion',
+    ],
+    populate: {
+      recursos: { fields: ['nombre', 'orden', 'activo'] },
+      negocio: { fields: ['documentId', 'slug', 'nombre'] },
+    },
     sort: ['nombre:asc'],
   });
   return rows;

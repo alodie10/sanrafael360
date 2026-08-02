@@ -1,4 +1,4 @@
-import { MercadoPagoConfig, PaymentRefund } from 'mercadopago';
+import { MercadoPagoConfig, Payment, PaymentRefund } from 'mercadopago';
 import { NotFoundError, ValidationError, ForbiddenError } from '../../../utils/errors';
 import { createReservaRepository } from '../repositories/reserva-repository';
 import { createNotificationService } from '../../../services/notification-service';
@@ -19,9 +19,22 @@ type CancelPolitica = {
   fuera_ventana?: CancelPoliticaTramo;
 };
 
+type MpRefundResult = { id: string; alreadyRefunded: boolean };
+
 function resolveMpToken(envName?: string | null): string | null {
   if (!envName) return process.env.MP_ACCESS_TOKEN || null;
   return process.env[envName] || process.env.MP_ACCESS_TOKEN || null;
+}
+
+function mpErrorCode(err: any): number | null {
+  const cause = err?.cause;
+  const first = Array.isArray(cause) ? cause[0] : cause;
+  const code = first?.code ?? err?.code;
+  return code != null ? Number(code) : null;
+}
+
+function isAlreadyRefundedStatus(status?: string | null): boolean {
+  return status === 'refunded' || status === 'charged_back';
 }
 
 function hoursUntil(inicioIso: string): number {
@@ -78,25 +91,100 @@ export async function sendReservaConfirmacionMail(strapi: any, reservaDocumentId
   });
 }
 
-async function refundMercadoPago(params: {
+async function findExistingMpRefundId(
+  accessToken: string,
+  paymentId: string
+): Promise<string | null> {
+  const client = new MercadoPagoConfig({ accessToken });
+  const refunds = new PaymentRefund(client);
+  try {
+    const list: any = await refunds.list({ payment_id: paymentId });
+    const rows = Array.isArray(list)
+      ? list
+      : list?.data || list?.results || (list?.[0] ? [list[0]] : []);
+    const first = rows.find((r: any) => r && r.id != null) || rows[0];
+    return first?.id != null ? String(first.id) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function readMpPayment(accessToken: string, paymentId: string): Promise<any | null> {
+  try {
+    const client = new MercadoPagoConfig({ accessToken });
+    return await new Payment(client).get({ id: paymentId });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Reembolsa en MP, o reconoce un refund ya hecho en la UI (APP_USR test
+ * a menudo falla POST /refunds con code 7 aunque el panel sí pueda devolver).
+ */
+async function ensureMercadoPagoRefund(params: {
   strapi: any;
   accessToken: string;
   paymentId: string;
   amount: number;
   fullRefund: boolean;
-}) {
-  const client = new MercadoPagoConfig({ accessToken: params.accessToken });
-  const refunds = new PaymentRefund(client);
+}): Promise<MpRefundResult> {
+  const { accessToken, paymentId } = params;
+  const refunds = new PaymentRefund(new MercadoPagoConfig({ accessToken }));
 
-  if (params.fullRefund) {
-    const result = await refunds.total({ payment_id: params.paymentId });
-    return result;
+  const markAlreadyRefunded = async (): Promise<MpRefundResult> => {
+    const existingId =
+      (await findExistingMpRefundId(accessToken, paymentId)) || `ui_refund_${paymentId}`;
+    return { id: existingId, alreadyRefunded: true };
+  };
+
+  let payment = await readMpPayment(accessToken, paymentId);
+  if (isAlreadyRefundedStatus(payment?.status)) {
+    return markAlreadyRefunded();
   }
 
-  return refunds.create({
-    payment_id: params.paymentId,
-    body: { amount: params.amount },
-  });
+  try {
+    const result: any = params.fullRefund
+      ? await refunds.total({ payment_id: paymentId })
+      : await refunds.create({
+          payment_id: paymentId,
+          body: { amount: params.amount },
+        });
+    return {
+      id: result?.id != null ? String(result.id) : `refund_${Date.now()}`,
+      alreadyRefunded: false,
+    };
+  } catch (err: any) {
+    payment = await readMpPayment(accessToken, paymentId);
+    if (isAlreadyRefundedStatus(payment?.status)) {
+      params.strapi.log.info(
+        `[ReservaCancel] Pago ${paymentId} ya reembolsado en MP; se omite API refund`
+      );
+      return markAlreadyRefunded();
+    }
+
+    // Si listamos refunds aprobados aunque get falle/status raro, también liberamos.
+    const listedId = await findExistingMpRefundId(accessToken, paymentId);
+    if (listedId) {
+      params.strapi.log.info(
+        `[ReservaCancel] Pago ${paymentId} tiene refund ${listedId} en MP; se omite API refund`
+      );
+      return { id: listedId, alreadyRefunded: true };
+    }
+
+    const code = mpErrorCode(err);
+    const msg = String(err?.message || 'error desconocido');
+    params.strapi.log.error(`[ReservaCancel] Refund MP falló: ${msg} (code=${code ?? 'n/a'})`);
+
+    if (code === 7 || /live credentials/i.test(msg)) {
+      throw new ValidationError(
+        `Mercado Pago no permite reembolsar por API con estas credenciales de prueba. ` +
+          `Devolvé el pago ${paymentId} desde la cuenta de prueba en MP y volvé a pulsar Cancelar.`
+      );
+    }
+
+    throw new ValidationError(`No se pudo reembolsar en Mercado Pago: ${msg}`);
+  }
 }
 
 export async function cancelReserva(params: {
@@ -160,24 +248,41 @@ export async function cancelReserva(params: {
   if (canRefundMp) {
     const token = resolveMpToken(comercio.mp_token_env);
     if (!token) {
-      throw new ValidationError('No hay token MP para reembolsar');
-    }
-    const full = refundAmount >= monto;
-    try {
-      const result: any = await refundMercadoPago({
-        strapi,
-        accessToken: token,
-        paymentId,
-        amount: refundAmount,
-        fullRefund: full,
-      });
-      mpRefundId = result?.id != null ? String(result.id) : `refund_${Date.now()}`;
-      reembolsoNota = full
-        ? 'Se procesó el reembolso total en Mercado Pago.'
-        : `Se procesó un reembolso parcial de $${refundAmount} en Mercado Pago.`;
-    } catch (err: any) {
-      strapi.log.error(`[ReservaCancel] Refund MP falló: ${err.message}`);
-      throw new ValidationError(`No se pudo reembolsar en Mercado Pago: ${err.message}`);
+      if (actor === 'admin') {
+        reembolsoNota = `Hueco liberado. No hay token MP; si corresponde, reembolsá a mano el pago ${paymentId}.`;
+      } else {
+        throw new ValidationError('No hay token MP para reembolsar');
+      }
+    } else {
+      const full = refundAmount >= monto;
+      try {
+        const result = await ensureMercadoPagoRefund({
+          strapi,
+          accessToken: token,
+          paymentId,
+          amount: refundAmount,
+          fullRefund: full,
+        });
+        mpRefundId = result.id;
+        if (result.alreadyRefunded) {
+          reembolsoNota =
+            'El reembolso ya figuraba en Mercado Pago; se liberó el turno en la agenda.';
+        } else {
+          reembolsoNota = full
+            ? 'Se procesó el reembolso total en Mercado Pago.'
+            : `Se procesó un reembolso parcial de $${refundAmount} en Mercado Pago.`;
+        }
+      } catch (err: any) {
+        // Admin gestiona MP a mano (APP_USR test a menudo no permite POST /refunds).
+        if (actor === 'admin') {
+          strapi.log.warn(`[ReservaCancel] Admin liberó sin refund API: ${err?.message}`);
+          reembolsoNota =
+            `Hueco liberado. Reembolsá en Mercado Pago el pago ${paymentId} si corresponde ` +
+            `(la API de prueba puede no permitir devoluciones automáticas).`;
+        } else {
+          throw err;
+        }
+      }
     }
   } else if (refundAmount <= 0) {
     reembolsoNota = 'Esta cancelación no incluye reembolso según la política del comercio.';
@@ -191,6 +296,8 @@ export async function cancelReserva(params: {
     mp_refund_id: mpRefundId,
   });
 
+  const notifications = createNotificationService(strapi);
+
   if (reserva.cliente_email) {
     const mail = reservaCancelacionEmail({
       clienteNombre: reserva.cliente_nombre || 'hola',
@@ -198,13 +305,21 @@ export async function cancelReserva(params: {
       codigo: reserva.codigo,
       reembolsoNota,
     });
-    const notifications = createNotificationService(strapi);
     await notifications.sendEmail({
       to: reserva.cliente_email,
       subject: mail.subject,
       html: mail.html,
     });
   }
+
+  // Aviso a admins: cancelación (self o portal) quedó registrada.
+  await notifications.sendAdminEmail(
+    `[Reservas] Cancelada ${reserva.codigo}`,
+    `<p>Reserva <strong>${reserva.codigo}</strong> cancelada (${actor}).</p>
+     <p>Comercio: ${comercio.nombre_publico || comercio.nombre} · Cliente: ${reserva.cliente_nombre || '—'}</p>
+     <p>MP payment: ${paymentId || '—'} · refund: ${mpRefundId || '—'} · monto reembolso calc: $${refundAmount}</p>
+     <p>${reembolsoNota || ''}</p>`
+  );
 
   return {
     success: true,

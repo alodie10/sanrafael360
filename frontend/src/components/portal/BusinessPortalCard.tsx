@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Building2, MapPin, ExternalLink, Crown, CreditCard, Loader2, Settings } from "lucide-react";
+import { Building2, MapPin, ExternalLink, Crown, CreditCard, Loader2, Settings, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getStrapiMedia, getStrapiUrl } from "@/lib/strapi";
@@ -183,6 +183,25 @@ export default function BusinessPortalCard({
         )}
         
         <div className="mt-auto space-y-4">
+          {negocio.reserva_comercio?.slug ? (
+            <div className="grid grid-cols-1 gap-3">
+              <Link
+                href={`/portal/reservas/${negocio.reserva_comercio.slug}`}
+                className="flex items-center justify-center gap-2 px-4 py-4 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-amber-500/20"
+                data-testid="portal-reservas-cta"
+              >
+                <CalendarDays className="w-4 h-4" /> Gestionar reservas
+              </Link>
+              <Link
+                href={`/reservas/${negocio.reserva_comercio.slug}`}
+                target="_blank"
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-amber-400" /> Ver grilla pública
+              </Link>
+            </div>
+          ) : null}
+
           {needsSubscription && (
             <div className="space-y-4">
               {/* Selector de Plan */}

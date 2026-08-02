@@ -85,6 +85,13 @@
       "required": false,
       "allowedTypes": ["images"]
     },
+    "negocio": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::negocio.negocio",
+      "inversedBy": "reserva_comercio",
+      "description": "Vínculo blando opcional al directorio (portal dueño). Dominio de agenda sigue separado."
+    },
     "recursos": {
       "type": "relation",
       "relation": "oneToMany",

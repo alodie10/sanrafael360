@@ -24,6 +24,7 @@ export default {
             'api::negocio.negocio.stats',
             'api::negocio.negocio.claim',
             'api::negocio.negocio.getstatstimeseries',
+            'api::negocio.negocio.getStatsSummary',
             'api::review.review.find',
             'api::review.review.findOne',
             'api::review.review.create', // Permiso vital para reseñas

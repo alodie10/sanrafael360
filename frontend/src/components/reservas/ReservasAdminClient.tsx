@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import {
   deleteBloqueo,
   fetchAdminAgenda,
@@ -10,6 +11,7 @@ import {
   postCancelReserva,
   postWalkIn,
 } from '@/lib/reservas-admin';
+import ReservasAdminConfig from './ReservasAdminConfig';
 import './reservas-admin.css';
 
 type Props = {
@@ -29,6 +31,43 @@ function formatTimeLabel(iso: string) {
   return new Intl.DateTimeFormat('es-AR', {
     timeStyle: 'short',
   }).format(new Date(iso));
+}
+
+function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number) {
+  return aStart < bEnd && aEnd > bStart;
+}
+
+function cellOccupant(agenda: any, slot: any, recursoId: string) {
+  const slotStart = new Date(slot.inicio).getTime();
+  const slotEnd = new Date(slot.fin).getTime();
+
+  const reserva = (agenda.reservas || []).find((r: any) => {
+    if (r.estado === 'cancelada') return false;
+    if (r.recurso?.documentId !== recursoId) return false;
+    return overlaps(slotStart, slotEnd, new Date(r.inicio).getTime(), new Date(r.fin).getTime());
+  });
+  if (reserva) {
+    return {
+      kind: 'reserva' as const,
+      label: reserva.cliente_nombre || reserva.codigo,
+      sub: `${reserva.estado}${reserva.codigo ? ` · ${reserva.codigo}` : ''}`,
+    };
+  }
+
+  const bloqueo = (agenda.bloqueos || []).find((b: any) => {
+    const sameRecurso = !b.recurso || b.recurso.documentId === recursoId;
+    if (!sameRecurso) return false;
+    return overlaps(slotStart, slotEnd, new Date(b.inicio).getTime(), new Date(b.fin).getTime());
+  });
+  if (bloqueo) {
+    return {
+      kind: 'bloqueo' as const,
+      label: 'Bloqueo',
+      sub: bloqueo.motivo || 'Admin',
+    };
+  }
+
+  return { kind: 'ocupado' as const, label: 'Ocupado', sub: null };
 }
 
 export default function ReservasAdminClient({
@@ -59,7 +98,9 @@ export default function ReservasAdminClient({
       setSelected(null);
       router.replace(`/portal/reservas/${slug}?fecha=${data.desde}`);
     } catch (err: any) {
-      setError(err?.message || 'Error al recargar');
+      const msg = err?.message || 'Error al recargar';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setBusy(false);
     }
@@ -125,14 +166,22 @@ export default function ReservasAdminClient({
   };
 
   const onCancel = async (documentId: string) => {
-    if (!confirm('¿Cancelar esta reserva y liberar el hueco?')) return;
+    if (
+      !confirm(
+        '¿Liberar este hueco en la agenda?\n\nSi hay pago MP, reembolsá aparte desde la cuenta de prueba/producción según corresponda.'
+      )
+    ) {
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
       await postCancelReserva(jwt, slug, documentId);
       await reload();
     } catch (err: any) {
-      setError(err?.message || 'No se pudo cancelar');
+      const msg = err?.message || 'No se pudo cancelar';
+      setError(msg);
+      toast.error(msg);
       setBusy(false);
     }
   };
@@ -163,28 +212,34 @@ export default function ReservasAdminClient({
             <Link href="/portal/reservas">Todos los comercios</Link>
           </p>
         </div>
-        <div className="ra-date">
-          <label>
-            Día
-            <input
-              type="date"
-              value={fecha}
-              disabled={busy}
-              onChange={(e) => {
-                const v = e.target.value;
-                setFecha(v);
-                void reload(v);
-              }}
-            />
-          </label>
-        </div>
       </header>
 
       {error ? <p className="ra-error">{error}</p> : null}
 
+      <ReservasAdminConfig slug={slug} jwt={jwt} />
+
       <section className="ra-panel">
-        <h2>Agenda del día</h2>
-        <p className="ra-hint">Tocá un hueco libre. Después elegís turno manual o bloqueo abajo.</p>
+        <div className="ra-panel-head">
+          <div>
+            <h2>Agenda del día</h2>
+            <p className="ra-hint">Tocá un hueco libre. Después elegís turno manual o bloqueo abajo.</p>
+          </div>
+          <div className="ra-date">
+            <label>
+              Día
+              <input
+                type="date"
+                value={fecha}
+                disabled={busy}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFecha(v);
+                  void reload(v);
+                }}
+              />
+            </label>
+          </div>
+        </div>
 
         {!dia || !dia.slots?.length ? (
           <p className="ra-muted">Sin horarios este día.</p>
@@ -205,12 +260,15 @@ export default function ReservasAdminClient({
                   const isSelected =
                     selected?.slot.inicio === slot.inicio && selected?.recursoId === r.documentId;
                   if (!libre) {
+                    const occupant = cellOccupant(agenda, slot, r.documentId);
                     return (
                       <div
                         key={`${slot.inicio}-${r.documentId}`}
-                        className="ra-cell is-busy"
+                        className={`ra-cell is-busy${occupant.kind === 'reserva' ? ' is-reserva' : ''}${occupant.kind === 'bloqueo' ? ' is-bloqueo' : ''}`}
+                        title={occupant.sub || occupant.label}
                       >
-                        Ocupado
+                        <span className="ra-cell-main">{occupant.label}</span>
+                        {occupant.sub ? <span className="ra-cell-sub">{occupant.sub}</span> : null}
                       </div>
                     );
                   }
@@ -310,6 +368,7 @@ export default function ReservasAdminClient({
                   </strong>
                   <span>
                     {r.cliente_nombre} · {r.codigo} · {r.estado}/{r.origen}
+                    {r.mp_payment_id ? ` · MP ${r.mp_payment_id}` : ''}
                   </span>
                 </div>
                 {(r.estado === 'confirmada' || r.estado === 'hold') && (

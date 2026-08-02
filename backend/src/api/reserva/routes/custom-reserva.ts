@@ -57,7 +57,7 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: ['global::require-admin'],
+        middlewares: ['api::reserva.require-reserva-portal'],
       },
     },
     {
@@ -67,7 +67,7 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: ['global::require-admin'],
+        middlewares: ['api::reserva.require-reserva-access'],
       },
     },
     {
@@ -77,7 +77,7 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: ['global::require-admin'],
+        middlewares: ['api::reserva.require-reserva-access'],
       },
     },
     {
@@ -87,7 +87,7 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: ['global::require-admin'],
+        middlewares: ['api::reserva.require-reserva-access'],
       },
     },
     {
@@ -97,7 +97,7 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: ['global::require-admin'],
+        middlewares: ['api::reserva.require-reserva-access'],
       },
     },
     {
@@ -107,7 +107,40 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: ['global::require-admin'],
+        middlewares: ['api::reserva.require-reserva-access'],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/reservas/admin/:slug/config',
+      handler: 'reserva.adminGetConfig',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['api::reserva.require-reserva-access'],
+      },
+    },
+    {
+      method: 'PUT',
+      path: '/reservas/admin/:slug/config',
+      handler: 'reserva.adminUpdateConfig',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: [
+          'api::reserva.require-reserva-access',
+          'api::reserva.admin-config-validator',
+        ],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/reservas/:slug/cancelar-info',
+      handler: 'reserva.publicCancelInfo',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['api::reserva.cancel-info-validator'],
       },
     },
     {

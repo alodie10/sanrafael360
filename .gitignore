@@ -33,6 +33,10 @@ id_rsa.pub
 *.pem
 *.key
 
+# Local tooling binaries (cloudflared, etc.)
+.tools/
+scratch/bin/
+
 # Obsidian settings
 .obsidian/
 

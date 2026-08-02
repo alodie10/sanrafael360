@@ -150,6 +150,13 @@
       "relation": "oneToOne",
       "target": "plugin::users-permissions.user"
     },
+    "reserva_comercio": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::reserva-comercio.reserva-comercio",
+      "mappedBy": "negocio",
+      "description": "Módulo de reservas vinculado (opcional; dominio separado)"
+    },
     "estado_reclamo": {
       "type": "string",
       "default": "ninguno",

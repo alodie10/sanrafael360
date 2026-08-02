@@ -30,10 +30,11 @@ export default async function EditBusinessPage(props: any) {
     // REGLA ORO: En Strapi 5, siempre usamos populate para que el formulario tenga los datos
     const populateParams = "populate[0]=logo&populate[1]=imagen_portada&populate[2]=galeria&populate[3]=schedules&populate[4]=categoria&populate[5]=owner&populate[6]=atributos&populate[7]=ofertas";
     
-    // Si es admin, buscamos global. Si no, usamos /me para seguridad
+    // Si es admin, buscamos global. Si no, stats/summary?includeNegocios=1
+    // (evitar /negocios/me: choca con findOne :documentId → 404).
     const endpoint = isAdmin 
       ? `${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&${populateParams}`
-      : `${strapiUrl}/api/negocios/me`;
+      : `${strapiUrl}/api/negocios/stats/summary?includeNegocios=1`;
 
     const res = await fetch(endpoint, {
       headers: { "Authorization": `Bearer ${session.jwt}` },
@@ -48,8 +49,8 @@ export default async function EditBusinessPage(props: any) {
         // La búsqueda por filtros siempre devuelve un array
         negocio = Array.isArray(rawData) ? rawData[0] : rawData;
       } else {
-        // /api/negocios/me devuelve la lista del usuario
-        negocio = Array.isArray(rawData) ? rawData.find((n: any) => n.slug === slug) : null;
+        const list = rawData?.negocios || [];
+        negocio = Array.isArray(list) ? list.find((n: any) => n.slug === slug) : null;
       }
     } else {
       fetchError = `Error de API: ${res.status}`;

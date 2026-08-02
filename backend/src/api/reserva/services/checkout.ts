@@ -1,4 +1,5 @@
 import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
+import type { PreferenceRequest } from 'mercadopago/dist/clients/preference/commonTypes';
 import { NotFoundError, ValidationError } from '../../../utils/errors';
 import { createReservaComercioRepository } from '../../reserva-comercio/repositories/reserva-comercio-repository';
 import { createReservaRepository } from '../repositories/reserva-repository';
@@ -150,51 +151,112 @@ export async function createCheckout(strapi: any, input: CheckoutInput) {
     );
   }
 
-  const client = new MercadoPagoConfig({ accessToken });
-  const preference = new Preference(client);
+  try {
+    const preferenceBody = buildPreferenceBody({
+      holdDocumentId: hold.documentId,
+      title: `Reserva ${comercio.nombre_publico || comercio.nombre} — ${recurso.nombre}`,
+      monto,
+      payerName: input.cliente_nombre.trim(),
+      payerEmail: input.cliente_email.trim().toLowerCase(),
+      successUrl,
+      failureUrl,
+      pendingUrl,
+      notificationUrl: `${backendUrl}/api/reservas/webhook`,
+      comercioSlug: comercio.slug,
+      codigo,
+      frontendUrl,
+    });
 
-  const result = await preference.create({
-    body: {
-      items: [
-        {
-          id: hold.documentId,
-          title: `Reserva ${comercio.nombre_publico || comercio.nombre} — ${recurso.nombre}`,
-          quantity: 1,
-          unit_price: monto,
-          currency_id: 'ARS',
-        },
-      ],
-      payer: {
-        name: input.cliente_nombre.trim(),
-        email: input.cliente_email.trim().toLowerCase(),
+    const client = new MercadoPagoConfig({ accessToken });
+    const preference = new Preference(client);
+    const result = await preference.create({ body: preferenceBody });
+
+    await reservaRepo.update(hold.documentId, {
+      mp_preference_id: result.id,
+    });
+
+    return {
+      simulated: false,
+      codigo,
+      reservaDocumentId: hold.documentId,
+      preferenceId: result.id,
+      // Con credenciales actuales (APP_USR de prueba) sandbox_init_point puede loopear
+      // (ERR_TOO_MANY_REDIRECTS). Preferir init_point; fallback a sandbox.
+      init_point: result.init_point || result.sandbox_init_point,
+    };
+  } catch (err: any) {
+    await reservaRepo.update(hold.documentId, {
+      estado: 'expirada',
+      hold_expires_at: new Date().toISOString(),
+    });
+    const mpMsg =
+      err?.message ||
+      err?.cause?.[0]?.description ||
+      err?.body?.message ||
+      'Error al crear preferencia MP';
+    strapi.log.error(`[ReservaCheckout] Preferencia falló ${codigo}: ${mpMsg}`);
+    throw new ValidationError(String(mpMsg));
+  }
+}
+
+function isLocalUrl(url: string) {
+  try {
+    const host = new URL(url).hostname;
+    return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+  } catch {
+    return true;
+  }
+}
+
+function buildPreferenceBody(input: {
+  holdDocumentId: string;
+  title: string;
+  monto: number;
+  payerName: string;
+  payerEmail: string;
+  successUrl: string;
+  failureUrl: string;
+  pendingUrl: string;
+  notificationUrl: string;
+  comercioSlug: string;
+  codigo: string;
+  frontendUrl: string;
+}): PreferenceRequest {
+  const body: PreferenceRequest = {
+    items: [
+      {
+        id: input.holdDocumentId,
+        title: input.title,
+        quantity: 1,
+        unit_price: input.monto,
+        currency_id: 'ARS',
       },
-      back_urls: {
-        success: successUrl,
-        failure: failureUrl,
-        pending: pendingUrl,
-      },
-      auto_return: 'approved',
-      notification_url: `${backendUrl}/api/reservas/webhook`,
-      external_reference: hold.documentId,
-      metadata: {
-        tipo: 'reserva',
-        comercio_slug: comercio.slug,
-        reserva_codigo: codigo,
-      },
+    ],
+    payer: {
+      name: input.payerName,
+      email: input.payerEmail,
     },
-  });
-
-  await reservaRepo.update(hold.documentId, {
-    mp_preference_id: result.id,
-  });
-
-  return {
-    simulated: false,
-    codigo,
-    reservaDocumentId: hold.documentId,
-    preferenceId: result.id,
-    init_point: result.init_point || result.sandbox_init_point,
+    back_urls: {
+      success: input.successUrl,
+      failure: input.failureUrl,
+      pending: input.pendingUrl,
+    },
+    notification_url: input.notificationUrl,
+    external_reference: input.holdDocumentId,
+    metadata: {
+      tipo: 'reserva',
+      comercio_slug: input.comercioSlug,
+      reserva_codigo: input.codigo,
+    },
   };
+
+  // MP rechaza auto_return si back_urls son localhost ("back_url.success must be defined").
+  // En local: sin auto_return; el webhook confirma igual. En prod/túnel FE: auto redirect.
+  if (!isLocalUrl(input.frontendUrl)) {
+    body.auto_return = 'approved';
+  }
+
+  return body;
 }
 
 export async function simulateReservaSuccess(strapi: any, reservaDocumentId: string) {

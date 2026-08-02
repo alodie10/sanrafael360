@@ -274,9 +274,10 @@ Env (solo `.env` local, no prod):
 - `MP_WEBHOOK_SECRET` — o skip controlado en `NODE_ENV=development` (mismo patrón premium)  
 - `BACKEND_URL` — si webhook real: túnel (`cloudflared` / ngrok) apuntando a `:1337`  
 - `FRONTEND_URL=http://localhost:3000`  
-- `RESEND_API_KEY` — o log-only en dev si ya hay flag; si no, spike mail en PR5  
+- `RESEND_API_KEY` — o log-only en dev si ya hay flag  
 - `ADMIN_EMAILS` — emails Diego + María Laura  
-- `ENABLE_PAYMENTS` — respetar kill switch existente o flag hermano `ENABLE_RESERVA_PAYMENTS`
+
+Pasos concretos del switch sim → sandbox: [mp-sandbox-runbook.md](mp-sandbox-runbook.md).
 
 ### 7.2 Modos de prueba (propuestos)
 

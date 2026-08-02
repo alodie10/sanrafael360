@@ -12,6 +12,7 @@ import {
   CreditCard,
   Mail,
   CheckCircle2,
+  CalendarDays,
 } from "lucide-react";
 import { getStrapiUrl } from "@/lib/strapi";
 import Link from "next/link";
@@ -105,9 +106,21 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
           
           {/* Sidebar Navigation (Mail Client Style) */}
           <aside className="lg:col-span-1 space-y-3">
+            <Link
+              href="/portal/reservas"
+              className="w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border bg-amber-500/15 text-amber-400 border-amber-500/30 hover:bg-amber-500/25 outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
+              data-testid="admin-reservas-nav"
+            >
+              <div className="flex items-center gap-3">
+                <CalendarDays className="w-4 h-4" />
+                <span>Módulo reservas</span>
+              </div>
+            </Link>
+
             <button 
+              type="button"
               onClick={() => setActiveTab('stats')}
-              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'stats' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${activeTab === 'stats' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
             >
               <div className="flex items-center gap-3">
                 <BarChart3 className="w-4 h-4" /> 

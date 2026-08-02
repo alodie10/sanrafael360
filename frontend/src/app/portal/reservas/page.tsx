@@ -12,7 +12,6 @@ export default async function PortalReservasPage() {
   const role = (session.user as { role?: string }).role?.toLowerCase() || '';
   const isAdmin =
     role === 'admin' || role === 'super admin' || ADMIN_EMAILS.includes(email);
-  if (!isAdmin) redirect('/portal');
 
   const jwt = (session as { jwt?: string }).jwt || '';
   let comercios: any[] = [];
@@ -22,12 +21,24 @@ export default async function PortalReservasPage() {
     comercios = [];
   }
 
+  // Dueño sin comercios linkeados: volver al portal. Admin siempre entra.
+  if (!isAdmin && !comercios.length) redirect('/portal');
+
+  // Un solo comercio (dueño típico): ir directo a la agenda
+  if (!isAdmin && comercios.length === 1) {
+    redirect(`/portal/reservas/${comercios[0].slug}`);
+  }
+
   return (
-    <main className="min-h-screen bg-black text-zinc-100 px-6 py-10">
+    <main className="min-h-screen bg-black text-zinc-100 px-6 pt-24 pb-10">
       <div className="max-w-3xl mx-auto">
-        <p className="text-xs uppercase tracking-[0.2em] text-amber-500 mb-3">Admin</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-amber-500 mb-3">
+          {isAdmin ? 'Admin' : 'Portal'}
+        </p>
         <h1 className="font-[family-name:var(--font-playfair)] text-4xl mb-2">Reservas</h1>
-        <p className="text-zinc-400 mb-8">Comercios del módulo de turnos.</p>
+        <p className="text-zinc-400 mb-8">
+          {isAdmin ? 'Comercios del módulo de turnos.' : 'Tus comercios con módulo de reservas.'}
+        </p>
         <ul className="space-y-3">
           {comercios.map((c) => (
             <li key={c.documentId}>
@@ -49,8 +60,11 @@ export default async function PortalReservasPage() {
           ) : null}
         </ul>
         <p className="mt-8 text-sm">
-          <Link href="/portal/admin" className="text-amber-500 hover:underline">
-            ← Volver al admin
+          <Link
+            href={isAdmin ? '/portal/admin' : '/portal'}
+            className="text-amber-500 hover:underline"
+          >
+            ← Volver
           </Link>
         </p>
       </div>

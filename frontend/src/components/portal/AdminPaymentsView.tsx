@@ -571,7 +571,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
                     type="date" 
                     value={manualDate}
                     onChange={(e) => setManualDate(e.target.value)}
-                    className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-primary/50 text-xs w-full md:w-auto"
+                    className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-primary/50 text-xs w-full md:w-auto [color-scheme:dark]"
                   />
                   <button 
                     onClick={handleUpdateValidity}

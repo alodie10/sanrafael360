@@ -2,11 +2,6 @@ export default {
   routes: [
     {
       method: 'GET',
-      path: '/negocios/me',
-      handler: 'negocio.me',
-    },
-    {
-      method: 'GET',
       path: '/negocios/stats/summary',
       handler: 'negocio.getStatsSummary',
     },

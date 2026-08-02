@@ -15,14 +15,9 @@ import {
   adminListComercios,
   adminWalkIn,
 } from '../services/admin-reserva';
-import { cancelReserva } from '../services/cancel-reserva';
+import { adminGetConfig, adminUpdateConfig } from '../services/admin-config';
+import { getReservaCancelContact } from '../services/cancel-contact';
 import { verifyReservaCancelToken } from '../services/cancel-token';
-
-function assertAdmin(ctx: any) {
-  if (!ctx.state?.adminUser) {
-    throw new ForbiddenError('Acceso restringido a administradores');
-  }
-}
 
 export default factories.createCoreController('api::reserva.reserva', ({ strapi }) => ({
   checkout: asyncHandler(async (ctx) => {
@@ -89,13 +84,17 @@ export default factories.createCoreController('api::reserva.reserva', ({ strapi 
   }),
 
   adminListComercios: asyncHandler(async (ctx) => {
-    assertAdmin(ctx);
-    const data = await adminListComercios(strapi);
+    const isAdmin = Boolean(ctx.state.adminUser);
+    const user = ctx.state.user;
+    if (!isAdmin && !user) {
+      throw new ForbiddenError('Acceso restringido');
+    }
+    const data = await adminListComercios(strapi, user, isAdmin);
     ctx.send({ data });
   }),
 
   adminAgenda: asyncHandler(async (ctx) => {
-    assertAdmin(ctx);
+    // adminUser o owner ya validados por middleware
     const { slug } = ctx.params;
     const fecha = typeof ctx.query.fecha === 'string' ? ctx.query.fecha : undefined;
     const dias = ctx.query.dias !== undefined ? Number(ctx.query.dias) : 1;
@@ -104,7 +103,6 @@ export default factories.createCoreController('api::reserva.reserva', ({ strapi 
   }),
 
   adminWalkIn: asyncHandler(async (ctx) => {
-    assertAdmin(ctx);
     const { slug } = ctx.params;
     const body = ctx.request.body || {};
     const data = await adminWalkIn(strapi, slug, body);
@@ -112,7 +110,6 @@ export default factories.createCoreController('api::reserva.reserva', ({ strapi 
   }),
 
   adminCreateBloqueo: asyncHandler(async (ctx) => {
-    assertAdmin(ctx);
     const { slug } = ctx.params;
     const body = ctx.request.body || {};
     const data = await adminCreateBloqueo(strapi, slug, body);
@@ -120,35 +117,51 @@ export default factories.createCoreController('api::reserva.reserva', ({ strapi 
   }),
 
   adminDeleteBloqueo: asyncHandler(async (ctx) => {
-    assertAdmin(ctx);
     const { slug, documentId } = ctx.params;
     const data = await adminDeleteBloqueo(strapi, slug, documentId);
     ctx.send({ data });
   }),
 
   adminCancelReserva: asyncHandler(async (ctx) => {
-    assertAdmin(ctx);
     const { slug, documentId } = ctx.params;
     const data = await adminCancelReserva(strapi, slug, documentId);
     ctx.send({ data });
   }),
 
+  adminGetConfig: asyncHandler(async (ctx) => {
+    const data = await adminGetConfig(strapi, ctx.params.slug);
+    ctx.send({ data });
+  }),
+
+  adminUpdateConfig: asyncHandler(async (ctx) => {
+    const data = await adminUpdateConfig(
+      strapi,
+      ctx.params.slug,
+      ctx.request.body || {},
+      (ctx.request as any).files
+    );
+    ctx.send({ data });
+  }),
+
+  publicCancelInfo: asyncHandler(async (ctx) => {
+    const token = String(ctx.query.token || '');
+    const data = await getReservaCancelContact(strapi, {
+      token,
+      slug: String(ctx.params.slug || ''),
+    });
+    ctx.send({ data });
+  }),
+
+  /** Self-service de baja deshabilitado: solo contacto WhatsApp (ver cancelar-info). */
   publicCancel: asyncHandler(async (ctx) => {
     const token =
       (typeof ctx.query.token === 'string' && ctx.query.token) ||
       ctx.request.body?.token;
-    if (!token) throw new ValidationError('token requerido');
-
-    const documentId = verifyReservaCancelToken(String(token));
-    if (!documentId) throw new ValidationError('token inválido o vencido');
-
-    const slug = ctx.params.slug;
-    const data = await cancelReserva({
-      strapi,
-      reservaDocumentId: documentId,
-      actor: 'self',
-      comercioSlug: slug,
-    });
-    ctx.send({ data });
+    if (token && !verifyReservaCancelToken(String(token))) {
+      throw new ValidationError('token inválido o vencido');
+    }
+    throw new ForbiddenError(
+      'La cancelación online automática está deshabilitada. Usá el link del mail para contactar al local por WhatsApp.'
+    );
   }),
 }));

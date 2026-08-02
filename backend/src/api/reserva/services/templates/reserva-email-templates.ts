@@ -10,7 +10,7 @@ export function reservaConfirmacionEmail(params: {
   cancelUrl?: string | null;
 }) {
   const cancelBlock = params.cancelUrl
-    ? `<p style="margin-top:24px;"><a href="${params.cancelUrl}" style="color:#b45309;">Cancelar reserva</a> (si tu comercio lo permite según su política).</p>`
+    ? `<p style="margin-top:24px;"><a href="${params.cancelUrl}" style="color:#b45309;">Solicitar cancelación</a> — te vamos a pedir que escribas al local por WhatsApp; ellos confirman y gestionan el reembolso si corresponde.</p>`
     : '';
   const llegada = params.textoLlegada
     ? `<p style="color:#555;">${params.textoLlegada}</p>`

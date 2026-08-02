@@ -41,7 +41,7 @@ test.describe('Auditoría de Integridad San Rafael 360', () => {
   test('API: Verificación de Sesión y Dashboard (Health Check)', async ({ request }) => {
     console.log('🔍 Verificando API de Negocios Propios...');
     // Este test fallará si no hay un token válido, lo cual es correcto como auditoría
-    const response = await request.get(`${API_URL}/api/negocios/me`);
+    const response = await request.get(`${API_URL}/api/negocios/stats/summary?includeNegocios=1`);
     console.log(`📡 Status API /me: ${response.status()}`);
     
     // No esperamos un 200 si no estamos logueados, pero sí que no de 500

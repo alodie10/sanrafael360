@@ -14,15 +14,24 @@ export class NegocioRepository {
     });
   }
 
-  async findByOwner(userId: number, populate: string[] = []) {
+  async findByOwner(userId: number, populate: any[] | string[] = []) {
+    // Mismo shape de filtro que getPortalStats (`owner: userId`).
+    // `owner: { id: { $eq } }` a veces no resuelve el link oneToOne en Document Service.
     return await this.strapi.documents('api::negocio.negocio').findMany({
       filters: {
-        owner: {
-          id: { $eq: userId },
-        },
+        owner: userId,
       },
       populate,
-      fields: ['nombre', 'slug', 'descripcion', 'is_premium', 'premium_valid_until', 'estado_reclamo', 'documentId'],
+      fields: [
+        'nombre',
+        'slug',
+        'descripcion',
+        'is_premium',
+        'premium_valid_until',
+        'estado_reclamo',
+        'documentId',
+      ],
+      status: 'published',
     });
   }
 

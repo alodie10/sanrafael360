@@ -73,6 +73,23 @@
       top: calc(var(--navbar-height, 80px) + var(--master-bar-height, 0px) + var(--app-banner-height, 0px));
     }
   }
+
+  /* Icono del date picker legible sobre fondos oscuros (portal / portal/admin). */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+  input[type="month"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.85;
+    filter: invert(1) brightness(1.15);
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator:hover,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+  input[type="month"]::-webkit-calendar-picker-indicator:hover,
+  input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
 }
 
 /* Animations */

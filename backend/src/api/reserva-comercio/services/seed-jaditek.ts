@@ -35,45 +35,47 @@ export async function seedJaditekReservaComercio(strapi: any): Promise<void> {
     limit: 1,
   });
 
-  if (existing?.length) {
-    strapi.log.info(`[Reservas Seed] Jaditek ya existe (${existing[0].documentId}). Omitido.`);
-    return;
-  }
-
-  const comercio = await strapi.documents('api::reserva-comercio.reserva-comercio').create({
-    data: {
-      nombre: 'Jaditek Sim Racing',
-      slug: JADITEK_SLUG,
-      nombre_publico: 'Jaditek Sim Racing',
-      activo: true,
-      timezone: 'America/Argentina/Mendoza',
-      duracion_minutos: 60,
-      buffer_limpieza_minutos: 0,
-      anticipacion_llegada_minutos: 15,
-      texto_llegada:
-        'Llegá 15 minutos antes para la charla en el living y dejar todo listo para tu turno.',
-      precio_ars: 15000,
-      horario: DEFAULT_HORARIO_LUN_SAB_16_22,
-      cancelacion_horas_minimas: 24,
-      cancelacion_politica: DEFAULT_CANCELACION_POLITICA,
-      hold_ttl_minutos: 15,
-      mp_token_env: 'MP_ACCESS_TOKEN_JADITEK',
-      modo_simulacion: true,
-    },
-  });
-
-  for (let i = 0; i < JADITEK_RECURSOS.length; i++) {
-    await strapi.documents('api::reserva-recurso.reserva-recurso').create({
+  if (!existing?.length) {
+    const comercio = await strapi.documents('api::reserva-comercio.reserva-comercio').create({
       data: {
-        nombre: JADITEK_RECURSOS[i],
-        orden: i + 1,
+        nombre: 'Jaditek Sim Racing',
+        slug: JADITEK_SLUG,
+        nombre_publico: 'Jaditek Sim Racing',
         activo: true,
-        comercio: comercio.documentId,
+        timezone: 'America/Argentina/Mendoza',
+        duracion_minutos: 60,
+        buffer_limpieza_minutos: 0,
+        anticipacion_llegada_minutos: 15,
+        texto_llegada:
+          'Llegá 15 minutos antes para la charla en el living y dejar todo listo para tu turno.',
+        precio_ars: 15000,
+        horario: DEFAULT_HORARIO_LUN_SAB_16_22,
+        cancelacion_horas_minimas: 24,
+        cancelacion_politica: DEFAULT_CANCELACION_POLITICA,
+        hold_ttl_minutos: 15,
+        mp_token_env: 'MP_ACCESS_TOKEN_JADITEK',
+        modo_simulacion: true,
       },
     });
+
+    for (let i = 0; i < JADITEK_RECURSOS.length; i++) {
+      await strapi.documents('api::reserva-recurso.reserva-recurso').create({
+        data: {
+          nombre: JADITEK_RECURSOS[i],
+          orden: i + 1,
+          activo: true,
+          comercio: comercio.documentId,
+        },
+      });
+    }
+
+    strapi.log.info(
+      `[Reservas Seed] ✅ Jaditek creado (${comercio.documentId}) con ${JADITEK_RECURSOS.length} puestos.`
+    );
+  } else {
+    strapi.log.info(`[Reservas Seed] Jaditek ya existe (${existing[0].documentId}). Omitido create.`);
   }
 
-  strapi.log.info(
-    `[Reservas Seed] ✅ Jaditek creado (${comercio.documentId}) con ${JADITEK_RECURSOS.length} puestos.`
-  );
+  const { ensureJaditekNegocioLink } = await import('./ensure-jaditek-negocio-link');
+  await ensureJaditekNegocioLink(strapi);
 }

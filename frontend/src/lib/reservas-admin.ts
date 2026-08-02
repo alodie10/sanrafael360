@@ -81,3 +81,83 @@ export async function postCancelReserva(jwt: string, slug: string, documentId: s
   if (!res.ok) throw new Error(json?.error?.message || `Cancel ${res.status}`);
   return json.data;
 }
+
+export type ReservaComercioConfig = {
+  documentId: string;
+  nombre: string;
+  nombre_publico?: string | null;
+  slug: string;
+  activo: boolean;
+  timezone?: string;
+  duracion_minutos: number;
+  buffer_limpieza_minutos: number;
+  anticipacion_llegada_minutos: number;
+  texto_llegada?: string | null;
+  precio_ars: number;
+  horario: { dias: Record<string, Array<{ inicio: string; fin: string }>> };
+  cancelacion_horas_minimas: number;
+  cancelacion_politica?: {
+    dentro_ventana?: { reembolso_porcentaje?: number; cargo_fijo_ars?: number };
+    fuera_ventana?: {
+      permitir_self_service?: boolean;
+      reembolso_porcentaje?: number;
+      cargo_fijo_ars?: number | null;
+    };
+  };
+  hold_ttl_minutos: number;
+  mp_token_env?: string | null;
+  modo_simulacion: boolean;
+  logo_url?: string | null;
+  portada_url?: string | null;
+};
+
+export async function fetchAdminConfig(jwt: string, slug: string): Promise<ReservaComercioConfig> {
+  const res = await fetch(
+    `${getStrapiUrl()}/api/reservas/admin/${encodeURIComponent(slug)}/config`,
+    { headers: authHeaders(jwt), cache: 'no-store' }
+  );
+  if (!res.ok) throw new Error(`Config ${res.status}`);
+  const json = await res.json();
+  return json.data;
+}
+
+export async function putAdminConfig(
+  jwt: string,
+  slug: string,
+  fields: Record<string, unknown>,
+  files?: { logo?: File | null; portada?: File | null }
+) {
+  const hasFiles = Boolean(files?.logo || files?.portada);
+  const url = `${getStrapiUrl()}/api/reservas/admin/${encodeURIComponent(slug)}/config`;
+
+  // Sin archivos: JSON (FormData a veces llega vacío en PUT y el save “no hace nada”).
+  if (!hasFiles) {
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(fields),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(json?.error?.message || `Config update ${res.status}`);
+    }
+    return json.data as ReservaComercioConfig;
+  }
+
+  const form = new FormData();
+  form.append('data', JSON.stringify(fields));
+  if (files?.logo) form.append('logo', files.logo);
+  if (files?.portada) form.append('imagen_portada', files.portada);
+
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${jwt}` },
+    body: form,
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.error?.message || `Config update ${res.status}`);
+  return json.data as ReservaComercioConfig;
+}

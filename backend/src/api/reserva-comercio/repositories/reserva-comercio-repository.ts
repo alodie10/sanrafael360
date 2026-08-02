@@ -28,6 +28,25 @@ export class ReservaComercioRepository {
         },
     });
   }
+
+  async update(documentId: string, data: Record<string, unknown>) {
+    return this.strapi.documents('api::reserva-comercio.reserva-comercio').update({
+      documentId,
+      data,
+    });
+  }
+
+  async uploadFile(documentId: string, field: 'logo' | 'imagen_portada', files: any) {
+    const uploadedFiles = await this.strapi.plugin('upload').service('upload').upload({
+      data: {},
+      files,
+    });
+    if (!uploadedFiles?.length) {
+      throw new Error('Upload returned no files');
+    }
+    await this.update(documentId, { [field]: uploadedFiles[0].id });
+    return uploadedFiles;
+  }
 }
 
 export const createReservaComercioRepository = (strapi: any) =>
