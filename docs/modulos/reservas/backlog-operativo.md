@@ -16,7 +16,7 @@ Orden fijo. No marcar hecho hasta verificar el criterio.
 | B4 | Token MP Jaditek | Token de la cuenta Jaditek (prueba) | ⬜ (hoy: app personal de Diego; falta cuenta Jaditek) |
 | B5 | Redirect post-pago local | Omit `auto_return` en localhost | ✅ |
 | C1 | Commit `develop` | Cuando Diego lo pida | ✅ |
-| C2 | Push `origin/develop` | Cuando Diego lo pida (nunca master) | ⬜ |
+| C2 | Push `origin/develop` | Cuando Diego lo pida (nunca master) | ✅ |
 
 ### B5. Redirect post-pago en local
 
