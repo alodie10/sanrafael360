@@ -22,12 +22,14 @@ export default (_config: unknown, { strapi }: { strapi: any }) => {
     }
 
     const query = ctx.query ?? {};
-    const dataId = query['data.id'] ?? query.id ?? ctx.request.body?.data?.id;
+    // Manifest de x-signature: solo `data.id` (docs MP). NO usar query.id (IPN legacy):
+    // si se incluye, el HMAC no coincide y cae 401 aunque el pago sea válido.
+    const dataIdRaw = query['data.id'] ?? ctx.request.body?.data?.id;
     const xSignature = ctx.request.headers['x-signature'] as string | undefined;
     const xRequestId = ctx.request.headers['x-request-id'] as string | undefined;
 
     const result = verifyMpWebhookSignature({
-      dataId: dataId != null ? String(dataId) : undefined,
+      dataId: dataIdRaw != null ? String(dataIdRaw) : undefined,
       xRequestId,
       xSignature,
       secret,
