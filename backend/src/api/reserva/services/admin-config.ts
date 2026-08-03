@@ -1,5 +1,10 @@
 import { NotFoundError, ValidationError } from '../../../utils/errors';
 import { createReservaComercioRepository } from '../../reserva-comercio/repositories/reserva-comercio-repository';
+import {
+  buildEncryptedMpTokenPatch,
+  clearEncryptedMpTokenPatch,
+  isComercioMpConfigured,
+} from './mp-token';
 
 const DAY_KEYS = ['0', '1', '2', '3', '4', '5', '6'] as const;
 
@@ -87,7 +92,9 @@ function serializeConfig(comercio: any) {
     cancelacion_horas_minimas: comercio.cancelacion_horas_minimas,
     cancelacion_politica: comercio.cancelacion_politica,
     hold_ttl_minutos: comercio.hold_ttl_minutos,
-    mp_token_env: comercio.mp_token_env,
+    mp_token_env: comercio.mp_token_env || null,
+    mp_configured: isComercioMpConfigured(comercio),
+    mp_token_hint: comercio.mp_token_hint || null,
     modo_simulacion: Boolean(comercio.modo_simulacion),
     logo_url: mediaUrl(comercio.logo),
     portada_url: mediaUrl(comercio.imagen_portada),
@@ -157,6 +164,7 @@ function buildPatch(body: Record<string, unknown>, comercio: any) {
     }
   }
   applyPoliticaPatch(body, comercio, patch);
+  applyMpTokenPatch(body, patch);
   return patch;
 }
 
@@ -179,6 +187,25 @@ function applyPoliticaPatch(
       { dentro_ventana: { reembolso_porcentaje: Number(body.reembolso_porcentaje) } },
       current
     );
+  }
+}
+
+function applyMpTokenPatch(body: Record<string, unknown>, patch: Record<string, unknown>) {
+  const clear =
+    body.mp_access_token_clear === true ||
+    body.mp_access_token_clear === 'true' ||
+    body.mp_access_token_clear === '1';
+  if (clear) {
+    Object.assign(patch, clearEncryptedMpTokenPatch());
+    return;
+  }
+  if (body.mp_access_token !== undefined && body.mp_access_token !== null) {
+    const raw = String(body.mp_access_token).trim();
+    if (!raw) {
+      Object.assign(patch, clearEncryptedMpTokenPatch());
+      return;
+    }
+    Object.assign(patch, buildEncryptedMpTokenPatch(raw));
   }
 }
 

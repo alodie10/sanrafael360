@@ -106,6 +106,8 @@ export type ReservaComercioConfig = {
   };
   hold_ttl_minutos: number;
   mp_token_env?: string | null;
+  mp_configured?: boolean;
+  mp_token_hint?: string | null;
   modo_simulacion: boolean;
   logo_url?: string | null;
   portada_url?: string | null;

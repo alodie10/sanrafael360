@@ -69,6 +69,14 @@
     "mp_token_env": {
       "type": "string"
     },
+    "mp_access_token_enc": {
+      "type": "text",
+      "private": true
+    },
+    "mp_token_hint": {
+      "type": "string",
+      "private": true
+    },
     "modo_simulacion": {
       "type": "boolean",
       "default": false

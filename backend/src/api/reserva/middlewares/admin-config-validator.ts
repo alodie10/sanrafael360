@@ -26,6 +26,16 @@ export default (_config: unknown, { strapi: _strapi }: { strapi: any }) => {
         throw new ValidationError('horario JSON inválido');
       }
     }
+    if (body.mp_access_token !== undefined && body.mp_access_token !== null) {
+      const raw = String(body.mp_access_token).trim();
+      const clearing =
+        body.mp_access_token_clear === true ||
+        body.mp_access_token_clear === 'true' ||
+        body.mp_access_token_clear === '1';
+      if (!clearing && raw && raw.length < 20) {
+        throw new ValidationError('Access Token MP inválido (muy corto)');
+      }
+    }
     await next();
   };
 };

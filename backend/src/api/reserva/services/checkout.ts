@@ -5,6 +5,7 @@ import { createReservaComercioRepository } from '../../reserva-comercio/reposito
 import { createReservaRepository } from '../repositories/reserva-repository';
 import { expireStaleHolds } from '../../reserva-comercio/services/disponibilidad';
 import { confirmReservaFromPayment } from '../../../services/reservation-payment-success-handler';
+import { resolveComercioMpAccessToken } from './mp-token';
 
 const inFlightMpPaymentIds = new Set<string>();
 
@@ -24,11 +25,6 @@ function generateCodigo(): string {
     out += alphabet[Math.floor(Math.random() * alphabet.length)];
   }
   return out;
-}
-
-function resolveMpToken(envName?: string | null): string | null {
-  if (!envName) return process.env.MP_ACCESS_TOKEN || null;
-  return process.env[envName] || process.env.MP_ACCESS_TOKEN || null;
 }
 
 function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number) {
@@ -144,10 +140,10 @@ export async function createCheckout(strapi: any, input: CheckoutInput) {
     };
   }
 
-  const accessToken = resolveMpToken(comercio.mp_token_env);
+  const accessToken = resolveComercioMpAccessToken(comercio);
   if (!accessToken) {
     throw new ValidationError(
-      `Token MP no configurado (${comercio.mp_token_env || 'MP_ACCESS_TOKEN'})`
+      'Token MP no configurado (pegá el Access Token en Configuración del comercio o definí mp_token_env)'
     );
   }
 

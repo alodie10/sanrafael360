@@ -62,6 +62,8 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
   const [days, setDays] = useState<Record<string, DayRow>>({});
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [portadaFile, setPortadaFile] = useState<File | null>(null);
+  const [mpTokenInput, setMpTokenInput] = useState('');
+  const [clearMpToken, setClearMpToken] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,6 +84,8 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
     setDays(horarioToRows(data.horario));
     setLogoFile(null);
     setPortadaFile(null);
+    setMpTokenInput('');
+    setClearMpToken(false);
   };
 
   useEffect(() => {
@@ -114,24 +118,28 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
     setError(null);
     const toastId = toast.loading('Guardando configuración…');
     try {
-      const data = await putAdminConfig(
-        jwt,
-        slug,
-        {
-          nombre_publico: nombrePublico,
-          texto_llegada: textoLlegada,
-          precio_ars: Number(precio),
-          duracion_minutos: Number(duracion),
-          buffer_limpieza_minutos: Number(buffer),
-          hold_ttl_minutos: Number(holdTtl),
-          anticipacion_llegada_minutos: Number(anticipacion),
-          cancelacion_horas_minimas: Number(cancelHoras),
-          reembolso_porcentaje: Number(reembolso),
-          modo_simulacion: modoSim,
-          horario: rowsToHorario(days),
-        },
-        { logo: logoFile, portada: portadaFile }
-      );
+      const fields: Record<string, unknown> = {
+        nombre_publico: nombrePublico,
+        texto_llegada: textoLlegada,
+        precio_ars: Number(precio),
+        duracion_minutos: Number(duracion),
+        buffer_limpieza_minutos: Number(buffer),
+        hold_ttl_minutos: Number(holdTtl),
+        anticipacion_llegada_minutos: Number(anticipacion),
+        cancelacion_horas_minimas: Number(cancelHoras),
+        reembolso_porcentaje: Number(reembolso),
+        modo_simulacion: modoSim,
+        horario: rowsToHorario(days),
+      };
+      if (clearMpToken) {
+        fields.mp_access_token_clear = true;
+      } else if (mpTokenInput.trim()) {
+        fields.mp_access_token = mpTokenInput.trim();
+      }
+      const data = await putAdminConfig(jwt, slug, fields, {
+        logo: logoFile,
+        portada: portadaFile,
+      });
       hydrate(data);
       toast.success(
         data.modo_simulacion
@@ -234,6 +242,37 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
           onChange={(e) => setModoSim(e.target.checked)}
         />
         Modo simulación (sin Mercado Pago)
+      </label>
+
+      <h3 className="ra-subhead">Mercado Pago (Access Token)</h3>
+      <p className="ra-muted" style={{ marginBottom: '0.75rem' }}>
+        {config?.mp_configured
+          ? `Token cargado${config.mp_token_hint ? ` (${config.mp_token_hint})` : ''}. Pegá uno nuevo para rotarlo.`
+          : 'Sin token en portal. Podés pegar el Access Token de prueba/producción, o seguir usando la variable de entorno.'}
+      </p>
+      <label className="ra-block-label">
+        Pegar Access Token
+        <input
+          type="password"
+          autoComplete="off"
+          placeholder="APP_USR-… o TEST-…"
+          value={mpTokenInput}
+          disabled={busy || clearMpToken}
+          onChange={(e) => setMpTokenInput(e.target.value)}
+          data-testid="reserva-mp-token-input"
+        />
+      </label>
+      <label className="ra-check">
+        <input
+          type="checkbox"
+          checked={clearMpToken}
+          disabled={busy || !config?.mp_configured}
+          onChange={(e) => {
+            setClearMpToken(e.target.checked);
+            if (e.target.checked) setMpTokenInput('');
+          }}
+        />
+        Quitar token guardado en el portal
       </label>
 
       <label className="ra-block-label">

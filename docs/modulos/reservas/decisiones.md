@@ -73,3 +73,15 @@ Formato:
 - **Decisión:** En el primer cliente, el visitante paga a la **cuenta Mercado Pago de Jaditek** (ellos son el comercio). Reembolsos desde esa cuenta. Sin split plataforma→local.  
 - **Nota:** Otros comercios del módulo: decidir después (su MP vs marketplace).  
 - **Qué sigue:** Implementar MVP.
+
+### 2026-08-02 — RES-DEC-009 — Alta multi-cliente + secretos MP desde portal
+
+- **Contexto:** El MVP Jaditek ya corre; falta producto para (a) configurar MP sin `.env` y (b) activar el módulo en otro `negocio` del portal SR360.  
+- **Decisión:**  
+  1. **Operación admin vs cliente:** cada `reserva-comercio` tiene flag `operado_por_plataforma` (o equivalente). Si es `true`, Master Admin gestiona config/secretos aunque haya `negocio` linkeado; si es `false`, el **owner** del `negocio` puede gestionar lo operativo (y el token solo si se habilita explícitamente — default: token solo Master Admin hasta OAuth).  
+  2. **Alta del módulo:** solo desde **`/portal/admin`** (Master Admin): elegir `negocio` → crear `reserva-comercio` + recursos + soft-link.  
+  3. **Simulación por defecto:** al crear, `modo_simulacion = true` hasta que exista un Access Token MP válido cargado; la grilla pública de cobro real no se habilita sin token (simulación sí puede probarse).  
+  4. **Almacenamiento del token:** cifrado at-rest en el comercio (no plaintext; no devolver el secreto en GET). Migración gradual desde `mp_token_env`.  
+  5. **UX no técnica para el token (fase 1):** guía paso a paso con capturas (“entrar a Mercado Pago Developers → Tu aplicación → Credenciales de prueba → copiar Access Token”) + campo “pegar acá” en el portal admin. Fase 2 (después): botón **Conectar Mercado Pago** (OAuth) para no copiar secretos.  
+- **Qué se descartó (por ahora):** self-serve del dueño para “activar reservas”; OAuth MP como primer corte; tokens solo en variables de entorno por cliente.  
+- **Qué sigue:** backlog D/E en `backlog-operativo.md` (D1 token cifrado + E1 alta desde admin).

@@ -7,6 +7,7 @@ import {
   reservaCancelacionEmail,
   reservaConfirmacionEmail,
 } from './templates/reserva-email-templates';
+import { resolveComercioMpAccessToken } from './mp-token';
 
 type CancelPoliticaTramo = {
   reembolso_porcentaje?: number;
@@ -20,11 +21,6 @@ type CancelPolitica = {
 };
 
 type MpRefundResult = { id: string; alreadyRefunded: boolean };
-
-function resolveMpToken(envName?: string | null): string | null {
-  if (!envName) return process.env.MP_ACCESS_TOKEN || null;
-  return process.env[envName] || process.env.MP_ACCESS_TOKEN || null;
-}
 
 function mpErrorCode(err: any): number | null {
   const cause = err?.cause;
@@ -246,7 +242,7 @@ export async function cancelReserva(params: {
   let reembolsoNota: string | null = null;
 
   if (canRefundMp) {
-    const token = resolveMpToken(comercio.mp_token_env);
+    const token = resolveComercioMpAccessToken(comercio);
     if (!token) {
       if (actor === 'admin') {
         reembolsoNota = `Hueco liberado. No hay token MP; si corresponde, reembolsá a mano el pago ${paymentId}.`;

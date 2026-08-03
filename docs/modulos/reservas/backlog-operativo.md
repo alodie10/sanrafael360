@@ -18,10 +18,31 @@ Orden fijo. No marcar hecho hasta verificar el criterio.
 | C1 | Commit `develop` | Cuando Diego lo pida | ✅ |
 | C2 | Push `origin/develop` | Cuando Diego lo pida (nunca master) | ✅ |
 
-### B5. Redirect post-pago en local
+## Fase D/E — Multi-cliente + MP en portal (RES-DEC-009)
 
-Ya implementado: si `FRONTEND_URL` es localhost, **no** se envía `auto_return` (MP lo rechaza).  
-El webhook confirma igual. Opcional después: túnel al frontend `:3000` para redirect automático.
+Orden fijo. No saltar.
+
+| # | Paso | Criterio de done | Estado |
+|---|------|------------------|--------|
+| D0 | RES-DEC-009 documentada | Este corte + `decisiones.md` | ✅ |
+| D1 | Token MP cifrado por comercio | Admin pega token; GET solo `mp_configured`; checkout usa secreto cifrado (fallback `mp_token_env`) | ✅ |
+| D2 | Flag `operado_por_plataforma` | UI admin: “Lo opera SR360 / Lo opera el dueño”; permisos de config respetan el flag | ⬜ |
+| E1 | Alta módulo desde `/portal/admin` | Elegir negocio → crea `reserva-comercio` + N recursos + soft-link; `modo_simulacion=true` | ⬜ |
+| E2 | Gate simulación ↔ token | Sin token: solo simulación; con token: se puede apagar simulación | ⬜ |
+| E3 | Guía “pedir token” no técnica | Copy + link docs en portal (capturas MP Developers / credenciales de prueba) | ⬜ |
+| E4 | (Después) OAuth MP | Botón Conectar; deja de pedir pegar Access Token | ⬜ |
+
+### Cómo pedirle el token a alguien no técnico (fase 1)
+
+No le pedís “un secret de API”. Le pedís:
+
+1. Entrar a [Mercado Pago Developers](https://www.mercadopago.com.ar/developers/panel/app) con **su** usuario MP (el del local).  
+2. Abrir (o crear) **su aplicación**.  
+3. Ir a **Credenciales de prueba** (para sandbox) o **de producción** (cuando vayan a prod).  
+4. Copiar el texto que dice **Access Token**.  
+5. Pegarlo en el portal SR360 donde diga “Token de cobros”.
+
+Vos (admin) podés hacerlo en una videollamada la primera vez. Cuando exista **E4 OAuth**, solo hacen clic en “Conectar Mercado Pago” e inician sesión: no copian nada.
 
 ## Notas
 
