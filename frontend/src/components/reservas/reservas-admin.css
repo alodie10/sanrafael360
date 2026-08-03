@@ -557,3 +557,99 @@
   font-size: 0.85em;
   color: #e8a317;
 }
+
+.ra-mp-guide {
+  margin: 0 0 1rem;
+  border: 1px solid rgba(242, 239, 230, 0.12);
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ra-mp-guide-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  background: transparent;
+  color: #e8a317;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.ra-mp-guide-toggle:hover {
+  text-decoration: underline;
+}
+
+.ra-mp-guide-body {
+  margin-top: 0.85rem;
+}
+
+.ra-mp-guide-lead {
+  margin: 0 0 0.9rem;
+  color: rgba(242, 239, 230, 0.72);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.ra-mp-guide-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ra-mp-guide-steps > li {
+  display: grid;
+  grid-template-columns: 1.75rem 1fr;
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.ra-mp-guide-step-num {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 163, 23, 0.45);
+  color: #e8a317;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ra-mp-guide-steps strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.92rem;
+}
+
+.ra-mp-guide-steps p {
+  margin: 0;
+  color: rgba(242, 239, 230, 0.55);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.ra-mp-guide-link {
+  display: inline-block;
+  margin-top: 0.35rem;
+  color: #e8a317;
+  font-size: 0.85rem;
+}
+
+.ra-mp-guide-note {
+  margin: 1rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(242, 239, 230, 0.1);
+  color: rgba(242, 239, 230, 0.5);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}

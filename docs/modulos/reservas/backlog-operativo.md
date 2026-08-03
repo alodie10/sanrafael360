@@ -29,7 +29,7 @@ Orden fijo. No saltar.
 | D2 | Flag `operado_por_plataforma` | UI admin: “Lo opera SR360 / Lo opera el dueño”; permisos de config respetan el flag | ✅ |
 | E1 | Alta módulo desde `/portal/admin` | Elegir negocio → crea `reserva-comercio` + N recursos + soft-link; `modo_simulacion=true` | ✅ |
 | E2 | Gate simulación ↔ token | Sin token: solo simulación; con token: se puede apagar simulación | ✅ |
-| E3 | Guía “pedir token” no técnica | Copy + link docs en portal (capturas MP Developers / credenciales de prueba) | ⬜ |
+| E3 | Guía “pedir token” no técnica | Copy + link docs en portal (capturas MP Developers / credenciales de prueba) | ✅ |
 | E4 | (Después) OAuth MP | Botón Conectar; deja de pedir pegar Access Token | ⬜ |
 
 ### Cómo pedirle el token a alguien no técnico (fase 1)

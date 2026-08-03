@@ -18,6 +18,7 @@ Encaja con el ERS del directorio: hoy “reservar” suele ser un link externo o
 | [alcance-mvp.md](alcance-mvp.md) | Qué entra / qué no entra en la primera versión |
 | [implementation_plan.md](implementation_plan.md) | Plan técnico MVP (datos, capas, spikes, PRs) |
 | [mp-sandbox-runbook.md](mp-sandbox-runbook.md) | Cómo pasar de simulación a MP sandbox en local |
+| [guia-token-mp.md](guia-token-mp.md) | Guía no técnica: pedir/pegar el token de cobros (E3) |
 | [backlog-operativo.md](backlog-operativo.md) | Checklist ordenado (portal + MP) — no saltar pasos |
 
 ## Relación con el repo Jaditek-SimR

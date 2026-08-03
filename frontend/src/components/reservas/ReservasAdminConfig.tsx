@@ -7,6 +7,7 @@ import {
   putAdminConfig,
   type ReservaComercioConfig,
 } from '@/lib/reservas-admin';
+import ReservasMpTokenGuide from '@/components/reservas/ReservasMpTokenGuide';
 
 const DAY_META: Array<{ key: string; label: string }> = [
   { key: '1', label: 'Lun' },
@@ -333,7 +334,7 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
       </label>
       {!canDisableSim ? (
         <p className="ra-muted" data-testid="reserva-sim-gate-hint">
-          Sin Access Token no se puede cobrar con MP: la simulación queda fija en ON.
+          Sin token de cobros no se puede cobrar con MP: la simulación queda fija en ON.
           {canEditMp ? ' Pegá el token abajo para poder apagarla.' : ''}
         </p>
       ) : (
@@ -342,20 +343,23 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
         </p>
       )}
 
-      <h3 className="ra-subhead">Mercado Pago (Access Token)</h3>
+      <h3 className="ra-subhead">Mercado Pago — Token de cobros</h3>
       <p className="ra-muted" style={{ marginBottom: '0.75rem' }}>
         {config?.mp_configured
-          ? `Token cargado${config.mp_token_hint ? ` (${config.mp_token_hint})` : ''}.${
-              canEditMp ? ' Pegá uno nuevo para rotarlo.' : ''
+          ? `Token de cobros cargado${config.mp_token_hint ? ` (${config.mp_token_hint})` : ''}.${
+              canEditMp ? ' Pegá uno nuevo solo si querés rotarlo.' : ''
             }`
           : canEditMp
-            ? 'Sin token en portal. Pegá el Access Token o usá la variable de entorno.'
-            : 'Sin permiso para cargar token (solo admin SR360).'}
+            ? 'Todavía no hay token de cobros. Seguí la guía y pegá el Access Token del local.'
+            : 'Sin permiso para cargar el token (solo admin SR360).'}
       </p>
+
+      <ReservasMpTokenGuide canPaste={canEditMp} />
+
       {canEditMp ? (
         <>
           <label className="ra-block-label">
-            Pegar Access Token
+            Token de cobros (Access Token)
             <input
               type="password"
               autoComplete="off"
