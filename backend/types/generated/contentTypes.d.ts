@@ -961,6 +961,8 @@ export interface ApiReservaComercioReservaComercio
     negocio: Schema.Attribute.Relation<'oneToOne', 'api::negocio.negocio'>;
     nombre: Schema.Attribute.String & Schema.Attribute.Required;
     nombre_publico: Schema.Attribute.String;
+    operado_por_plataforma: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
     precio_ars: Schema.Attribute.Decimal & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
     recursos: Schema.Attribute.Relation<

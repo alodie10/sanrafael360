@@ -26,7 +26,7 @@ Orden fijo. No saltar.
 |---|------|------------------|--------|
 | D0 | RES-DEC-009 documentada | Este corte + `decisiones.md` | ✅ |
 | D1 | Token MP cifrado por comercio | Admin pega token; GET solo `mp_configured`; checkout usa secreto cifrado (fallback `mp_token_env`) | ✅ |
-| D2 | Flag `operado_por_plataforma` | UI admin: “Lo opera SR360 / Lo opera el dueño”; permisos de config respetan el flag | ⬜ |
+| D2 | Flag `operado_por_plataforma` | UI admin: “Lo opera SR360 / Lo opera el dueño”; permisos de config respetan el flag | ✅ |
 | E1 | Alta módulo desde `/portal/admin` | Elegir negocio → crea `reserva-comercio` + N recursos + soft-link; `modo_simulacion=true` | ⬜ |
 | E2 | Gate simulación ↔ token | Sin token: solo simulación; con token: se puede apagar simulación | ⬜ |
 | E3 | Guía “pedir token” no técnica | Copy + link docs en portal (capturas MP Developers / credenciales de prueba) | ⬜ |

@@ -108,6 +108,10 @@ export type ReservaComercioConfig = {
   mp_token_env?: string | null;
   mp_configured?: boolean;
   mp_token_hint?: string | null;
+  operado_por_plataforma?: boolean;
+  can_edit_config?: boolean;
+  can_edit_mp_token?: boolean;
+  can_edit_operacion?: boolean;
   modo_simulacion: boolean;
   logo_url?: string | null;
   portada_url?: string | null;

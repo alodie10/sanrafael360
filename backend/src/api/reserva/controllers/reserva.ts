@@ -129,16 +129,23 @@ export default factories.createCoreController('api::reserva.reserva', ({ strapi 
   }),
 
   adminGetConfig: asyncHandler(async (ctx) => {
-    const data = await adminGetConfig(strapi, ctx.params.slug);
+    const access = (ctx.state.reservaAccess || { role: 'owner' }) as {
+      role: 'admin' | 'owner';
+    };
+    const data = await adminGetConfig(strapi, ctx.params.slug, access);
     ctx.send({ data });
   }),
 
   adminUpdateConfig: asyncHandler(async (ctx) => {
+    const access = (ctx.state.reservaAccess || { role: 'owner' }) as {
+      role: 'admin' | 'owner';
+    };
     const data = await adminUpdateConfig(
       strapi,
       ctx.params.slug,
       ctx.request.body || {},
-      (ctx.request as any).files
+      (ctx.request as any).files,
+      access
     );
     ctx.send({ data });
   }),

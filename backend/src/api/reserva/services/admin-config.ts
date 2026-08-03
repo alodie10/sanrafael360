@@ -5,6 +5,13 @@ import {
   clearEncryptedMpTokenPatch,
   isComercioMpConfigured,
 } from './mp-token';
+import {
+  assertCanEditConfig,
+  assertCanEditMpToken,
+  assertCanEditOperacion,
+  resolveConfigCapabilities,
+  type ReservaAccess,
+} from './config-access';
 
 const DAY_KEYS = ['0', '1', '2', '3', '4', '5', '6'] as const;
 
@@ -75,7 +82,14 @@ function normalizePolitica(raw: unknown, current: any) {
   };
 }
 
-function serializeConfig(comercio: any) {
+function serializeConfig(comercio: any, access?: ReservaAccess) {
+  const caps = access
+    ? resolveConfigCapabilities(comercio, access)
+    : {
+        can_edit_config: false,
+        can_edit_mp_token: false,
+        can_edit_operacion: false,
+      };
   return {
     documentId: comercio.documentId,
     nombre: comercio.nombre,
@@ -95,9 +109,11 @@ function serializeConfig(comercio: any) {
     mp_token_env: comercio.mp_token_env || null,
     mp_configured: isComercioMpConfigured(comercio),
     mp_token_hint: comercio.mp_token_hint || null,
+    operado_por_plataforma: comercio.operado_por_plataforma !== false,
     modo_simulacion: Boolean(comercio.modo_simulacion),
     logo_url: mediaUrl(comercio.logo),
     portada_url: mediaUrl(comercio.imagen_portada),
+    ...caps,
   };
 }
 
@@ -164,7 +180,6 @@ function buildPatch(body: Record<string, unknown>, comercio: any) {
     }
   }
   applyPoliticaPatch(body, comercio, patch);
-  applyMpTokenPatch(body, patch);
   return patch;
 }
 
@@ -221,24 +236,60 @@ async function uploadMediaIfPresent(
   if (cover) await repo.uploadFile(documentId, 'imagen_portada', cover);
 }
 
-export async function adminGetConfig(strapi: any, slug: string) {
+export async function adminGetConfig(strapi: any, slug: string, access: ReservaAccess) {
   const { comercio } = await loadComercio(strapi, slug);
-  return serializeConfig(comercio);
+  return serializeConfig(comercio, access);
+}
+
+function hasMediaFiles(files?: Record<string, any>) {
+  if (!files) return false;
+  return Boolean(
+    files.logo ||
+      files['files.logo'] ||
+      files.imagen_portada ||
+      files['files.imagen_portada']
+  );
 }
 
 export async function adminUpdateConfig(
   strapi: any,
   slug: string,
   rawBody: Record<string, unknown>,
-  files?: Record<string, any>
+  files: Record<string, any> | undefined,
+  access: ReservaAccess
 ) {
   const { repo, comercio } = await loadComercio(strapi, slug);
+  const caps = resolveConfigCapabilities(comercio, access);
   const body = parseBody(rawBody);
-  const patch = buildPatch(body, comercio);
+  const wantsMpToken =
+    body.mp_access_token !== undefined ||
+    body.mp_access_token_clear === true ||
+    body.mp_access_token_clear === 'true' ||
+    body.mp_access_token_clear === '1';
+  const wantsOperacion = body.operado_por_plataforma !== undefined;
+  const patchPreview = buildPatch(body, comercio);
+  const wantsConfig = Object.keys(patchPreview).length > 0 || hasMediaFiles(files);
+
+  if (wantsConfig) assertCanEditConfig(caps);
+  if (wantsMpToken) assertCanEditMpToken(caps);
+  if (wantsOperacion) assertCanEditOperacion(caps);
+  if (!wantsConfig && !wantsMpToken && !wantsOperacion) {
+    throw new ValidationError('Nada para actualizar');
+  }
+
+  const patch = { ...patchPreview };
+  if (wantsMpToken) applyMpTokenPatch(body, patch);
+  if (wantsOperacion) {
+    patch.operado_por_plataforma = parseBool(
+      body.operado_por_plataforma,
+      comercio.operado_por_plataforma !== false
+    );
+  }
+
   if (Object.keys(patch).length) {
     await repo.update(comercio.documentId, patch);
   }
-  await uploadMediaIfPresent(repo, comercio.documentId, files);
+  if (wantsConfig) await uploadMediaIfPresent(repo, comercio.documentId, files);
   const refreshed = await repo.findByDocumentId(comercio.documentId);
-  return serializeConfig(refreshed);
+  return serializeConfig(refreshed, access);
 }

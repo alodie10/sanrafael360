@@ -77,6 +77,11 @@
       "type": "string",
       "private": true
     },
+    "operado_por_plataforma": {
+      "type": "boolean",
+      "default": true,
+      "description": "true = lo opera Master Admin SR360; false = lo opera el dueño del negocio linkeado (token MP sigue solo admin hasta OAuth)"
+    },
     "modo_simulacion": {
       "type": "boolean",
       "default": false

@@ -310,6 +310,21 @@
   margin-bottom: 0.5rem;
 }
 
+.ra-fieldset {
+  border: 1px solid rgba(242, 239, 230, 0.16);
+  border-radius: 12px;
+  padding: 0.85rem 1rem 1rem;
+  margin: 0 0 1rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.ra-fieldset legend {
+  padding: 0 0.35rem;
+  color: rgba(242, 239, 230, 0.78);
+  font-size: 0.85rem;
+}
+
 .ra-config-head h2 {
   margin: 0;
 }
