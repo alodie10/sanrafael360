@@ -30,8 +30,15 @@ export async function confirmReservaFromPayment(
     return { success: true, duplicate: true, reserva };
   }
 
-  if (reserva.estado !== 'hold') {
+  // hold = flujo normal; expirada = webhook/pago tardío tras TTL (cliente ya pagó).
+  if (reserva.estado !== 'hold' && reserva.estado !== 'expirada') {
     throw new ValidationError(`Reserva en estado ${reserva.estado}; no se puede confirmar`);
+  }
+
+  if (reserva.estado === 'expirada') {
+    strapi.log.warn(
+      `[ReservaPago] Confirmando ${reserva.codigo} desde expirada (pago ${paymentIdStr} aprobado)`
+    );
   }
 
   const updated = await repo.update(reserva.documentId, {
