@@ -144,6 +144,8 @@ export type ReservaComercioConfig = {
   can_edit_mp_token?: boolean;
   can_edit_operacion?: boolean;
   can_disable_simulacion?: boolean;
+  mp_oauth_available?: boolean;
+  mp_oauth_connected?: boolean;
   modo_simulacion: boolean;
   logo_url?: string | null;
   portada_url?: string | null;
@@ -198,4 +200,24 @@ export async function putAdminConfig(
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json?.error?.message || `Config update ${res.status}`);
   return json.data as ReservaComercioConfig;
+}
+
+export async function startAdminMpOauth(jwt: string, slug: string) {
+  const res = await fetch(
+    `${getStrapiUrl()}/api/reservas/admin/${encodeURIComponent(slug)}/mp/oauth/start`,
+    { headers: authHeaders(jwt), cache: 'no-store' }
+  );
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.error?.message || `OAuth start ${res.status}`);
+  return json.data as { authorizeUrl: string; slug: string };
+}
+
+export async function disconnectAdminMpOauth(jwt: string, slug: string) {
+  const res = await fetch(
+    `${getStrapiUrl()}/api/reservas/admin/${encodeURIComponent(slug)}/mp/oauth/disconnect`,
+    { method: 'POST', headers: authHeaders(jwt) }
+  );
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.error?.message || `OAuth disconnect ${res.status}`);
+  return json.data;
 }

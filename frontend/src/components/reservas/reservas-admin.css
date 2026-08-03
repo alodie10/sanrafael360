@@ -653,3 +653,10 @@
   font-size: 0.82rem;
   line-height: 1.4;
 }
+
+.ra-oauth-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 0 0 1rem;
+}

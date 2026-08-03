@@ -73,8 +73,20 @@
       "type": "text",
       "private": true
     },
+    "mp_refresh_token_enc": {
+      "type": "text",
+      "private": true
+    },
     "mp_token_hint": {
       "type": "string",
+      "private": true
+    },
+    "mp_oauth_user_id": {
+      "type": "string",
+      "private": true
+    },
+    "mp_oauth_connected_at": {
+      "type": "datetime",
       "private": true
     },
     "operado_por_plataforma": {

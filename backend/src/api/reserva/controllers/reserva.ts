@@ -17,6 +17,12 @@ import {
 } from '../services/admin-reserva';
 import { adminGetConfig, adminUpdateConfig } from '../services/admin-config';
 import { adminCreateComercio as createReservaComercioModulo } from '../services/admin-alta-comercio';
+import {
+  startMpOauth,
+  completeMpOauth,
+  disconnectMpOauth,
+  peekSlugFromOauthState,
+} from '../services/mp-oauth';
 import { getReservaCancelContact } from '../services/cancel-contact';
 import { verifyReservaCancelToken } from '../services/cancel-token';
 
@@ -154,6 +160,43 @@ export default factories.createCoreController('api::reserva.reserva', ({ strapi 
       access
     );
     ctx.send({ data });
+  }),
+
+  adminMpOauthStart: asyncHandler(async (ctx) => {
+    const user = ctx.state.user;
+    if (!user?.id) throw new ForbiddenError('Debes iniciar sesión');
+    const data = await startMpOauth(strapi, ctx.params.slug, { id: user.id });
+    ctx.send({ data });
+  }),
+
+  adminMpOauthDisconnect: asyncHandler(async (ctx) => {
+    const data = await disconnectMpOauth(strapi, ctx.params.slug);
+    ctx.send({ data });
+  }),
+
+  mpOauthCallback: asyncHandler(async (ctx) => {
+    const frontend = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+    const stateRaw = typeof ctx.query.state === 'string' ? ctx.query.state : undefined;
+    try {
+      const result = await completeMpOauth(strapi, {
+        code: typeof ctx.query.code === 'string' ? ctx.query.code : undefined,
+        state: stateRaw,
+        error: typeof ctx.query.error === 'string' ? ctx.query.error : undefined,
+      });
+      ctx.redirect(
+        `${frontend}/portal/reservas/${encodeURIComponent(result.slug)}?tab=config&mp_oauth=ok`
+      );
+    } catch (err: any) {
+      const msg = encodeURIComponent(err?.message || 'oauth_error');
+      const slug = peekSlugFromOauthState(stateRaw);
+      if (slug) {
+        ctx.redirect(
+          `${frontend}/portal/reservas/${encodeURIComponent(slug)}?tab=config&mp_oauth=error&msg=${msg}`
+        );
+        return;
+      }
+      ctx.redirect(`${frontend}/portal/reservas?mp_oauth=error&msg=${msg}`);
+    }
   }),
 
   publicCancelInfo: asyncHandler(async (ctx) => {

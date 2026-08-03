@@ -66,5 +66,8 @@ export function clearEncryptedMpTokenPatch() {
   return {
     mp_access_token_enc: null,
     mp_token_hint: null,
+    mp_refresh_token_enc: null,
+    mp_oauth_user_id: null,
+    mp_oauth_connected_at: null,
   };
 }

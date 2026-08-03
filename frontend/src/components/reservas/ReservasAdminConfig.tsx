@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import {
   fetchAdminConfig,
   putAdminConfig,
+  startAdminMpOauth,
+  disconnectAdminMpOauth,
   type ReservaComercioConfig,
 } from '@/lib/reservas-admin';
 import ReservasMpTokenGuide from '@/components/reservas/ReservasMpTokenGuide';
@@ -109,6 +111,23 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
       cancelled = true;
     };
   }, [jwt, slug]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const oauth = params.get('mp_oauth');
+    if (!oauth) return;
+    if (oauth === 'ok') {
+      toast.success('Mercado Pago conectado. Ya podés apagar la simulación.');
+    } else if (oauth === 'error') {
+      toast.error(params.get('msg') || 'No se pudo conectar Mercado Pago');
+    }
+    params.delete('mp_oauth');
+    params.delete('msg');
+    params.delete('tab');
+    const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`;
+    window.history.replaceState({}, '', next);
+  }, []);
 
   const onSave = async () => {
     if (!config) {
@@ -346,13 +365,70 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
       <h3 className="ra-subhead">Mercado Pago — Token de cobros</h3>
       <p className="ra-muted" style={{ marginBottom: '0.75rem' }}>
         {config?.mp_configured
-          ? `Token de cobros cargado${config.mp_token_hint ? ` (${config.mp_token_hint})` : ''}.${
-              canEditMp ? ' Pegá uno nuevo solo si querés rotarlo.' : ''
-            }`
-          : canEditMp
-            ? 'Todavía no hay token de cobros. Seguí la guía y pegá el Access Token del local.'
+          ? `Token de cobros cargado${config.mp_token_hint ? ` (${config.mp_token_hint})` : ''}${
+              config.mp_oauth_connected ? ' · conectado con OAuth' : ''
+            }.${canEditMp ? ' Pegá uno nuevo solo si querés rotarlo a mano.' : ''}`
+          : canEditMp || config?.mp_oauth_available
+            ? 'Todavía no hay token de cobros. Conectá con Mercado Pago o seguí la guía para pegarlo.'
             : 'Sin permiso para cargar el token (solo admin SR360).'}
       </p>
+
+      {config?.mp_oauth_available ? (
+        <div className="ra-oauth-row" data-testid="reserva-mp-oauth">
+          <button
+            type="button"
+            className="ra-btn primary"
+            disabled={busy}
+            data-testid="reserva-mp-oauth-connect"
+            onClick={() => {
+              void (async () => {
+                setBusy(true);
+                try {
+                  const data = await startAdminMpOauth(jwt, slug);
+                  window.location.href = data.authorizeUrl;
+                } catch (err: any) {
+                  toast.error(err?.message || 'No se pudo iniciar OAuth');
+                  setBusy(false);
+                }
+              })();
+            }}
+          >
+            {config.mp_oauth_connected || config.mp_configured
+              ? 'Reconectar Mercado Pago'
+              : 'Conectar Mercado Pago'}
+          </button>
+          {config.mp_oauth_connected || config.mp_configured ? (
+            <button
+              type="button"
+              className="ra-btn ghost"
+              disabled={busy}
+              data-testid="reserva-mp-oauth-disconnect"
+              onClick={() => {
+                void (async () => {
+                  setBusy(true);
+                  try {
+                    await disconnectAdminMpOauth(jwt, slug);
+                    const data = await fetchAdminConfig(jwt, slug);
+                    hydrate(data);
+                    toast.success('Mercado Pago desconectado. Simulación ON.');
+                  } catch (err: any) {
+                    toast.error(err?.message || 'No se pudo desconectar');
+                  } finally {
+                    setBusy(false);
+                  }
+                })();
+              }}
+            >
+              Desconectar
+            </button>
+          ) : null}
+        </div>
+      ) : (
+        <p className="ra-muted" data-testid="reserva-mp-oauth-disabled">
+          OAuth no está habilitado en este entorno (faltan variables MP_OAUTH_*). Podés seguir
+          pegando el token a mano.
+        </p>
+      )}
 
       <ReservasMpTokenGuide canPaste={canEditMp} />
 

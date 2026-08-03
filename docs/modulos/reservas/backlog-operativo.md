@@ -30,7 +30,7 @@ Orden fijo. No saltar.
 | E1 | Alta módulo desde `/portal/admin` | Elegir negocio → crea `reserva-comercio` + N recursos + soft-link; `modo_simulacion=true` | ✅ |
 | E2 | Gate simulación ↔ token | Sin token: solo simulación; con token: se puede apagar simulación | ✅ |
 | E3 | Guía “pedir token” no técnica | Copy + link docs en portal (capturas MP Developers / credenciales de prueba) | ✅ |
-| E4 | (Después) OAuth MP | Botón Conectar; deja de pedir pegar Access Token | ⬜ |
+| E4 | (Después) OAuth MP | Botón Conectar; deja de pedir pegar Access Token | ✅ |
 
 ### Cómo pedirle el token a alguien no técnico (fase 1)
 

@@ -145,6 +145,36 @@ export default {
     },
     {
       method: 'GET',
+      path: '/reservas/admin/:slug/mp/oauth/start',
+      handler: 'reserva.adminMpOauthStart',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['api::reserva.require-reserva-access'],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/reservas/admin/:slug/mp/oauth/disconnect',
+      handler: 'reserva.adminMpOauthDisconnect',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['api::reserva.require-reserva-access'],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/reservas/mp/oauth/callback',
+      handler: 'reserva.mpOauthCallback',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'GET',
       path: '/reservas/:slug/cancelar-info',
       handler: 'reserva.publicCancelInfo',
       config: {

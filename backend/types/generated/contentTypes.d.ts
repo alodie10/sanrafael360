@@ -956,6 +956,9 @@ export interface ApiReservaComercioReservaComercio
     modo_simulacion: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     mp_access_token_enc: Schema.Attribute.Text & Schema.Attribute.Private;
+    mp_oauth_connected_at: Schema.Attribute.DateTime & Schema.Attribute.Private;
+    mp_oauth_user_id: Schema.Attribute.String & Schema.Attribute.Private;
+    mp_refresh_token_enc: Schema.Attribute.Text & Schema.Attribute.Private;
     mp_token_env: Schema.Attribute.String;
     mp_token_hint: Schema.Attribute.String & Schema.Attribute.Private;
     negocio: Schema.Attribute.Relation<'oneToOne', 'api::negocio.negocio'>;

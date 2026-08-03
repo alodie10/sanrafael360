@@ -13,6 +13,7 @@ import {
   type ReservaAccess,
 } from './config-access';
 import { applySimulacionGate } from './sim-gate';
+import { isMpOauthConfigured } from './mp-oauth';
 
 const DAY_KEYS = ['0', '1', '2', '3', '4', '5', '6'] as const;
 
@@ -110,6 +111,8 @@ function serializeConfig(comercio: any, access?: ReservaAccess) {
     mp_token_env: comercio.mp_token_env || null,
     mp_configured: isComercioMpConfigured(comercio),
     mp_token_hint: comercio.mp_token_hint || null,
+    mp_oauth_available: isMpOauthConfigured(),
+    mp_oauth_connected: Boolean(comercio.mp_oauth_user_id || comercio.mp_oauth_connected_at),
     operado_por_plataforma: comercio.operado_por_plataforma !== false,
     can_disable_simulacion: isComercioMpConfigured(comercio),
     modo_simulacion: Boolean(comercio.modo_simulacion),

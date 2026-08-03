@@ -101,8 +101,9 @@ export default function ReservasMpTokenGuide({ canPaste }: Props) {
           </ol>
 
           <p className="ra-mp-guide-note">
-            Tip: la primera vez conviene hacerlo juntos (videollamada). Más adelante habrá un botón
-            “Conectar Mercado Pago” para no copiar nada.
+            Tip: si ves el botón <strong>Conectar Mercado Pago</strong>, usalo primero (no hace falta
+            copiar nada). El pegado manual queda como respaldo. Renovar OAuth (E4) evita pasar el
+            secreto por chat.
           </p>
         </div>
       ) : null}
