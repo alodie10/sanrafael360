@@ -122,6 +122,10 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
     try {
       const fields: Record<string, unknown> = {};
       if (config.can_edit_config) {
+        const canDisable =
+          !clearMpToken &&
+          (Boolean(config.can_disable_simulacion || config.mp_configured) ||
+            mpTokenInput.trim().length >= 20);
         Object.assign(fields, {
           nombre_publico: nombrePublico,
           texto_llegada: textoLlegada,
@@ -132,7 +136,7 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
           anticipacion_llegada_minutos: Number(anticipacion),
           cancelacion_horas_minimas: Number(cancelHoras),
           reembolso_porcentaje: Number(reembolso),
-          modo_simulacion: modoSim,
+          modo_simulacion: canDisable ? modoSim : true,
           horario: rowsToHorario(days),
         });
       }
@@ -186,13 +190,18 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
   const canEditMp = Boolean(config?.can_edit_mp_token);
   const canEditOp = Boolean(config?.can_edit_operacion);
   const fieldsDisabled = busy || !canEdit;
+  const canDisableSim =
+    !clearMpToken &&
+    (Boolean(config?.can_disable_simulacion || config?.mp_configured) ||
+      mpTokenInput.trim().length >= 20);
+  const effectiveModoSim = canDisableSim ? modoSim : true;
 
   return (
     <section className="ra-panel" data-testid="reserva-admin-config">
       <div className="ra-config-head">
         <h2>Configuración del comercio</h2>
-        <span className={`ra-badge ${modoSim ? 'is-sim' : 'is-live'}`}>
-          {modoSim ? 'Simulación ON' : 'MP real (sandbox/prod)'}
+        <span className={`ra-badge ${effectiveModoSim ? 'is-sim' : 'is-live'}`}>
+          {effectiveModoSim ? 'Simulación ON' : 'MP real (sandbox/prod)'}
         </span>
       </div>
       <p className="ra-hint">
@@ -315,12 +324,23 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
       <label className="ra-check">
         <input
           type="checkbox"
-          checked={modoSim}
-          disabled={fieldsDisabled}
+          checked={effectiveModoSim}
+          disabled={fieldsDisabled || !canDisableSim}
           onChange={(e) => setModoSim(e.target.checked)}
+          data-testid="reserva-modo-sim"
         />
         Modo simulación (sin Mercado Pago)
       </label>
+      {!canDisableSim ? (
+        <p className="ra-muted" data-testid="reserva-sim-gate-hint">
+          Sin Access Token no se puede cobrar con MP: la simulación queda fija en ON.
+          {canEditMp ? ' Pegá el token abajo para poder apagarla.' : ''}
+        </p>
+      ) : (
+        <p className="ra-muted">
+          Con token cargado podés apagar la simulación y cobrar (sandbox/prod).
+        </p>
+      )}
 
       <h3 className="ra-subhead">Mercado Pago (Access Token)</h3>
       <p className="ra-muted" style={{ marginBottom: '0.75rem' }}>
@@ -353,7 +373,10 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
               disabled={busy || !config?.mp_configured}
               onChange={(e) => {
                 setClearMpToken(e.target.checked);
-                if (e.target.checked) setMpTokenInput('');
+                if (e.target.checked) {
+                  setMpTokenInput('');
+                  setModoSim(true);
+                }
               }}
             />
             Quitar token guardado en el portal

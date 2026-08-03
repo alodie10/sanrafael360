@@ -12,6 +12,7 @@ import {
   resolveConfigCapabilities,
   type ReservaAccess,
 } from './config-access';
+import { applySimulacionGate } from './sim-gate';
 
 const DAY_KEYS = ['0', '1', '2', '3', '4', '5', '6'] as const;
 
@@ -110,6 +111,7 @@ function serializeConfig(comercio: any, access?: ReservaAccess) {
     mp_configured: isComercioMpConfigured(comercio),
     mp_token_hint: comercio.mp_token_hint || null,
     operado_por_plataforma: comercio.operado_por_plataforma !== false,
+    can_disable_simulacion: isComercioMpConfigured(comercio),
     modo_simulacion: Boolean(comercio.modo_simulacion),
     logo_url: mediaUrl(comercio.logo),
     portada_url: mediaUrl(comercio.imagen_portada),
@@ -237,7 +239,16 @@ async function uploadMediaIfPresent(
 }
 
 export async function adminGetConfig(strapi: any, slug: string, access: ReservaAccess) {
-  const { comercio } = await loadComercio(strapi, slug);
+  const { repo, comercio } = await loadComercio(strapi, slug);
+  // E2 heal: si quedó sim OFF sin token propio (bug previo / env global), forzar ON.
+  if (!isComercioMpConfigured(comercio) && !comercio.modo_simulacion) {
+    await repo.update(comercio.documentId, { modo_simulacion: true });
+    const healed = await repo.findByDocumentId(comercio.documentId, {
+      logo: { fields: ['url'] },
+      imagen_portada: { fields: ['url'] },
+    });
+    return serializeConfig(healed, access);
+  }
   return serializeConfig(comercio, access);
 }
 
@@ -285,6 +296,7 @@ export async function adminUpdateConfig(
       comercio.operado_por_plataforma !== false
     );
   }
+  applySimulacionGate(comercio, body, patch);
 
   if (Object.keys(patch).length) {
     await repo.update(comercio.documentId, patch);

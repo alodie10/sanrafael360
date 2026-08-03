@@ -143,6 +143,7 @@ export type ReservaComercioConfig = {
   can_edit_config?: boolean;
   can_edit_mp_token?: boolean;
   can_edit_operacion?: boolean;
+  can_disable_simulacion?: boolean;
   modo_simulacion: boolean;
   logo_url?: string | null;
   portada_url?: string | null;

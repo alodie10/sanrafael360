@@ -12,15 +12,18 @@ type ComercioMpFields = {
   mp_token_env?: string | null;
 };
 
-function resolveEnvToken(envName?: string | null): string | null {
-  if (envName) {
-    const named = process.env[envName];
-    if (named) return named;
-  }
-  return process.env.MP_ACCESS_TOKEN || null;
+function resolveNamedEnvToken(envName?: string | null): string | null {
+  const key = String(envName || '').trim();
+  if (!key) return null;
+  const value = process.env[key];
+  return value ? value : null;
 }
 
-/** Prioridad: token cifrado del comercio → mp_token_env → MP_ACCESS_TOKEN. */
+/**
+ * Prioridad: token cifrado del comercio → variable nombrada en `mp_token_env`.
+ * No usa `MP_ACCESS_TOKEN` global a ciegas (evita que todos los comercios
+ * parezcan “con token” solo porque hay un .env de Jaditek/dev).
+ */
 export function resolveComercioMpAccessToken(comercio: ComercioMpFields): string | null {
   const enc = comercio.mp_access_token_enc;
   if (enc && hasMpTokenEncryptionKey()) {
@@ -28,15 +31,16 @@ export function resolveComercioMpAccessToken(comercio: ComercioMpFields): string
       const plain = decryptSecret(enc);
       if (plain.trim()) return plain.trim();
     } catch {
-      // corrupt / wrong key → fallback env
+      // corrupt / wrong key → fallback env nombrado
     }
   }
-  return resolveEnvToken(comercio.mp_token_env);
+  return resolveNamedEnvToken(comercio.mp_token_env);
 }
 
+/** True solo si este comercio tiene secreto propio (cifrado o env nombrado). */
 export function isComercioMpConfigured(comercio: ComercioMpFields): boolean {
   if (comercio.mp_access_token_enc) return true;
-  return Boolean(resolveEnvToken(comercio.mp_token_env));
+  return Boolean(resolveNamedEnvToken(comercio.mp_token_env));
 }
 
 export function buildEncryptedMpTokenPatch(plaintext: string): {
