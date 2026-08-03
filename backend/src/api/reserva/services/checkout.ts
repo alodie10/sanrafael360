@@ -266,6 +266,27 @@ export async function simulateReservaSuccess(strapi: any, reservaDocumentId: str
   );
 }
 
+async function collectMpPaymentTokenCandidates(strapi: any): Promise<string[]> {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const push = (t?: string | null) => {
+    const v = String(t || '').trim();
+    if (!v || seen.has(v)) return;
+    seen.add(v);
+    out.push(v);
+  };
+
+  push(process.env.MP_ACCESS_TOKEN_JADITEK);
+  push(process.env.MP_ACCESS_TOKEN);
+
+  const comercioRepo = createReservaComercioRepository(strapi);
+  const sources = await comercioRepo.listMpTokenSources();
+  for (const comercio of sources || []) {
+    push(resolveComercioMpAccessToken(comercio));
+  }
+  return out;
+}
+
 export async function processReservaPaymentNotification(strapi: any, paymentId: string) {
   const paymentIdStr = String(paymentId);
   const repo = createReservaRepository(strapi);
@@ -281,12 +302,9 @@ export async function processReservaPaymentNotification(strapi: any, paymentId: 
   inFlightMpPaymentIds.add(paymentIdStr);
 
   try {
-    // Necesitamos un token para consultar el pago. Probamos env del comercio vía metadata
-    // tras un get con token plataforma/jaditek.
-    const tokenCandidates = [
-      process.env.MP_ACCESS_TOKEN_JADITEK,
-      process.env.MP_ACCESS_TOKEN,
-    ].filter(Boolean) as string[];
+    // Preferencia creada con token OAuth del comercio: payment.get exige ese token
+    // (o el mismo vendedor vía env). Probamos env globales + tokens por comercio.
+    const tokenCandidates = await collectMpPaymentTokenCandidates(strapi);
 
     if (!tokenCandidates.length) {
       throw new ValidationError('No hay token MP para procesar webhook de reserva');
@@ -318,8 +336,6 @@ export async function processReservaPaymentNotification(strapi: any, paymentId: 
       throw new ValidationError('Pago sin external_reference');
     }
 
-    // Si el comercio tiene token propio distinto, re-consultar no es necesario:
-    // ya tenemos approved + external_reference.
     return confirmReservaFromPayment(strapi, String(externalReference), paymentIdStr);
   } finally {
     inFlightMpPaymentIds.delete(paymentIdStr);

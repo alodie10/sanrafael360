@@ -38,6 +38,15 @@ export class ReservaComercioRepository {
     });
   }
 
+  /** Campos de token MP para resolver access tokens en webhooks. */
+  async listMpTokenSources(limit = 200) {
+    return this.strapi.documents('api::reserva-comercio.reserva-comercio').findMany({
+      filters: { activo: { $ne: false } },
+      fields: ['slug', 'mp_access_token_enc', 'mp_token_env'],
+      limit,
+    });
+  }
+
   async create(data: Record<string, unknown>) {
     return this.strapi.documents('api::reserva-comercio.reserva-comercio').create({ data });
   }

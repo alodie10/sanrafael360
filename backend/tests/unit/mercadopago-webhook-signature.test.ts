@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   buildMpWebhookManifest,
   computeMpWebhookSignature,
+  normalizeMpWebhookTsMs,
   verifyMpWebhookSignature,
 } from '../../src/utils/mercadopago-webhook-signature';
 
@@ -72,5 +73,27 @@ describe('Mercado Pago webhook signature', () => {
     if (!result.valid) {
       expect(result.reason).toContain('expirada');
     }
+  });
+
+  it('normalizes second-based ts from MP examples', () => {
+    expect(normalizeMpWebhookTsMs(1704908010)).toBe(1704908010_000);
+    expect(normalizeMpWebhookTsMs(1742505638683)).toBe(1742505638683);
+  });
+
+  it('accepts valid signature when ts is in seconds', () => {
+    const tsSec = String(Math.floor(Date.now() / 1000));
+    const dataId = '170989657925';
+    const xRequestId = 'req-seconds';
+    const manifest = buildMpWebhookManifest(dataId, xRequestId, tsSec);
+    const v1 = computeMpWebhookSignature(manifest, secret);
+
+    const result = verifyMpWebhookSignature({
+      dataId,
+      xRequestId,
+      xSignature: `ts=${tsSec},v1=${v1}`,
+      secret,
+    });
+
+    expect(result.valid).toBe(true);
   });
 });

@@ -55,11 +55,22 @@ function safeEqualHex(a: string, b: string): boolean {
 }
 
 /**
+ * MP documenta `ts` en ms, pero algunos ejemplos/entregas usan segundos (10 dígitos).
+ * Umbral 1e11: por debajo → segundos; por encima → milisegundos.
+ */
+export function normalizeMpWebhookTsMs(tsNum: number): number {
+  return tsNum < 1e11 ? tsNum * 1000 : tsNum;
+}
+
+/**
  * Valida x-signature de notificaciones Webhook / IPN de Mercado Pago.
+ * Ventana anti-replay amplia: MP reintenta con el mismo `ts` (15 min+) si respondemos 401.
+ * La autenticidad real es el HMAC; el age solo acota capturas muy viejas.
  * @see https://www.mercadopago.com.ar/developers/en/docs/your-integrations/notifications/webhooks
  */
 export function verifyMpWebhookSignature(input: MpWebhookSignatureInput): MpWebhookSignatureResult {
-  const { dataId, xRequestId, xSignature, secret, maxAgeMs = 5 * 60 * 1000 } = input;
+  // 48h: cubre reintentos MP tras un 401 temporal (firma/redeploy).
+  const { dataId, xRequestId, xSignature, secret, maxAgeMs = 48 * 60 * 60 * 1000 } = input;
 
   if (!xSignature) {
     return { valid: false, reason: 'Falta header x-signature' };
@@ -75,7 +86,8 @@ export function verifyMpWebhookSignature(input: MpWebhookSignatureInput): MpWebh
     return { valid: false, reason: 'Timestamp inválido en x-signature' };
   }
 
-  const age = Math.abs(Date.now() - tsNum);
+  const tsMs = normalizeMpWebhookTsMs(tsNum);
+  const age = Math.abs(Date.now() - tsMs);
   if (age > maxAgeMs) {
     return { valid: false, reason: 'Notificación expirada (replay)' };
   }
