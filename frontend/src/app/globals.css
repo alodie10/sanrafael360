@@ -74,7 +74,9 @@
     }
   }
 
-  /* Icono del date picker legible sobre fondos oscuros (portal / portal/admin). */
+  /* Icono del date picker: el nativo es negro → invertir en UI oscura.
+     Si el input (o un ancestro) usa color-scheme: dark, el nativo ya es claro:
+     no invertir (si no queda negro otra vez). */
   input[type="date"]::-webkit-calendar-picker-indicator,
   input[type="datetime-local"]::-webkit-calendar-picker-indicator,
   input[type="month"]::-webkit-calendar-picker-indicator,
@@ -89,6 +91,13 @@
   input[type="month"]::-webkit-calendar-picker-indicator:hover,
   input[type="time"]::-webkit-calendar-picker-indicator:hover {
     opacity: 1;
+  }
+
+  .\[color-scheme\:dark\]::-webkit-calendar-picker-indicator,
+  [style*="color-scheme: dark"]::-webkit-calendar-picker-indicator,
+  [style*="color-scheme:dark"]::-webkit-calendar-picker-indicator {
+    filter: none;
+    opacity: 0.9;
   }
 }
 

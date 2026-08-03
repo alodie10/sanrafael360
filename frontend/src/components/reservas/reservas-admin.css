@@ -77,6 +77,23 @@
   color-scheme: dark;
 }
 
+/* color-scheme:dark ya aclara el icono; el invert global lo volvería oscuro. */
+.ra-page input[type="date"]::-webkit-calendar-picker-indicator,
+.ra-page input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.ra-page input[type="month"]::-webkit-calendar-picker-indicator,
+.ra-page input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.9;
+  filter: none;
+}
+
+.ra-page input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.ra-page input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+.ra-page input[type="month"]::-webkit-calendar-picker-indicator:hover,
+.ra-page input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
 .ra-date input::placeholder,
 .ra-tools input::placeholder {
   color: rgba(242, 239, 230, 0.4);
