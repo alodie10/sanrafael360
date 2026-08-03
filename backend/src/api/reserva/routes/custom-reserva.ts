@@ -61,6 +61,16 @@ export default {
       },
     },
     {
+      method: 'POST',
+      path: '/reservas/admin/comercios',
+      handler: 'reserva.adminCreateComercio',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['global::require-admin', 'api::reserva.admin-alta-validator'],
+      },
+    },
+    {
       method: 'GET',
       path: '/reservas/admin/:slug/agenda',
       handler: 'reserva.adminAgenda',

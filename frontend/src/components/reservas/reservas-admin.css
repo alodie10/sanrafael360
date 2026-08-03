@@ -5,6 +5,7 @@
   /* Navbar fijo (mismo criterio que portal: pt-24) */
   padding: 6.5rem 1.25rem 3rem;
   font-family: var(--font-outfit), system-ui, sans-serif;
+  color-scheme: dark;
 }
 
 .ra-header {
@@ -67,12 +68,18 @@
 .ra-tools input {
   border: 1px solid rgba(242, 239, 230, 0.18);
   background: rgba(242, 239, 230, 0.04);
-  color: inherit;
+  color: #f2efe6;
   border-radius: 0.65rem;
   padding: 0.55rem 0.75rem;
   font: inherit;
   text-transform: none;
   letter-spacing: normal;
+  color-scheme: dark;
+}
+
+.ra-date input::placeholder,
+.ra-tools input::placeholder {
+  color: rgba(242, 239, 230, 0.4);
 }
 
 .ra-error {
@@ -325,6 +332,79 @@
   font-size: 0.85rem;
 }
 
+.ra-alta-wrap {
+  max-width: 1100px;
+  margin: 0 auto 1.5rem;
+}
+
+.ra-comercios-list {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ra-comercio-card {
+  display: block;
+  border: 1px solid rgba(242, 239, 230, 0.12);
+  border-radius: 16px;
+  padding: 1rem 1.15rem;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.ra-comercio-card:hover {
+  border-color: rgba(232, 163, 23, 0.45);
+  transform: translateY(-1px);
+}
+
+.ra-comercio-name {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.ra-back {
+  max-width: 1100px;
+  margin: 1.75rem auto 0;
+  font-size: 0.9rem;
+}
+
+.ra-back a {
+  color: #e8a317;
+}
+
+.ra-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ra-picker-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: left;
+  border: 1px solid rgba(242, 239, 230, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+}
+
+.ra-picker-item.is-selected,
+.ra-picker-item:hover {
+  border-color: rgba(232, 163, 23, 0.5);
+}
+
 .ra-config-head h2 {
   margin: 0;
 }
@@ -369,16 +449,40 @@
   color: rgba(242, 239, 230, 0.5);
 }
 
-.ra-block-label textarea {
+.ra-block-label input,
+.ra-block-label textarea,
+.ra-block-label select {
+  width: 100%;
   border: 1px solid rgba(242, 239, 230, 0.18);
   background: rgba(242, 239, 230, 0.04);
-  color: inherit;
+  color: #f2efe6;
   border-radius: 0.65rem;
   padding: 0.55rem 0.75rem;
   font: inherit;
   text-transform: none;
   letter-spacing: normal;
   resize: vertical;
+  color-scheme: dark;
+}
+
+.ra-block-label input::placeholder,
+.ra-block-label textarea::placeholder {
+  color: rgba(242, 239, 230, 0.4);
+}
+
+.ra-block-label input:focus,
+.ra-block-label textarea:focus,
+.ra-block-label select:focus {
+  outline: none;
+  border-color: rgba(232, 163, 23, 0.55);
+  background: rgba(242, 239, 230, 0.07);
+}
+
+.ra-block-label input:disabled,
+.ra-block-label textarea:disabled,
+.ra-block-label select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .ra-subhead {

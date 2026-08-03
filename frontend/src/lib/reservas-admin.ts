@@ -17,6 +17,37 @@ export async function fetchAdminComercios(jwt: string) {
   return json.data || [];
 }
 
+export async function postAdminCreateComercio(
+  jwt: string,
+  body: {
+    negocioDocumentId: string;
+    slug?: string;
+    nombre?: string;
+    nombre_publico?: string;
+    precio_ars?: number;
+    duracion_minutos?: number;
+    cantidad_recursos?: number;
+    recursos?: string[];
+    operado_por_plataforma?: boolean;
+  }
+) {
+  const res = await fetch(`${getStrapiUrl()}/api/reservas/admin/comercios`, {
+    method: 'POST',
+    headers: authHeaders(jwt),
+    body: JSON.stringify(body),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(json?.error?.message || `Alta módulo ${res.status}`);
+  }
+  return json.data as {
+    documentId: string;
+    slug: string;
+    nombre: string;
+    modo_simulacion: boolean;
+  };
+}
+
 export async function fetchAdminAgenda(
   jwt: string,
   slug: string,

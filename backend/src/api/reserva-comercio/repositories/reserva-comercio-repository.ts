@@ -16,6 +16,15 @@ export class ReservaComercioRepository {
     return rows[0] ?? null;
   }
 
+  async findByNegocioDocumentId(negocioDocumentId: string) {
+    const rows = await this.strapi.documents('api::reserva-comercio.reserva-comercio').findMany({
+      filters: { negocio: { documentId: { $eq: negocioDocumentId } } },
+      limit: 1,
+      fields: ['slug', 'nombre', 'documentId'],
+    });
+    return rows[0] ?? null;
+  }
+
   async findByDocumentId(documentId: string, populate?: any) {
     return this.strapi.documents('api::reserva-comercio.reserva-comercio').findOne({
       documentId,
@@ -27,6 +36,10 @@ export class ReservaComercioRepository {
           recursos: { sort: ['orden:asc'] },
         },
     });
+  }
+
+  async create(data: Record<string, unknown>) {
+    return this.strapi.documents('api::reserva-comercio.reserva-comercio').create({ data });
   }
 
   async update(documentId: string, data: Record<string, unknown>) {

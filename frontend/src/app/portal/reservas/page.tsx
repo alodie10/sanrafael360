@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { authOptions, ADMIN_EMAILS } from '@/lib/auth';
 import { fetchAdminComercios } from '@/lib/reservas-admin';
+import ReservasAdminAlta from '@/components/reservas/ReservasAdminAlta';
+import '@/components/reservas/reservas-admin.css';
 
 export default async function PortalReservasPage() {
   const session = await getServerSession(authOptions);
@@ -29,45 +31,48 @@ export default async function PortalReservasPage() {
     redirect(`/portal/reservas/${comercios[0].slug}`);
   }
 
+  const linkedNegocioIds = comercios
+    .map((c) => c.negocio?.documentId)
+    .filter(Boolean) as string[];
+
   return (
-    <main className="min-h-screen bg-black text-zinc-100 px-6 pt-24 pb-10">
-      <div className="max-w-3xl mx-auto">
-        <p className="text-xs uppercase tracking-[0.2em] text-amber-500 mb-3">
-          {isAdmin ? 'Admin' : 'Portal'}
+    <main className="ra-page">
+      <header className="ra-header">
+        <p className="ra-kicker">{isAdmin ? 'Admin' : 'Portal'}</p>
+        <h1>Reservas</h1>
+        <p className="ra-hint">
+          {isAdmin
+            ? 'Comercios del módulo de turnos. Activá uno nuevo desde el directorio.'
+            : 'Tus comercios con módulo de reservas.'}
         </p>
-        <h1 className="font-[family-name:var(--font-playfair)] text-4xl mb-2">Reservas</h1>
-        <p className="text-zinc-400 mb-8">
-          {isAdmin ? 'Comercios del módulo de turnos.' : 'Tus comercios con módulo de reservas.'}
-        </p>
-        <ul className="space-y-3">
-          {comercios.map((c) => (
-            <li key={c.documentId}>
-              <Link
-                href={`/portal/reservas/${c.slug}`}
-                className="block border border-white/10 rounded-2xl px-5 py-4 hover:border-amber-500/50 transition-colors"
-              >
-                <span className="text-lg font-medium">
-                  {c.nombre_publico || c.nombre}
-                </span>
-                <span className="block text-sm text-zinc-500 mt-1">
-                  /reservas/{c.slug} · {c.recursos?.length || 0} recursos
-                </span>
-              </Link>
-            </li>
-          ))}
-          {!comercios.length ? (
-            <li className="text-zinc-500">No hay comercios de reserva todavía.</li>
-          ) : null}
-        </ul>
-        <p className="mt-8 text-sm">
-          <Link
-            href={isAdmin ? '/portal/admin' : '/portal'}
-            className="text-amber-500 hover:underline"
-          >
-            ← Volver
-          </Link>
-        </p>
-      </div>
+      </header>
+
+      {isAdmin ? (
+        <div className="ra-alta-wrap">
+          <ReservasAdminAlta jwt={jwt} linkedNegocioIds={linkedNegocioIds} />
+        </div>
+      ) : null}
+
+      <ul className="ra-comercios-list">
+        {comercios.map((c) => (
+          <li key={c.documentId}>
+            <Link href={`/portal/reservas/${c.slug}`} className="ra-comercio-card">
+              <span className="ra-comercio-name">{c.nombre_publico || c.nombre}</span>
+              <span className="ra-muted">
+                /reservas/{c.slug} · {c.recursos?.length || 0} recursos
+                {c.modo_simulacion ? ' · simulación' : ''}
+              </span>
+            </Link>
+          </li>
+        ))}
+        {!comercios.length ? (
+          <li className="ra-muted">No hay comercios de reserva todavía.</li>
+        ) : null}
+      </ul>
+
+      <p className="ra-back">
+        <Link href={isAdmin ? '/portal/admin' : '/portal'}>← Volver</Link>
+      </p>
     </main>
   );
 }

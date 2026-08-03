@@ -16,6 +16,7 @@ import {
   adminWalkIn,
 } from '../services/admin-reserva';
 import { adminGetConfig, adminUpdateConfig } from '../services/admin-config';
+import { adminCreateComercio as createReservaComercioModulo } from '../services/admin-alta-comercio';
 import { getReservaCancelContact } from '../services/cancel-contact';
 import { verifyReservaCancelToken } from '../services/cancel-token';
 
@@ -90,6 +91,11 @@ export default factories.createCoreController('api::reserva.reserva', ({ strapi 
       throw new ForbiddenError('Acceso restringido');
     }
     const data = await adminListComercios(strapi, user, isAdmin);
+    ctx.send({ data });
+  }),
+
+  adminCreateComercio: asyncHandler(async (ctx) => {
+    const data = await createReservaComercioModulo(strapi, ctx.request.body || {});
     ctx.send({ data });
   }),
 
