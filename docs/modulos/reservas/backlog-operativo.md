@@ -13,7 +13,7 @@ Orden fijo. No marcar hecho hasta verificar el criterio.
 | B1 | Túnel estable + `BACKEND_URL` | Webhook alcanzable desde internet | ✅ |
 | B2 | 2º pago sandbox E2E | Reserva `confirmada` con `mp_payment_id` real | ✅ |
 | B3 | Cancel + refund sandbox | Admin libera hueco; refund MP (UI si API falla); self = WhatsApp | ✅ |
-| B4 | Token MP Jaditek | Token de la cuenta Jaditek (prueba) | ⬜ (hoy: app personal de Diego; falta cuenta Jaditek) |
+| B4 | Token MP Jaditek | OAuth con cuenta MP Jaditek (no la personal de Diego) | ⬜ ver [alta-cliente.md](alta-cliente.md) §3 |
 | B5 | Redirect post-pago local | Omit `auto_return` en localhost | ✅ |
 | C1 | Commit `develop` | Cuando Diego lo pida | ✅ |
 | C2 | Push `origin/develop` | Cuando Diego lo pida (nunca master) | ✅ |
@@ -42,12 +42,12 @@ No le pedís “un secret de API”. Le pedís:
 4. Copiar el texto que dice **Access Token**.  
 5. Pegarlo en el portal SR360 donde diga “Token de cobros”.
 
-Vos (admin) podés hacerlo en una videollamada la primera vez. Cuando exista **E4 OAuth**, solo hacen clic en “Conectar Mercado Pago” e inician sesión: no copian nada.
+**Preferido (E4):** el owner hace clic en “Conectar Mercado Pago” e inicia sesión con la MP del local; el admin apaga simulación. Playbook completo: [alta-cliente.md](alta-cliente.md) §3. Pegar token (E3) queda como respaldo.
 
 ## Notas
 
 - Dominio agenda **separado** del directorio (RES-DEC-003). Solo vínculo opcional.
 - Diego puede ser **admin + owner** a la vez: dos puertas, mismo motor.
-- B4 espera acceso a la cuenta MP Jaditek; mientras tanto se prueba con token personal de sandbox.
+- B4: el owner de Jaditek debe OAuth con la MP del local (smoke prod actual = MP personal de Diego).
 - **Cancelación self-service:** el link del mail NO cancela solo; abre contacto WhatsApp del `negocio` vinculado. El admin libera en portal y reembolsa en MP según el caso.
 - B3: con credenciales `APP_USR` de prueba el `POST /refunds` suele fallar (code 7); devolver en UI MP y/o liberar hueco desde admin (ya no bloquea si falla la API).

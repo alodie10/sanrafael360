@@ -33,6 +33,8 @@ BACKEND_URL=https://<mismo host que el redirect>
 
 Admin o dueño con acceso al módulo (`require-reserva-access`). Desconectar limpia el token y fuerza simulación ON.
 
+**Operación remota (admin administra, owner vincula):** el owner hace OAuth con la MP del local; con `operado_por_plataforma=true` el admin es quien apaga simulación. Playbook y mensaje copiable: [alta-cliente.md](alta-cliente.md) §3.
+
 ## Local: NXDOMAIN de `*.trycloudflare.com`
 
 En algunas Mac el callback del túnel falla con `DNS_PROBE_FINISHED_NXDOMAIN` aunque el túnel esté up. Si MP ya redirigió con `?code=…&state=…`, se puede completar pegando esa URL al agente o llamando:

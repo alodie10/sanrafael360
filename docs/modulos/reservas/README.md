@@ -15,6 +15,7 @@ Encaja con el ERS del directorio: hoy “reservar” suele ser un link externo o
 | [decisiones.md](decisiones.md) | Decisiones cerradas del módulo (RES-DEC-…) |
 | [complejidad-y-stack.md](complejidad-y-stack.md) | Qué se reutiliza de SR360 vs qué se construye de cero |
 | [primer-cliente-jaditek.md](primer-cliente-jaditek.md) | Cómo se configura Jaditek como comercio #1 |
+| [alta-cliente.md](alta-cliente.md) | Instructivo: otorgar el módulo a un cliente (alta + OAuth remoto) |
 | [alcance-mvp.md](alcance-mvp.md) | Qué entra / qué no entra en la primera versión |
 | [implementation_plan.md](implementation_plan.md) | Plan técnico MVP (datos, capas, spikes, PRs) |
 | [mp-sandbox-runbook.md](mp-sandbox-runbook.md) | Cómo pasar de simulación a MP sandbox en local |
@@ -27,8 +28,7 @@ Encaja con el ERS del directorio: hoy “reservar” suele ser un link externo o
 Allí vive el **inventario del local físico** (simuladores, auriculares, competencia, otros componentes).  
 Para **reservas (CMP-01)** ese repo solo apunta acá: la fuente de verdad del motor es **esta carpeta**.
 
-## Estado (1 ago 2026)
+## Estado (3 ago 2026)
 
-MVP local + vínculo portal dueño (`reserva-comercio.negocio` + CTA en card).  
-Checklist: [backlog-operativo.md](backlog-operativo.md) · Sandbox: [mp-sandbox-runbook.md](mp-sandbox-runbook.md).  
-Pendiente verificar: webhook E2E, refund real, token MP Jaditek.
+MVP en prod + OAuth MP en portal (E4). Smoke webhook OK (cuenta MP de Diego; falta B4 Jaditek).  
+Alta de cliente: [alta-cliente.md](alta-cliente.md) · Checklist: [backlog-operativo.md](backlog-operativo.md).
