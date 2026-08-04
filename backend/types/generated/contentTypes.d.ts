@@ -953,6 +953,10 @@ export interface ApiReservaComercioReservaComercio
     > &
       Schema.Attribute.Private;
     logo: Schema.Attribute.Media<'images'>;
+    modo_cobro: Schema.Attribute.Enumeration<
+      ['mp_requerido', 'solo_local', 'mp_o_local']
+    > &
+      Schema.Attribute.DefaultTo<'mp_requerido'>;
     modo_simulacion: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     mp_access_token_enc: Schema.Attribute.Text & Schema.Attribute.Private;

@@ -258,6 +258,32 @@
   outline-offset: 1px;
 }
 
+.rp-pago {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(242, 239, 230, 0.16);
+  border-radius: 0.85rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.rp-pago legend {
+  padding: 0 0.25rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(242, 239, 230, 0.55);
+}
+
+.rp-pago-opt {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.95rem;
+  color: #f2efe6;
+  cursor: pointer;
+}
+
 .rp-cta {
   border: none;
   border-radius: 999px;

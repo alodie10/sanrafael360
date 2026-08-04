@@ -1,4 +1,5 @@
 import { JADITEK_SLUG } from './seed-jaditek';
+import { buildNegocioCtaFromReservaSlug } from '../../reserva/services/sync-negocio-cta';
 
 /**
  * Asegura negocio Jaditek en directorio como reclamo APROBADO + link a reserva-comercio.
@@ -41,8 +42,7 @@ export async function ensureJaditekNegocioLink(strapi: any): Promise<void> {
     slug: JADITEK_SLUG,
     descripcion:
       'Sim racing en San Rafael. Reservas online de turnos vía módulo San Rafael 360.',
-    reserva_url: `/reservas/${JADITEK_SLUG}`,
-    reserva_habilitada: true,
+    ...buildNegocioCtaFromReservaSlug(JADITEK_SLUG),
     estado_reclamo: 'aprobado',
     verificado: true,
     owner: owner.id,
@@ -64,8 +64,7 @@ export async function ensureJaditekNegocioLink(strapi: any): Promise<void> {
         owner: owner.id,
         estado_reclamo: 'aprobado',
         verificado: true,
-        reserva_url: `/reservas/${JADITEK_SLUG}`,
-        reserva_habilitada: true,
+        ...buildNegocioCtaFromReservaSlug(JADITEK_SLUG),
         ...(process.env.JADITEK_WHATSAPP
           ? { whatsapp: String(process.env.JADITEK_WHATSAPP).trim() }
           : {}),
@@ -83,6 +82,6 @@ export async function ensureJaditekNegocioLink(strapi: any): Promise<void> {
   });
 
   strapi.log.info(
-    `[Reservas Seed] ✅ Jaditek: owner=${ownerEmail}, estado_reclamo=aprobado, módulo linkeado.`
+    `[Reservas Seed] ✅ Jaditek: owner=${ownerEmail}, estado_reclamo=aprobado, módulo linkeado + CTA ficha.`
   );
 }

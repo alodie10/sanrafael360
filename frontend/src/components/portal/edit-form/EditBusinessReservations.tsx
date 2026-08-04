@@ -20,6 +20,8 @@ interface EditBusinessReservationsProps {
   setCtaTagConfirmacion: (val: boolean) => void;
   ctaTagSinComisiones: boolean;
   setCtaTagSinComisiones: (val: boolean) => void;
+  /** Si hay módulo SR360, el CTA apunta fijo a /reservas/{slug} */
+  reservaModuloSlug?: string | null;
 }
 
 export default function EditBusinessReservations({
@@ -38,9 +40,13 @@ export default function EditBusinessReservations({
   ctaTagConfirmacion,
   setCtaTagConfirmacion,
   ctaTagSinComisiones,
-  setCtaTagSinComisiones
+  setCtaTagSinComisiones,
+  reservaModuloSlug,
 }: EditBusinessReservationsProps) {
   const priceOptions = ["Economico", "Moderado", "Medio-Alto", "Alto"];
+  const moduloSlug = String(reservaModuloSlug || "").trim();
+  const hasModulo = Boolean(moduloSlug);
+  const moduloPath = hasModulo ? `/reservas/${moduloSlug}` : "";
 
   return (
     <div className="space-y-8">
@@ -83,30 +89,46 @@ export default function EditBusinessReservations({
           <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
             <div>
               <p className="text-sm font-bold text-white">Habilitar Botón Principal</p>
-              <p className="text-xs text-slate-500 mt-1">Muestra u oculta la tarjeta de acción en tu perfil público.</p>
+              <p className="text-xs text-slate-500 mt-1">
+                {hasModulo
+                  ? "Este negocio tiene el módulo de reservas SR360: el CTA queda activo y apunta a la grilla."
+                  : "Muestra u oculta la tarjeta de acción en tu perfil público."}
+              </p>
             </div>
             <button 
               type="button"
+              disabled={hasModulo}
               onClick={() => setCtaHabilitado(!ctaHabilitado)}
               className={cn(
                 "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                ctaHabilitado ? 'bg-emerald-500' : 'bg-slate-700'
+                (hasModulo || ctaHabilitado) ? 'bg-emerald-500' : 'bg-slate-700',
+                hasModulo && "opacity-70 cursor-not-allowed"
               )}
             >
               <span className={cn(
                 "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                ctaHabilitado ? 'translate-x-6' : 'translate-x-1'
+                (hasModulo || ctaHabilitado) ? 'translate-x-6' : 'translate-x-1'
               )} />
             </button>
           </div>
 
-          {ctaHabilitado && (
+          {(hasModulo || ctaHabilitado) && (
             <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
+              {hasModulo ? (
+                <div className="space-y-2 p-4 rounded-2xl border border-amber-500/25 bg-amber-500/5" data-testid="cta-modulo-locked">
+                  <p className="text-xs font-bold text-amber-300 uppercase tracking-wider">Módulo de reservas activo</p>
+                  <p className="text-sm text-slate-300">
+                    El botón de la ficha apunta automáticamente a{" "}
+                    <span className="font-mono text-white">{moduloPath}</span>
+                  </p>
+                </div>
+              ) : null}
+
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Título del CTA</label>
                 <input 
                   type="text"
-                  value={ctaTitulo}
+                  value={hasModulo ? (ctaTitulo || "Reserve su turno") : ctaTitulo}
                   onChange={(e) => setCtaTitulo(e.target.value)}
                   placeholder="Ej: Agenda tu Cita, Pedi para llevar..."
                   className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
@@ -138,12 +160,17 @@ export default function EditBusinessReservations({
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">URL de Destino (Enlace)</label>
                 <input 
                   type="text"
-                  value={ctaLink}
+                  value={hasModulo ? moduloPath : ctaLink}
                   onChange={(e) => setCtaLink(e.target.value)}
+                  disabled={hasModulo}
                   placeholder="https://meitre.com/tu-restaurante"
-                  className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                  className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 outline-none transition-all disabled:opacity-60"
                 />
-                <p className="text-[10px] text-slate-500 ml-1 italic">Si se deja vacío, el botón redirigirá al WhatsApp del negocio.</p>
+                <p className="text-[10px] text-slate-500 ml-1 italic">
+                  {hasModulo
+                    ? "Lo gestiona el módulo de reservas; no se puede cambiar a mano."
+                    : "Si se deja vacío, el botón redirigirá al WhatsApp del negocio."}
+                </p>
               </div>
 
               <div className="pt-4 border-t border-white/5 space-y-4">

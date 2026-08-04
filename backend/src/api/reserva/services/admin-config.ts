@@ -12,8 +12,10 @@ import {
   resolveConfigCapabilities,
   type ReservaAccess,
 } from './config-access';
-import { applySimulacionGate } from './sim-gate';
+import { applySimulacionGate, canDisableSimulacion } from './sim-gate';
 import { isMpOauthConfigured } from './mp-oauth';
+import { normalizeModoCobro, parseModoCobroInput } from './modo-cobro';
+import { syncLinkedNegocioCtaFromComercio } from './sync-negocio-cta';
 
 const DAY_KEYS = ['0', '1', '2', '3', '4', '5', '6'] as const;
 
@@ -114,8 +116,9 @@ function serializeConfig(comercio: any, access?: ReservaAccess) {
     mp_oauth_available: isMpOauthConfigured(),
     mp_oauth_connected: Boolean(comercio.mp_oauth_user_id || comercio.mp_oauth_connected_at),
     operado_por_plataforma: comercio.operado_por_plataforma !== false,
-    can_disable_simulacion: isComercioMpConfigured(comercio),
+    can_disable_simulacion: canDisableSimulacion(comercio),
     modo_simulacion: Boolean(comercio.modo_simulacion),
+    modo_cobro: normalizeModoCobro(comercio.modo_cobro),
     logo_url: mediaUrl(comercio.logo),
     portada_url: mediaUrl(comercio.imagen_portada),
     ...caps,
@@ -127,6 +130,7 @@ async function loadComercio(strapi: any, slug: string) {
   const comercio = await repo.findBySlug(slug.trim(), {
     logo: { fields: ['url'] },
     imagen_portada: { fields: ['url'] },
+    negocio: { fields: ['documentId', 'slug'] },
   });
   if (!comercio) throw new NotFoundError('Comercio de reservas');
   return { repo, comercio };
@@ -172,6 +176,9 @@ function buildPatch(body: Record<string, unknown>, comercio: any) {
   }
   if (body.modo_simulacion !== undefined) {
     patch.modo_simulacion = parseBool(body.modo_simulacion, Boolean(comercio.modo_simulacion));
+  }
+  if (body.modo_cobro !== undefined) {
+    patch.modo_cobro = parseModoCobroInput(body.modo_cobro);
   }
   if (body.activo !== undefined) {
     patch.activo = parseBool(body.activo, comercio.activo !== false);
@@ -243,14 +250,25 @@ async function uploadMediaIfPresent(
 
 export async function adminGetConfig(strapi: any, slug: string, access: ReservaAccess) {
   const { repo, comercio } = await loadComercio(strapi, slug);
-  // E2 heal: si quedó sim OFF sin token propio (bug previo / env global), forzar ON.
-  if (!isComercioMpConfigured(comercio) && !comercio.modo_simulacion) {
+  // E2 heal: sim OFF sin forma de cobrar en vivo → forzar ON.
+  if (!comercio.modo_simulacion && !canDisableSimulacion(comercio)) {
     await repo.update(comercio.documentId, { modo_simulacion: true });
     const healed = await repo.findByDocumentId(comercio.documentId, {
       logo: { fields: ['url'] },
       imagen_portada: { fields: ['url'] },
+      negocio: { fields: ['documentId', 'slug'] },
     });
+    try {
+      await syncLinkedNegocioCtaFromComercio(strapi, healed);
+    } catch (err: any) {
+      strapi.log.warn(`[ReservasConfig] Sync CTA negocio falló: ${err?.message || err}`);
+    }
     return serializeConfig(healed, access);
+  }
+  try {
+    await syncLinkedNegocioCtaFromComercio(strapi, comercio);
+  } catch (err: any) {
+    strapi.log.warn(`[ReservasConfig] Sync CTA negocio falló: ${err?.message || err}`);
   }
   return serializeConfig(comercio, access);
 }
@@ -305,6 +323,15 @@ export async function adminUpdateConfig(
     await repo.update(comercio.documentId, patch);
   }
   if (wantsConfig) await uploadMediaIfPresent(repo, comercio.documentId, files);
-  const refreshed = await repo.findByDocumentId(comercio.documentId);
+  const refreshed = await repo.findByDocumentId(comercio.documentId, {
+    logo: { fields: ['url'] },
+    imagen_portada: { fields: ['url'] },
+    negocio: { fields: ['documentId', 'slug'] },
+  });
+  try {
+    await syncLinkedNegocioCtaFromComercio(strapi, refreshed);
+  } catch (err: any) {
+    strapi.log.warn(`[ReservasConfig] Sync CTA negocio falló: ${err?.message || err}`);
+  }
   return serializeConfig(refreshed, access);
 }

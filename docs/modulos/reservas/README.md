@@ -15,7 +15,7 @@ Encaja con el ERS del directorio: hoy “reservar” suele ser un link externo o
 | [decisiones.md](decisiones.md) | Decisiones cerradas del módulo (RES-DEC-…) |
 | [complejidad-y-stack.md](complejidad-y-stack.md) | Qué se reutiliza de SR360 vs qué se construye de cero |
 | [primer-cliente-jaditek.md](primer-cliente-jaditek.md) | Cómo se configura Jaditek como comercio #1 |
-| [alta-cliente.md](alta-cliente.md) | Instructivo: otorgar el módulo a un cliente (alta + OAuth remoto) |
+| [alta-cliente.md](alta-cliente.md) | Instructivo: otorgar el módulo a un cliente (alta + OAuth remoto + modos de cobro) |
 | [alcance-mvp.md](alcance-mvp.md) | Qué entra / qué no entra en la primera versión |
 | [implementation_plan.md](implementation_plan.md) | Plan técnico MVP (datos, capas, spikes, PRs) |
 | [mp-sandbox-runbook.md](mp-sandbox-runbook.md) | Cómo pasar de simulación a MP sandbox en local |

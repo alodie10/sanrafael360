@@ -437,6 +437,8 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       const strapiUrl = getStrapiUrl();
       const formData = new FormData();
       
+      const moduloSlug = String(negocio.reserva_comercio?.slug || "").trim();
+      const moduloPath = moduloSlug ? `/reservas/${moduloSlug}` : "";
       const payload = {
         nombre,
         descripcion,
@@ -449,14 +451,14 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         facebook,
         instagram,
         price_range: priceRange,
-        reserva_habilitada: reservaHabilitada,
-        reserva_url: reservaUrl,
-        cta_habilitado: ctaHabilitado,
-        cta_titulo: ctaTitulo,
+        reserva_habilitada: moduloSlug ? true : reservaHabilitada,
+        reserva_url: moduloSlug ? moduloPath : reservaUrl,
+        cta_habilitado: moduloSlug ? true : ctaHabilitado,
+        cta_titulo: moduloSlug ? (ctaTitulo || "Reserve su turno") : ctaTitulo,
         cta_texto: ctaTexto,
-        cta_boton_texto: ctaBotonTexto,
-        cta_link: ctaLink,
-        cta_tag_confirmacion: ctaTagConfirmacion,
+        cta_boton_texto: moduloSlug ? (ctaBotonTexto || "Reservar turno") : ctaBotonTexto,
+        cta_link: moduloSlug ? moduloPath : ctaLink,
+        cta_tag_confirmacion: moduloSlug ? true : ctaTagConfirmacion,
         cta_tag_sin_comisiones: ctaTagSinComisiones,
         schedules,
         categoria: isAdmin ? categoria : undefined,
@@ -606,6 +608,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
           setCtaTagConfirmacion={setCtaTagConfirmacion}
           ctaTagSinComisiones={ctaTagSinComisiones}
           setCtaTagSinComisiones={setCtaTagSinComisiones}
+          reservaModuloSlug={negocio.reserva_comercio?.slug}
         />
 
         <EditBusinessRatings

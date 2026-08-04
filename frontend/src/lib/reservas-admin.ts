@@ -147,6 +147,7 @@ export type ReservaComercioConfig = {
   mp_oauth_available?: boolean;
   mp_oauth_connected?: boolean;
   modo_simulacion: boolean;
+  modo_cobro?: 'mp_requerido' | 'solo_local' | 'mp_o_local';
   logo_url?: string | null;
   portada_url?: string | null;
 };

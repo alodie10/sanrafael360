@@ -36,6 +36,7 @@ export default factories.createCoreController('api::reserva.reserva', ({ strapi 
       cliente_nombre: body.cliente_nombre,
       cliente_email: body.cliente_email,
       cliente_telefono: body.cliente_telefono,
+      metodo_pago: body.metodo_pago,
     });
     ctx.send({ success: true, data: result });
   }),

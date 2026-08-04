@@ -62,6 +62,9 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
   const [cancelHoras, setCancelHoras] = useState('24');
   const [reembolso, setReembolso] = useState('100');
   const [modoSim, setModoSim] = useState(true);
+  const [modoCobro, setModoCobro] = useState<'mp_requerido' | 'solo_local' | 'mp_o_local'>(
+    'mp_requerido'
+  );
   const [days, setDays] = useState<Record<string, DayRow>>({});
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [portadaFile, setPortadaFile] = useState<File | null>(null);
@@ -85,6 +88,11 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
       String(data.cancelacion_politica?.dentro_ventana?.reembolso_porcentaje ?? 100)
     );
     setModoSim(Boolean(data.modo_simulacion));
+    setModoCobro(
+      data.modo_cobro === 'solo_local' || data.modo_cobro === 'mp_o_local'
+        ? data.modo_cobro
+        : 'mp_requerido'
+    );
     setOperadoPlataforma(data.operado_por_plataforma !== false);
     setDays(horarioToRows(data.horario));
     setLogoFile(null);
@@ -144,7 +152,8 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
       if (config.can_edit_config) {
         const canDisable =
           !clearMpToken &&
-          (Boolean(config.can_disable_simulacion || config.mp_configured) ||
+          (modoCobro === 'solo_local' ||
+            Boolean(config.can_disable_simulacion || config.mp_configured) ||
             mpTokenInput.trim().length >= 20);
         Object.assign(fields, {
           nombre_publico: nombrePublico,
@@ -157,6 +166,7 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
           cancelacion_horas_minimas: Number(cancelHoras),
           reembolso_porcentaje: Number(reembolso),
           modo_simulacion: canDisable ? modoSim : true,
+          modo_cobro: modoCobro,
           horario: rowsToHorario(days),
         });
       }
@@ -212,17 +222,29 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
   const fieldsDisabled = busy || !canEdit;
   const canDisableSim =
     !clearMpToken &&
-    (Boolean(config?.can_disable_simulacion || config?.mp_configured) ||
+    (modoCobro === 'solo_local' ||
+      Boolean(config?.can_disable_simulacion || config?.mp_configured) ||
       mpTokenInput.trim().length >= 20);
   const effectiveModoSim = canDisableSim ? modoSim : true;
 
   return (
     <section className="ra-panel" data-testid="reserva-admin-config">
       <div className="ra-config-head">
-        <h2>Configuración del comercio</h2>
-        <span className={`ra-badge ${effectiveModoSim ? 'is-sim' : 'is-live'}`}>
-          {effectiveModoSim ? 'Simulación ON' : 'MP real (sandbox/prod)'}
-        </span>
+        <div>
+          <h2>Configuración del comercio</h2>
+          <span className={`ra-badge ${effectiveModoSim ? 'is-sim' : 'is-live'}`}>
+            {effectiveModoSim ? 'Simulación ON' : 'MP real (sandbox/prod)'}
+          </span>
+        </div>
+        <button
+          type="button"
+          className="ra-btn primary"
+          disabled={busy || (!canEdit && !canEditMp && !canEditOp)}
+          data-testid="reserva-config-save-top"
+          onClick={() => void onSave()}
+        >
+          {busy ? 'Guardando…' : 'Guardar cambios'}
+        </button>
       </div>
       <p className="ra-hint">
         {config?.operado_por_plataforma !== false
@@ -354,13 +376,52 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
       {!canDisableSim ? (
         <p className="ra-muted" data-testid="reserva-sim-gate-hint">
           Sin token de cobros no se puede cobrar con MP: la simulación queda fija en ON.
-          {canEditMp ? ' Pegá el token abajo para poder apagarla.' : ''}
+          {canEdit
+            ? ' Conectá MP, o elegí cobro “solo en el local” abajo.'
+            : canEditMp
+              ? ' Pegá el token abajo para poder apagarla.'
+              : ''}
         </p>
       ) : (
         <p className="ra-muted">
-          Con token cargado podés apagar la simulación y cobrar (sandbox/prod).
+          {modoCobro === 'solo_local'
+            ? 'Cobro en el local: podés apagar la simulación sin Mercado Pago.'
+            : 'Con token cargado (o cobro local) podés apagar la simulación.'}
         </p>
       )}
+
+      {canEdit ? (
+        <fieldset className="ra-fieldset ra-modo-cobro" disabled={busy} data-testid="reserva-modo-cobro">
+          <legend>Modo de cobro</legend>
+          <label className="ra-check">
+            <input
+              type="radio"
+              name="modo_cobro"
+              checked={modoCobro === 'mp_requerido'}
+              onChange={() => setModoCobro('mp_requerido')}
+            />
+            Solo Mercado Pago (anticipado)
+          </label>
+          <label className="ra-check">
+            <input
+              type="radio"
+              name="modo_cobro"
+              checked={modoCobro === 'solo_local'}
+              onChange={() => setModoCobro('solo_local')}
+            />
+            Solo pago en el local (confirma turno sin MP)
+          </label>
+          <label className="ra-check">
+            <input
+              type="radio"
+              name="modo_cobro"
+              checked={modoCobro === 'mp_o_local'}
+              onChange={() => setModoCobro('mp_o_local')}
+            />
+            El visitante elige: MP anticipado o pago en el local
+          </label>
+        </fieldset>
+      ) : null}
 
       <h3 className="ra-subhead">Mercado Pago — Token de cobros</h3>
       <p className="ra-muted" style={{ marginBottom: '0.75rem' }}>
@@ -571,10 +632,11 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
         <button
           type="button"
           className="ra-btn primary"
-          disabled={busy || (!canEdit && !canEditOp)}
+          disabled={busy || (!canEdit && !canEditMp && !canEditOp)}
+          data-testid="reserva-config-save-bottom"
           onClick={() => void onSave()}
         >
-          Guardar configuración
+          {busy ? 'Guardando…' : 'Guardar cambios'}
         </button>
       </div>
     </section>

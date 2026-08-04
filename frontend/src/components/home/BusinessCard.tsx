@@ -61,6 +61,26 @@ export default function BusinessCard({
 
   const isFav = isFavorite(businessId);
 
+  const reservaHref = (() => {
+    const raw = (negocio.cta_link || negocio.reserva_url || "").trim();
+    if (!raw) return null;
+    if (raw.startsWith("/reservas/")) return raw;
+    try {
+      const u = new URL(raw);
+      if (
+        (u.protocol === "http:" || u.protocol === "https:") &&
+        u.pathname.startsWith("/reservas/")
+      ) {
+        return u.pathname;
+      }
+    } catch {
+      /* ignore */
+    }
+    return null;
+  })();
+  const showReservaBadge =
+    Boolean(reservaHref) && negocio.reserva_habilitada !== false;
+
   // Calcular rating usando los campos precalculados de Strapi
   let displayCount = negocio.review_count || 0;
   let averageRating = negocio.rating || 0;
@@ -220,6 +240,15 @@ export default function BusinessCard({
               <span className="font-medium text-white/30">$</span>
             )}
           </div>
+
+          {showReservaBadge && reservaHref ? (
+            <span
+              className="mt-1 inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-300/95"
+              data-testid="home-reserva-badge"
+            >
+              Reserve su turno
+            </span>
+          ) : null}
         </Link>
       </motion.div>
 

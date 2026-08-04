@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ import {
   postWalkIn,
 } from '@/lib/reservas-admin';
 import ReservasAdminConfig from './ReservasAdminConfig';
+import CopyPublicReservaLink from './CopyPublicReservaLink';
 import './reservas-admin.css';
 
 type Props = {
@@ -84,27 +85,53 @@ export default function ReservasAdminClient({
   const [selected, setSelected] = useState<Selection | null>(null);
   const [walkNombre, setWalkNombre] = useState('');
   const [bloqueoMotivo, setBloqueoMotivo] = useState('Mantenimiento');
+  const fechaRef = useRef(fecha);
+  const busyRef = useRef(busy);
+  fechaRef.current = fecha;
+  busyRef.current = busy;
 
   const brand = agenda.comercio?.nombre_publico || agenda.comercio?.nombre || slug;
   const dia = agenda.dias?.[0];
 
-  const reload = async (nextFecha = fecha) => {
-    setBusy(true);
-    setError(null);
-    try {
-      const data = await fetchAdminAgenda(jwt, slug, { fecha: nextFecha, dias: 1 });
-      setAgenda(data);
-      setFecha(data.desde);
-      setSelected(null);
-      router.replace(`/portal/reservas/${slug}?fecha=${data.desde}`);
-    } catch (err: any) {
-      const msg = err?.message || 'Error al recargar';
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setBusy(false);
-    }
-  };
+  const reload = useCallback(
+    async (nextFecha = fechaRef.current, opts: { silent?: boolean } = {}) => {
+      if (!opts.silent) {
+        setBusy(true);
+        setError(null);
+      }
+      try {
+        const data = await fetchAdminAgenda(jwt, slug, { fecha: nextFecha, dias: 1 });
+        setAgenda(data);
+        setFecha(data.desde);
+        if (!opts.silent) setSelected(null);
+        router.replace(`/portal/reservas/${slug}?fecha=${data.desde}`);
+      } catch (err: any) {
+        if (!opts.silent) {
+          const msg = err?.message || 'Error al recargar';
+          setError(msg);
+          toast.error(msg);
+        }
+      } finally {
+        if (!opts.silent) setBusy(false);
+      }
+    },
+    [jwt, slug, router]
+  );
+
+  // Tras una reserva online (otra pestaña), al volver al módulo se actualiza sola.
+  useEffect(() => {
+    const softRefresh = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (busyRef.current) return;
+      void reload(fechaRef.current, { silent: true });
+    };
+    window.addEventListener('focus', softRefresh);
+    document.addEventListener('visibilitychange', softRefresh);
+    return () => {
+      window.removeEventListener('focus', softRefresh);
+      document.removeEventListener('visibilitychange', softRefresh);
+    };
+  }, [reload]);
 
   const onWalkIn = async () => {
     if (!selected) return;
@@ -211,6 +238,7 @@ export default function ReservasAdminClient({
             {' · '}
             <Link href="/portal/reservas">Todos los comercios</Link>
           </p>
+          <CopyPublicReservaLink path={`/reservas/${slug}`} />
         </div>
       </header>
 
@@ -238,6 +266,15 @@ export default function ReservasAdminClient({
                 }}
               />
             </label>
+            <button
+              type="button"
+              className="ra-btn"
+              disabled={busy}
+              data-testid="reserva-agenda-refresh"
+              onClick={() => void reload(fecha)}
+            >
+              Actualizar
+            </button>
           </div>
         </div>
 

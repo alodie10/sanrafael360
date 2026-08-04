@@ -129,6 +129,8 @@ export interface Negocio {
   promocion_activa?: boolean;
   promocion_flyer?: StrapiMedia;
   ofertas?: Oferta[];
+  /** Soft-link al módulo de reservas SR360 */
+  reserva_comercio?: { documentId?: string; slug?: string; nombre?: string } | null;
 }
 
 export interface StrapiUser {

@@ -8,14 +8,17 @@ export type CheckoutPayload = {
   cliente_nombre: string;
   cliente_email: string;
   cliente_telefono?: string;
+  metodo_pago?: 'mp' | 'local';
 };
 
 export type CheckoutResult = {
   simulated: boolean;
+  pago_en_local?: boolean;
   codigo: string;
   reservaDocumentId: string;
   init_point: string;
   preferenceId?: string;
+  metodo_pago?: string;
 };
 
 export async function postCheckout(payload: CheckoutPayload): Promise<CheckoutResult> {

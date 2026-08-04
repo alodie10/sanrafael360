@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { applySimulacionGate, willMpBeConfigured } from '../../src/api/reserva/services/sim-gate';
+import { applySimulacionGate, willMpBeConfigured, canDisableSimulacion } from '../../src/api/reserva/services/sim-gate';
 
-describe('sim-gate (E2)', () => {
+describe('sim-gate (E2 + modo_cobro)', () => {
   it('sin token no está configurado', () => {
     expect(willMpBeConfigured({}, {})).toBe(false);
   });
@@ -25,14 +25,33 @@ describe('sim-gate (E2)', () => {
     ).toBe(false);
   });
 
-  it('rechaza apagar simulación sin token', () => {
+  it('rechaza apagar simulación sin token (mp_requerido)', () => {
     const patch: Record<string, unknown> = { modo_simulacion: false };
     expect(() => applySimulacionGate({}, { modo_simulacion: false }, patch)).toThrow(
       /simulación/i
     );
   });
 
-  it('fuerza simulación ON al limpiar token', () => {
+  it('permite apagar simulación con solo_local sin token', () => {
+    const patch: Record<string, unknown> = { modo_simulacion: false };
+    applySimulacionGate(
+      { modo_cobro: 'solo_local' },
+      { modo_simulacion: false },
+      patch
+    );
+    expect(patch.modo_simulacion).toBe(false);
+  });
+
+  it('permite apagar simulación al setear solo_local en el mismo save', () => {
+    const patch: Record<string, unknown> = {
+      modo_simulacion: false,
+      modo_cobro: 'solo_local',
+    };
+    applySimulacionGate({}, { modo_simulacion: false, modo_cobro: 'solo_local' }, patch);
+    expect(patch.modo_simulacion).toBe(false);
+  });
+
+  it('fuerza simulación ON al limpiar token (mp_requerido)', () => {
     const patch: Record<string, unknown> = {};
     applySimulacionGate(
       { mp_access_token_enc: 'enc', modo_simulacion: false },
@@ -60,5 +79,14 @@ describe('sim-gate (E2)', () => {
       patch
     );
     expect(patch.modo_simulacion).toBe(false);
+  });
+
+  it('canDisableSimulacion respeta solo_local', () => {
+    expect(canDisableSimulacion({ modo_cobro: 'solo_local' })).toBe(true);
+    expect(canDisableSimulacion({ modo_cobro: 'mp_requerido' })).toBe(false);
+    expect(canDisableSimulacion({ modo_cobro: 'mp_o_local' })).toBe(false);
+    expect(
+      canDisableSimulacion({ modo_cobro: 'mp_o_local', mp_access_token_enc: 'enc' })
+    ).toBe(true);
   });
 });

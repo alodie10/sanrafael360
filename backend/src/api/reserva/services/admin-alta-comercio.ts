@@ -6,6 +6,7 @@ import {
   DEFAULT_CANCELACION_POLITICA,
   DEFAULT_HORARIO_LUN_SAB_16_22,
 } from '../../reserva-comercio/services/seed-jaditek';
+import { syncNegocioCtaFromReservaSlug } from './sync-negocio-cta';
 
 export type AdminAltaComercioInput = {
   negocioDocumentId: string;
@@ -146,16 +147,14 @@ export async function adminCreateComercio(strapi: any, input: AdminAltaComercioI
     cancelacion_politica: DEFAULT_CANCELACION_POLITICA,
     hold_ttl_minutos: 15,
     modo_simulacion: true,
+    modo_cobro: 'mp_requerido',
     operado_por_plataforma: operado,
     negocio: negocioDocumentId,
   });
 
   await recursoRepo.createMany(created.documentId, recursoNames);
 
-  await negocioRepo.updateDraftAndPublished(negocioDocumentId, {
-    reserva_url: `/reservas/${slug}`,
-    reserva_habilitada: true,
-  });
+  await syncNegocioCtaFromReservaSlug(strapi, negocioDocumentId, slug);
 
   const refreshed = await comercioRepo.findByDocumentId(created.documentId, {
     recursos: { sort: ['orden:asc'], fields: ['nombre', 'orden', 'activo'] },

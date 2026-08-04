@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { CalendarCheck, ArrowRight, Sparkles, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
@@ -15,17 +15,22 @@ interface BookingWidgetProps {
   ctaLink?: string;
   ctaTagConfirmacion?: boolean;
   ctaTagSinComisiones?: boolean;
+  /** Slug del módulo SR360: fuerza CTA encendido → /reservas/{slug} */
+  reservaModuloSlug?: string | null;
   onTrackClick?: (type: 'whatsapp' | 'website' | 'view') => void;
 }
 
-function isValidUrl(url?: string): boolean {
-  if (!url || url.trim() === "") return false;
+function resolveCtaHref(url?: string): string | undefined {
+  if (!url || url.trim() === "") return undefined;
+  const trimmed = url.trim();
+  if (trimmed.startsWith("/")) return trimmed;
   try {
-    const parsed = new URL(url);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") return trimmed;
   } catch {
-    return false;
+    return undefined;
   }
+  return undefined;
 }
 
 export default function BookingWidget({ 
@@ -40,28 +45,37 @@ export default function BookingWidget({
   ctaLink,
   ctaTagConfirmacion,
   ctaTagSinComisiones,
+  reservaModuloSlug,
   onTrackClick 
 }: BookingWidgetProps) {
-  // Priorizar la nueva configuración del CTA. Si no existe, usar la lógica antigua (reservas).
-  const isEnabled = ctaHabilitado ?? (reservaHabilitada !== false);
+  const moduloSlug = String(reservaModuloSlug || "").trim();
+  const hasModulo = Boolean(moduloSlug);
+  const moduloPath = hasModulo ? `/reservas/${moduloSlug}` : undefined;
+
+  // Módulo de reservas SR360: siempre visible y apunta al slug (no WhatsApp).
+  // Sin módulo: CTA manual; ojo: cta_habilitado=false (default schema) oculta el widget.
+  const isEnabled = hasModulo || ctaHabilitado === true || (ctaHabilitado == null && reservaHabilitada !== false);
   
   if (!isEnabled) return null;
 
-  // Si hay un ctaLink personalizado, lo usamos. Si no, usamos el reservaUrl (legacy)
-  const finalLink = ctaLink || reservaUrl;
-  const validLink = isValidUrl(finalLink) ? finalLink : undefined;
+  const finalLink = moduloPath || ctaLink || reservaUrl;
+  const validLink = resolveCtaHref(finalLink);
   const validWhatsapp = whatsapp && whatsapp.replace(/\D/g, "").length >= 10
     ? whatsapp
     : undefined;
 
   if (!validLink && !validWhatsapp) return null;
 
-  const title = ctaTitulo || "Agenda tu Cita";
+  const title = hasModulo
+    ? (ctaTitulo || "Reserve su turno")
+    : (ctaTitulo || "Agenda tu Cita");
   const isWhatsappFallback = !validLink && !!validWhatsapp;
-  const buttonText = ctaBotonTexto || (isWhatsappFallback ? "Consultar Cita" : "Reservar Ahora");
+  const buttonText = hasModulo
+    ? (ctaBotonTexto || "Reservar turno")
+    : (ctaBotonTexto || (isWhatsappFallback ? "Consultar Cita" : "Reservar Ahora"));
 
   return (
-    <div className="relative w-full rounded-3xl p-8 bg-gradient-to-br from-primary/20 via-slate-900 to-slate-900 border border-primary/20 shadow-2xl overflow-hidden group mb-12">
+    <div className="relative w-full rounded-3xl p-8 bg-gradient-to-br from-primary/20 via-slate-900 to-slate-900 border border-primary/20 shadow-2xl overflow-hidden group mb-12" data-testid="booking-widget">
       <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 blur-[120px] -z-10 group-hover:bg-primary/30 transition-all duration-1000" />
       
       <div className="flex flex-col gap-8">
@@ -76,20 +90,20 @@ export default function BookingWidget({
             {ctaTexto ? ctaTexto : (
               <>
                 No pierdas tu lugar en <span className="text-white font-bold">{businessName}</span>. 
-                Reserva ahora de forma directa y asegura tu experiencia en San Rafael.
+                Reserva ahora de forma directa y asegura tu lugar.
               </>
             )}
           </p>
           
-          {(ctaTagConfirmacion || ctaTagSinComisiones) && (
+          {(hasModulo || ctaTagConfirmacion || ctaTagSinComisiones) && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] font-bold uppercase tracking-widest text-primary">
-               {ctaTagConfirmacion && (
+               {(hasModulo || ctaTagConfirmacion) && (
                  <div className="flex items-center gap-1">
                     <Sparkles className="w-3 h-3" />
                     <span>Confirmación Inmediata</span>
                  </div>
                )}
-               {ctaTagConfirmacion && ctaTagSinComisiones && (
+               {(hasModulo || ctaTagConfirmacion) && ctaTagSinComisiones && (
                  <div className="w-1 h-1 rounded-full bg-primary/30" />
                )}
                {ctaTagSinComisiones && (
@@ -103,7 +117,9 @@ export default function BookingWidget({
           {!isWhatsappFallback && validLink ? (
             <motion.a 
                href={validLink}
-               target="_blank"
+               target={validLink.startsWith('/') ? undefined : '_blank'}
+               rel={validLink.startsWith('/') ? undefined : 'noreferrer'}
+               data-testid="booking-widget-cta"
                onClick={() => onTrackClick?.('website')}
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}

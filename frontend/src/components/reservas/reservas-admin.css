@@ -54,6 +54,13 @@
   color: #e8a317;
 }
 
+.ra-date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.65rem;
+}
+
 .ra-date label,
 .ra-tools label {
   display: grid;
@@ -332,6 +339,13 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.5rem;
+}
+
+.ra-config-head > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
 }
 
 .ra-fieldset {
@@ -677,3 +691,45 @@
   gap: 0.65rem;
   margin: 0 0 1rem;
 }
+
+.ra-public-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(232, 163, 23, 0.28);
+  background: rgba(232, 163, 23, 0.06);
+  max-width: 100%;
+}
+
+.ra-public-link-url {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.88rem;
+  color: #f2efe6;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.ra-public-link-url:hover {
+  color: #e8a317;
+}
+
+.ra-public-link .ra-btn {
+  flex: 0 0 auto;
+}
+
+.ra-modo-cobro {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0 0 1rem;
+}
+
+.ra-modo-cobro legend {
+  margin-bottom: 0.35rem;
+}
+

@@ -1,13 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReservaDisponibilidad, ReservaSlot } from '@/lib/reservas';
+import { fetchDisponibilidad } from '@/lib/reservas';
 import { postCheckout } from '@/lib/reservas-checkout';
 import './reservas-public.css';
 
 type Props = {
   initial: ReservaDisponibilidad;
 };
+
+type MetodoPago = 'mp' | 'local';
 
 function formatDayLabel(fecha: string): string {
   const [y, m, d] = fecha.split('-').map(Number);
@@ -28,7 +31,15 @@ function formatPrice(ars: number): string {
   }).format(ars);
 }
 
+function resolveDefaultMetodo(
+  modo: ReservaDisponibilidad['comercio']['modo_cobro']
+): MetodoPago {
+  if (modo === 'solo_local') return 'local';
+  return 'mp';
+}
+
 export default function ReservasPublicClient({ initial }: Props) {
+  const [data, setData] = useState(initial);
   const [selectedFecha, setSelectedFecha] = useState(initial.dias[0]?.fecha || initial.desde);
   const [selected, setSelected] = useState<{
     slot: ReservaSlot;
@@ -37,25 +48,65 @@ export default function ReservasPublicClient({ initial }: Props) {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [telefono, setTelefono] = useState('');
+  const [metodoPago, setMetodoPago] = useState<MetodoPago>(() =>
+    resolveDefaultMetodo(initial.comercio.modo_cobro)
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const softRefresh = () => {
+      if (document.visibilityState !== 'visible') return;
+      void fetchDisponibilidad(data.comercio.slug, { fecha: data.desde, dias: 7 })
+        .then((next) => {
+          if (!next) return;
+          setData(next);
+        })
+        .catch(() => {
+          /* ignore soft refresh errors */
+        });
+    };
+    window.addEventListener('focus', softRefresh);
+    document.addEventListener('visibilitychange', softRefresh);
+    return () => {
+      window.removeEventListener('focus', softRefresh);
+      document.removeEventListener('visibilitychange', softRefresh);
+    };
+  }, [data.comercio.slug, data.desde]);
+
   const dia = useMemo(
-    () => initial.dias.find((d) => d.fecha === selectedFecha) || initial.dias[0],
-    [initial.dias, selectedFecha]
+    () => data.dias.find((d) => d.fecha === selectedFecha) || data.dias[0],
+    [data.dias, selectedFecha]
   );
 
-  const comercio = initial.comercio;
+  const comercio = data.comercio;
   const brand = comercio.nombre_publico || comercio.nombre;
+  const modoCobro = comercio.modo_cobro || 'mp_requerido';
+  const showMetodoChoice = modoCobro === 'mp_o_local' && !comercio.modo_simulacion;
   const recursoNombre = selected
-    ? initial.recursos.find((r) => r.documentId === selected.recursoId)?.nombre
+    ? data.recursos.find((r) => r.documentId === selected.recursoId)?.nombre
     : null;
+
+  const ctaLabel = (() => {
+    if (submitting) return 'Confirmando…';
+    if (comercio.modo_simulacion) return 'Confirmar reserva';
+    if (modoCobro === 'solo_local' || metodoPago === 'local') {
+      return 'Reservar (pago en el local)';
+    }
+    return 'Pagar y confirmar';
+  })();
 
   const onConfirm = async () => {
     if (!selected) return;
     setError(null);
     setSubmitting(true);
     try {
+      const effectiveMetodo: MetodoPago =
+        modoCobro === 'solo_local'
+          ? 'local'
+          : modoCobro === 'mp_requerido'
+            ? 'mp'
+            : metodoPago;
       const result = await postCheckout({
         slug: comercio.slug,
         recursoDocumentId: selected.recursoId,
@@ -63,6 +114,7 @@ export default function ReservasPublicClient({ initial }: Props) {
         cliente_nombre: nombre,
         cliente_email: email,
         cliente_telefono: telefono || undefined,
+        metodo_pago: effectiveMetodo,
       });
       window.location.href = result.init_point;
     } catch (err: any) {
@@ -103,11 +155,12 @@ export default function ReservasPublicClient({ initial }: Props) {
         <div className="rp-board-meta">
           <p className="rp-meta-line">
             Turnos de {comercio.duracion_minutos} min · {formatPrice(comercio.precio_ars)}
+            {modoCobro === 'solo_local' ? ' · pago en el local' : ''}
           </p>
         </div>
 
         <div className="rp-days" role="tablist" aria-label="Días">
-          {initial.dias.map((d) => {
+          {data.dias.map((d) => {
             const active = d.fecha === selectedFecha;
             return (
               <button
@@ -135,7 +188,7 @@ export default function ReservasPublicClient({ initial }: Props) {
               <div className="rp-cell rp-cell-label" role="columnheader">
                 Hora
               </div>
-              {initial.recursos.map((r) => (
+              {data.recursos.map((r) => (
                 <div key={r.documentId} className="rp-cell rp-cell-label" role="columnheader">
                   {r.nombre}
                 </div>
@@ -146,7 +199,7 @@ export default function ReservasPublicClient({ initial }: Props) {
                 <div className="rp-cell rp-cell-time" role="rowheader">
                   {slot.hora}
                 </div>
-                {initial.recursos.map((r) => {
+                {data.recursos.map((r) => {
                   const cell = slot.recursos.find((x) => x.documentId === r.documentId);
                   const disponible = !!cell?.disponible;
                   const isSelected =
@@ -224,9 +277,36 @@ export default function ReservasPublicClient({ initial }: Props) {
                 />
               </label>
             </div>
+
+            {showMetodoChoice ? (
+              <fieldset className="rp-pago" data-testid="reserva-metodo-pago">
+                <legend>Cómo preferís pagar</legend>
+                <label className="rp-pago-opt">
+                  <input
+                    type="radio"
+                    name="metodo_pago"
+                    checked={metodoPago === 'mp'}
+                    disabled={submitting}
+                    onChange={() => setMetodoPago('mp')}
+                  />
+                  Pagar ahora con Mercado Pago
+                </label>
+                <label className="rp-pago-opt">
+                  <input
+                    type="radio"
+                    name="metodo_pago"
+                    checked={metodoPago === 'local'}
+                    disabled={submitting}
+                    onChange={() => setMetodoPago('local')}
+                  />
+                  Reservar y pagar en el local
+                </label>
+              </fieldset>
+            ) : null}
+
             {error ? <p className="rp-error">{error}</p> : null}
             <button type="submit" className="rp-cta" disabled={submitting}>
-              {submitting ? 'Confirmando…' : 'Confirmar reserva'}
+              {ctaLabel}
             </button>
           </form>
         ) : null}

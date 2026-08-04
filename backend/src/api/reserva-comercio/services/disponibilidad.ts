@@ -218,6 +218,8 @@ export async function getDisponibilidad(
       duracion_minutos: duracion,
       buffer_limpieza_minutos: bufferMin,
       timezone: timeZone,
+      modo_cobro: comercio.modo_cobro || 'mp_requerido',
+      modo_simulacion: Boolean(comercio.modo_simulacion),
       logo_url: mediaUrl(comercio.logo),
       portada_url: mediaUrl(comercio.imagen_portada),
     },

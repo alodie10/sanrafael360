@@ -62,10 +62,21 @@ En `/portal/reservas/{slug}` → **Configuración**:
   - *Lo opera San Rafael 360* → admin edita config; owner en lectura (salvo OAuth, ver §3)
   - *Lo opera el dueño* → owner edita lo operativo
 
+**CTA de la ficha (automático):** al alta (y al abrir/guardar Config del módulo) se sincroniza el negocio: `cta_habilitado`, `cta_link` → `/reservas/{slug}`, textos “Reserve su turno”. En la ficha pública, si existe `reserva_comercio`, el `BookingWidget` fuerza ese link aunque el CTA del directorio esté viejo o en `false`.
 ### 3. Mercado Pago — vínculo remoto (paso crítico)
 
 **No hace falta que el admin entre a la cuenta MP del cliente.**  
 OAuth lo hace quien tiene el login de Mercado Pago **del local**.
+
+#### Modo de cobro (RES-DEC-010)
+
+En Config → **Modo de cobro**:
+
+| Modo | Uso |
+|------|-----|
+| Solo Mercado Pago | Cobro anticipado obligatorio (default). |
+| Solo pago en el local | Confirma turno sin MP; cobran en el salón. Se puede apagar simulación sin conectar MP. |
+| El visitante elige | Grilla ofrece MP anticipado **o** pago en el local (hace falta MP conectado para la opción online). |
 
 #### Quién puede qué (hoy)
 

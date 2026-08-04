@@ -4,8 +4,9 @@ import { NotFoundError, ValidationError } from '../../../utils/errors';
 import { createReservaComercioRepository } from '../../reserva-comercio/repositories/reserva-comercio-repository';
 import { createReservaRepository } from '../repositories/reserva-repository';
 import { expireStaleHolds } from '../../reserva-comercio/services/disponibilidad';
-import { confirmReservaFromPayment } from '../../../services/reservation-payment-success-handler';
+import { confirmReservaFromPayment, confirmReservaPagoEnLocal } from '../../../services/reservation-payment-success-handler';
 import { resolveComercioMpAccessToken } from './mp-token';
+import { normalizeModoCobro, resolveCheckoutMetodoPago } from './modo-cobro';
 
 const inFlightMpPaymentIds = new Set<string>();
 
@@ -16,6 +17,8 @@ export type CheckoutInput = {
   cliente_nombre: string;
   cliente_email: string;
   cliente_telefono?: string;
+  /** mp | local — requerido solo si modo_cobro = mp_o_local */
+  metodo_pago?: string;
 };
 
 function generateCodigo(): string {
@@ -137,13 +140,30 @@ export async function createCheckout(strapi: any, input: CheckoutInput) {
       codigo,
       reservaDocumentId: hold.documentId,
       init_point: successUrl,
+      metodo_pago: 'simulado',
+    };
+  }
+
+  const modoCobro = normalizeModoCobro(comercio.modo_cobro);
+  const metodoPago = resolveCheckoutMetodoPago(modoCobro, input.metodo_pago);
+
+  if (metodoPago === 'local') {
+    await confirmReservaPagoEnLocal(strapi, hold.documentId);
+    strapi.log.info(`[ReservaCheckout] Pago en local OK ${codigo}`);
+    return {
+      simulated: false,
+      pago_en_local: true,
+      codigo,
+      reservaDocumentId: hold.documentId,
+      init_point: successUrl,
+      metodo_pago: 'local',
     };
   }
 
   const accessToken = resolveComercioMpAccessToken(comercio);
   if (!accessToken) {
     throw new ValidationError(
-      'Token MP no configurado (pegá el Access Token en Configuración del comercio o definí mp_token_env)'
+      'Token MP no configurado (conectá Mercado Pago en Configuración, o usá modo cobro “solo en el local”)'
     );
   }
 
@@ -179,6 +199,7 @@ export async function createCheckout(strapi: any, input: CheckoutInput) {
       // Con credenciales actuales (APP_USR de prueba) sandbox_init_point puede loopear
       // (ERR_TOO_MANY_REDIRECTS). Preferir init_point; fallback a sandbox.
       init_point: result.init_point || result.sandbox_init_point,
+      metodo_pago: 'mp',
     };
   } catch (err: any) {
     await reservaRepo.update(hold.documentId, {

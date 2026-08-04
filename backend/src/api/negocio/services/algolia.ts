@@ -80,6 +80,10 @@ export const syncNegocioToAlgolia = async (documentId: string) => {
           valida_desde: o.valida_desde,
           activa: o.activa
         })) || [],
+      reserva_url: negocioData.reserva_url || null,
+      reserva_habilitada: negocioData.reserva_habilitada !== false,
+      cta_link: negocioData.cta_link || null,
+      cta_habilitado: Boolean(negocioData.cta_habilitado),
       _geoloc: negocioData.latitud && negocioData.longitud ? {
         lat: negocioData.latitud,
         lng: negocioData.longitud

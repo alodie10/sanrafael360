@@ -36,6 +36,12 @@ export default (_config: unknown, { strapi: _strapi }: { strapi: any }) => {
         throw new ValidationError('Access Token MP inválido (muy corto)');
       }
     }
+    if (body.modo_cobro !== undefined && body.modo_cobro !== null && body.modo_cobro !== '') {
+      const allowed = ['mp_requerido', 'solo_local', 'mp_o_local'];
+      if (!allowed.includes(String(body.modo_cobro).trim())) {
+        throw new ValidationError(`modo_cobro inválido (usar: ${allowed.join(' | ')})`);
+      }
+    }
     await next();
   };
 };

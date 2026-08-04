@@ -32,6 +32,8 @@ export type ReservaDisponibilidad = {
     duracion_minutos: number;
     buffer_limpieza_minutos: number;
     timezone: string;
+    modo_cobro?: 'mp_requerido' | 'solo_local' | 'mp_o_local';
+    modo_simulacion?: boolean;
     logo_url: string | null;
     portada_url: string | null;
   };

@@ -98,6 +98,12 @@
       "type": "boolean",
       "default": false
     },
+    "modo_cobro": {
+      "type": "enumeration",
+      "enum": ["mp_requerido", "solo_local", "mp_o_local"],
+      "default": "mp_requerido",
+      "description": "mp_requerido = solo MP; solo_local = confirma sin cobro online; mp_o_local = visitante elige"
+    },
     "logo": {
       "type": "media",
       "multiple": false,

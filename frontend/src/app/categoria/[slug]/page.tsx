@@ -179,7 +179,12 @@ export default async function CategoriaPage({
           "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug" +
           "&populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo" +
           "&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url" +
-          "&populate[owner][fields][0]=id";
+          "&populate[owner][fields][0]=id" +
+          "&fields[0]=nombre&fields[1]=slug&fields[2]=direccion&fields[3]=is_premium" +
+          "&fields[4]=premium_valid_until&fields[5]=price_range&fields[6]=rating" +
+          "&fields[7]=review_count&fields[8]=google_rating&fields[9]=google_review_count" +
+          "&fields[10]=tripadvisor_rating&fields[11]=tripadvisor_review_count" +
+          "&fields[12]=reserva_url&fields[13]=reserva_habilitada&fields[14]=cta_link&fields[15]=cta_habilitado";
         
         const filters = `filters[$or][0][categoria][slug][$eq]=${slug}&filters[$or][1][categoria][parent][slug][$eq]=${slug}`;
         const negRes = await fetchFromStrapi(

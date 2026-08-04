@@ -85,3 +85,14 @@ Formato:
   5. **UX no técnica para el token (fase 1):** guía paso a paso con capturas (“entrar a Mercado Pago Developers → Tu aplicación → Credenciales de prueba → copiar Access Token”) + campo “pegar acá” en el portal admin. Fase 2 (después): botón **Conectar Mercado Pago** (OAuth) para no copiar secretos.  
 - **Qué se descartó (por ahora):** self-serve del dueño para “activar reservas”; OAuth MP como primer corte; tokens solo en variables de entorno por cliente.  
 - **Qué sigue:** backlog D/E en `backlog-operativo.md` (D1 token cifrado + E1 alta desde admin).
+
+### 2026-08-04 — RES-DEC-010 — Modos de cobro (MP y/o pago en local)
+
+- **Contexto:** No todos los comercios quieren cobrar anticipado con Mercado Pago; algunos confirman turno y cobran en el local.  
+- **Decisión:** campo `modo_cobro` en `reserva-comercio`:
+  1. `mp_requerido` (default): hold → MP → confirmada (como hoy).  
+  2. `solo_local`: confirma online sin MP (`excepcion_sin_pago`), bloquea el hueco. Permite apagar simulación sin token MP.  
+  3. `mp_o_local`: la grilla pública ofrece elegir MP anticipado o pago en el local.  
+- **Alta de módulo:** además de `reserva_url` / `reserva_habilitada`, setea CTA del negocio (`cta_habilitado`, `cta_link` absoluto al slug, textos “Reserve su turno”). La ficha pública también fuerza el link si existe relación `reserva_comercio` (aunque el CTA en DB esté viejo).  
+- **Home:** badge “Reserve su turno” si el negocio tiene módulo (`/reservas/…`).  
+- **Qué sigue:** documentar en [alta-cliente.md](alta-cliente.md); sync Algolia para el badge en prod.

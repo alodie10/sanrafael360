@@ -53,6 +53,10 @@ function buildNegociosSearchPath({ query, localidad, categoryDocId }: HomeSearch
     "fields[11]=tripadvisor_review_count",
     "fields[12]=latitud",
     "fields[13]=longitud",
+    "fields[14]=reserva_url",
+    "fields[15]=reserva_habilitada",
+    "fields[16]=cta_link",
+    "fields[17]=cta_habilitado",
   ].join("&");
 
   const filterQuery = parts.length ? `${parts.join("&")}&` : "";
@@ -120,6 +124,10 @@ function mapAlgoliaHit(hit: Record<string, unknown>): Negocio {
     latitud: hit.latitud as number,
     longitud: hit.longitud as number,
     ofertas: (hit.ofertas as Negocio["ofertas"]) || [],
+    reserva_url: hit.reserva_url as string | undefined,
+    reserva_habilitada: hit.reserva_habilitada as boolean | undefined,
+    cta_link: hit.cta_link as string | undefined,
+    cta_habilitado: hit.cta_habilitado as boolean | undefined,
   };
 }
 
