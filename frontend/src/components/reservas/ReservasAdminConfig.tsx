@@ -51,6 +51,7 @@ function rowsToHorario(rows: Record<string, DayRow>) {
 }
 
 export default function ReservasAdminConfig({ slug, jwt }: Props) {
+  const [open, setOpen] = useState(false);
   const [config, setConfig] = useState<ReservaComercioConfig | null>(null);
   const [precio, setPrecio] = useState('');
   const [duracion, setDuracion] = useState('60');
@@ -102,6 +103,32 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
   };
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const oauth = params.get('mp_oauth');
+    const tab = params.get('tab');
+    if (oauth || tab === 'config') {
+      setOpen(true);
+      window.requestAnimationFrame(() => {
+        document
+          .querySelector('[data-testid="reserva-admin-config"]')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+    if (!oauth) return;
+    if (oauth === 'ok') {
+      toast.success('Mercado Pago conectado. Ya podés apagar la simulación.');
+    } else if (oauth === 'error') {
+      toast.error(params.get('msg') || 'No se pudo conectar Mercado Pago');
+    }
+    params.delete('mp_oauth');
+    params.delete('msg');
+    params.delete('tab');
+    const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`;
+    window.history.replaceState({}, '', next);
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
@@ -119,23 +146,6 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
       cancelled = true;
     };
   }, [jwt, slug]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const oauth = params.get('mp_oauth');
-    if (!oauth) return;
-    if (oauth === 'ok') {
-      toast.success('Mercado Pago conectado. Ya podés apagar la simulación.');
-    } else if (oauth === 'error') {
-      toast.error(params.get('msg') || 'No se pudo conectar Mercado Pago');
-    }
-    params.delete('mp_oauth');
-    params.delete('msg');
-    params.delete('tab');
-    const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`;
-    window.history.replaceState({}, '', next);
-  }, []);
 
   const onSave = async () => {
     if (!config) {
@@ -209,9 +219,19 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
 
   if (!config && !error) {
     return (
-      <section className="ra-panel">
-        <h2>Configuración del comercio</h2>
-        <p className="ra-muted">Cargando…</p>
+      <section className="ra-panel ra-config-collapsed" data-testid="reserva-admin-config">
+        <button
+          type="button"
+          className="ra-config-toggle"
+          aria-expanded={false}
+          disabled
+          data-testid="reserva-config-toggle"
+        >
+          <span className="ra-config-toggle-label">
+            <span className="ra-config-toggle-title">Configuración del comercio</span>
+            <span className="ra-muted">Cargando…</span>
+          </span>
+        </button>
       </section>
     );
   }
@@ -228,14 +248,37 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
   const effectiveModoSim = canDisableSim ? modoSim : true;
 
   return (
-    <section className="ra-panel" data-testid="reserva-admin-config">
-      <div className="ra-config-head">
-        <div>
-          <h2>Configuración del comercio</h2>
+    <section
+      className={`ra-panel${open ? '' : ' ra-config-collapsed'}`}
+      data-testid="reserva-admin-config"
+    >
+      <button
+        type="button"
+        className="ra-config-toggle"
+        aria-expanded={open}
+        data-testid="reserva-config-toggle"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="ra-config-toggle-label">
+          <span className="ra-config-toggle-title">Configuración del comercio</span>
           <span className={`ra-badge ${effectiveModoSim ? 'is-sim' : 'is-live'}`}>
             {effectiveModoSim ? 'Simulación ON' : 'MP real (sandbox/prod)'}
           </span>
-        </div>
+        </span>
+        <span className="ra-config-toggle-action">{open ? 'Ocultar' : 'Mostrar'}</span>
+      </button>
+
+      {open ? (
+        <>
+      <div className="ra-config-head">
+        <p className="ra-hint" style={{ margin: 0, flex: 1 }}>
+          {config?.operado_por_plataforma !== false
+            ? 'Operación: San Rafael 360 (plataforma).'
+            : 'Operación: dueño del negocio.'}{' '}
+          {canEdit
+            ? 'Podés editar precio, horario y simulación.'
+            : 'Solo lectura: pedile al admin de SR360 si necesitás un cambio.'}
+        </p>
         <button
           type="button"
           className="ra-btn primary"
@@ -246,14 +289,6 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
           {busy ? 'Guardando…' : 'Guardar cambios'}
         </button>
       </div>
-      <p className="ra-hint">
-        {config?.operado_por_plataforma !== false
-          ? 'Operación: San Rafael 360 (plataforma).'
-          : 'Operación: dueño del negocio.'}{' '}
-        {canEdit
-          ? 'Podés editar precio, horario y simulación.'
-          : 'Solo lectura: pedile al admin de SR360 si necesitás un cambio.'}
-      </p>
 
       {error ? <p className="ra-error">{error}</p> : null}
 
@@ -639,6 +674,8 @@ export default function ReservasAdminConfig({ slug, jwt }: Props) {
           {busy ? 'Guardando…' : 'Guardar cambios'}
         </button>
       </div>
+        </>
+      ) : null}
     </section>
   );
 }

@@ -244,8 +244,6 @@ export default function ReservasAdminClient({
 
       {error ? <p className="ra-error">{error}</p> : null}
 
-      <ReservasAdminConfig slug={slug} jwt={jwt} />
-
       <section className="ra-panel">
         <div className="ra-panel-head">
           <div>
@@ -447,6 +445,8 @@ export default function ReservasAdminClient({
           ) : null}
         </ul>
       </section>
+
+      <ReservasAdminConfig slug={slug} jwt={jwt} />
     </main>
   );
 }

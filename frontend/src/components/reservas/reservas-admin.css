@@ -348,6 +348,60 @@
   gap: 0.65rem;
 }
 
+.ra-config-toggle {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.85rem;
+  padding: 0.15rem 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ra-config-collapsed .ra-config-toggle {
+  margin-bottom: 0;
+}
+
+.ra-config-toggle:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+.ra-config-toggle-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.ra-config-toggle-title {
+  margin: 0;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.ra-config-toggle-action {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e8a317;
+}
+
+.ra-config-collapsed {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
 .ra-fieldset {
   border: 1px solid rgba(242, 239, 230, 0.16);
   border-radius: 12px;
