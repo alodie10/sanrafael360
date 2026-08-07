@@ -1,17 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { 
-  Eye, 
-  MousePointer2, 
-  MessageSquare, 
+import {
+  Eye,
+  MousePointer2,
+  MessageSquare,
   TrendingUp,
   Search,
-  Crown
+  Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import type { PortalStatsPayload } from "@/lib/portal";
+import type { PeriodPreset } from "@/lib/performance-period";
+import { rangeFromPreset } from "@/lib/performance-period";
+import PerformancePeriodFilter from "./PerformancePeriodFilter";
 
 interface StatCardProps {
   title: string;
@@ -24,7 +27,7 @@ interface StatCardProps {
 
 function StatCard({ title, value, label, icon: Icon, trend, color }: StatCardProps) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-zinc-950/40 border border-white/5 rounded-[2rem] p-6 backdrop-blur-sm group hover:border-primary/20 transition-all shadow-2xl shadow-black/50"
@@ -41,71 +44,78 @@ function StatCard({ title, value, label, icon: Icon, trend, color }: StatCardPro
   );
 }
 
-function statsFromPayload(payload: PortalStatsPayload) {
-  const stats = payload.summary;
-  return {
-    views: stats.views || 0,
-    leads: stats.clicks_whatsapp || 0,
-    clicks: stats.clicks_website || 0,
-    score: stats.profileScore || 0,
-    loading: false,
-  };
-}
-
 interface PortalStatsProps {
+  /** Reserved for SSR warm-start; client always refetches by period. */
   initialStats?: PortalStatsPayload | null;
+  /** Controlled period from parent (admin Rendimiento). Hides local filter. */
+  startDate?: string;
+  endDate?: string;
 }
 
-export default function PortalStats({ initialStats }: PortalStatsProps) {
-  const [data, setData] = useState(() =>
-    initialStats
-      ? statsFromPayload(initialStats)
-      : { views: 0, leads: 0, clicks: 0, score: 0, loading: true }
-  );
-  const [breakdown, setBreakdown] = useState(initialStats?.breakdown || []);
+export default function PortalStats({
+  initialStats: _initialStats,
+  startDate: controlledStart,
+  endDate: controlledEnd,
+}: PortalStatsProps) {
+  const isControlled =
+    typeof controlledStart === "string" &&
+    typeof controlledEnd === "string" &&
+    controlledStart.length > 0 &&
+    controlledEnd.length > 0;
+
+  const defaultRange = rangeFromPreset("30d");
+  const [preset, setPreset] = useState<PeriodPreset>("30d");
+  const [localStart, setLocalStart] = useState(defaultRange.startDate);
+  const [localEnd, setLocalEnd] = useState(defaultRange.endDate);
+
+  const startDate = isControlled ? controlledStart! : localStart;
+  const endDate = isControlled ? controlledEnd! : localEnd;
+
+  const [data, setData] = useState({
+    views: 0,
+    leads: 0,
+    clicks: 0,
+    score: 0,
+    loading: true,
+  });
+  const [breakdown, setBreakdown] = useState<
+    NonNullable<PortalStatsPayload["breakdown"]>
+  >([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-
-  const loadStats = async () => {
-    setData(prev => ({ ...prev, loading: true }));
-    try {
-      let url = '/api/portal/stats';
-      if (startDate && endDate) {
-        url += `?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
-      }
-
-      const response = await fetch(url, { cache: 'no-store' });
-      
-      if (!response.ok) throw new Error(`Error en API: ${response.status}`);
-      
-      const res = await response.json();
-      const payload = res.data || res;
-      const summary = payload.summary || payload;
-
-      setData({
-        views: summary.views || 0,
-        leads: summary.clicks_whatsapp || 0,
-        clicks: summary.clicks_website || 0,
-        score: summary.profileScore || 0,
-        loading: false,
-      });
-      setBreakdown(payload.breakdown || []);
-    } catch (e) {
-      console.error("Error loading stats:", e);
-      setData(prev => ({ ...prev, loading: false }));
-    }
-  };
 
   useEffect(() => {
-    if (!startDate && !endDate) {
-      if (initialStats) {
-        setData(statsFromPayload(initialStats));
-        setBreakdown(initialStats.breakdown);
-        return;
+    let cancelled = false;
+
+    const loadStats = async () => {
+      setData((prev) => ({ ...prev, loading: true }));
+      try {
+        const qs = new URLSearchParams({ startDate, endDate });
+        const response = await fetch(`/api/portal/stats?${qs}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Error en API: ${response.status}`);
+
+        const res = await response.json();
+        const payload = res.data || res;
+        const summary = payload.summary || payload;
+        if (cancelled) return;
+
+        setData({
+          views: summary.views || 0,
+          leads: summary.clicks_whatsapp || 0,
+          clicks: summary.clicks_website || 0,
+          score: summary.profileScore || 0,
+          loading: false,
+        });
+        setBreakdown(payload.breakdown || []);
+      } catch (e) {
+        console.error("Error loading stats:", e);
+        if (!cancelled) setData((prev) => ({ ...prev, loading: false }));
       }
-    }
+    };
+
     loadStats();
+    return () => {
+      cancelled = true;
+    };
   }, [startDate, endDate]);
 
   const stats = [
@@ -114,70 +124,65 @@ export default function PortalStats({ initialStats }: PortalStatsProps) {
       value: data.loading ? "..." : data.views.toLocaleString(),
       label: "Usuarios que vieron el perfil",
       icon: Eye,
-      color: "bg-blue-500/10 border-blue-500/20 text-blue-400"
+      color: "bg-blue-500/10 border-blue-500/20 text-blue-400",
     },
     {
       title: "Clicks a la Web",
       value: data.loading ? "..." : data.clicks.toLocaleString(),
       label: "Tráfico enviado a sitios externos",
       icon: MousePointer2,
-      color: "bg-primary/10 border-primary/20 text-primary"
+      color: "bg-primary/10 border-primary/20 text-primary",
     },
     {
       title: "Contactos WhatsApp",
       value: data.loading ? "..." : data.leads.toLocaleString(),
       label: "Consultas directas generadas",
       icon: MessageSquare,
-      color: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+      color: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
     },
     {
       title: "Salud del Perfil",
       value: data.loading ? "..." : `${data.score}%`,
       label: "Basado en info completada",
       icon: TrendingUp,
-      color: "bg-amber-500/10 border-amber-500/20 text-amber-400"
-    }
+      color: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+    },
   ];
 
-  const filteredBreakdown = breakdown.filter(b => b.nombre?.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredBreakdown = breakdown.filter((b) =>
+    b.nombre?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-8 mb-16">
-      
-      <div className="bg-zinc-950/40 border border-white/5 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div>
-          <h2 className="text-white font-bold text-lg">Filtro de Fechas</h2>
-          <p className="text-sm text-zinc-400">Selecciona un período para ver el rendimiento histórico.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-zinc-400">Desde:</label>
-            <input 
-              type="date" 
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 [color-scheme:dark]"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-zinc-400">Hasta:</label>
-            <input 
-              type="date" 
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 [color-scheme:dark]"
-            />
-          </div>
-          {(startDate || endDate) && (
-            <button 
-              onClick={() => { setStartDate(""); setEndDate(""); }}
-              className="text-sm text-primary hover:text-white transition-colors"
-            >
-              Limpiar
-            </button>
-          )}
-        </div>
-      </div>
+      {!isControlled && (
+        <PerformancePeriodFilter
+          preset={preset}
+          startDate={localStart}
+          endDate={localEnd}
+          onPreset={(p) => {
+            const range = rangeFromPreset(p);
+            setPreset(p);
+            setLocalStart(range.startDate);
+            setLocalEnd(range.endDate);
+          }}
+          onCustom={() => setPreset("custom")}
+          onStartDate={(v) => {
+            setPreset("custom");
+            setLocalStart(v);
+          }}
+          onEndDate={(v) => {
+            setPreset("custom");
+            setLocalEnd(v);
+          }}
+          onResetToDefault={() => {
+            const range = rangeFromPreset("30d");
+            setPreset("30d");
+            setLocalStart(range.startDate);
+            setLocalEnd(range.endDate);
+          }}
+        />
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
@@ -186,7 +191,7 @@ export default function PortalStats({ initialStats }: PortalStatsProps) {
       </div>
 
       {!data.loading && breakdown.length > 0 && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -195,16 +200,18 @@ export default function PortalStats({ initialStats }: PortalStatsProps) {
           <div className="p-6 md:p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h3 className="text-xl font-bold text-white mb-1">Desglose por Negocio</h3>
-              <p className="text-sm text-zinc-400">Rendimiento individual detallado de las {breakdown.length} fichas.</p>
+              <p className="text-sm text-zinc-400">
+                Rendimiento individual detallado de las {breakdown.length} fichas.
+              </p>
             </div>
-            
+
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-              <input 
-                type="text" 
-                placeholder="Buscar negocio..." 
+              <input
+                type="text"
+                placeholder="Buscar negocio..."
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full md:w-64 bg-zinc-900 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               />
             </div>
@@ -223,27 +230,50 @@ export default function PortalStats({ initialStats }: PortalStatsProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {filteredBreakdown.length > 0 ? filteredBreakdown.map((b, i) => {
-                  const total = b.views + b.clicks_whatsapp + b.clicks_website;
-                  return (
-                    <tr key={b.documentId || i} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-4 py-4 font-medium text-white flex items-center gap-3">
-                        <span className="truncate max-w-[150px] sm:max-w-[250px] block" title={b.nombre}>{b.nombre}</span>
-                        {b.is_premium && (
-                          <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border border-yellow-500/20" title={`Válido hasta: ${b.premium_valid_until ? new Date(b.premium_valid_until).toLocaleDateString() : 'Activo'}`}>
-                            <Crown className="w-3 h-3" />
-                            Premium
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-4 text-center font-bold text-amber-400">{b.profile_score || 0}%</td>
-                      <td className="px-4 py-4 text-center text-blue-400 font-bold">{b.views.toLocaleString()}</td>
-                      <td className="px-4 py-4 text-center text-primary font-bold">{b.clicks_website.toLocaleString()}</td>
-                      <td className="px-4 py-4 text-center text-emerald-400 font-bold">{b.clicks_whatsapp.toLocaleString()}</td>
-                      <td className="px-4 py-4 text-center font-bold text-white bg-white/5">{total.toLocaleString()}</td>
-                    </tr>
-                  )
-                }) : (
+                {filteredBreakdown.length > 0 ? (
+                  filteredBreakdown.map((b, i) => {
+                    const total = b.views + b.clicks_whatsapp + b.clicks_website;
+                    return (
+                      <tr
+                        key={b.documentId || i}
+                        className="hover:bg-white/[0.02] transition-colors"
+                      >
+                        <td className="px-4 py-4 font-medium text-white flex items-center gap-3">
+                          <span
+                            className="truncate max-w-[150px] sm:max-w-[250px] block"
+                            title={b.nombre}
+                          >
+                            {b.nombre}
+                          </span>
+                          {b.is_premium && (
+                            <div
+                              className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border border-yellow-500/20"
+                              title={`Válido hasta: ${b.premium_valid_until ? new Date(b.premium_valid_until).toLocaleDateString() : "Activo"}`}
+                            >
+                              <Crown className="w-3 h-3" />
+                              Premium
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-center font-bold text-amber-400">
+                          {b.profile_score || 0}%
+                        </td>
+                        <td className="px-4 py-4 text-center text-blue-400 font-bold">
+                          {b.views.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-4 text-center text-primary font-bold">
+                          {b.clicks_website.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-4 text-center text-emerald-400 font-bold">
+                          {b.clicks_whatsapp.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-4 text-center font-bold text-white bg-white/5">
+                          {total.toLocaleString()}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-zinc-500">
                       No se encontraron negocios con ese nombre.

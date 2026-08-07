@@ -75,10 +75,16 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     if (!user) return ctx.unauthorized();
     const fullUser = await resolveAdminUser(strapi, user);
     const isAdmin = userHasAdminAccess(fullUser);
-    const { period = '30d' } = ctx.query as { period?: string };
+    const { period = '30d', startDate, endDate } = ctx.query as {
+      period?: string;
+      startDate?: string;
+      endDate?: string;
+    };
     const data = await strapi.service('api::negocio.negocio').getStatsTimeseries(
       isAdmin ? undefined : user.id,
-      period as string
+      period as string,
+      startDate,
+      endDate
     );
     return ctx.send({ success: true, data });
   }),

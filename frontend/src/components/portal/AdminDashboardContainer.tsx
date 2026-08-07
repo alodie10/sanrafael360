@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { getStrapiUrl } from "@/lib/strapi";
 import Link from "next/link";
+import type { PeriodPreset } from "@/lib/performance-period";
+import { rangeFromPreset } from "@/lib/performance-period";
 import AdminClaimCard from "./AdminClaimCard";
 import AdminSupportInbox from "./AdminSupportInbox";
 import AdminLeadsInbox from "./AdminLeadsInbox";
@@ -26,12 +28,18 @@ import PortalStats from "./PortalStats";
 import AdminTopRanking from "./AdminTopRanking";
 import AdminStatsChart from "./AdminStatsChart";
 import AdminClientesPanel from "./AdminClientesPanel";
+import PerformancePeriodFilter from "./PerformancePeriodFilter";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
   const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats' | 'payments' | 'clientes'>('payments');
   const [claims, setClaims] = useState(initialClaims);
   const [supportCount, setSupportCount] = useState(0);
   const [leadsCount, setLeadsCount] = useState(0);
+
+  const initialPerfRange = rangeFromPreset("30d");
+  const [perfPreset, setPerfPreset] = useState<PeriodPreset>("30d");
+  const [perfStart, setPerfStart] = useState(initialPerfRange.startDate);
+  const [perfEnd, setPerfEnd] = useState(initialPerfRange.endDate);
 
   // Sincronizar estado cuando router.refresh() trae nuevas props del servidor
   useEffect(() => {
@@ -215,14 +223,44 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
           <div className="lg:col-span-3 space-y-8 min-w-0">
             {activeTab === 'stats' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-                <div>
-                  <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Rendimiento General de la Plataforma</h2>
-                  
-                  {/* Gráfico de serie de tiempo — arriba */}
-                  <AdminStatsChart jwt={session.jwt as string} />
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-serif font-bold text-white italic">Rendimiento General de la Plataforma</h2>
+
+                  <PerformancePeriodFilter
+                    preset={perfPreset}
+                    startDate={perfStart}
+                    endDate={perfEnd}
+                    onPreset={(p) => {
+                      const range = rangeFromPreset(p);
+                      setPerfPreset(p);
+                      setPerfStart(range.startDate);
+                      setPerfEnd(range.endDate);
+                    }}
+                    onCustom={() => setPerfPreset("custom")}
+                    onStartDate={(v) => {
+                      setPerfPreset("custom");
+                      setPerfStart(v);
+                    }}
+                    onEndDate={(v) => {
+                      setPerfPreset("custom");
+                      setPerfEnd(v);
+                    }}
+                    onResetToDefault={() => {
+                      const range = rangeFromPreset("30d");
+                      setPerfPreset("30d");
+                      setPerfStart(range.startDate);
+                      setPerfEnd(range.endDate);
+                    }}
+                  />
+
+                  <AdminStatsChart
+                    jwt={session.jwt as string}
+                    startDate={perfStart}
+                    endDate={perfEnd}
+                  />
                 </div>
 
-                <PortalStats />
+                <PortalStats startDate={perfStart} endDate={perfEnd} />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <AdminTopRanking jwt={session.jwt} />

@@ -386,15 +386,43 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     return { summary, breakdown: breakdownWithScore };
   },
 
-  async getStatsTimeseries(userId?: number, period: string = '30d') {
-    // Calcular rango de fechas
-    const days = period === '7d' ? 7 : period === '90d' ? 90 : 30;
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - (days - 1));
+  async getStatsTimeseries(
+    userId?: number,
+    period: string = '30d',
+    startDateArg?: string,
+    endDateArg?: string
+  ) {
+    const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+    let startISO: string;
+    let endISO: string;
 
-    const startISO = startDate.toISOString().split('T')[0];
-    const endISO = endDate.toISOString().split('T')[0];
+    if (
+      startDateArg &&
+      endDateArg &&
+      isoDate.test(startDateArg) &&
+      isoDate.test(endDateArg)
+    ) {
+      startISO = startDateArg <= endDateArg ? startDateArg : endDateArg;
+      endISO = startDateArg <= endDateArg ? endDateArg : startDateArg;
+      // Cap ~1 año para no explotar la serie
+      const start = new Date(`${startISO}T12:00:00`);
+      const end = new Date(`${endISO}T12:00:00`);
+      const maxMs = 366 * 24 * 60 * 60 * 1000;
+      if (end.getTime() - start.getTime() > maxMs) {
+        start.setTime(end.getTime() - maxMs);
+        startISO = start.toISOString().split('T')[0];
+      }
+    } else {
+      const days = period === '7d' ? 7 : period === '90d' ? 90 : 30;
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - (days - 1));
+      startISO = startDate.toISOString().split('T')[0];
+      endISO = endDate.toISOString().split('T')[0];
+    }
+
+    const startDate = new Date(`${startISO}T12:00:00`);
+    const endDate = new Date(`${endISO}T12:00:00`);
 
     // Si hay userId, solo incluir negocios del propietario
     let negocioIds: string[] | undefined;

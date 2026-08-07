@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { Eye, MessageSquare, MousePointer2, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getStrapiUrl } from "@/lib/strapi";
+import { chartDensity } from "@/lib/performance-period";
 
 interface DataPoint {
   date: string;
@@ -18,14 +19,6 @@ interface TooltipState {
   point: DataPoint;
   visible: boolean;
 }
-
-type Period = "7d" | "30d" | "90d";
-
-const PERIOD_LABELS: Record<Period, string> = {
-  "7d": "7 días",
-  "30d": "30 días",
-  "90d": "90 días",
-};
 
 const METRICS = [
   {
@@ -96,19 +89,24 @@ function buildArea(
   return `${linePath} L ${lastX} ${baseY} L ${firstX} ${baseY} Z`;
 }
 
-function formatDateLabel(dateStr: string, period: Period): string {
+function formatDateLabel(dateStr: string, density: '7d' | '30d' | '90d'): string {
   const d = new Date(dateStr + "T12:00:00");
-  if (period === "7d") {
+  if (density === "7d") {
     return d.toLocaleDateString("es-AR", { weekday: "short", day: "numeric" });
   }
-  if (period === "90d") {
+  if (density === "90d") {
     return d.toLocaleDateString("es-AR", { month: "short", day: "numeric" });
   }
   return d.toLocaleDateString("es-AR", { month: "short", day: "numeric" });
 }
 
-export default function AdminStatsChart({ jwt }: { jwt: string }) {
-  const [period, setPeriod] = useState<Period>("30d");
+type Props = {
+  jwt: string;
+  startDate: string;
+  endDate: string;
+};
+
+export default function AdminStatsChart({ jwt, startDate, endDate }: Props) {
   const [data, setData] = useState<DataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [tooltip, setTooltip] = useState<TooltipState>({
@@ -121,6 +119,7 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ width: 600, height: 260 });
+  const density = chartDensity(startDate, endDate);
 
   // Resize observer — usa containerRef directo para medir desde el primer render
   useEffect(() => {
@@ -137,12 +136,14 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
 
   // Fetch data
   useEffect(() => {
+    if (!startDate || !endDate) return;
     const fetchData = async () => {
       setLoading(true);
       try {
         const strapiUrl = getStrapiUrl();
+        const qs = new URLSearchParams({ startDate, endDate });
         const res = await fetch(
-          `${strapiUrl}/api/negocios/stats/timeseries?period=${period}`,
+          `${strapiUrl}/api/negocios/stats/timeseries?${qs}`,
           { headers: { Authorization: `Bearer ${jwt}` }, cache: "no-store" }
         );
         if (!res.ok) throw new Error(`Error ${res.status}`);
@@ -156,7 +157,7 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
       }
     };
     fetchData();
-  }, [jwt, period]);
+  }, [jwt, startDate, endDate]);
 
   const maxVal = data.length > 0
     ? Math.max(
@@ -211,7 +212,7 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
   };
 
   // Tick labels en el eje X
-  const tickCount = period === "7d" ? 7 : period === "30d" ? 6 : 6;
+  const tickCount = density === "7d" ? 7 : 6;
   const tickIndices = data.length > 0
     ? Array.from({ length: tickCount }, (_, i) =>
         Math.round((i / (tickCount - 1)) * (data.length - 1))
@@ -233,25 +234,11 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">Evolución en el tiempo</h3>
-            <p className="text-xs text-zinc-500">Interacciones diarias de todos los negocios</p>
+            <p className="text-xs text-zinc-500">
+              {new Date(`${startDate}T12:00:00`).toLocaleDateString("es-AR")} →{" "}
+              {new Date(`${endDate}T12:00:00`).toLocaleDateString("es-AR")} · interacciones diarias
+            </p>
           </div>
-        </div>
-
-        {/* Period selector */}
-        <div className="flex items-center gap-1 p-1 bg-black/30 rounded-2xl border border-white/5">
-          {(["7d", "30d", "90d"] as Period[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                period === p
-                  ? "bg-primary text-black shadow-lg shadow-primary/20"
-                  : "text-zinc-500 hover:text-white"
-              }`}
-            >
-              {PERIOD_LABELS[p]}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -420,7 +407,7 @@ export default function AdminStatsChart({ jwt }: { jwt: string }) {
                   fontSize={11}
                   textAnchor="middle"
                 >
-                  {formatDateLabel(data[idx].date, period)}
+                  {formatDateLabel(data[idx].date, density)}
                 </text>
               );
             })}

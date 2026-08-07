@@ -99,6 +99,20 @@
     filter: none;
     opacity: 0.9;
   }
+
+  /* Date input con icono Lucide: el nativo queda invisible pero clickeable. */
+  .color-scheme-dark-date {
+    color-scheme: dark;
+  }
+  .color-scheme-dark-date::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    filter: none;
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 2.75rem;
+    height: 100%;
+    cursor: pointer;
+  }
 }
 
 /* Animations */
