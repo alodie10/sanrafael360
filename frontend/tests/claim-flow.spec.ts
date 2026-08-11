@@ -8,38 +8,39 @@ test.describe('Flujo de Reclamo de Negocio', () => {
 
     const claimButton = page.getByTestId('claim-profile-button');
 
-    if (await claimButton.isVisible()) {
-      await page.route('**/api/negocios/*/claim', (route) =>
-        route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ message: 'Claim requested successfully' }),
-        })
-      );
-
-      await claimButton.click();
-      await page.fill('textarea[placeholder*="Hola, soy el dueño"]', 'Prueba de reclamo mandatorio');
-      await page.click('button:has-text("Enviar Solicitud")');
-
-      await expect(
-        page.getByText('La documentación probatoria (DNI o Habilitación) es obligatoria.')
-      ).toBeVisible();
-
-      await page.setInputFiles('input[id="claim-file-upload"]', {
-        name: 'doc-prueba.txt',
-        mimeType: 'text/plain',
-        buffer: Buffer.from('Documento de validación de propiedad.'),
-      });
-
-      page.once('dialog', (dialog) => dialog.accept());
-      await page.click('button:has-text("Enviar Solicitud")');
-
-      await expect(
-        page.getByText('Tu solicitud de reclamo está pendiente de aprobación.')
-      ).toBeVisible();
-    } else {
-      console.log('ℹ️ Este negocio ya tiene dueño o el botón no está disponible en esta sesión.');
+    if (!(await claimButton.isVisible())) {
+      test.skip(true, 'Negocio ya reclamado o sin botón de reclamo en esta sesión.');
+      return;
     }
+
+    await page.route('**/api/negocios/*/claim', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Claim requested successfully' }),
+      })
+    );
+
+    await claimButton.click();
+    await expect(page.getByTestId('claim-modal')).toBeVisible();
+    await page.getByTestId('claim-message').fill('Prueba de reclamo mandatorio');
+    await page.getByTestId('claim-submit').click();
+
+    await expect(page.getByTestId('claim-error')).toHaveText(
+      'La documentación probatoria (DNI o Habilitación) es obligatoria.'
+    );
+
+    await page.setInputFiles('input[id="claim-file-upload"]', {
+      name: 'doc-prueba.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('Documento de validación de propiedad.'),
+    });
+
+    await page.getByTestId('claim-submit').click();
+
+    await expect(page.getByTestId('claim-success')).toHaveText(
+      'Tu solicitud de reclamo está pendiente de aprobación.'
+    );
   });
 
   test('un usuario no admin no debe poder entrar al panel /portal/admin', async ({ page }) => {

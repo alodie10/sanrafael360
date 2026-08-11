@@ -50,6 +50,7 @@ export default {
       path: '/negocios/admin/pending-claims',
       handler: 'negocio.adminPendingClaims',
       config: {
+        auth: false,
         policies: [],
         middlewares: ['global::require-admin'],
       },
@@ -59,6 +60,7 @@ export default {
       path: '/negocios/admin/resolve-claim/:id',
       handler: 'negocio.adminResolveClaim',
       config: {
+        auth: false,
         policies: [],
         middlewares: ['global::require-admin', 'api::negocio.admin-resolve-claim-validator'],
       },
@@ -68,6 +70,8 @@ export default {
       path: '/negocios/:slug/test-reset',
       handler: 'negocio.resetClaimForTest',
       config: {
+        // auth:false → Users & Permissions no bloquea; require-admin valida JWT+admin.
+        auth: false,
         policies: [],
         middlewares: ['global::require-admin'],
       },
@@ -77,6 +81,7 @@ export default {
       path: '/negocios/admin/backfill-stats',
       handler: 'negocio.backfillStats',
       config: {
+        auth: false,
         policies: [],
         middlewares: ['global::require-admin'],
       },
@@ -85,25 +90,38 @@ export default {
       method: 'POST',
       path: '/negocios/admin/pagos',
       handler: 'negocio.cargarPagoPortal',
-      config: { policies: [], middlewares: ['global::require-admin', 'api::negocio.admin-pago-validator'] },
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['global::require-admin', 'api::negocio.admin-pago-validator'],
+      },
     },
     {
       method: 'DELETE',
       path: '/negocios/admin/pagos/:documentId',
       handler: 'negocio.borrarPagoPortal',
-      config: { policies: [], middlewares: ['global::require-admin'] },
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['global::require-admin'],
+      },
     },
     {
       method: 'PUT',
       path: '/negocios/admin/vigencia/:documentId',
       handler: 'negocio.modificarVigenciaPortal',
-      config: { policies: [], middlewares: ['global::require-admin', 'api::negocio.admin-vigencia-validator'] },
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['global::require-admin', 'api::negocio.admin-vigencia-validator'],
+      },
     },
     {
       method: 'POST',
       path: '/negocios/admin/reset-stats-backfill',
       handler: 'negocio.resetStatsBackfill',
       config: {
+        auth: false,
         policies: [],
         middlewares: ['global::require-admin'],
       },

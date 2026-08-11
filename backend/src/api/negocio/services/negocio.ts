@@ -18,20 +18,25 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     const negocio = await repo.findById(id, ['owner']);
     assertNegocioClaimable(negocio);
 
+    const rawFile = files?.documentacion_reclamo || files?.files || files?.file;
+    if (!rawFile) {
+      throw new ValidationError(
+        'La documentación probatoria (DNI o Habilitación) es obligatoria.'
+      );
+    }
+
     const updated = await repo.update(id, { 
       estado_reclamo: 'pendiente', 
       owner: user.id,
       descripcion: bodyData.message || negocio.descripcion
     });
 
-    const rawFile = files?.documentacion_reclamo || files?.files || files?.file;
-    if (rawFile) {
-      const claimFile = Array.isArray(rawFile) ? rawFile[0] : rawFile;
-      try {
-        await repo.uploadFile(updated.documentId, 'documentacion_reclamo', claimFile);
-      } catch (uploadErr: any) {
-        strapi.log.error(`[ClaimFlow] Upload failed: ${uploadErr.message}`);
-      }
+    const claimFile = Array.isArray(rawFile) ? rawFile[0] : rawFile;
+    try {
+      await repo.uploadFile(updated.documentId, 'documentacion_reclamo', claimFile);
+    } catch (uploadErr: any) {
+      strapi.log.error(`[ClaimFlow] Upload failed: ${uploadErr.message}`);
+      throw new ValidationError('No se pudo subir la documentación de reclamo.');
     }
 
     // Notificación Admin

@@ -37,6 +37,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
   const [claimMessage, setClaimMessage] = useState("");
   const [claimFile, setClaimFile] = useState<File | null>(null);
   const [claimErrorMessage, setClaimErrorMessage] = useState<string | null>(null);
+  const [claimSuccessMessage, setClaimSuccessMessage] = useState<string | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const autoClaim = searchParams.get("auto_claim");
   
@@ -120,12 +121,22 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
 
   const handleClaimSubmit = async () => {
     if (!session || !negocio) return;
+    setClaimErrorMessage(null);
+    setClaimSuccessMessage(null);
+
+    if (!claimFile) {
+      setClaimErrorMessage(
+        "La documentación probatoria (DNI o Habilitación) es obligatoria."
+      );
+      return;
+    }
+
     setIsClaiming(true);
     try {
       const strapiUrl = getStrapiUrl();
       const formData = new FormData();
       formData.append("data", JSON.stringify({ message: claimMessage }));
-      if (claimFile) formData.append("documentacion_reclamo", claimFile);
+      formData.append("documentacion_reclamo", claimFile);
       
       const res = await fetch(`${strapiUrl}/api/negocios/${negocio.documentId}/claim`, {
         method: "POST",
@@ -134,10 +145,15 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
       });
 
       if (res.ok) {
-        alert("¡Tu solicitud ha sido enviada!");
+        setClaimSuccessMessage(
+          "Tu solicitud de reclamo está pendiente de aprobación."
+        );
         setShowClaimModal(false);
       } else {
-        setClaimErrorMessage("Error al enviar el reclamo.");
+        const payload = await res.json().catch(() => null);
+        setClaimErrorMessage(
+          payload?.error?.message || "Error al enviar el reclamo."
+        );
       }
     } catch {
       setClaimErrorMessage("Error de conexión.");
@@ -328,17 +344,52 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
       </section>
 
       {showClaimModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          data-testid="claim-modal"
+        >
           <div className="bg-slate-900 border border-white/10 p-8 rounded-[2.5rem] max-w-md w-full shadow-2xl">
             <h3 className="text-2xl font-bold text-white mb-4">Reclamar Perfil</h3>
-            <textarea value={claimMessage} onChange={(e) => setClaimMessage(e.target.value)} placeholder="Tu mensaje..." className="w-full h-24 p-4 bg-slate-800 rounded-xl text-white mb-4 outline-none focus:ring-2 focus:ring-primary/50" />
-            <input type="file" onChange={(e) => setClaimFile(e.target.files?.[0] || null)} className="mb-4 text-white text-xs" />
+            <textarea
+              data-testid="claim-message"
+              value={claimMessage}
+              onChange={(e) => setClaimMessage(e.target.value)}
+              placeholder="Hola, soy el dueño..."
+              className="w-full h-24 p-4 bg-slate-800 rounded-xl text-white mb-4 outline-none focus:ring-2 focus:ring-primary/50"
+            />
+            <input
+              id="claim-file-upload"
+              data-testid="claim-file-upload"
+              type="file"
+              onChange={(e) => setClaimFile(e.target.files?.[0] || null)}
+              className="mb-4 text-white text-xs"
+            />
             <div className="flex flex-col gap-3">
-              <button onClick={handleClaimSubmit} disabled={isClaiming} className="w-full py-4 bg-primary text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:scale-105 transition-all">{isClaiming ? "Enviando..." : "Confirmar Reclamo"}</button>
+              <button
+                data-testid="claim-submit"
+                onClick={handleClaimSubmit}
+                disabled={isClaiming}
+                className="w-full py-4 bg-primary text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:scale-105 transition-all"
+              >
+                {isClaiming ? "Enviando..." : "Enviar Solicitud"}
+              </button>
               <button onClick={() => setShowClaimModal(false)} className="w-full py-4 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest">Cancelar</button>
             </div>
-            {claimErrorMessage && <p className="mt-4 text-red-400 text-xs text-center">{claimErrorMessage}</p>}
+            {claimErrorMessage && (
+              <p data-testid="claim-error" className="mt-4 text-red-400 text-xs text-center">
+                {claimErrorMessage}
+              </p>
+            )}
           </div>
+        </div>
+      )}
+      {claimSuccessMessage && (
+        <div
+          data-testid="claim-success"
+          className="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2 rounded-2xl border border-emerald-500/30 bg-emerald-500/15 px-6 py-4 text-sm font-bold text-emerald-300 shadow-2xl"
+          role="status"
+        >
+          {claimSuccessMessage}
         </div>
       )}
     </main>
