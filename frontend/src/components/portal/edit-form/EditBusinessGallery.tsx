@@ -1,7 +1,7 @@
 "use client";
 
+import { useState } from "react";
 import { Image as ImageIcon, Video, X, Upload, Loader2, RotateCw, GripVertical } from "lucide-react";
-import { Reorder } from "framer-motion";
 import { getStrapiMedia } from "@/lib/strapi";
 import { syncGaleriaOrden } from "@/lib/galeria-order";
 
@@ -10,9 +10,7 @@ function applyCloudinaryRotation(url: string, degrees: number): string {
   if (!degrees || !url?.includes('res.cloudinary.com')) return url;
   const parts = url.split('/upload/');
   if (parts.length !== 2) return url;
-  // Si ya tiene esa rotación, no duplicar
   if (parts[1].startsWith(`a_${degrees}/`)) return url;
-  // Quitar rotación previa si existe
   const withoutPrev = parts[1].replace(/^a_\d+\//, '');
   return `${parts[0]}/upload/a_${degrees}/${withoutPrev}`;
 }
@@ -48,10 +46,28 @@ export default function EditBusinessGallery({
   galeriaConfig,
   setGaleriaConfig
 }: EditBusinessGalleryProps) {
-  const handleReorder = (next: any[]) => {
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+
+  const applyOrder = (next: any[]) => {
     setExistingGallery(next);
     setGaleriaConfig(syncGaleriaOrden(next, galeriaConfig));
   };
+
+  const moveItem = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0 || from >= existingGallery.length || to >= existingGallery.length) return;
+    const next = [...existingGallery];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    applyOrder(next);
+  };
+
+  const filledCount =
+    existingGallery.length +
+    newGalleryFiles.length +
+    cloudinaryVideos.length +
+    (uploadingVideo ? 1 : 0);
+  const emptySlots = filledCount === 0 ? 5 : filledCount % 5 === 0 ? 0 : 5 - (filledCount % 5);
 
   return (
     <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
@@ -63,113 +79,144 @@ export default function EditBusinessGallery({
         Sube hasta <strong className="text-white">20 fotos o videos</strong> para destacar tu comercio.
         Las fotos de iPhone en HEIC se convierten automáticamente a JPEG.
         {existingGallery.length > 1 && (
-          <> Arrastrá las miniaturas para cambiar el <strong className="text-white">orden de reproducción</strong>.</>
+          <> Arrastrá una miniatura sobre otra para cambiar el <strong className="text-white">orden de reproducción</strong>.</>
         )}
       </p>
-      
-      {existingGallery.length > 0 && (
-        <Reorder.Group
-          axis="y"
-          values={existingGallery}
-          onReorder={handleReorder}
-          className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-4"
-        >
-          {existingGallery.map((photo: any) => {
-            const isVideo = photo.mime?.startsWith('video/') || photo.ext?.match(/\.(mp4|mov|webm)$/i);
-            return (
-              <Reorder.Item
-                key={photo.id}
-                value={photo}
-                className="relative group aspect-square rounded-2xl bg-zinc-950 border border-white/10 overflow-hidden shadow-xl cursor-grab active:cursor-grabbing touch-none"
-                whileDrag={{ scale: 1.04, zIndex: 20, boxShadow: "0 20px 40px rgba(0,0,0,0.45)" }}
-              >
-                {isVideo ? (
-                  <video src={getStrapiMedia(photo.url) || undefined} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none" muted />
-                ) : (
-                  <img 
-                    src={applyCloudinaryRotation(getStrapiMedia(photo.url) || '', galeriaConfig[photo.id.toString()]?.rotation || 0) || undefined} 
-                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none" 
-                    alt="" 
-                    draggable={false}
-                  />
-                )}
-                <div className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-md rounded-lg border border-white/10 text-white/80 pointer-events-none">
-                  {isVideo ? <Video className="w-3.5 h-3.5" /> : <GripVertical className="w-3.5 h-3.5" />}
-                </div>
-                <button 
-                  type="button"
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={() => removeExistingPhoto(photo.id)}
-                  className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                
-                {!isVideo && (
-                  <div
-                    className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md p-2 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onPointerDown={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const current = galeriaConfig[photo.id.toString()] || { cropGravity: 'g_auto', isInternal: false };
-                        const current_rot = current.rotation || 0;
-                        const next_rot = (current_rot + 90) % 360;
-                        setGaleriaConfig({ ...galeriaConfig, [photo.id.toString()]: { ...current, rotation: next_rot } });
-                      }}
-                      className="w-full flex items-center justify-center gap-1.5 mb-2 py-1 bg-white/10 hover:bg-white/20 rounded-md text-white text-[10px] font-bold uppercase tracking-wider transition-colors"
-                      title="Rotar 90°"
-                    >
-                      <RotateCw className="w-3 h-3" />
-                      Rotar {(galeriaConfig[photo.id.toString()]?.rotation || 0) > 0 ? `(${galeriaConfig[photo.id.toString()]?.rotation}°)` : ''}
-                    </button>
-
-                    <label className="flex items-center gap-2 mb-2 cursor-pointer text-xs text-white">
-                      <input 
-                        type="checkbox" 
-                        className="accent-blue-500 rounded bg-slate-800 border-white/20"
-                        checked={galeriaConfig[photo.id.toString()]?.isInternal || false}
-                        onChange={(e) => {
-                          const current = galeriaConfig[photo.id.toString()] || { cropGravity: "g_auto" };
-                          setGaleriaConfig({ 
-                            ...galeriaConfig, 
-                            [photo.id.toString()]: { ...current, isInternal: e.target.checked }
-                          });
-                        }}
-                      />
-                      Mandar a galería interna
-                    </label>
-
-                    {!(galeriaConfig[photo.id.toString()]?.isInternal) && (
-                      <select
-                        value={galeriaConfig[photo.id.toString()]?.cropGravity || "g_auto"}
-                        onChange={(e) => {
-                          const current = galeriaConfig[photo.id.toString()] || { isInternal: false };
-                          setGaleriaConfig({ 
-                            ...galeriaConfig, 
-                            [photo.id.toString()]: { ...current, cropGravity: e.target.value } 
-                          });
-                        }}
-                        className="w-full bg-slate-800 border border-white/20 rounded-md px-2 py-1 text-white focus:outline-none text-xs appearance-none"
-                      >
-                        <option value="g_auto">Auto Inteligente (Recorte)</option>
-                        <option value="g_center">Centrado (Recorte)</option>
-                        <option value="g_north">Arriba (Recorte)</option>
-                        <option value="g_south">Abajo (Recorte)</option>
-                        <option value="g_auto:subject">Sujeto (Recorte)</option>
-                      </select>
-                    )}
-                  </div>
-                )}
-              </Reorder.Item>
-            );
-          })}
-        </Reorder.Group>
-      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
-        {/* New Files */}
+        {existingGallery.map((photo: any, index: number) => {
+          const isVideo = photo.mime?.startsWith('video/') || photo.ext?.match(/\.(mp4|mov|webm)$/i);
+          const isDragging = dragIndex === index;
+          const isDropTarget = overIndex === index && dragIndex !== null && dragIndex !== index;
+
+          return (
+            <div
+              key={photo.id}
+              draggable={existingGallery.length > 1}
+              onDragStart={(e) => {
+                setDragIndex(index);
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", String(index));
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                if (overIndex !== index) setOverIndex(index);
+              }}
+              onDragLeave={() => {
+                if (overIndex === index) setOverIndex(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const from = dragIndex ?? Number(e.dataTransfer.getData("text/plain"));
+                moveItem(from, index);
+                setDragIndex(null);
+                setOverIndex(null);
+              }}
+              onDragEnd={() => {
+                setDragIndex(null);
+                setOverIndex(null);
+              }}
+              className={[
+                "relative group aspect-square rounded-2xl bg-zinc-950 border overflow-hidden shadow-xl transition-all",
+                existingGallery.length > 1 ? "cursor-grab active:cursor-grabbing" : "",
+                isDragging ? "opacity-40 scale-95 border-blue-400/50" : "border-white/10",
+                isDropTarget ? "ring-2 ring-blue-400 border-blue-400 scale-[1.02]" : "",
+              ].join(" ")}
+            >
+              {isVideo ? (
+                <video src={getStrapiMedia(photo.url) || undefined} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none" muted />
+              ) : (
+                <img
+                  src={applyCloudinaryRotation(getStrapiMedia(photo.url) || '', galeriaConfig[photo.id.toString()]?.rotation || 0) || undefined}
+                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none"
+                  alt=""
+                  draggable={false}
+                />
+              )}
+
+              <div className="absolute top-2 left-2 flex items-center gap-1.5 pointer-events-none">
+                <span className="min-w-6 h-6 px-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-white text-[11px] font-bold flex items-center justify-center">
+                  {index + 1}
+                </span>
+                {existingGallery.length > 1 && (
+                  <span className="p-1.5 bg-black/50 backdrop-blur-md rounded-lg border border-white/10 text-white/80">
+                    <GripVertical className="w-3.5 h-3.5" />
+                  </span>
+                )}
+                {isVideo && (
+                  <span className="p-1.5 bg-black/40 backdrop-blur-md rounded-lg border border-white/10">
+                    <Video className="w-3.5 h-3.5 text-white" />
+                  </span>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => removeExistingPhoto(photo.id)}
+                className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {!isVideo && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md p-2 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = galeriaConfig[photo.id.toString()] || { cropGravity: 'g_auto', isInternal: false };
+                      const current_rot = current.rotation || 0;
+                      const next_rot = (current_rot + 90) % 360;
+                      setGaleriaConfig({ ...galeriaConfig, [photo.id.toString()]: { ...current, rotation: next_rot } });
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 mb-2 py-1 bg-white/10 hover:bg-white/20 rounded-md text-white text-[10px] font-bold uppercase tracking-wider transition-colors"
+                    title="Rotar 90°"
+                  >
+                    <RotateCw className="w-3 h-3" />
+                    Rotar {(galeriaConfig[photo.id.toString()]?.rotation || 0) > 0 ? `(${galeriaConfig[photo.id.toString()]?.rotation}°)` : ''}
+                  </button>
+
+                  <label className="flex items-center gap-2 mb-2 cursor-pointer text-xs text-white">
+                    <input
+                      type="checkbox"
+                      className="accent-blue-500 rounded bg-slate-800 border-white/20"
+                      checked={galeriaConfig[photo.id.toString()]?.isInternal || false}
+                      onChange={(e) => {
+                        const current = galeriaConfig[photo.id.toString()] || { cropGravity: "g_auto" };
+                        setGaleriaConfig({
+                          ...galeriaConfig,
+                          [photo.id.toString()]: { ...current, isInternal: e.target.checked }
+                        });
+                      }}
+                    />
+                    Mandar a galería interna
+                  </label>
+
+                  {!(galeriaConfig[photo.id.toString()]?.isInternal) && (
+                    <select
+                      value={galeriaConfig[photo.id.toString()]?.cropGravity || "g_auto"}
+                      onChange={(e) => {
+                        const current = galeriaConfig[photo.id.toString()] || { isInternal: false };
+                        setGaleriaConfig({
+                          ...galeriaConfig,
+                          [photo.id.toString()]: { ...current, cropGravity: e.target.value }
+                        });
+                      }}
+                      className="w-full bg-slate-800 border border-white/20 rounded-md px-2 py-1 text-white focus:outline-none text-xs appearance-none"
+                    >
+                      <option value="g_auto">Auto Inteligente (Recorte)</option>
+                      <option value="g_center">Centrado (Recorte)</option>
+                      <option value="g_north">Arriba (Recorte)</option>
+                      <option value="g_south">Abajo (Recorte)</option>
+                      <option value="g_auto:subject">Sujeto (Recorte)</option>
+                    </select>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
         {newGalleryFiles.map((file, i) => {
           const isVideo = file.type.startsWith('video/');
           return (
@@ -184,13 +231,14 @@ export default function EditBusinessGallery({
                   <Video className="w-3.5 h-3.5 text-white" />
                 </div>
               )}
-              <button 
+              <button
+                type="button"
                 onClick={() => removeNewPhoto(i)}
                 className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
               >
                 <X className="w-4 h-4" />
               </button>
-              
+
               {!isVideo && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md p-2 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <p className="text-[10px] text-slate-300 text-center leading-tight font-medium">Guarda los cambios para configurar su recorte</p>
@@ -200,14 +248,14 @@ export default function EditBusinessGallery({
           );
         })}
 
-        {/* Cloudinary Videos (subidos directo, pendientes de guardar) */}
         {cloudinaryVideos.map((vid, i) => (
           <div key={`cv-${i}`} className="relative group aspect-square rounded-2xl bg-zinc-950 border border-blue-500/40 overflow-hidden shadow-xl">
             <video src={vid.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted />
             <div className="absolute top-2 left-2 p-1.5 bg-blue-600/80 backdrop-blur-md rounded-lg border border-white/10">
               <Video className="w-3.5 h-3.5 text-white" />
             </div>
-            <button 
+            <button
+              type="button"
               onClick={() => removeCloudinaryVideo(i)}
               className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
             >
@@ -219,7 +267,6 @@ export default function EditBusinessGallery({
           </div>
         ))}
 
-        {/* Spinner mientras se sube un video */}
         {uploadingVideo && (
           <div className="aspect-square rounded-2xl bg-zinc-950 border-2 border-dashed border-blue-500/50 flex flex-col items-center justify-center gap-2">
             <Loader2 className="w-7 h-7 text-blue-400 animate-spin" />
@@ -227,8 +274,7 @@ export default function EditBusinessGallery({
           </div>
         )}
 
-        {/* Empty Slots */}
-        {Array.from({ length: Math.max(0, 5 - (existingGallery.length + newGalleryFiles.length) % 5) }).map((_, i) => (
+        {Array.from({ length: emptySlots }).map((_, i) => (
           <div key={`empty-${i}`} className="aspect-square rounded-2xl bg-white/5 border-2 border-dashed border-white/10 flex items-center justify-center overflow-hidden">
             <Upload className="w-6 h-6 text-white/5" />
           </div>
@@ -236,15 +282,15 @@ export default function EditBusinessGallery({
       </div>
 
       <div className="relative">
-        <input 
-          type="file" 
-          multiple 
+        <input
+          type="file"
+          multiple
           accept="image/*,video/*"
           onChange={(e) => handleFileChange(e, 'gallery')}
-          className="hidden" 
+          className="hidden"
           id="gallery-upload"
         />
-        <label 
+        <label
           htmlFor="gallery-upload"
           className="flex items-center justify-center gap-2 w-full py-4 px-6 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border-2 border-blue-600/30 rounded-2xl font-bold cursor-pointer transition-all border-dashed"
         >
@@ -255,7 +301,7 @@ export default function EditBusinessGallery({
       <p className="text-[10px] text-slate-500 mt-3 text-center uppercase tracking-widest font-black">Máximo 20 elementos | Límite 50MB recomendado</p>
 
       <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-8" />
-      
+
       <div className="space-y-4">
         <div>
           <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
@@ -264,7 +310,7 @@ export default function EditBusinessGallery({
           </h3>
           <p className="text-xs text-slate-400">Si tu video es muy pesado, te recomendamos subirlo a YouTube y pegar el enlace aquí.</p>
         </div>
-        <input 
+        <input
           type="text"
           value={youtubeUrl}
           onChange={(e) => setYoutubeUrl(e.target.value)}
