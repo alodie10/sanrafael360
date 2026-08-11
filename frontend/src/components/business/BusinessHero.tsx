@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Star, Camera } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
+import { sortGaleriaByOrden } from "@/lib/galeria-order";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +34,7 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
     });
   }
   if (isValidPremium && negocio.galeria && negocio.galeria.length > 0) {
-    negocio.galeria.forEach((img: any) => {
+    sortGaleriaByOrden(negocio.galeria, negocio.galeria_config).forEach((img: any) => {
       if (img.url) {
         // Excluir videos — los videos se muestran en BusinessGallery
         const isVideo = img.mime?.startsWith('video/') || img.url.match(/\.(mp4|m4v|webm|ogg|mov)$/i);

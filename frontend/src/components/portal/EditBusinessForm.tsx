@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Clock, ShieldCheck } from "lucide-react";
 import { ADMIN_EMAILS } from "@/lib/admin-emails";
 import { getStrapiUrl } from "@/lib/strapi";
+import { sortGaleriaByOrden, syncGaleriaOrden } from "@/lib/galeria-order";
 
 // Sub-components extracted for optimization
 import EditBusinessHeader from "./edit-form/EditBusinessHeader";
@@ -85,7 +86,9 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
-  const [existingGallery, setExistingGallery] = useState(negocio.galeria || []);
+  const [existingGallery, setExistingGallery] = useState(() =>
+    sortGaleriaByOrden(negocio.galeria || [], negocio.galeria_config)
+  );
   const [removedGalleryIds, setRemovedGalleryIds] = useState<number[]>([]);
   const [youtubeUrl, setYoutubeUrl] = useState(negocio.youtube_url || "");
   // Videos subidos directo a Cloudinary (array de { url, publicId })
@@ -469,7 +472,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         tripadvisor_review_count: Number(tripadvisorReviewCount) || 0,
         youtube_url: youtubeUrl,
         crop_gravity: cropGravity,
-        galeria_config: galeriaConfig,
+        galeria_config: syncGaleriaOrden(existingGallery, galeriaConfig),
         is_premium: isAdmin ? isPremium : undefined,
         premium_valid_until: isAdmin ? (premiumValidUntil ? new Date(premiumValidUntil).toISOString() : null) : undefined,
         galeria: existingGallery.map((img: any) => img.id),
@@ -570,6 +573,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
 
         <EditBusinessGallery 
           existingGallery={existingGallery}
+          setExistingGallery={setExistingGallery}
           newGalleryFiles={newGalleryFiles}
           cloudinaryVideos={cloudinaryVideos}
           uploadingVideo={uploadingVideo}

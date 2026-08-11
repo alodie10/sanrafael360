@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Play, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
+import { sortGaleriaByOrden } from "@/lib/galeria-order";
 
 interface BusinessGalleryProps {
   negocio: any;
@@ -23,7 +24,7 @@ export default function BusinessGallery({ negocio, isValidPremium }: BusinessGal
   // La galería es un beneficio EXCLUSIVO Premium
   if (!isValidPremium) return null;
 
-  const galeria = negocio.galeria || [];
+  const galeria = sortGaleriaByOrden(negocio.galeria || [], negocio.galeria_config);
 
   // Filtrar videos y fotos marcadas como internas
   const mediaItems = galeria.filter((media: any) => {
