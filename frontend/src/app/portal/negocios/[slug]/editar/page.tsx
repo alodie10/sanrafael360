@@ -4,15 +4,19 @@ import { notFound, redirect } from "next/navigation";
 import EditBusinessForm from "@/components/portal/EditBusinessForm";
 import Link from "next/link";
 import { getStrapiUrl } from "@/lib/strapi";
+import { safeReturnTo } from "@/lib/return-to";
 
 interface EditPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ returnTo?: string }>;
 }
 
 export default async function EditBusinessPage(props: any) {
   // Soporte universal para Next.js 14 y 15
   const params = await props.params;
+  const searchParams = (await props.searchParams) || {};
   const slug = params?.slug;
+  const returnTo = safeReturnTo(searchParams.returnTo);
   const session: any = await getServerSession(authOptions);
 
   if (!session) {
@@ -69,7 +73,7 @@ export default async function EditBusinessPage(props: any) {
           <p className="text-zinc-400 mb-8">
             {fetchError ? `Detalle técnico: ${fetchError}` : `No tienes permisos para editar "${slug}" o el negocio no existe.`}
           </p>
-          <Link href="/portal" className="inline-flex px-8 py-4 bg-primary text-black font-black uppercase tracking-widest rounded-2xl text-xs">
+          <Link href={returnTo} className="inline-flex px-8 py-4 bg-primary text-black font-black uppercase tracking-widest rounded-2xl text-xs">
             Volver al Portal
           </Link>
         </div>
@@ -79,7 +83,7 @@ export default async function EditBusinessPage(props: any) {
 
   return (
     <main className="min-h-screen pt-32 pb-20 px-4 md:px-8 max-w-5xl mx-auto">
-      <EditBusinessForm negocio={negocio} session={session} />
+      <EditBusinessForm negocio={negocio} session={session} returnTo={returnTo} />
     </main>
   );
 }

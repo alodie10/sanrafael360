@@ -2,6 +2,7 @@
 
 import { ArrowLeft, Globe, Save, CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { returnToLabel } from "@/lib/return-to";
 
 interface EditBusinessHeaderProps {
   nombre: string;
@@ -10,6 +11,8 @@ interface EditBusinessHeaderProps {
   success: boolean;
   error: string | null;
   onSave: () => void;
+  /** Internal path to restore after cancel/save (e.g. /?cat=alojamientos). */
+  returnTo?: string;
 }
 
 export default function EditBusinessHeader({ 
@@ -18,18 +21,21 @@ export default function EditBusinessHeader({
   isSaving, 
   success, 
   error, 
-  onSave 
+  onSave,
+  returnTo = "/portal",
 }: EditBusinessHeaderProps) {
+  const backLabel = returnToLabel(returnTo);
+
   return (
     <>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <Link 
-            href="/portal" 
+            href={returnTo} 
             className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4 group font-medium"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Volver al Portal
+            {backLabel}
           </Link>
           <h1 className="text-3xl font-heading font-bold text-white mb-2">Editar Perfil</h1>
           <p className="text-slate-400">Gestiona la información pública de <strong className="text-white">{nombre}</strong></p>

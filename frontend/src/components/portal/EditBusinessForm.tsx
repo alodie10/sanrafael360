@@ -20,14 +20,18 @@ import EditBusinessRatings from "./edit-form/EditBusinessRatings";
 import EditBusinessPremium from "./edit-form/EditBusinessPremium";
 import EditBusinessOffers from "./edit-form/EditBusinessOffers";
 import ScheduleEditor from "./ScheduleEditor";
+import { safeReturnTo } from "@/lib/return-to";
 
 interface EditBusinessFormProps {
   negocio: any;
   session: any;
+  /** Where to go after cancel/save. Defaults to /portal. */
+  returnTo?: string;
 }
 
-export default function EditBusinessForm({ negocio, session }: EditBusinessFormProps) {
+export default function EditBusinessForm({ negocio, session, returnTo: returnToProp }: EditBusinessFormProps) {
   const router = useRouter();
+  const returnTo = safeReturnTo(returnToProp);
   
   // States
   const [nombre, setNombre] = useState(negocio.nombre || "");
@@ -496,7 +500,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
       if (res.ok) {
         setSuccess(true);
         toast.success("¡Perfil actualizado!");
-        setTimeout(() => router.push("/portal"), 2000);
+        setTimeout(() => router.push(returnTo), 2000);
       } else {
         const errorData = await res.json();
         setError(errorData.error?.message || "Error al guardar los cambios");
@@ -519,6 +523,7 @@ export default function EditBusinessForm({ negocio, session }: EditBusinessFormP
         success={success}
         error={error}
         onSave={handleSave}
+        returnTo={returnTo}
       />
 
       <div className="max-w-4xl mx-auto space-y-12">

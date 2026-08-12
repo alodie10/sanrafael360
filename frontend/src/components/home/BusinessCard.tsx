@@ -10,7 +10,9 @@ import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { buildBusinessEditHref } from "@/lib/return-to";
 
 const FavoritesModal = dynamic(() => import('../auth/FavoritesModal'), { ssr: false });
 import { toast } from "sonner";
@@ -34,6 +36,8 @@ export default function BusinessCard({
   priority = false,
 }: BusinessCardProps) {
   const { data: session } = useSession();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -44,6 +48,11 @@ export default function BusinessCard({
     : null;
   const businessSlug = negocio.slug || negocio.documentId;
   const businessId = negocio.documentId;
+  const searchQs = searchParams.toString();
+  const editHref = buildBusinessEditHref(
+    businessSlug,
+    `${pathname}${searchQs ? `?${searchQs}` : ""}`
+  );
 
   const sessionUserId = String(session?.user?.id || "");
   const ownerId = String(negocio.owner?.id || negocio.owner?.documentId || "");
@@ -194,7 +203,7 @@ export default function BusinessCard({
             {/* Gestionar */}
             {canManage && (
               <Link 
-                href={`/portal/negocios/${businessSlug}/editar`}
+                href={editHref}
                 className="w-10 h-10 bg-primary/90 text-black rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center border border-black/10"
                 title="Gestionar negocio"
               >

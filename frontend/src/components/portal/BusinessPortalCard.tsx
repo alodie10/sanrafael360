@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { getStrapiMedia, getStrapiUrl } from "@/lib/strapi";
 import { toast } from "sonner";
 import type { SuscripcionPrices } from "@/lib/portal";
+import { buildBusinessEditHref } from "@/lib/return-to";
 
 interface BusinessPortalCardProps {
   negocio: any;
@@ -22,6 +23,7 @@ export default function BusinessPortalCard({
   const [isProcessing, setIsProcessing] = useState(false);
   const [prices, setPrices] = useState<SuscripcionPrices | null>(subscriptionPrices);
   const [isMounted, setIsMounted] = useState(false);
+  const editHref = buildBusinessEditHref(negocio.slug, "/portal");
 
   useEffect(() => {
     setIsMounted(true);
@@ -244,7 +246,7 @@ export default function BusinessPortalCard({
 
           <div className="grid grid-cols-2 gap-3">
             <Link 
-              href={`/portal/negocios/${negocio.slug}/editar`}
+              href={editHref}
               className="flex items-center justify-center gap-2 px-4 py-4 bg-primary hover:bg-primary/90 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/20"
             >
               <Settings className="w-4 h-4" /> Gestionar
