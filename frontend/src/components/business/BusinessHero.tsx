@@ -107,7 +107,7 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
     <section className="select-none">
       {/* ═══════════ ZONA 1: Carrusel de fotos (brillo completo) ═══════════ */}
       <div 
-        className="relative w-full overflow-hidden bg-slate-900 h-[min(36dvh,300px)] md:h-[min(42dvh,480px)]"
+        className="relative w-full overflow-hidden bg-slate-900 h-[min(36dvh,300px)] md:h-[min(52dvh,560px)]"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={() => setIsPaused(true)}
@@ -132,7 +132,7 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
                   media="(max-width: 767px)" 
                   srcSet={optimizeCloudinaryUrl(imgUrl, `${rotPrefix}c_fill,ar_4:3,${cropGravity},w_1200,f_auto,q_auto`)} 
                 />
-                {/* PC: 16:9; el banner se capa a 480px para que el título quede a la vista */}
+                {/* PC: 16:9; el banner se capa a 560px para ver más foto sin tapar el título */}
                 <source 
                   media="(min-width: 768px)" 
                   srcSet={optimizeCloudinaryUrl(imgUrl, `${rotPrefix}c_fill,ar_16:9,${cropGravity},w_1920,f_auto,q_auto`)} 
