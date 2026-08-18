@@ -109,6 +109,9 @@ export default function EditBusinessVisualIdentity({
           >
             Subir Portada
           </label>
+          <p className="text-xs text-slate-500 text-center">
+            Ideal 1920×1080 (16:9). En el celular se muestra en 4:3.
+          </p>
 
           <div className="mt-2 space-y-2">
             <label className="text-sm font-bold text-slate-300">Enfoque del recorte automático</label>

@@ -107,7 +107,7 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
     <section className="select-none">
       {/* ═══════════ ZONA 1: Carrusel de fotos (brillo completo) ═══════════ */}
       <div 
-        className="relative w-full h-[300px] md:h-[480px] overflow-hidden bg-slate-900"
+        className="relative w-full overflow-hidden bg-slate-900 h-[min(36dvh,300px)] md:h-[min(42dvh,480px)]"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={() => setIsPaused(true)}
@@ -127,19 +127,18 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
               style={{ zIndex: index === activeIndex ? 1 : 0 }}
             >
               <picture>
-                {/* Mobile: Crop más vertical */}
+                {/* Celular: 4:3 (el banner ~300px de alto queda muy cerca de esa proporción) */}
                 <source 
-                  media="(max-width: 768px)" 
-                  srcSet={optimizeCloudinaryUrl(imgUrl, `${rotPrefix}c_fill,ar_4:5,${cropGravity},w_800,f_auto,q_auto`)} 
+                  media="(max-width: 767px)" 
+                  srcSet={optimizeCloudinaryUrl(imgUrl, `${rotPrefix}c_fill,ar_4:3,${cropGravity},w_1200,f_auto,q_auto`)} 
                 />
-                {/* Desktop: Crop ultrawide para el banner de la PC */}
+                {/* PC: 16:9; el banner se capa a 480px para que el título quede a la vista */}
                 <source 
-                  media="(min-width: 769px)" 
-                  srcSet={optimizeCloudinaryUrl(imgUrl, `${rotPrefix}c_fill,ar_21:9,${cropGravity},w_1600,f_auto,q_auto`)} 
+                  media="(min-width: 768px)" 
+                  srcSet={optimizeCloudinaryUrl(imgUrl, `${rotPrefix}c_fill,ar_16:9,${cropGravity},w_1920,f_auto,q_auto`)} 
                 />
-                {/* Fallback */}
                 <img
-                  src={optimizeCloudinaryUrl(imgUrl, `${rotPrefix}f_auto,q_auto`)}
+                  src={optimizeCloudinaryUrl(imgUrl, `${rotPrefix}c_fill,ar_16:9,${cropGravity},w_1920,f_auto,q_auto`)}
                   alt={`${negocio.nombre} - Foto ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
