@@ -10,13 +10,11 @@ interface BusinessActionsProps {
 }
 
 export default function BusinessActions({ negocio, isValidPremium, onTrackClick }: BusinessActionsProps) {
-  // Solo se muestra para negocios Premium
-  if (!isValidPremium) return null;
+  const whatsappNumber = negocio.whatsapp || (!isValidPremium ? negocio.telefono : undefined);
 
   return (
     <section className="bg-slate-900/50 border-b border-white/5 py-6 px-4 md:px-8">
       <div className="max-w-7xl mx-auto flex flex-wrap justify-center md:justify-start gap-4">
-        {/* COMPARTIR BOTÓN (Siempre visible para Premium) */}
         <button
           onClick={async () => {
             const url = window.location.href;
@@ -37,9 +35,9 @@ export default function BusinessActions({ negocio, isValidPremium, onTrackClick 
           Compartir
         </button>
 
-        {negocio.whatsapp && (
+        {whatsappNumber && (
           <a 
-            href={`https://wa.me/${negocio.whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent(`¡Hola! Vi tu negocio "${negocio.nombre}" en sanrafael360.com y quería hacerte una consulta.`)}`} 
+            href={`https://wa.me/${whatsappNumber.replace(/\D/g,'')}?text=${encodeURIComponent(`¡Hola! Vi tu negocio "${negocio.nombre}" en sanrafael360.com y quería hacerte una consulta.`)}`} 
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onTrackClick?.('whatsapp')}
@@ -49,7 +47,7 @@ export default function BusinessActions({ negocio, isValidPremium, onTrackClick 
             WhatsApp
           </a>
         )}
-        {negocio.website && (
+        {isValidPremium && negocio.website && (
           <a 
             href={negocio.website.startsWith('http') ? negocio.website : `https://${negocio.website}`} 
             target="_blank"
@@ -61,7 +59,7 @@ export default function BusinessActions({ negocio, isValidPremium, onTrackClick 
             Visitar Web
           </a>
         )}
-        {negocio.instagram && (
+        {isValidPremium && negocio.instagram && (
           <a 
             href={negocio.instagram.startsWith('http') ? negocio.instagram : `https://instagram.com/${negocio.instagram.replace('@','')}`} 
             target="_blank" 
@@ -72,7 +70,7 @@ export default function BusinessActions({ negocio, isValidPremium, onTrackClick 
             Instagram
           </a>
         )}
-        {negocio.facebook && (
+        {isValidPremium && negocio.facebook && (
           <a 
             href={negocio.facebook.startsWith('http') ? negocio.facebook : `https://facebook.com/${negocio.facebook}`} 
             target="_blank" 
