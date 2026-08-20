@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Star, Camera } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
-import { sortGaleriaByOrden } from "@/lib/galeria-order";
+import { buildHeroCarouselImages } from "@/lib/hero-carousel";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
 
@@ -16,53 +16,13 @@ interface BusinessHeroProps {
 
 export default function BusinessHero({ negocio, businessStatus }: BusinessHeroProps) {
   const logoUrl = negocio.logo?.url;
-  const coverUrl = negocio.imagen_portada?.url;
 
-  // Verificar si el comercio es premium y su validez
   let isValidPremium = negocio.is_premium || false;
   if (isValidPremium && negocio.premium_valid_until && new Date() > new Date(negocio.premium_valid_until)) {
     isValidPremium = false;
   }
 
-  // Armar lista de imágenes: Portada + Galería (si es premium)
-  const images: { url: string, cropGravity: string, rotation: number }[] = [];
-  if (coverUrl) {
-    images.push({ 
-      url: getStrapiMedia(coverUrl)!, 
-      cropGravity: negocio.crop_gravity || "g_auto",
-      rotation: 0
-    });
-  }
-  if (isValidPremium && negocio.galeria && negocio.galeria.length > 0) {
-    sortGaleriaByOrden(negocio.galeria, negocio.galeria_config).forEach((img: any) => {
-      if (img.url) {
-        // Excluir videos — los videos se muestran en BusinessGallery
-        const isVideo = img.mime?.startsWith('video/') || img.url.match(/\.(mp4|m4v|webm|ogg|mov)$/i);
-        if (isVideo) return;
-        
-        // Excluir imágenes marcadas como internas
-        const configStr = negocio.galeria_config?.[img.id];
-        let cropGravity = negocio.crop_gravity || "g_auto";
-        let isInternal = false;
-        let rotation = 0;
-        
-        if (typeof configStr === 'string') {
-           cropGravity = configStr;
-        } else if (configStr) {
-           cropGravity = configStr.cropGravity || cropGravity;
-           isInternal = configStr.isInternal === true;
-           rotation = configStr.rotation || 0;
-        }
-
-        if (isInternal) return;
-
-        const url = getStrapiMedia(img.url)!;
-        if (!images.find(i => i.url === url)) {
-          images.push({ url, cropGravity, rotation });
-        }
-      }
-    });
-  }
+  const images = buildHeroCarouselImages(negocio, isValidPremium);
 
   const hasCarousel = images.length > 1;
 
