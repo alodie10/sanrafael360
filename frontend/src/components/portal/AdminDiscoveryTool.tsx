@@ -16,6 +16,8 @@ interface DiscoveryData {
   photo_reference?: string;
   location?: { lat: number; lng: number };
   schedules?: any[];
+  tipo?: string;
+  descripcion?: string;
 }
 
 export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
@@ -118,6 +120,15 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
         return;
       }
 
+      const categoryName = categories.find(
+        (c) => c.documentId === selectedCategory || String(c.id) === selectedCategory
+      )?.nombre;
+      const descripcion =
+        result.descripcion ||
+        (categoryName
+          ? `${categoryName} en ${result.direccion || "San Rafael, Mendoza"}.`
+          : result.nombre);
+
       const res = await fetch(`${STRAPI_URL}/api/negocios`, {
         method: "POST",
         headers: {
@@ -128,7 +139,7 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
           data: {
             nombre: result.nombre,
             slug,
-            descripcion: `Negocio importado desde Google Maps. Ubicado en ${result.direccion}.`,
+            descripcion,
             direccion: result.direccion,
             telefono: result.telefono,
             website: result.website,

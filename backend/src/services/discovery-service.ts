@@ -1,6 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import {
+  buildGoogleImportDescription,
+  resolvePlaceTypeLabel,
+} from '../utils/google-place-description';
+
+const PLACE_DETAIL_FIELDS =
+  'name,opening_hours,website,url,formatted_phone_number,formatted_address,rating,user_ratings_total,photos,geometry,place_id,type,editorial_summary';
 
 /**
  * DiscoveryService — Google Places API + Playwright fallback
@@ -193,10 +200,43 @@ export class DiscoveryService {
   // ─── Places API Strategy ────────────────────────────────────────────────────
 
   private async fetchDetails(placeId: string, apiKey: string): Promise<any> {
-    const fields = 'name,opening_hours,website,url,formatted_phone_number,formatted_address,rating,user_ratings_total,photos,geometry';
-    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${apiKey}&language=es`;
+    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${PLACE_DETAIL_FIELDS}&key=${apiKey}&language=es`;
     const detailsRes = await fetch(detailsUrl);
     return await detailsRes.json();
+  }
+
+  private toDiscoveryData(result: any, placeId?: string) {
+    const types: string[] = Array.isArray(result.types) ? result.types : [];
+    const tipo = resolvePlaceTypeLabel(types);
+    const editorialSummary =
+      typeof result.editorial_summary?.overview === 'string'
+        ? result.editorial_summary.overview
+        : undefined;
+
+    return {
+      place_id: placeId || result.place_id,
+      nombre: result.name,
+      website: result.website,
+      telefono: result.formatted_phone_number,
+      direccion: result.formatted_address,
+      google_maps_url: result.url,
+      rating: result.rating,
+      user_ratings_total: result.user_ratings_total,
+      photo_reference: result.photos?.[0]?.photo_reference,
+      photo_references: result.photos ? result.photos.slice(0, 3).map((p: any) => p.photo_reference) : [],
+      location: result.geometry?.location,
+      schedules: result.opening_hours?.periods
+        ? periodsToSchedules(result.opening_hours.periods)
+        : [],
+      types,
+      tipo,
+      descripcion: buildGoogleImportDescription({
+        editorialSummary,
+        tipo,
+        direccion: result.formatted_address,
+        nombre: result.name,
+      }),
+    };
   }
 
   async discover(input: string): Promise<any> {
@@ -220,32 +260,14 @@ export class DiscoveryService {
 
       // 2. Direct Call by CID (Pinpoint Accuracy)
       if (extractedCid) {
-        const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?cid=${extractedCid}&key=${apiKey}&language=es&fields=name,formatted_address,formatted_phone_number,website,url,rating,user_ratings_total,photos,geometry,opening_hours,place_id`;
+        const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?cid=${extractedCid}&key=${apiKey}&language=es&fields=${PLACE_DETAIL_FIELDS}`;
         const detailsRes = await fetch(detailsUrl);
         const detailsData: any = await detailsRes.json();
 
         if (detailsData.status === 'OK' && detailsData.result) {
-          const result = detailsData.result;
-          const schedules = result.opening_hours?.periods
-            ? periodsToSchedules(result.opening_hours.periods)
-            : [];
-
           return {
             success: true,
-            data: {
-              place_id: result.place_id,
-              nombre: result.name,
-              website: result.website,
-              telefono: result.formatted_phone_number,
-              direccion: result.formatted_address,
-              google_maps_url: result.url,
-              rating: result.rating,
-              user_ratings_total: result.user_ratings_total,
-              photo_reference: result.photos?.[0]?.photo_reference,
-              photo_references: result.photos ? result.photos.slice(0, 3).map((p: any) => p.photo_reference) : [],
-              location: result.geometry?.location,
-              schedules
-            }
+            data: this.toDiscoveryData(detailsData.result),
           };
         }
       }
@@ -281,27 +303,9 @@ export class DiscoveryService {
       const detailsData = await this.fetchDetails(placeId, apiKey);
       if (detailsData.status !== 'OK') throw new Error(`Google API Error: ${detailsData.status}`);
 
-      const result = detailsData.result || {};
-      const schedules = result.opening_hours?.periods
-        ? periodsToSchedules(result.opening_hours.periods)
-        : [];
-
       return {
         success: true,
-        data: {
-          place_id: placeId,
-          nombre: result.name,
-          website: result.website,
-          telefono: result.formatted_phone_number,
-          direccion: result.formatted_address,
-          google_maps_url: result.url,
-          rating: result.rating,
-          user_ratings_total: result.user_ratings_total,
-          photo_reference: result.photos?.[0]?.photo_reference,
-          photo_references: result.photos ? result.photos.slice(0, 3).map((p: any) => p.photo_reference) : [],
-          location: result.geometry?.location,
-          schedules
-        }
+        data: this.toDiscoveryData(detailsData.result || {}, placeId),
       };
     } catch (err: any) {
       console.error(`[DiscoveryService] Error: ${err.message}`);
