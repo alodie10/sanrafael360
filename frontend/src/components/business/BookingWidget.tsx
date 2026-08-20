@@ -2,6 +2,7 @@
 
 import { CalendarCheck, ArrowRight, Sparkles, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { buildWhatsappUrl, normalizeWhatsappDigits } from "@/lib/whatsapp";
 
 interface BookingWidgetProps {
   reservaUrl?: string;
@@ -60,16 +61,20 @@ export default function BookingWidget({
 
   const finalLink = moduloPath || ctaLink || reservaUrl;
   const validLink = resolveCtaHref(finalLink);
-  const validWhatsapp = whatsapp && whatsapp.replace(/\D/g, "").length >= 10
-    ? whatsapp
-    : undefined;
+  const validWhatsapp = normalizeWhatsappDigits(whatsapp) || undefined;
+  const whatsappUrl = validWhatsapp
+    ? buildWhatsappUrl(
+        validWhatsapp,
+        `¡Hola! Vi tu negocio "${businessName}" en sanrafael360.com y quería comunicarme.`
+      )
+    : null;
 
-  if (!validLink && !validWhatsapp) return null;
+  if (!validLink && !whatsappUrl) return null;
 
   const title = hasModulo
     ? (ctaTitulo || "Reserve su turno")
     : (ctaTitulo || "Agenda tu Cita");
-  const isWhatsappFallback = !validLink && !!validWhatsapp;
+  const isWhatsappFallback = !validLink && !!whatsappUrl;
   const buttonText = hasModulo
     ? (ctaBotonTexto || "Reservar turno")
     : (ctaBotonTexto || (isWhatsappFallback ? "Consultar Cita" : "Reservar Ahora"));
@@ -130,8 +135,9 @@ export default function BookingWidget({
             </motion.a>
           ) : (
             <motion.a 
-               href={`https://wa.me/${validWhatsapp?.replace(/\D/g,'')}?text=${encodeURIComponent(`¡Hola! Vi tu negocio "${businessName}" en sanrafael360.com y quería comunicarme.`)}`}
+               href={whatsappUrl || "#"}
                target="_blank"
+               rel="noopener noreferrer"
                onClick={() => onTrackClick?.('whatsapp')}
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}

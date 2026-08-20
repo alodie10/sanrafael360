@@ -2,6 +2,7 @@
 
 import { MessageCircle, Globe, Instagram, Facebook, Share2 } from "lucide-react";
 import { Negocio } from "@/types/strapi";
+import { buildWhatsappUrl } from "@/lib/whatsapp";
 
 interface BusinessActionsProps {
   negocio: Negocio;
@@ -11,6 +12,12 @@ interface BusinessActionsProps {
 
 export default function BusinessActions({ negocio, isValidPremium, onTrackClick }: BusinessActionsProps) {
   const whatsappNumber = negocio.whatsapp || (!isValidPremium ? negocio.telefono : undefined);
+  const whatsappUrl = whatsappNumber
+    ? buildWhatsappUrl(
+        whatsappNumber,
+        `¡Hola! Vi tu negocio "${negocio.nombre}" en sanrafael360.com y quería hacerte una consulta.`
+      )
+    : null;
 
   return (
     <section className="bg-slate-900/50 border-b border-white/5 py-6 px-4 md:px-8">
@@ -35,9 +42,9 @@ export default function BusinessActions({ negocio, isValidPremium, onTrackClick 
           Compartir
         </button>
 
-        {whatsappNumber && (
+        {whatsappUrl && (
           <a 
-            href={`https://wa.me/${whatsappNumber.replace(/\D/g,'')}?text=${encodeURIComponent(`¡Hola! Vi tu negocio "${negocio.nombre}" en sanrafael360.com y quería hacerte una consulta.`)}`} 
+            href={whatsappUrl} 
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onTrackClick?.('whatsapp')}

@@ -1,28 +1,9 @@
 import { NotFoundError, ValidationError } from '../../../utils/errors';
+import { normalizeWhatsappDigits } from '../../../utils/whatsapp';
 import { createReservaRepository } from '../repositories/reserva-repository';
 import { verifyReservaCancelToken } from './cancel-token';
 
-function digitsOnly(value?: string | null): string {
-  return String(value || '').replace(/\D/g, '');
-}
-
-/** Normaliza a formato wa.me (AR: 549…). */
-export function normalizeWhatsappDigits(raw?: string | null): string | null {
-  let digits = digitsOnly(raw);
-  if (!digits) return null;
-  if (digits.startsWith('00')) digits = digits.slice(2);
-  if (digits.length === 10 && digits.startsWith('15')) {
-    digits = `549${digits.slice(2)}`;
-  } else if (digits.length === 10) {
-    digits = `549${digits}`;
-  } else if (digits.length === 11 && digits.startsWith('9')) {
-    digits = `54${digits}`;
-  } else if (digits.length === 12 && digits.startsWith('54') && !digits.startsWith('549')) {
-    // 54 + area + number without 9
-    digits = `549${digits.slice(2)}`;
-  }
-  return digits.length >= 10 ? digits : null;
-}
+export { normalizeWhatsappDigits };
 
 function formatCuando(iso: string, timeZone?: string) {
   return new Intl.DateTimeFormat('es-AR', {
