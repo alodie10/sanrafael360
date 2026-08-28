@@ -131,6 +131,8 @@ export interface Negocio {
   ofertas?: Oferta[];
   /** Soft-link al módulo de reservas SR360 */
   reserva_comercio?: { documentId?: string; slug?: string; nombre?: string } | null;
+  /** Campo Algolia que coincidió: nombre → etiquetas → descripción */
+  searchMatch?: "nombre" | "atributos" | "descripcion";
 }
 
 export interface StrapiUser {

@@ -16,6 +16,7 @@ import {
 } from "@/lib/search-negocios";
 import { isStrapiUnreachableError } from "@/lib/strapi";
 import { useRouter, usePathname } from "next/navigation";
+import { buildSearchExplanation, matchRank } from "@/lib/search-match";
 
 const normalizeText = (str: string) => {
   return str
@@ -235,7 +236,16 @@ export default function HomeClient({ categorias, initialNegocios }: HomeClientPr
   }, [filtersKey, searchQuery, localidadQuery, selectedCategoryDocId, categorias]);
 
   const scrollToResults = () => {
-    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const results = resultsRef.current;
+    const filterBar = filterBarRef.current;
+    if (!results) return;
+
+    const stickyTop = filterBar
+      ? parseFloat(getComputedStyle(filterBar).top) || 0
+      : 0;
+    const offset = stickyTop + (filterBar?.offsetHeight ?? 0) + 16;
+    const top = window.scrollY + results.getBoundingClientRect().top - offset;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
   };
 
   const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -255,7 +265,13 @@ export default function HomeClient({ categorias, initialNegocios }: HomeClientPr
   const filterBarRef = useRef<HTMLDivElement>(null);
 
   const sortedNegocios = useMemo(() => {
+    const hasTextQuery = searchQuery.trim().length > 0;
     return [...searchResults].sort((a, b) => {
+      if (hasTextQuery) {
+        const matchDelta = matchRank(a.searchMatch) - matchRank(b.searchMatch);
+        if (matchDelta !== 0) return matchDelta;
+      }
+
       const isAPremium = isPremiumActive(a);
       const isBPremium = isPremiumActive(b);
 
@@ -270,7 +286,17 @@ export default function HomeClient({ categorias, initialNegocios }: HomeClientPr
 
       return a.nombre.localeCompare(b.nombre);
     });
-  }, [searchResults, userLocation]);
+  }, [searchResults, userLocation, searchQuery]);
+
+  const searchExplanation = useMemo(() => {
+    const q = searchQuery.trim();
+    if (!q) return null;
+    return buildSearchExplanation(
+      searchResults.length,
+      q,
+      searchResults.map((n) => n.searchMatch)
+    );
+  }, [searchQuery, searchResults]);
 
   const isFiltering =
     searchQuery.trim().length > 0 ||
@@ -291,24 +317,34 @@ export default function HomeClient({ categorias, initialNegocios }: HomeClientPr
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 bg-background">
         <AnimatePresence mode="wait" />
 
-        <section className="mt-4 scroll-mt-64" ref={resultsRef}>
-          <div className="flex items-center justify-between mb-6 gap-4">
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">
-                Comercios{" "}
-                <span className="text-primary italic">
-                  {isFiltering ? "Encontrados" : "Destacados"}
+        <section className="mt-4" ref={resultsRef}>
+          <div className="mb-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">
+                  Comercios{" "}
+                  <span className="text-primary italic">
+                    {isFiltering ? "Encontrados" : "Destacados"}
+                  </span>
+                </h2>
+                <span className="text-xs font-bold text-slate-500 bg-white/[0.04] border border-white/[0.08] rounded-full px-2.5 py-0.5">
+                  {sortedNegocios.length}
                 </span>
-              </h2>
-              <span className="text-xs font-bold text-slate-500 bg-white/[0.04] border border-white/[0.08] rounded-full px-2.5 py-0.5">
-                {sortedNegocios.length}
-              </span>
+              </div>
+              {isFiltering && !searchExplanation && (
+                <p className="text-xs text-slate-500 hidden md:block">
+                  {selectedCategoryDocId
+                    ? `En ${categorias.find((c) => c.documentId === selectedCategoryDocId)?.nombre}`
+                    : "San Rafael, Mendoza"}
+                </p>
+              )}
             </div>
-            {isFiltering && (
-              <p className="text-xs text-slate-500 hidden md:block">
-                {selectedCategoryDocId
-                  ? `En ${categorias.find((c) => c.documentId === selectedCategoryDocId)?.nombre}`
-                  : "San Rafael, Mendoza"}
+            {searchExplanation && (
+              <p
+                data-testid="search-explanation"
+                className="mt-2 text-sm text-slate-400"
+              >
+                {searchExplanation}
               </p>
             )}
           </div>

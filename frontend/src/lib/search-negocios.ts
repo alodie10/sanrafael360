@@ -2,6 +2,7 @@ import { cache } from "react";
 import { fetchFromStrapi, isStrapiUnreachableError } from "@/lib/strapi";
 import { canUseAlgoliaSearch, shouldUseStrapiSearchForHome } from "@/lib/search-config";
 import { Categoria, Negocio } from "@/types/strapi";
+import { matchFieldFromAlgoliaHit, matchFieldFromText } from "@/lib/search-match";
 
 export type HomeSearchParams = {
   query?: string;
@@ -23,7 +24,8 @@ function buildNegociosSearchPath({ query, localidad, categoryDocId }: HomeSearch
 
   if (text) {
     parts.push(`filters[$or][0][nombre][$containsi]=${encodeURIComponent(text)}`);
-    parts.push(`filters[$or][1][direccion][$containsi]=${encodeURIComponent(text)}`);
+    parts.push(`filters[$or][1][atributos][nombre][$containsi]=${encodeURIComponent(text)}`);
+    parts.push(`filters[$or][2][descripcion][$containsi]=${encodeURIComponent(text)}`);
   }
 
   if (categoryDocId) {
@@ -42,21 +44,22 @@ function buildNegociosSearchPath({ query, localidad, categoryDocId }: HomeSearch
     "fields[0]=nombre",
     "fields[1]=slug",
     "fields[2]=direccion",
-    "fields[3]=is_premium",
-    "fields[4]=premium_valid_until",
-    "fields[5]=price_range",
-    "fields[6]=rating",
-    "fields[7]=review_count",
-    "fields[8]=google_rating",
-    "fields[9]=google_review_count",
-    "fields[10]=tripadvisor_rating",
-    "fields[11]=tripadvisor_review_count",
-    "fields[12]=latitud",
-    "fields[13]=longitud",
-    "fields[14]=reserva_url",
-    "fields[15]=reserva_habilitada",
-    "fields[16]=cta_link",
-    "fields[17]=cta_habilitado",
+    "fields[3]=descripcion",
+    "fields[4]=is_premium",
+    "fields[5]=premium_valid_until",
+    "fields[6]=price_range",
+    "fields[7]=rating",
+    "fields[8]=review_count",
+    "fields[9]=google_rating",
+    "fields[10]=google_review_count",
+    "fields[11]=tripadvisor_rating",
+    "fields[12]=tripadvisor_review_count",
+    "fields[13]=latitud",
+    "fields[14]=longitud",
+    "fields[15]=reserva_url",
+    "fields[16]=reserva_habilitada",
+    "fields[17]=cta_link",
+    "fields[18]=cta_habilitado",
   ].join("&");
 
   const filterQuery = parts.length ? `${parts.join("&")}&` : "";
@@ -69,7 +72,11 @@ export async function searchNegociosFromStrapi(
   options: RequestInit = {}
 ): Promise<Negocio[]> {
   const res = await fetchFromStrapi(buildNegociosSearchPath(params), options);
-  return (res.data ?? []) as Negocio[];
+  const query = params.query?.trim() || "";
+  return ((res.data ?? []) as Negocio[]).map((negocio) => ({
+    ...negocio,
+    searchMatch: query ? matchFieldFromText(negocio, query) : undefined,
+  }));
 }
 
 /**
@@ -100,12 +107,13 @@ export const getHomeNegocios = cache(async function getHomeNegocios(
   }
 });
 
-function mapAlgoliaHit(hit: Record<string, unknown>): Negocio {
-  return {
+function mapAlgoliaHit(hit: Record<string, unknown>, query?: string): Negocio {
+  const mapped: Negocio = {
     id: typeof hit.id === "number" ? hit.id : 0,
     documentId: hit.objectID as string,
     slug: hit.slug as string,
     nombre: hit.nombre as string,
+    descripcion: hit.descripcion as string | undefined,
     direccion: hit.direccion as string,
     is_premium: hit.is_premium as boolean,
     premium_valid_until: hit.premium_valid_until as string,
@@ -129,6 +137,8 @@ function mapAlgoliaHit(hit: Record<string, unknown>): Negocio {
     cta_link: hit.cta_link as string | undefined,
     cta_habilitado: hit.cta_habilitado as boolean | undefined,
   };
+  mapped.searchMatch = query ? matchFieldFromAlgoliaHit(hit, query) : undefined;
+  return mapped;
 }
 
 /** Búsqueda vía Algolia (prod o fallback en dev si Strapi no responde). */
@@ -141,31 +151,27 @@ export async function searchNegociosFromAlgolia(
     process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY || ""
   );
 
-  let fullQuery = `${params.query || ""} ${params.localidad || ""}`.trim();
+  const textQuery = (params.query || "").trim();
+  let query = textQuery;
 
-  if (params.categoryDocId && params.categorias?.length) {
+  if (!query && params.categoryDocId && params.categorias?.length) {
     const selectedCat = params.categorias.find((c) => c.documentId === params.categoryDocId);
-    if (selectedCat) {
-      fullQuery = `${fullQuery} ${selectedCat.nombre}`.trim();
-    }
+    if (selectedCat) query = selectedCat.nombre;
   }
 
   const { results } = await client.search({
     requests: [
       {
         indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME || "negocios",
-        query: fullQuery,
+        query,
         hitsPerPage: 100,
+        typoTolerance: false,
+        restrictSearchableAttributes: ["nombre", "atributos", "descripcion"],
+        attributesToHighlight: ["nombre", "atributos", "descripcion"],
       },
     ],
   });
 
   const hits = (results[0] as { hits?: Record<string, unknown>[] })?.hits || [];
-  const sortedHits = hits.sort((a, b) => {
-    if (a.is_premium && !b.is_premium) return -1;
-    if (!a.is_premium && b.is_premium) return 1;
-    return 0;
-  });
-
-  return sortedHits.map(mapAlgoliaHit);
+  return hits.map((hit) => mapAlgoliaHit(hit, textQuery));
 }

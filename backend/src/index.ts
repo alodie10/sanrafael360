@@ -319,6 +319,13 @@ export default {
       });
       strapi.log.info('✅ Lifecycle hooks de Negocio registrados correctamente.');
 
+      try {
+        const algoliaService = require('./api/negocio/services/algolia');
+        await algoliaService.applyAlgoliaIndexSettings();
+      } catch (algoliaSettingsErr: any) {
+        strapi.log.warn(`[Algolia] No se pudieron aplicar settings: ${algoliaSettingsErr.message}`);
+      }
+
       // 7. STRApi 5 DOCUMENT SERVICE MIDDLEWARE (Para atrapar Publish/Unpublish)
       strapi.documents.use(async (context, next) => {
         const result = await next();
