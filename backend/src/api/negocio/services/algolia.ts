@@ -1,10 +1,27 @@
 import { algoliasearch } from 'algoliasearch';
+import { ALGOLIA_INDEX_SETTINGS } from './algolia-index-settings';
 
 const APP_ID = process.env.ALGOLIA_APP_ID || '';
 const ADMIN_KEY = process.env.ALGOLIA_ADMIN_KEY || '';
 
 const client = (APP_ID && ADMIN_KEY) ? algoliasearch(APP_ID, ADMIN_KEY) : null;
 const INDEX_NAME = process.env.ALGOLIA_INDEX_NAME || (process.env.NODE_ENV === 'production' ? 'negocios' : 'negocios_dev');
+
+let settingsApplied = false;
+
+export async function applyAlgoliaIndexSettings() {
+  if (!client || settingsApplied) return;
+  try {
+    await client.setSettings({
+      indexName: INDEX_NAME,
+      indexSettings: ALGOLIA_INDEX_SETTINGS,
+    });
+    settingsApplied = true;
+    console.log(`[Algolia] Index settings applied on ${INDEX_NAME}`);
+  } catch (error) {
+    console.error('[Algolia] Error applying index settings:', error);
+  }
+}
 
 export const syncNegocioToAlgolia = async (documentId: string) => {
   if (!client) {
@@ -13,6 +30,7 @@ export const syncNegocioToAlgolia = async (documentId: string) => {
   }
 
   try {
+    await applyAlgoliaIndexSettings();
     const negocioData: any = await strapi.documents('api::negocio.negocio').findOne({
       documentId,
       status: 'published',

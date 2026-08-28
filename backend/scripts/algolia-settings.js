@@ -18,9 +18,13 @@ const { algoliasearch } = require('algoliasearch');
     await client.setSettings({
       indexName: INDEX_NAME,
       indexSettings: {
-        customRanking: [
-          'desc(is_premium)'
-        ]
+        searchableAttributes: ['nombre', 'atributos', 'descripcion'],
+        typoTolerance: false,
+        exactOnSingleWordQuery: 'word',
+        customRanking: ['desc(is_premium)'],
+        attributesToHighlight: ['nombre', 'atributos', 'descripcion'],
+        indexLanguages: ['es'],
+        queryLanguages: ['es'],
       }
     });
 
