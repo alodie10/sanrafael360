@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>San Rafael 360 — Guion comercial Premium</title>
+  <style>
+    @page { size: A4; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 210mm;
+      height: 297mm;
+      background: #fff;
+      color: #161411;
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page {
+      width: 210mm;
+      height: 297mm;
+      padding: 9mm 10mm 8mm;
+      display: flex;
+      flex-direction: column;
+      gap: 4.2mm;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 0.45mm solid #c4a574;
+      padding-bottom: 3.2mm;
+    }
+    .brand {
+      font-size: 9.2pt;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: #8a7350;
+      font-weight: 700;
+    }
+    h1 {
+      font-size: 16.5pt;
+      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-top: 1mm;
+    }
+    .meta {
+      text-align: right;
+      font-size: 8pt;
+      color: #5c564d;
+      line-height: 1.35;
+    }
+    .core {
+      background: #161411;
+      color: #f6f1e8;
+      border-radius: 3mm;
+      padding: 4.2mm 4.8mm 4.6mm;
+    }
+    .core h2 {
+      font-size: 7.4pt;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #c4a574;
+      margin-bottom: 2.4mm;
+    }
+    .chips {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2mm 4mm;
+      font-size: 8.7pt;
+      line-height: 1.28;
+    }
+    .chips b { color: #c4a574; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.18fr 0.82fr;
+      gap: 4.5mm;
+      flex: 1;
+      min-height: 0;
+    }
+    h3 {
+      font-size: 8pt;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #8a7350;
+      margin-bottom: 2mm;
+    }
+    .step {
+      margin-bottom: 3.1mm;
+    }
+    .step .n {
+      display: inline-block;
+      width: 5.2mm;
+      height: 5.2mm;
+      border-radius: 50%;
+      background: #161411;
+      color: #f6f1e8;
+      font-size: 7pt;
+      font-weight: 700;
+      text-align: center;
+      line-height: 5.2mm;
+      margin-right: 1.6mm;
+      vertical-align: middle;
+    }
+    .step strong {
+      font-size: 9.2pt;
+      font-weight: 700;
+    }
+    .step p {
+      margin-top: 0.8mm;
+      font-size: 8.4pt;
+      line-height: 1.32;
+      color: #2a2722;
+    }
+    .quote {
+      font-style: italic;
+      color: #161411;
+    }
+    .panel {
+      background: #f6f1e8;
+      border: 0.3mm solid #e4d9c6;
+      border-radius: 3mm;
+      padding: 4mm 4.2mm 3.6mm;
+    }
+    .obj {
+      margin-bottom: 2.8mm;
+    }
+    .obj dt {
+      font-size: 8.2pt;
+      font-weight: 700;
+      color: #161411;
+    }
+    .obj dd {
+      font-size: 8pt;
+      line-height: 1.3;
+      color: #2a2722;
+      margin-top: 0.4mm;
+    }
+    .rules {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 3mm;
+      background: #161411;
+      color: #f6f1e8;
+      border-radius: 3mm;
+      padding: 3.6mm 4.2mm;
+    }
+    .rules h3 { color: #c4a574; margin-bottom: 1.2mm; }
+    .rules p { font-size: 7.8pt; line-height: 1.32; }
+    footer {
+      font-size: 7.2pt;
+      color: #7a7368;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <div class="brand">San Rafael 360 · Equipo comercial</div>
+        <h1>Guion Premium — cualquier comercio</h1>
+      </div>
+      <div class="meta">
+        Hoja de coaching · 1 página<br>
+        Usar con cualquier rubro. Hablarle de <em>su</em> negocio.
+      </div>
+    </header>
+
+    <section class="core">
+      <h2>Núcleo a memorizar — si sale natural, el resto fluye</h2>
+      <div class="chips">
+        <div><b>1. Pauta.</b> Nosotros invertimos para que te vean fuera de San Rafael.</div>
+        <div><b>2. Analogía.</b> Igual que Mercado Libre: tu aviso, esponsoreado, en Google.</div>
+        <div><b>3. Ficha propia.</b> Logo de la guía + URL en sanrafael360, como un perfil.</div>
+        <div><b>4. Pertenencia.</b> Hecho por sanrafaelinos. El mapa de los mejores de acá.</div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section>
+        <h3>Guion · decirlo en este orden</h3>
+
+        <div class="step">
+          <span class="n">1</span><strong>Apertura</strong>
+          <p>Hola, [nombre], ¿cómo estás? Te escribo de San Rafael 360. Soy [tu nombre] del equipo comercial. Te contacto porque [quién te pasó el dato / vimos tu comercio] y quería contestarte lo que pregunta casi todo el mundo:</p>
+          <p class="quote">«¿Cómo me van a ver afuera de San Rafael?»</p>
+        </div>
+
+        <div class="step">
+          <span class="n">2</span><strong>El problema · 1 frase</strong>
+          <p>Tener ficha en Google o Instagram no alcanza si el turista o el cliente de otra ciudad no te encuentra cuando está decidiendo.</p>
+        </div>
+
+        <div class="step">
+          <span class="n">3</span><strong>Beneficio central</strong>
+          <p>Si tu comercio es Premium, San Rafael 360 pone plata de su bolsillo para promocionarte. Pagamos pauta en Instagram y Facebook y te hacemos aparecer en Google, con foco en Buenos Aires, Santa Fe, Córdoba, Mendoza y San Rafael; el resto del país, en menor medida. No es un disparo al aire: miramos campañas y estadísticas y reforzamos donde hay más respuesta.</p>
+        </div>
+
+        <div class="step">
+          <span class="n">4</span><strong>Analogía · no saltearla</strong>
+          <p>Es el mismo mecanismo de Mercado Libre: publicás, googleás, y aparece tu aviso esponsoreado. Acá igual, con el sello de San Rafael 360. El aviso es de <b>tu</b> negocio: nuestro logo, destaque y una URL propia en la guía.</p>
+        </div>
+
+        <div class="step">
+          <span class="n">5</span><strong>Pertenencia</strong>
+          <p>Esto lo hacemos sanrafaelinos para San Rafael. No es una guía de cualquier ciudad. Tu negocio entra al mapa de los mejores comercios de acá; no competís con locales de otro lado.</p>
+        </div>
+
+        <div class="step">
+          <span class="n">6</span><strong>Prueba · números, sin inflar</strong>
+          <p>Hoy: 700 a 1.000 impresiones por día, y creciendo. Tres meses de proyecto: por eso los precios están bajos. Alrededor de 600 comercios; una parte interesante ya es Premium y está usando estos beneficios.</p>
+        </div>
+
+        <div class="step">
+          <span class="n">7</span><strong>Extra</strong>
+          <p>Al Premium se le filma un reel sin cargo, se sube a redes y entra en la pauta. Si hacen falta mejores fotos, se coordina con el equipo de publicidad.</p>
+        </div>
+
+        <div class="step">
+          <span class="n">8</span><strong>Cierre · pregunta, no monólogo</strong>
+          <p>En resumen: no es solo “estar listado”. Es que nosotros invertimos para que te vean en las ciudades de donde viene la gente, con tu marca y el respaldo de la guía local.</p>
+          <p class="quote">«¿Lo vemos esta semana y te armo la ficha de [su rubro]?»</p>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <h3>Objeciones · respuesta corta</h3>
+
+        <div class="obj">
+          <dt>«Ya estoy en Google / Instagram»</dt>
+          <dd>Estar listado no es lo mismo que que alguien pague para que te vean en Buenos Aires, Córdoba o Santa Fe cuando están eligiendo.</dd>
+        </div>
+        <div class="obj">
+          <dt>«Es caro» / «Lo pienso»</dt>
+          <dd>Los precios están bajos porque acabamos de lanzar. Entrar ahora es entrar barato al mapa que se está armando.</dd>
+        </div>
+        <div class="obj">
+          <dt>«¿De dónde viene la gente?»</dt>
+          <dd>Pauta con foco en las provincias de origen del turista. Ajustamos según estadísticas, no al azar.</dd>
+        </div>
+        <div class="obj">
+          <dt>«No quiero aparecer con otra marca»</dt>
+          <dd>El aviso es de tu negocio. San Rafael 360 es el sello de la guía local, como Mercado Libre en un aviso esponsoreado.</dd>
+        </div>
+        <div class="obj">
+          <dt>«Después lo veo»</dt>
+          <dd>Ya hay ~600 comercios y los Premium ya están usando el beneficio. El lugar se está llenando ahora.</dd>
+        </div>
+        <div class="obj">
+          <dt>«No tengo fotos buenas»</dt>
+          <dd>Se coordina con publicidad. El reel sin cargo ya suma a la pauta aunque las fotos actuales no sean ideales.</dd>
+        </div>
+        <div class="obj">
+          <dt>Pregunta para que hablen ellos</dt>
+          <dd class="quote">«¿Qué te sirve más: que te vean en Buenos Aires, o el reel y la ficha acá?»</dd>
+        </div>
+      </aside>
+    </div>
+
+    <section class="rules">
+      <div>
+        <h3>Siempre</h3>
+        <p>Decir tu comercio, tu local, tu marca. Adaptar el rubro en el cierre. Después del pitch, preguntar.</p>
+      </div>
+      <div>
+        <h3>Nunca</h3>
+        <p>Nombrar finca, restaurante u otro caso que no sea el de ellos. Inventar números. Hablar más de 90 segundos seguidos.</p>
+      </div>
+      <div>
+        <h3>Si se traban</h3>
+        <p>Volver al núcleo: nosotros pagamos la pauta · analogía Mercado Libre · URL propia · guía de acá.</p>
+      </div>
+    </section>
+
+    <footer>
+      <span>Uso interno · equipo comercial San Rafael 360</span>
+      <span>No es un discurso: es una conversación con cierre</span>
+    </footer>
+  </div>
+</body>
+</html>
