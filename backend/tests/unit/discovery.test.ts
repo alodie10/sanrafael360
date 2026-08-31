@@ -47,4 +47,16 @@ describe('DiscoveryService Unit Tests', () => {
       expect(result).toBe('Texto con muchos espacios');
     });
   });
+
+  describe('toDiscoveryData phone', () => {
+    it('normalizes formatted Places phones into local digits for telefono and whatsapp', () => {
+      const data = (service as any).toDiscoveryData({
+        name: 'Amelie',
+        formatted_phone_number: '0260 449-8128',
+        formatted_address: 'San Rafael',
+      });
+      expect(data.telefono).toBe('2604498128');
+      expect(data.whatsapp).toBe('2604498128');
+    });
+  });
 });

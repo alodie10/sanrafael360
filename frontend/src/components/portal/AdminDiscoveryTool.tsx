@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { Search, MapPin, Globe, Phone, Clock, Plus, Loader2, CheckCircle2, AlertCircle, Building2, Zap } from "lucide-react";
 import { STRAPI_URL } from "@/lib/strapi";
+import { normalizeLocalPhoneDigits } from "@/lib/whatsapp";
 
 interface DiscoveryData {
   place_id: string;
   nombre: string;
   website?: string;
   telefono?: string;
+  whatsapp?: string;
   direccion?: string;
   google_maps_url?: string;
   rating?: number;
@@ -128,6 +130,8 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
         (categoryName
           ? `${categoryName} en ${result.direccion || "San Rafael, Mendoza"}.`
           : result.nombre);
+      const localPhone =
+        normalizeLocalPhoneDigits(result.telefono) || result.telefono || undefined;
 
       const res = await fetch(`${STRAPI_URL}/api/negocios`, {
         method: "POST",
@@ -141,7 +145,8 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
             slug,
             descripcion,
             direccion: result.direccion,
-            telefono: result.telefono,
+            telefono: localPhone,
+            whatsapp: result.whatsapp || localPhone,
             website: result.website,
             google_maps_url: result.google_maps_url,
             google_place_id: result.place_id,

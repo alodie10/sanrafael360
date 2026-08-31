@@ -5,6 +5,7 @@ import {
   buildGoogleImportDescription,
   resolvePlaceTypeLabel,
 } from '../utils/google-place-description';
+import { normalizeLocalPhoneDigits } from '../utils/whatsapp';
 
 const PLACE_DETAIL_FIELDS =
   'name,opening_hours,website,url,formatted_phone_number,formatted_address,rating,user_ratings_total,photos,geometry,place_id,type,editorial_summary';
@@ -44,6 +45,7 @@ export interface DetailedDiscovery {
   google_maps_url?: string;
   horarios_texto?: string;
   telefono?: string;
+  whatsapp?: string;
   schedules?: PlacesSchedule[];
   success: boolean;
   error?: string;
@@ -212,12 +214,17 @@ export class DiscoveryService {
       typeof result.editorial_summary?.overview === 'string'
         ? result.editorial_summary.overview
         : undefined;
+    const telefono =
+      normalizeLocalPhoneDigits(result.formatted_phone_number) ||
+      result.formatted_phone_number ||
+      undefined;
 
     return {
       place_id: placeId || result.place_id,
       nombre: result.name,
       website: result.website,
-      telefono: result.formatted_phone_number,
+      telefono,
+      whatsapp: telefono,
       direccion: result.formatted_address,
       google_maps_url: result.url,
       rating: result.rating,

@@ -110,6 +110,9 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
           if (discovery.data.google_maps_url) updateData.google_maps_url = discovery.data.google_maps_url;
           if (!updateData.website && discovery.data.website) updateData.website = discovery.data.website;
           if (!updateData.telefono && discovery.data.telefono) updateData.telefono = discovery.data.telefono;
+          if (!updateData.whatsapp && (discovery.data.whatsapp || discovery.data.telefono)) {
+            updateData.whatsapp = discovery.data.whatsapp || discovery.data.telefono;
+          }
           
           strapi.log.info(`[PortalUpdate] Auto-Discovery exitoso. Rating: ${discovery.data.rating}`);
 
