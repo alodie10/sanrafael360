@@ -1,5 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeWhatsappDigits } from '../../src/utils/whatsapp';
+import { normalizeLocalPhoneDigits, normalizeWhatsappDigits } from '../../src/utils/whatsapp';
+
+describe('normalizeLocalPhoneDigits', () => {
+  it('strips leading 0, spaces and dashes from a Places formatted number', () => {
+    expect(normalizeLocalPhoneDigits('0260 449-8128')).toBe('2604498128');
+  });
+
+  it('strips AR country code from an international number', () => {
+    expect(normalizeLocalPhoneDigits('+54 260 449-8128')).toBe('2604498128');
+  });
+
+  it('keeps an already local 10-digit number', () => {
+    expect(normalizeLocalPhoneDigits('2604498128')).toBe('2604498128');
+  });
+});
 
 describe('normalizeWhatsappDigits', () => {
   it('adds 549 to a 10-digit San Rafael number (Amelie / WhatsApp Web)', () => {

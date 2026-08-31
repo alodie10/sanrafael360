@@ -21,6 +21,7 @@ import EditBusinessPremium from "./edit-form/EditBusinessPremium";
 import EditBusinessOffers from "./edit-form/EditBusinessOffers";
 import ScheduleEditor from "./ScheduleEditor";
 import { safeReturnTo } from "@/lib/return-to";
+import { normalizeLocalPhoneDigits } from "@/lib/whatsapp";
 
 interface EditBusinessFormProps {
   negocio: any;
@@ -409,13 +410,17 @@ export default function EditBusinessForm({ negocio, session, returnTo: returnToP
         const d = result.data;
         if (d.direccion) setDireccion(d.direccion);
         if (d.lat && d.lng) { setLatitud(d.lat); setLongitud(d.lng); }
-        if (d.telefono) setTelefono(d.telefono);
+        const localPhone = normalizeLocalPhoneDigits(d.telefono) || d.telefono;
+        if (localPhone) {
+          setTelefono(localPhone);
+          setWhatsapp(d.whatsapp || localPhone);
+        }
         if (d.website) setWebsite(d.website);
         if (d.schedules && d.schedules.length > 0) setSchedules(d.schedules);
         
         setSyncSummary({
           direccion: d.direccion,
-          telefono: d.telefono,
+          telefono: localPhone,
           website: d.website,
           schedules: d.schedules?.length || 0
         });
