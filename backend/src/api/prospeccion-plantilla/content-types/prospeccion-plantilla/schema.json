@@ -1,0 +1,27 @@
+{
+  "kind": "singleType",
+  "collectionName": "prospeccion_plantillas",
+  "info": {
+    "singularName": "prospeccion-plantilla",
+    "pluralName": "prospeccion-plantillas",
+    "displayName": "Plantilla de Prospección",
+    "description": "Textos globales del módulo de prospección WhatsApp"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "texto_ficha": {
+      "type": "text",
+      "required": true
+    },
+    "mensaje": {
+      "type": "text",
+      "required": true
+    },
+    "firma": {
+      "type": "text"
+    }
+  }
+}

@@ -39,3 +39,9 @@ export function normalizeWhatsappDigits(raw?: string | null): string | null {
 
   return digits.length >= 10 ? digits : null;
 }
+
+export function buildWhatsappUrl(rawNumber: string, text: string): string | null {
+  const digits = normalizeWhatsappDigits(rawNumber);
+  if (!digits) return null;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
