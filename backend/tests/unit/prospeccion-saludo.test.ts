@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { greetingForHour, greetingNow, hourInTimeZone } from '../../src/utils/prospeccion-saludo';
-import { composeFichaMensaje } from '../../src/api/prospeccion/plantilla-defaults';
+import { composeFichaMensaje, resolveFirma } from '../../src/api/prospeccion/plantilla-defaults';
 
 describe('greetingForHour', () => {
   it('returns Buen día from 6 through 11', () => {
@@ -57,6 +57,20 @@ describe('composeFichaMensaje', () => {
         'Oferta premium',
         'Diego Alonso',
       ].join('\n\n')
+    );
+  });
+});
+
+describe('resolveFirma', () => {
+  it('prefers the user signature over the shared fallback', () => {
+    expect(resolveFirma('Mi nombre es Ana', 'Mi nombre es Diego Alonso')).toBe(
+      'Mi nombre es Ana'
+    );
+  });
+
+  it('falls back to the shared signature when the user has none', () => {
+    expect(resolveFirma('', 'Mi nombre es Diego Alonso')).toBe(
+      'Mi nombre es Diego Alonso'
     );
   });
 });

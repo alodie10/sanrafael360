@@ -161,8 +161,7 @@ export default function AdminProspeccionPanel({
       if (!res.ok) throw new Error(apiError(json, "No se pudo guardar la plantilla"));
       setPlantilla(json.data);
       setDraft(json.data);
-      setEditingPlantilla(false);
-      setNotice("Plantilla actualizada para todos los prospectos.");
+      setNotice("Guardado. El mensaje es compartido; la firma quedó en tu usuario.");
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -360,7 +359,7 @@ export default function AdminProspeccionPanel({
           <div>
             <h3 className="text-lg font-serif font-bold text-white italic">Plantilla del mensaje</h3>
             <p className="text-sm text-zinc-500">
-              Acá cambiás el texto, el precio y la firma cuando quieras. Guardar queda grabado para todos los envíos siguientes.
+              El mensaje y el precio son compartidos. La firma es de cada usuario: tu esposa puede poner la suya sin cambiar la tuya.
             </p>
           </div>
           <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform ${editingPlantilla ? "rotate-180" : ""}`} />
@@ -390,7 +389,9 @@ export default function AdminProspeccionPanel({
               />
             </label>
             <label className="block space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Firma</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                Firma (solo tu usuario)
+              </span>
               <textarea
                 value={draft.firma}
                 onChange={(e) => setDraft({ ...draft, firma: e.target.value })}

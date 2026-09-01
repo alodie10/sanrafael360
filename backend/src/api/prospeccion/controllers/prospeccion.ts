@@ -1,6 +1,6 @@
 import type { Core } from '@strapi/strapi';
 import { asyncHandler } from '../../../utils/asyncHandler';
-import { ForbiddenError } from '../../../utils/errors';
+import { ForbiddenError, ValidationError } from '../../../utils/errors';
 import { createProspeccionService } from '../services/prospeccion-service';
 
 function assertAdmin(ctx: any) {
@@ -9,17 +9,22 @@ function assertAdmin(ctx: any) {
   }
 }
 
+function adminUserId(ctx: any): number {
+  assertAdmin(ctx);
+  const id = ctx.state.adminUser.id;
+  if (!id) throw new ValidationError('Usuario admin inválido');
+  return id;
+}
+
 export default ({ strapi }: { strapi: Core.Strapi }) => ({
   getPlantilla: asyncHandler(async (ctx: any) => {
-    assertAdmin(ctx);
-    const data = await createProspeccionService(strapi).ensurePlantilla();
+    const data = await createProspeccionService(strapi).getPlantilla(adminUserId(ctx));
     ctx.send({ data });
   }),
 
   updatePlantilla: asyncHandler(async (ctx: any) => {
-    assertAdmin(ctx);
     const { texto_ficha, mensaje, firma } = ctx.request.body || {};
-    const data = await createProspeccionService(strapi).updatePlantilla({
+    const data = await createProspeccionService(strapi).updatePlantilla(adminUserId(ctx), {
       texto_ficha,
       mensaje,
       firma: firma || '',
@@ -55,9 +60,12 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
   }),
 
   enviar: asyncHandler(async (ctx: any) => {
-    assertAdmin(ctx);
     const { negocioDocumentId, tipo } = ctx.request.body || {};
-    const data = await createProspeccionService(strapi).enviar(negocioDocumentId, tipo);
+    const data = await createProspeccionService(strapi).enviar(
+      adminUserId(ctx),
+      negocioDocumentId,
+      tipo
+    );
     ctx.send({ data });
   }),
 });

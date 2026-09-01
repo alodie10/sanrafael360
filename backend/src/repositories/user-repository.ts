@@ -74,6 +74,18 @@ export class UserRepository {
       data: { resetPasswordToken: token },
     });
   }
+
+  async getFirmaProspeccion(userId: number): Promise<string> {
+    const user = await this.findById(userId);
+    return String(user?.firma_prospeccion || '').trim();
+  }
+
+  async setFirmaProspeccion(userId: number, firma: string) {
+    return this.strapi.db.query('plugin::users-permissions.user').update({
+      where: { id: userId },
+      data: { firma_prospeccion: firma },
+    });
+  }
 }
 
 export const createUserRepository = (strapi: any) => new UserRepository(strapi);

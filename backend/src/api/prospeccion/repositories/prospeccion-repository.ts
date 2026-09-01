@@ -28,7 +28,10 @@ export class ProspeccionRepository {
     return this.strapi.documents(PLANTILLA_UID).create({ data });
   }
 
-  async updatePlantilla(documentId: string, data: ProspeccionPlantillaFields) {
+  async updatePlantilla(
+    documentId: string,
+    data: { texto_ficha: string; mensaje: string }
+  ) {
     return this.strapi.documents(PLANTILLA_UID).update({ documentId, data });
   }
 
