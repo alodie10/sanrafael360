@@ -61,7 +61,7 @@ export default function AdminProspeccionPanel({
   const [pickerResults, setPickerResults] = useState<ProspeccionNegocio[]>([]);
   const [plantilla, setPlantilla] = useState<ProspeccionPlantilla | null>(null);
   const [draft, setDraft] = useState<ProspeccionPlantilla | null>(null);
-  const [editingPlantilla, setEditingPlantilla] = useState(false);
+  const [editingPlantilla, setEditingPlantilla] = useState(true);
   const [alcanzados, setAlcanzados] = useState<ProspeccionAlcanzado[]>([]);
   const [nameFilter, setNameFilter] = useState("");
   const initialRange = rangeFromPreset("30d");
@@ -354,8 +354,10 @@ export default function AdminProspeccionPanel({
           data-testid="prospeccion-plantilla-toggle"
         >
           <div>
-            <h3 className="text-lg font-serif font-bold text-white italic">Plantilla global</h3>
-            <p className="text-sm text-zinc-500">Se aplica a todos los prospectos. No se edita en cada envío.</p>
+            <h3 className="text-lg font-serif font-bold text-white italic">Plantilla del mensaje</h3>
+            <p className="text-sm text-zinc-500">
+              Acá cambiás el texto, el precio y la firma cuando quieras. Guardar queda grabado para todos los envíos siguientes.
+            </p>
           </div>
           <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform ${editingPlantilla ? "rotate-180" : ""}`} />
         </button>
@@ -372,7 +374,9 @@ export default function AdminProspeccionPanel({
               />
             </label>
             <label className="block space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Mensaje</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                Mensaje (precio, beneficios y oferta)
+              </span>
               <textarea
                 value={draft.mensaje}
                 onChange={(e) => setDraft({ ...draft, mensaje: e.target.value })}
