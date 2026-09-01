@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "prospeccion_contactos",
+  "info": {
+    "singularName": "prospeccion-contacto",
+    "pluralName": "prospeccion-contactos",
+    "displayName": "Contacto de Prospección",
+    "description": "Negocios alcanzados por WhatsApp desde el módulo de prospección"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "negocio": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::negocio.negocio"
+    },
+    "ultimo_tipo": {
+      "type": "enumeration",
+      "enum": ["saludo", "ficha_mensaje"],
+      "required": true
+    },
+    "ultimo_envio_at": {
+      "type": "datetime",
+      "required": true
+    },
+    "saludo_enviado_at": {
+      "type": "datetime"
+    },
+    "ficha_enviada_at": {
+      "type": "datetime"
+    }
+  }
+}

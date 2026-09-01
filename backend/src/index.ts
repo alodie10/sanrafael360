@@ -368,6 +368,15 @@ export default {
         strapi.log.error('❌ Error en seed de reservas Jaditek:', err.message);
       }
 
+      // 9. SEED PLANTILLA DE PROSPECCIÓN (idempotente)
+      try {
+        const { createProspeccionService } = require('./api/prospeccion/services/prospeccion-service');
+        await createProspeccionService(strapi).ensurePlantilla();
+        strapi.log.info('✅ Plantilla de prospección verificada.');
+      } catch (err: any) {
+        strapi.log.error('❌ Error en seed de plantilla de prospección:', err.message);
+      }
+
     } catch (error) {
       strapi.log.error('❌ Error general en bootstrap:', error);
     }

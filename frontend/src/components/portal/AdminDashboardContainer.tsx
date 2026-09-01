@@ -13,6 +13,7 @@ import {
   Mail,
   CheckCircle2,
   CalendarDays,
+  Megaphone,
 } from "lucide-react";
 import { getStrapiUrl } from "@/lib/strapi";
 import Link from "next/link";
@@ -29,12 +30,15 @@ import AdminTopRanking from "./AdminTopRanking";
 import AdminStatsChart from "./AdminStatsChart";
 import AdminClientesPanel from "./AdminClientesPanel";
 import PerformancePeriodFilter from "./PerformancePeriodFilter";
+import AdminProspeccionPanel from "./AdminProspeccionPanel";
+import type { ProspeccionNegocio } from "@/lib/prospeccion";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
-  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats' | 'payments' | 'clientes'>('payments');
+  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats' | 'payments' | 'clientes' | 'prospeccion'>('payments');
   const [claims, setClaims] = useState(initialClaims);
   const [supportCount, setSupportCount] = useState(0);
   const [leadsCount, setLeadsCount] = useState(0);
+  const [prospeccionPrecarga, setProspeccionPrecarga] = useState<ProspeccionNegocio | null>(null);
 
   const initialPerfRange = rangeFromPreset("30d");
   const [perfPreset, setPerfPreset] = useState<PeriodPreset>("30d");
@@ -194,6 +198,16 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
               <span>Importar desde Places</span>
             </button>
 
+            <button
+              type="button"
+              onClick={() => setActiveTab('prospeccion')}
+              className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'prospeccion' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+              data-testid="admin-prospeccion-nav"
+            >
+              <Megaphone className="w-4 h-4" />
+              <span>Prospección</span>
+            </button>
+
             
             <button 
               onClick={() => setActiveTab('support')}
@@ -303,7 +317,24 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
             {activeTab === 'discovery' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Importar Places (Curación Proactiva)</h2>
-                <AdminDiscoveryTool jwt={session.jwt as string} />
+                <AdminDiscoveryTool
+                  jwt={session.jwt as string}
+                  onPrecargaProspeccion={(negocio) => {
+                    setProspeccionPrecarga(negocio);
+                    setActiveTab('prospeccion');
+                  }}
+                />
+              </div>
+            )}
+
+            {activeTab === 'prospeccion' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Prospección WhatsApp</h2>
+                <AdminProspeccionPanel
+                  jwt={session.jwt as string}
+                  precarga={prospeccionPrecarga}
+                  onPrecargaConsumed={() => setProspeccionPrecarga(null)}
+                />
               </div>
             )}
 

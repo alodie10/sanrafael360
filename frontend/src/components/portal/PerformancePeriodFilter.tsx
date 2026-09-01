@@ -14,6 +14,9 @@ type Props = {
   onStartDate: (value: string) => void;
   onEndDate: (value: string) => void;
   onResetToDefault?: () => void;
+  title?: string;
+  description?: string;
+  testId?: string;
 };
 
 function DateField({
@@ -63,18 +66,19 @@ export default function PerformancePeriodFilter({
   onStartDate,
   onEndDate,
   onResetToDefault,
+  title = 'Período',
+  description = 'Aplica al gráfico, KPIs y desglose por negocio.',
+  testId = 'performance-period-filter',
 }: Props) {
   return (
     <div
       className="bg-zinc-950/40 border border-white/5 rounded-3xl p-5 md:p-6 flex flex-col gap-5"
-      data-testid="performance-period-filter"
+      data-testid={testId}
     >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-white font-bold text-lg">Período</h2>
-          <p className="text-sm text-zinc-400">
-            Aplica al gráfico, KPIs y desglose por negocio.
-          </p>
+          <h2 className="text-white font-bold text-lg">{title}</h2>
+          <p className="text-sm text-zinc-400">{description}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-1 p-1 bg-black/30 rounded-2xl border border-white/5 self-start">

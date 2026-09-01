@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Search, MapPin, Globe, Phone, Clock, Plus, Loader2, CheckCircle2, AlertCircle, Building2, Zap } from "lucide-react";
 import { STRAPI_URL } from "@/lib/strapi";
 import { normalizeLocalPhoneDigits } from "@/lib/whatsapp";
+import type { ProspeccionNegocio } from "@/lib/prospeccion";
 
 interface DiscoveryData {
   place_id: string;
@@ -22,7 +23,13 @@ interface DiscoveryData {
   descripcion?: string;
 }
 
-export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
+export default function AdminDiscoveryTool({
+  jwt,
+  onPrecargaProspeccion,
+}: {
+  jwt: string;
+  onPrecargaProspeccion?: (negocio: ProspeccionNegocio) => void;
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DiscoveryData | null>(null);
@@ -31,6 +38,7 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [activarPrecarga, setActivarPrecarga] = useState(true);
 
   const GOOGLE_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -191,6 +199,18 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
       setSuccess(true);
       setResult(null);
       setSearchTerm("");
+
+      const created = createdData.data;
+      if (activarPrecarga && created?.documentId && onPrecargaProspeccion) {
+        onPrecargaProspeccion({
+          documentId: created.documentId,
+          nombre: created.nombre || result.nombre,
+          slug: created.slug || slug,
+          whatsapp: result.whatsapp || localPhone || null,
+          telefono: localPhone || null,
+          categoriaNombre: categoryName || null,
+        });
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -340,6 +360,26 @@ export default function AdminDiscoveryTool({ jwt }: { jwt: string }) {
                       ))}
                     </select>
                   </div>
+
+                  <label
+                    className="flex items-start gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer"
+                    data-testid="discovery-activar-precarga"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={activarPrecarga}
+                      onChange={(e) => setActivarPrecarga(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 accent-primary"
+                    />
+                    <span>
+                      <span className="block text-[10px] font-black uppercase tracking-widest text-white">
+                        Activar precarga
+                      </span>
+                      <span className="block text-[11px] text-zinc-500 mt-1 leading-snug">
+                        Si está tildado, al importar se abre Prospección con este negocio ya seleccionado.
+                      </span>
+                    </span>
+                  </label>
 
                   <div className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-2">
                     <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">

@@ -872,6 +872,73 @@ export interface ApiPagoPago extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiProspeccionContactoProspeccionContacto
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'prospeccion_contactos';
+  info: {
+    description: 'Negocios alcanzados por WhatsApp desde el m\u00F3dulo de prospecci\u00F3n';
+    displayName: 'Contacto de Prospecci\u00F3n';
+    pluralName: 'prospeccion-contactos';
+    singularName: 'prospeccion-contacto';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ficha_enviada_at: Schema.Attribute.DateTime;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::prospeccion-contacto.prospeccion-contacto'
+    > &
+      Schema.Attribute.Private;
+    negocio: Schema.Attribute.Relation<'oneToOne', 'api::negocio.negocio'>;
+    publishedAt: Schema.Attribute.DateTime;
+    saludo_enviado_at: Schema.Attribute.DateTime;
+    ultimo_envio_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    ultimo_tipo: Schema.Attribute.Enumeration<['saludo', 'ficha_mensaje']> &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiProspeccionPlantillaProspeccionPlantilla
+  extends Struct.SingleTypeSchema {
+  collectionName: 'prospeccion_plantillas';
+  info: {
+    description: 'Textos globales del m\u00F3dulo de prospecci\u00F3n WhatsApp';
+    displayName: 'Plantilla de Prospecci\u00F3n';
+    pluralName: 'prospeccion-plantillas';
+    singularName: 'prospeccion-plantilla';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    firma: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::prospeccion-plantilla.prospeccion-plantilla'
+    > &
+      Schema.Attribute.Private;
+    mensaje: Schema.Attribute.Text & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    texto_ficha: Schema.Attribute.Text & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiReservaBloqueoReservaBloqueo
   extends Struct.CollectionTypeSchema {
   collectionName: 'reserva_bloqueos';
@@ -1732,6 +1799,8 @@ declare module '@strapi/strapi' {
       'api::negocio.negocio': ApiNegocioNegocio;
       'api::oferta.oferta': ApiOfertaOferta;
       'api::pago.pago': ApiPagoPago;
+      'api::prospeccion-contacto.prospeccion-contacto': ApiProspeccionContactoProspeccionContacto;
+      'api::prospeccion-plantilla.prospeccion-plantilla': ApiProspeccionPlantillaProspeccionPlantilla;
       'api::reserva-bloqueo.reserva-bloqueo': ApiReservaBloqueoReservaBloqueo;
       'api::reserva-comercio.reserva-comercio': ApiReservaComercioReservaComercio;
       'api::reserva-recurso.reserva-recurso': ApiReservaRecursoReservaRecurso;
