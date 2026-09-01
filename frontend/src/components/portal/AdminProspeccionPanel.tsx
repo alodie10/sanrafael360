@@ -184,8 +184,12 @@ export default function AdminProspeccionPanel({
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo armar el WhatsApp"));
       window.open(json.data.whatsappUrl, "_blank", "noopener,noreferrer");
-      setNotice(tipo === "saludo" ? "WhatsApp abierto con el saludo." : "WhatsApp abierto con la ficha y el mensaje.");
-      await loadAlcanzados();
+      if (tipo === "saludo") {
+        setNotice("WhatsApp abierto con el saludo. Si el número funciona, enviá la ficha para registrarlo.");
+      } else {
+        setNotice("WhatsApp abierto con la ficha y el mensaje. Quedó registrado en contactos alcanzados.");
+        await loadAlcanzados();
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {

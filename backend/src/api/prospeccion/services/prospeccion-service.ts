@@ -65,9 +65,8 @@ async function upsertContacto(
   const patch: Record<string, unknown> = {
     ultimo_tipo: tipo,
     ultimo_envio_at: now,
+    ficha_enviada_at: now,
   };
-  if (tipo === 'saludo') patch.saludo_enviado_at = now;
-  if (tipo === 'ficha_mensaje') patch.ficha_enviada_at = now;
 
   const existing = await repo.findContactoByNegocio(negocioDocumentId);
   if (existing) {
@@ -93,7 +92,10 @@ async function enviarWhatsapp(
     throw new ValidationError('El negocio no tiene un teléfono de WhatsApp válido');
   }
 
-  await upsertContacto(repo, negocioDocumentId, tipo);
+  // El saludo prueba el número; el historial se graba recién con la ficha.
+  if (tipo === 'ficha_mensaje') {
+    await upsertContacto(repo, negocioDocumentId, tipo);
+  }
   return { whatsappUrl, texto, negocio: mapNegocioForPanel(negocio) };
 }
 
