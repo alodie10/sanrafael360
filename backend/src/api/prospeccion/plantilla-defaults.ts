@@ -30,6 +30,12 @@ export function composeFichaMensaje(input: {
     .join('\n\n');
 }
 
+export function resolveFirma(userFirma?: string | null, fallback?: string | null): string {
+  const own = String(userFirma || '').trim();
+  if (own) return own;
+  return String(fallback || DEFAULT_PROSPECCION_PLANTILLA.firma).trim();
+}
+
 export function getPublicSiteUrl(): string {
   return (
     process.env.FRONTEND_URL ||

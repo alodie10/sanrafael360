@@ -74,6 +74,10 @@
       "relation": "manyToMany",
       "target": "api::negocio.negocio",
       "inversedBy": "favorited_by"
+    },
+    "firma_prospeccion": {
+      "type": "text",
+      "description": "Firma personal del módulo de prospección WhatsApp"
     }
   }
 }

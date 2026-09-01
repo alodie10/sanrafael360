@@ -1,10 +1,12 @@
 import { NotFoundError, ValidationError } from '../../../utils/errors';
 import { greetingNow } from '../../../utils/prospeccion-saludo';
 import { buildWhatsappUrl } from '../../../utils/whatsapp';
+import { createUserRepository, type UserRepository } from '../../../repositories/user-repository';
 import {
   DEFAULT_PROSPECCION_PLANTILLA,
   composeFichaMensaje,
   fichaUrlForSlug,
+  resolveFirma,
   type ProspeccionPlantillaFields,
 } from '../plantilla-defaults';
 import {
@@ -35,17 +37,37 @@ async function ensurePlantilla(repo: ProspeccionRepository) {
   return plantillaFromDoc(created);
 }
 
+async function plantillaForUser(
+  repo: ProspeccionRepository,
+  userRepo: UserRepository,
+  userId: number
+): Promise<ProspeccionPlantillaFields> {
+  const global = await ensurePlantilla(repo);
+  const userFirma = await userRepo.getFirmaProspeccion(userId);
+  return { ...global, firma: resolveFirma(userFirma, global.firma) };
+}
+
 async function updatePlantilla(
   repo: ProspeccionRepository,
+  userRepo: UserRepository,
+  userId: number,
   input: ProspeccionPlantillaFields
 ) {
   const existing = await repo.findPlantilla();
   if (!existing) {
-    await repo.createPlantilla(input);
-    return input;
+    await repo.createPlantilla({
+      ...DEFAULT_PROSPECCION_PLANTILLA,
+      texto_ficha: input.texto_ficha,
+      mensaje: input.mensaje,
+    });
+  } else {
+    await repo.updatePlantilla(existing.documentId, {
+      texto_ficha: input.texto_ficha,
+      mensaje: input.mensaje,
+    });
   }
-  const updated = await repo.updatePlantilla(existing.documentId, input);
-  return plantillaFromDoc(updated);
+  await userRepo.setFirmaProspeccion(userId, input.firma);
+  return plantillaForUser(repo, userRepo, userId);
 }
 
 function composeEnvioTexto(negocio: any, tipo: EnviarTipo, plantilla: ProspeccionPlantillaFields) {
@@ -78,6 +100,8 @@ async function upsertContacto(
 
 async function enviarWhatsapp(
   repo: ProspeccionRepository,
+  userRepo: UserRepository,
+  userId: number,
   negocioDocumentId: string,
   tipo: EnviarTipo
 ) {
@@ -85,14 +109,13 @@ async function enviarWhatsapp(
   if (!negocio) throw new NotFoundError('Negocio');
 
   const phone = negocio.whatsapp || negocio.telefono;
-  const plantilla = await ensurePlantilla(repo);
+  const plantilla = await plantillaForUser(repo, userRepo, userId);
   const texto = composeEnvioTexto(negocio, tipo, plantilla);
   const whatsappUrl = buildWhatsappUrl(phone, texto);
   if (!whatsappUrl) {
     throw new ValidationError('El negocio no tiene un teléfono de WhatsApp válido');
   }
 
-  // El saludo prueba el número; el historial se graba recién con la ficha.
   if (tipo === 'ficha_mensaje') {
     await upsertContacto(repo, negocioDocumentId, tipo);
   }
@@ -101,9 +124,12 @@ async function enviarWhatsapp(
 
 export function createProspeccionService(strapi: any) {
   const repo = createProspeccionRepository(strapi);
+  const userRepo = createUserRepository(strapi);
   return {
+    getPlantilla: (userId: number) => plantillaForUser(repo, userRepo, userId),
     ensurePlantilla: () => ensurePlantilla(repo),
-    updatePlantilla: (input: ProspeccionPlantillaFields) => updatePlantilla(repo, input),
+    updatePlantilla: (userId: number, input: ProspeccionPlantillaFields) =>
+      updatePlantilla(repo, userRepo, userId, input),
     listAlcanzados: async (query: AlcanzadosQuery) => {
       const rows = await repo.findAlcanzados(query);
       return (rows || []).map((row: any) => ({
@@ -123,7 +149,7 @@ export function createProspeccionService(strapi: any) {
       if (!negocio) throw new NotFoundError('Negocio');
       return mapNegocioForPanel(negocio);
     },
-    enviar: (negocioDocumentId: string, tipo: EnviarTipo) =>
-      enviarWhatsapp(repo, negocioDocumentId, tipo),
+    enviar: (userId: number, negocioDocumentId: string, tipo: EnviarTipo) =>
+      enviarWhatsapp(repo, userRepo, userId, negocioDocumentId, tipo),
   };
 }

@@ -1748,6 +1748,7 @@ export interface PluginUsersPermissionsUser
         minLength: 6;
       }>;
     favoritos: Schema.Attribute.Relation<'manyToMany', 'api::negocio.negocio'>;
+    firma_prospeccion: Schema.Attribute.Text;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
