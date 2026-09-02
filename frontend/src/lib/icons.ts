@@ -42,7 +42,9 @@ import {
   Calculator,
   PawPrint,
   Sofa,
-  Fish
+  Fish,
+  IceCream,
+  Landmark,
 } from "lucide-react";
 
 /**
@@ -52,11 +54,13 @@ import {
 export const iconMap: Record<string, LucideIcon> = {
   "hoteles": Hotel,
   "hotel": Hotel,
+  "cabalgata": MapPin,
   "caba": Bed, 
   "aloj": Bed,
   "apart": Hotel,
   "posada": Home,
   "host": Users,
+  "pesca y camping": Fish,
   "pesca": Fish,
   "camping": Mountain,
   "gastron": Utensils,
@@ -69,6 +73,7 @@ export const iconMap: Record<string, LucideIcon> = {
   "pizzer": Pizza,
   "bar": Beer,
   "cervez": Beer,
+  "cerve": Beer,
   "pub": Beer,
   "aventura": Waves,
   "actividad": Waves,
@@ -110,7 +115,7 @@ export const iconMap: Record<string, LucideIcon> = {
   "climatizacion": Snowflake,
   "refrigeracion": Snowflake,
   "inmobiliaria": Building,
-  "bienes": Building,
+  "raices": Building,
   "peluqueria": Scissors,
   "barberia": Scissors,
   "estetica": Sparkles,
@@ -127,6 +132,7 @@ export const iconMap: Record<string, LucideIcon> = {
   "mascota": PawPrint,
   "veterinaria": PawPrint,
   "pet": PawPrint,
+  "entreten": Ticket,
   "cine": Ticket,
   "teatro": Ticket,
   "musica": Music,
@@ -144,6 +150,12 @@ export const iconMap: Record<string, LucideIcon> = {
   "mueble": Sofa,
   "muebleria": Sofa,
   "living": Sofa,
+  "helader": IceCream,
+  "turistic": Landmark,
+  "trekking": Mountain,
+  "hamburg": Utensils,
+  "panader": Utensils,
+  "sushi": Utensils,
 };
 
 /**
@@ -163,6 +175,10 @@ export const gradientMap: Record<string, string> = {
   "viaje": "from-sky-500 to-indigo-600",
   "host": "from-purple-600 to-pink-700",
   "pesca": "from-cyan-500 to-blue-700",
+  "entreten": "from-violet-500 to-fuchsia-700",
+  "helader": "from-pink-400 to-rose-600",
+  "turistic": "from-sky-500 to-cyan-700",
+  "cabalgata": "from-amber-600 to-orange-800",
   "tienda": "from-emerald-500 to-teal-700",
   "ropa": "from-pink-500 to-rose-700",
   "taller": "from-slate-600 to-slate-800",
@@ -183,28 +199,24 @@ export const gradientMap: Record<string, string> = {
   "default": "from-slate-800 to-slate-900",
 };
 
-/**
- * Lógica de matching mejorada.
- */
+function normalizeCategoryKey(name: string): string {
+  return name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+/** Prefiere la raíz más larga para evitar choques (bienes/bienestar, caba/cabalgata). */
+function matchByLongestRoot<T>(name: string, map: Record<string, T>): T | undefined {
+  const n = normalizeCategoryKey(name);
+  return Object.entries(map)
+    .sort(([a], [b]) => b.length - a.length)
+    .find(([key]) => n.includes(key.toLowerCase()))?.[1];
+}
+
 export function getCategoryIcon(name: string): LucideIcon {
   if (!name) return Info;
-  const n = name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  
-  // Intenta match por raíz
-  const entry = Object.entries(iconMap).find(([key]) => 
-    n.includes(key.toLowerCase())
-  );
-  
-  return entry ? entry[1] : Info;
+  return matchByLongestRoot(name, iconMap) ?? Info;
 }
 
 export function getCategoryGradient(name: string): string {
   if (!name) return gradientMap.default;
-  const n = name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  
-  const entry = Object.entries(gradientMap).find(([key]) => 
-    n.includes(key.toLowerCase())
-  );
-  
-  return entry ? entry[1] : gradientMap.default;
+  return matchByLongestRoot(name, gradientMap) ?? gradientMap.default;
 }
