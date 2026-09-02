@@ -2,13 +2,7 @@
 
 import { useRef, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  ChevronLeft, ChevronRight, LayoutGrid,
-  Plane, Hotel, Wine, UtensilsCrossed, ShoppingBag, Mountain,
-  Scissors, Stethoscope, Car, Hammer, GraduationCap, Music,
-  Dumbbell, PawPrint, Camera, Sparkles, TreePine, Store,
-  type LucideIcon
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCategoryIcon } from "@/lib/icons";
 import { Categoria } from "@/types/strapi";
@@ -137,7 +131,9 @@ export default function FilterBar({ categorias, selectedCategoryDocId }: FilterB
       <Link
         href={href}
         key={isAll ? "todos" : cat.id}
-        className="flex-shrink-0 flex flex-col items-center gap-2 w-24 md:w-20 group transition-all"
+        title={label}
+        aria-label={label}
+        className="flex-shrink-0 flex flex-col items-center gap-2 w-24 group transition-all"
       >
         <div className={cn(
           "w-14 h-14 md:w-12 md:h-12 rounded-2xl flex items-center justify-center border transition-all duration-300",
@@ -148,7 +144,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId }: FilterB
           <Icon className="w-5 h-5" />
         </div>
         <span className={cn(
-          "text-[9px] font-bold text-center uppercase tracking-wider whitespace-normal line-clamp-2 leading-tight block w-full px-0.5 transition-colors",
+          "text-[9px] font-bold text-center uppercase tracking-wide whitespace-normal line-clamp-2 leading-tight block w-full px-0.5 transition-colors",
           isActive ? "text-primary" : "text-slate-400 group-hover:text-white"
         )}>
           {label}
