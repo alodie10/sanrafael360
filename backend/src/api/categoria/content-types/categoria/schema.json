@@ -24,6 +24,10 @@
     "descripcion": {
       "type": "text"
     },
+    "palabras_clave": {
+      "type": "text",
+      "description": "Términos extra de búsqueda, separados por coma. Se suman al diccionario del rubro (ej: martillo, tornillo)."
+    },
     "icono": {
       "type": "string",
       "description": "Nombre del ícono (emoji o clase CSS)"

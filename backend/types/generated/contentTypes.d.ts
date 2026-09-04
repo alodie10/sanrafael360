@@ -546,6 +546,7 @@ export interface ApiCategoriaCategoria extends Struct.CollectionTypeSchema {
     nombre: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
+    palabras_clave: Schema.Attribute.Text;
     parent: Schema.Attribute.Relation<'manyToOne', 'api::categoria.categoria'>;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'nombre'> & Schema.Attribute.Required;

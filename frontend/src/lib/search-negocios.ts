@@ -2,7 +2,7 @@ import { cache } from "react";
 import { fetchFromStrapi, isStrapiUnreachableError } from "@/lib/strapi";
 import { canUseAlgoliaSearch, shouldUseStrapiSearchForHome } from "@/lib/search-config";
 import { Categoria, Negocio } from "@/types/strapi";
-import { matchFieldFromAlgoliaHit, matchFieldFromText } from "@/lib/search-match";
+import { matchFieldFromAlgoliaHit, matchFieldFromText, queryVariants } from "@/lib/search-match";
 
 export type HomeSearchParams = {
   query?: string;
@@ -14,56 +14,74 @@ const HOME_NEGOCIOS_FETCH_OPTIONS: RequestInit = {
   next: { revalidate: 60 },
 };
 
+const STRAPI_TEXT_PATHS = [
+  "[nombre][$containsi]",
+  "[atributos][nombre][$containsi]",
+  "[descripcion][$containsi]",
+  "[categoria][nombre][$containsi]",
+  "[categoria][palabras_clave][$containsi]",
+];
+
+const ALGOLIA_SEARCHABLE = [
+  "nombre",
+  "categoria",
+  "search_keywords",
+  "atributos",
+  "descripcion",
+];
+
+const NEGOCIO_SEARCH_POPULATE = [
+  "populate[categoria][fields][0]=nombre",
+  "populate[categoria][fields][1]=slug",
+  "populate[categoria][fields][2]=palabras_clave",
+  "populate[logo][fields][0]=url",
+  "populate[imagen_portada][fields][0]=url",
+  "populate[atributos][fields][0]=nombre",
+  "populate[atributos][fields][1]=tipo",
+  "populate[owner][fields][0]=id",
+  "populate[owner][fields][1]=documentId",
+  "fields[0]=nombre",
+  "fields[1]=slug",
+  "fields[2]=direccion",
+  "fields[3]=descripcion",
+  "fields[4]=is_premium",
+  "fields[5]=premium_valid_until",
+  "fields[6]=price_range",
+  "fields[7]=rating",
+  "fields[8]=review_count",
+  "fields[9]=google_rating",
+  "fields[10]=google_review_count",
+  "fields[11]=tripadvisor_rating",
+  "fields[12]=tripadvisor_review_count",
+  "fields[13]=latitud",
+  "fields[14]=longitud",
+  "fields[15]=reserva_url",
+  "fields[16]=reserva_habilitada",
+  "fields[17]=cta_link",
+  "fields[18]=cta_habilitado",
+].join("&");
+
 function buildNegociosSearchPath({ query, localidad, categoryDocId }: HomeSearchParams): string {
   const parts: string[] = [];
-
   const text = [query, localidad]
     .filter((v) => v && v !== "San Rafael, Mendoza")
     .join(" ")
     .trim();
 
-  if (text) {
-    parts.push(`filters[$or][0][nombre][$containsi]=${encodeURIComponent(text)}`);
-    parts.push(`filters[$or][1][atributos][nombre][$containsi]=${encodeURIComponent(text)}`);
-    parts.push(`filters[$or][2][descripcion][$containsi]=${encodeURIComponent(text)}`);
+  let orIndex = 0;
+  for (const term of queryVariants(text)) {
+    for (const path of STRAPI_TEXT_PATHS) {
+      parts.push(`filters[$or][${orIndex}]${path}=${encodeURIComponent(term)}`);
+      orIndex += 1;
+    }
   }
 
   if (categoryDocId) {
     parts.push(`filters[categoria][documentId][$eq]=${encodeURIComponent(categoryDocId)}`);
   }
 
-  const populate = [
-    "populate[categoria][fields][0]=nombre",
-    "populate[categoria][fields][1]=slug",
-    "populate[logo][fields][0]=url",
-    "populate[imagen_portada][fields][0]=url",
-    "populate[atributos][fields][0]=nombre",
-    "populate[atributos][fields][1]=tipo",
-    "populate[owner][fields][0]=id",
-    "populate[owner][fields][1]=documentId",
-    "fields[0]=nombre",
-    "fields[1]=slug",
-    "fields[2]=direccion",
-    "fields[3]=descripcion",
-    "fields[4]=is_premium",
-    "fields[5]=premium_valid_until",
-    "fields[6]=price_range",
-    "fields[7]=rating",
-    "fields[8]=review_count",
-    "fields[9]=google_rating",
-    "fields[10]=google_review_count",
-    "fields[11]=tripadvisor_rating",
-    "fields[12]=tripadvisor_review_count",
-    "fields[13]=latitud",
-    "fields[14]=longitud",
-    "fields[15]=reserva_url",
-    "fields[16]=reserva_habilitada",
-    "fields[17]=cta_link",
-    "fields[18]=cta_habilitado",
-  ].join("&");
-
   const filterQuery = parts.length ? `${parts.join("&")}&` : "";
-  return `negocios?${filterQuery}${populate}&pagination[pageSize]=100&sort=nombre:asc`;
+  return `negocios?${filterQuery}${NEGOCIO_SEARCH_POPULATE}&pagination[pageSize]=100&sort=nombre:asc`;
 }
 
 /** Búsqueda de comercios contra el Strapi configurado (local en dev). */
@@ -165,9 +183,11 @@ export async function searchNegociosFromAlgolia(
         indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME || "negocios",
         query,
         hitsPerPage: 100,
-        typoTolerance: false,
-        restrictSearchableAttributes: ["nombre", "atributos", "descripcion"],
-        attributesToHighlight: ["nombre", "atributos", "descripcion"],
+        restrictSearchableAttributes: [...ALGOLIA_SEARCHABLE],
+        attributesToHighlight: [...ALGOLIA_SEARCHABLE],
+        removeStopWords: true,
+        ignorePlurals: true,
+        removeWordsIfNoResults: "firstWords",
       },
     ],
   });
