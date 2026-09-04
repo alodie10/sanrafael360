@@ -361,14 +361,25 @@ export default {
       });
       strapi.log.info('✅ Document Service Middleware para Algolia registrado.');
 
-      // 8. SEED MÓDULO RESERVAS — primer cliente Jaditek (idempotente)
+      // 8. SEED palabras_clave de categorías (idempotente: solo si está vacío)
+      try {
+        const { seedCategoriaSearchKeywords } = require('./api/categoria/services/seed-search-keywords');
+        const seeded = await seedCategoriaSearchKeywords(strapi);
+        if (seeded > 0) {
+          strapi.log.info(`[Search] Palabras clave sembradas en ${seeded} categorías.`);
+        }
+      } catch (err: any) {
+        strapi.log.error('❌ Error en seed de palabras clave de categorías:', err.message);
+      }
+
+      // 9. SEED MÓDULO RESERVAS — primer cliente Jaditek (idempotente)
       try {
         await seedJaditekReservaComercio(strapi);
       } catch (err: any) {
         strapi.log.error('❌ Error en seed de reservas Jaditek:', err.message);
       }
 
-      // 9. SEED PLANTILLA DE PROSPECCIÓN (idempotente)
+      // 10. SEED PLANTILLA DE PROSPECCIÓN (idempotente)
       try {
         const { createProspeccionService } = require('./api/prospeccion/services/prospeccion-service');
         await createProspeccionService(strapi).ensurePlantilla();

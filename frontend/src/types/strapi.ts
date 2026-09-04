@@ -25,6 +25,7 @@ export interface Categoria {
   /** Puede venir poblado o como wrapper `data` según el nivel de populate de Strapi. */
   parent?: Categoria | StrapiRelationRef;
   subcategorias?: Categoria[];
+  palabras_clave?: string;
 }
 
 /** Relación Strapi con distintos niveles de población (v4 attributes / v5 data). */
@@ -131,8 +132,8 @@ export interface Negocio {
   ofertas?: Oferta[];
   /** Soft-link al módulo de reservas SR360 */
   reserva_comercio?: { documentId?: string; slug?: string; nombre?: string } | null;
-  /** Campo Algolia que coincidió: nombre → etiquetas → descripción */
-  searchMatch?: "nombre" | "atributos" | "descripcion";
+  /** Campo Algolia que coincidió: nombre → etiquetas → rubro → intención → descripción */
+  searchMatch?: "nombre" | "atributos" | "categoria" | "keywords" | "descripcion";
 }
 
 export interface StrapiUser {
