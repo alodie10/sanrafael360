@@ -1,0 +1,49 @@
+{
+  "kind": "collectionType",
+  "collectionName": "efemerides",
+  "info": {
+    "singularName": "efemeride",
+    "pluralName": "efemerides",
+    "displayName": "Efeméride",
+    "description": "Categoría temporal (Día del Maestro, Día del Padre, etc.) con encabezado, slug y vigencia"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "nombre",
+      "required": true
+    },
+    "descripcion": {
+      "type": "text",
+      "description": "Texto del encabezado público"
+    },
+    "encabezado": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"],
+      "description": "Imagen de portada del encabezado público"
+    },
+    "vigente_desde": {
+      "type": "datetime",
+      "description": "Inicio de vigencia (opcional). Si está vacío, vale desde que se publica."
+    },
+    "vigente_hasta": {
+      "type": "datetime",
+      "description": "Fecha tope. Pasada esta fecha la efeméride deja de mostrarse en público."
+    },
+    "negocios": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::negocio.negocio",
+      "inversedBy": "efemerides"
+    }
+  }
+}

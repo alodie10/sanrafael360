@@ -6,6 +6,7 @@ import HeroCarousel from "@/components/home/HeroCarousel";
 import BusinessGrid from "@/components/home/BusinessGrid";
 import FilterBar from "@/components/home/FilterBar";
 import OffersBanner from "@/components/home/OffersBanner";
+import EfemeridesBanner from "@/components/home/EfemeridesBanner";
 import NavigationFAB from "@/components/layout/NavigationFAB";
 import { AnimatePresence } from "framer-motion";
 import { Negocio, Categoria } from "@/types/strapi";
@@ -311,6 +312,7 @@ export default function HomeClient({ categorias, initialNegocios }: HomeClientPr
 
       <div id="filter-bar" ref={filterBarRef} className="sticky-filter-bar scroll-mt-36">
         <FilterBar categorias={categorias} selectedCategoryDocId={selectedCategoryDocId} />
+        <EfemeridesBanner />
         <OffersBanner />
       </div>
 

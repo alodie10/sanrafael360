@@ -317,6 +317,13 @@
       "target": "api::cliente.cliente",
       "inversedBy": "negocios",
       "description": "Contacto comercial manual (opcional)"
+    },
+    "efemerides": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::efemeride.efemeride",
+      "mappedBy": "negocios",
+      "description": "Efemérides temporales en las que participa el negocio"
     }
   }
 }
