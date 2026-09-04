@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { fetchFromStrapi } from "@/lib/strapi";
+import { fetchEfemeridesPublicList } from "@/lib/efemerides";
 import { getSiteUrl } from "@/lib/site";
 
 /** Forzar render dinámico: evita warnings de build cuando Strapi no está levantado. */
@@ -85,6 +86,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9, // Las categorías son páginas de aterrizaje importantes
     }));
 
+  const efemerides = await fetchEfemeridesPublicList();
+  const efemerideUrls: MetadataRoute.Sitemap = efemerides
+    .filter((e: any) => e.slug)
+    .map((e: any) => ({
+      url: `${siteUrl}/efemerides/${e.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    }));
+
   // FIX SEO: El home no cambia a diario. Usar new Date() siempre causa que
   // Google vea el sitemap como "siempre actualizado" lo que puede reducir la
   // credibilidad de la señal lastModified. Usamos una fecha fija + revisión semanal.
@@ -100,6 +111,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // NOTA: /negocios no se incluye porque next.config.ts tiene un redirect 301 → /
     // Incluirla causaría una señal SEO contradictoria para Google.
     ...categoriaUrls,
+    ...efemerideUrls,
     ...negocioUrls,
   ];
 }

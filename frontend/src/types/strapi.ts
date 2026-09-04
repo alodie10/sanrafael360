@@ -144,6 +144,43 @@ export interface StrapiUser {
   favoritos?: Negocio[];
 }
 
+export interface Efemeride {
+  documentId: string;
+  nombre: string;
+  slug: string;
+  descripcion?: string | null;
+  encabezado?: StrapiMedia | null;
+  vigente_desde?: string | null;
+  vigente_hasta?: string | null;
+  publicationStatus?: "draft" | "published";
+  vigente?: boolean;
+  participantesCount?: number;
+  negocios?: string[];
+}
+
+export type EfemeridePublicItem =
+  | { kind: "oferta"; negocio: Negocio; oferta: Oferta }
+  | { kind: "negocio"; negocio: Negocio };
+
+export interface EfemeridePublic {
+  documentId: string;
+  nombre: string;
+  slug: string;
+  descripcion?: string | null;
+  encabezado?: StrapiMedia | null;
+  vigente_desde?: string | null;
+  vigente_hasta?: string | null;
+  items: EfemeridePublicItem[];
+}
+
+export interface EfemeridePremiumPickerItem {
+  documentId: string;
+  nombre: string;
+  slug?: string;
+  categoria?: string | null;
+  label: string;
+}
+
 export interface StrapiResponse<T> {
   data: T;
   meta: {

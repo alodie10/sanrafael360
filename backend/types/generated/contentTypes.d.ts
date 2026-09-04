@@ -627,6 +627,41 @@ export interface ApiDailyStatDailyStat extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiEfemerideEfemeride extends Struct.CollectionTypeSchema {
+  collectionName: 'efemerides';
+  info: {
+    description: 'Categor\u00EDa temporal (D\u00EDa del Maestro, D\u00EDa del Padre, etc.) con encabezado, slug y vigencia';
+    displayName: 'Efem\u00E9ride';
+    pluralName: 'efemerides';
+    singularName: 'efemeride';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.Text;
+    encabezado: Schema.Attribute.Media<'images'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::efemeride.efemeride'
+    > &
+      Schema.Attribute.Private;
+    negocios: Schema.Attribute.Relation<'manyToMany', 'api::negocio.negocio'>;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'nombre'> & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    vigente_desde: Schema.Attribute.DateTime;
+    vigente_hasta: Schema.Attribute.DateTime;
+  };
+}
+
 export interface ApiLeadLead extends Struct.CollectionTypeSchema {
   collectionName: 'leads';
   info: {
@@ -712,6 +747,10 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     discovery_verified: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     documentacion_reclamo: Schema.Attribute.Media<'files'>;
+    efemerides: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::efemeride.efemeride'
+    >;
     email: Schema.Attribute.Email;
     estado_reclamo: Schema.Attribute.String &
       Schema.Attribute.DefaultTo<'ninguno'>;
@@ -1797,6 +1836,7 @@ declare module '@strapi/strapi' {
       'api::categoria.categoria': ApiCategoriaCategoria;
       'api::cliente.cliente': ApiClienteCliente;
       'api::daily-stat.daily-stat': ApiDailyStatDailyStat;
+      'api::efemeride.efemeride': ApiEfemerideEfemeride;
       'api::lead.lead': ApiLeadLead;
       'api::negocio.negocio': ApiNegocioNegocio;
       'api::oferta.oferta': ApiOfertaOferta;

@@ -42,6 +42,10 @@ export default {
 
           if (roleType === 'authenticated') {
             actions.push(
+              'api::efemeride.efemeride.adminlist',
+              'api::efemeride.efemeride.adminget',
+              'api::efemeride.efemeride.adminupdate',
+              'api::efemeride.efemeride.adminpremiumpicker',
               'api::cliente.cliente.adminlist',
               'api::cliente.cliente.admincreate',
               'api::cliente.cliente.adminupdate',
