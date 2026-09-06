@@ -1,6 +1,7 @@
 import { Negocio } from "@/types/strapi";
 import { getStrapiMedia } from "@/lib/strapi";
 import { getSiteUrl } from "@/lib/site";
+import { toPublicCategoriaSlug } from "@/lib/categoria-slug";
 
 // --- Mapeos ---
 
@@ -207,7 +208,7 @@ export function LocalBusinessSchema({ negocio }: LocalBusinessSchemaProps) {
   if (negocio.categoria?.slug && negocio.categoria?.nombre) {
     breadcrumbItems.push({
       name: negocio.categoria.nombre,
-      url: `${siteUrl}/categoria/${negocio.categoria.slug}`,
+      url: `${siteUrl}/categoria/${toPublicCategoriaSlug(negocio.categoria.slug)}`,
     });
   }
 

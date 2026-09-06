@@ -18,6 +18,7 @@ import {
 import { isStrapiUnreachableError } from "@/lib/strapi";
 import { useRouter, usePathname } from "next/navigation";
 import { buildSearchExplanation, matchRank } from "@/lib/search-match";
+import { toCmsCategoriaSlug } from "@/lib/categoria-slug";
 
 const normalizeText = (str: string) => {
   return str
@@ -42,6 +43,7 @@ function resolveCategoryFromParam(
     (c) =>
       c.documentId === catParam ||
       c.slug === catParam ||
+      c.slug === toCmsCategoriaSlug(catParam) ||
       normalizeText(c.nombre) === normalizeText(catParam)
   );
   return found ? found.documentId : null;

@@ -1,11 +1,8 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
 import BajaClient from "./BajaClient";
+import { noIndexPage } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Baja de avisos | San Rafael 360",
-  robots: { index: false, follow: false },
-};
+export const metadata = noIndexPage("/baja", "Baja de avisos");
 
 export default function BajaPage() {
   return (

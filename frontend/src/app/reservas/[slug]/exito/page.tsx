@@ -1,11 +1,18 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { fetchReservaByCodigo } from '@/lib/reservas-checkout';
+import { noIndexPage } from '@/lib/seo';
 import '@/components/reservas/reservas-public.css';
 
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ codigo?: string }>;
 };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  return noIndexPage(`/reservas/${slug}/exito`, 'Reserva confirmada');
+}
 
 function formatWhen(iso: string) {
   return new Intl.DateTimeFormat('es-AR', {

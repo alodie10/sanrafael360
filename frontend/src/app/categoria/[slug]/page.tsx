@@ -6,6 +6,10 @@ import FilterBar from "@/components/home/FilterBar";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { notFound, unstable_rethrow } from "next/navigation";
+import {
+  isPlaceholderCategoriaSlug,
+  toCmsCategoriaSlug,
+} from "@/lib/categoria-slug";
 
 // ---------------------------------------------------------------------------
 // Generador de contenido editorial por categoría
@@ -148,6 +152,11 @@ export default async function CategoriaPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const cmsSlug = toCmsCategoriaSlug(slug);
+
+  if (isPlaceholderCategoriaSlug(slug) || isPlaceholderCategoriaSlug(cmsSlug)) {
+    notFound();
+  }
 
   let categoria: Categoria | null = null;
   let negocios: Negocio[] = [];
@@ -161,7 +170,7 @@ export default async function CategoriaPage({
 
     // 1. Obtener la categoría
     const catRes = await fetchFromStrapi(
-      `categorias?filters[slug][$eq]=${slug}&fields[0]=nombre&fields[1]=descripcion&fields[2]=documentId`,
+      `categorias?filters[slug][$eq]=${cmsSlug}&fields[0]=nombre&fields[1]=descripcion&fields[2]=documentId`,
       options
     );
     categoria = catRes.data?.[0] || null;
@@ -186,7 +195,7 @@ export default async function CategoriaPage({
           "&fields[10]=tripadvisor_rating&fields[11]=tripadvisor_review_count" +
           "&fields[12]=reserva_url&fields[13]=reserva_habilitada&fields[14]=cta_link&fields[15]=cta_habilitado";
         
-        const filters = `filters[$or][0][categoria][slug][$eq]=${slug}&filters[$or][1][categoria][parent][slug][$eq]=${slug}`;
+        const filters = `filters[$or][0][categoria][slug][$eq]=${cmsSlug}&filters[$or][1][categoria][parent][slug][$eq]=${cmsSlug}`;
         const negRes = await fetchFromStrapi(
           `negocios?${filters}&${populate}&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=100`,
           options
