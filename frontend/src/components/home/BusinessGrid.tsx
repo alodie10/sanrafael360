@@ -31,6 +31,7 @@ const item = {
 };
 
 import { useFavorites } from "@/context/FavoritesContext";
+import { uniqueNegocios } from "@/lib/unique-negocios";
 
 export default function BusinessGrid({ negocios, loading = false, onClearFilters, filterFavorites = false, emptyMessage }: BusinessGridProps) {
   const { isFavorite } = useFavorites();
@@ -38,9 +39,11 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
   const observerTarget = useRef<HTMLDivElement>(null);
 
   // Filtrar si estamos en la página de favoritos para ocultar los removidos inmediatamente
-  const displayNegocios = filterFavorites 
-    ? negocios.filter(n => isFavorite(n.documentId))
-    : negocios;
+  const displayNegocios = uniqueNegocios(
+    filterFavorites
+      ? negocios.filter(n => isFavorite(n.documentId))
+      : negocios
+  );
 
   // Reseteamos el conteo si cambia la longitud de la lista filtrada (ej. al buscar)
   useEffect(() => {

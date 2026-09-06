@@ -3,48 +3,33 @@ import { createPagoRepository } from '../../pago/repositories/pago-repository';
 import { createUserRepository } from '../../../repositories/user-repository';
 import { NotFoundError } from '../../../utils/errors';
 import { resolveVigenciaUpdate } from '../../../utils/premium-vigencia';
-
-function normalizeFavorito(negocio: any) {
-  return {
-    ...negocio,
-    documentId: negocio.documentId || negocio.document_id,
-    categoria: negocio.categoria
-      ? {
-          ...negocio.categoria,
-          documentId: negocio.categoria.documentId || negocio.categoria.document_id,
-        }
-      : null,
-  };
-}
+import { dedupeFavoritos, nextFavoritoIds } from './favoritos-utils';
 
 export function createPortalAdminService(strapi: any) {
   return {
     async getFavoritesForUser(userId: number) {
       const userRepo = createUserRepository(strapi);
       const dbUser = await userRepo.findWithFavoritos(userId);
-      return (dbUser?.favoritos || []).map(normalizeFavorito);
+      return dedupeFavoritos(dbUser?.favoritos || []);
     },
 
     async toggleFavorite(userId: number, negocioDocumentId: string) {
       const negocioRepo = createNegocioRepository(strapi);
       const userRepo = createUserRepository(strapi);
 
-      const negocio = await negocioRepo.findById(negocioDocumentId);
+      const negocio =
+        (await negocioRepo.findById(negocioDocumentId, [], 'published')) ||
+        (await negocioRepo.findById(negocioDocumentId));
       if (!negocio) throw new NotFoundError('Negocio');
 
       const dbUser = await userRepo.findById(userId, ['favoritos']);
-      const favorites = dbUser?.favoritos || [];
-      const negocioId = Number(negocio.id);
-      const isFavorited = favorites.some((f: any) => Number(f.id) === negocioId);
+      const { isFavorited, ids } = nextFavoritoIds(
+        dbUser?.favoritos || [],
+        negocioDocumentId,
+        Number(negocio.id)
+      );
 
-      let newFavoritesIds = favorites.map((f: any) => Number(f.id));
-      if (isFavorited) {
-        newFavoritesIds = newFavoritesIds.filter((id) => id !== negocioId);
-      } else {
-        newFavoritesIds.push(negocioId);
-      }
-
-      await userRepo.updateFavoritos(userId, newFavoritesIds);
+      await userRepo.updateFavoritos(userId, ids);
 
       return {
         action: isFavorited ? ('removed' as const) : ('added' as const),

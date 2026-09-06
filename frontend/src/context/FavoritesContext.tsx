@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
+import { uniqueNegocios } from '@/lib/unique-negocios';
 
 interface FavoritesContextType {
   favorites: string[];
@@ -37,11 +38,13 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         // Normalizar: strapi.db.query puede devolver document_id (snake) o documentId (camel)
-        const objects = json.data.map((b: any) => ({
-          ...b,
-          documentId: b.documentId || b.document_id || '',
-        }));
-        const docs = objects.map((b: any) => b.documentId).filter(Boolean);
+        const objects = uniqueNegocios(
+          json.data.map((b: any) => ({
+            ...b,
+            documentId: b.documentId || b.document_id || '',
+          }))
+        );
+        const docs = [...new Set(objects.map((b: any) => b.documentId).filter(Boolean))];
         setFavorites(docs);
         setFavoriteObjects(objects);
       }
@@ -57,7 +60,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   }, [fetchFavorites]);
 
   const isFavorite = useCallback(
-    (documentId: string) => favorites.includes(documentId),
+    (documentId: string) => Boolean(documentId) && favorites.includes(documentId),
     [favorites]
   );
 
@@ -107,10 +110,12 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
             .then(r => r.json())
             .then(data => {
               if (data.success && Array.isArray(data.data)) {
-                const objects = data.data.map((b: any) => ({
-                  ...b,
-                  documentId: b.documentId || b.document_id || '',
-                }));
+                const objects = uniqueNegocios(
+                  data.data.map((b: any) => ({
+                    ...b,
+                    documentId: b.documentId || b.document_id || '',
+                  }))
+                );
                 setFavoriteObjects(objects);
               }
             })
