@@ -3,6 +3,7 @@ import { fetchFromStrapi, isStrapiUnreachableError } from "@/lib/strapi";
 import { canUseAlgoliaSearch, shouldUseStrapiSearchForHome } from "@/lib/search-config";
 import { Categoria, Negocio } from "@/types/strapi";
 import { matchFieldFromAlgoliaHit, matchFieldFromText, queryVariants } from "@/lib/search-match";
+import { uniqueNegocios } from "@/lib/unique-negocios";
 
 export type HomeSearchParams = {
   query?: string;
@@ -91,10 +92,12 @@ export async function searchNegociosFromStrapi(
 ): Promise<Negocio[]> {
   const res = await fetchFromStrapi(buildNegociosSearchPath(params), options);
   const query = params.query?.trim() || "";
-  return ((res.data ?? []) as Negocio[]).map((negocio) => ({
-    ...negocio,
-    searchMatch: query ? matchFieldFromText(negocio, query) : undefined,
-  }));
+  return uniqueNegocios(
+    ((res.data ?? []) as Negocio[]).map((negocio) => ({
+      ...negocio,
+      searchMatch: query ? matchFieldFromText(negocio, query) : undefined,
+    }))
+  );
 }
 
 /**
@@ -193,5 +196,5 @@ export async function searchNegociosFromAlgolia(
   });
 
   const hits = (results[0] as { hits?: Record<string, unknown>[] })?.hits || [];
-  return hits.map((hit) => mapAlgoliaHit(hit, textQuery));
+  return uniqueNegocios(hits.map((hit) => mapAlgoliaHit(hit, textQuery)));
 }

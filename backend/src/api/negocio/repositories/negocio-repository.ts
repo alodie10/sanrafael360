@@ -7,10 +7,15 @@ export class NegocioRepository {
     this.strapi = strapi;
   }
 
-  async findById(documentId: string, populate: string[] = []) {
+  async findById(
+    documentId: string,
+    populate: string[] = [],
+    status?: 'draft' | 'published'
+  ) {
     return await this.strapi.documents('api::negocio.negocio').findOne({
       documentId,
       populate,
+      ...(status ? { status } : {}),
     });
   }
 

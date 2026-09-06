@@ -2,6 +2,7 @@
 
 import { useFavorites } from "@/context/FavoritesContext";
 import BusinessGrid from "@/components/home/BusinessGrid";
+import { uniqueNegocios } from "@/lib/unique-negocios";
 
 import { Heart } from "lucide-react";
 import Link from "next/link";
@@ -9,7 +10,9 @@ import Link from "next/link";
 export default function FavoritosClient() {
   const { favoriteObjects, favorites, isLoading } = useFavorites();
 
-  const displayedObjects = favoriteObjects.filter(obj => favorites.includes(obj.documentId));
+  const displayedObjects = uniqueNegocios(
+    favoriteObjects.filter(obj => favorites.includes(obj.documentId))
+  );
 
   if (!isLoading && displayedObjects.length === 0) {
     return (
