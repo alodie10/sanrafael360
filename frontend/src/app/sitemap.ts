@@ -2,6 +2,10 @@ import { MetadataRoute } from "next";
 import { fetchFromStrapi } from "@/lib/strapi";
 import { fetchEfemeridesPublicList } from "@/lib/efemerides";
 import { getSiteUrl } from "@/lib/site";
+import {
+  categoriaHref,
+  isPlaceholderCategoriaSlug,
+} from "@/lib/categoria-slug";
 
 /** Forzar render dinámico: evita warnings de build cuando Strapi no está levantado. */
 export const dynamic = "force-dynamic";
@@ -74,13 +78,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
   }
 
-  const isPlaceholderCategoriaSlug = (slug: string) =>
-    slug === "categoria" || /^categoria-\d+$/.test(slug);
-
   const categoriaUrls: MetadataRoute.Sitemap = categorias
     .filter((c: any) => c.slug && !isPlaceholderCategoriaSlug(c.slug))
     .map((c: any) => ({
-      url: `${siteUrl}/categoria/${c.slug}`,
+      url: `${siteUrl}${categoriaHref(c.slug)}`,
       lastModified: c.updatedAt ? new Date(c.updatedAt) : new Date(),
       changeFrequency: "daily" as const,
       priority: 0.9, // Las categorías son páginas de aterrizaje importantes
@@ -101,6 +102,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // credibilidad de la señal lastModified. Usamos una fecha fija + revisión semanal.
   const BUILD_DATE = new Date("2025-07-01T00:00:00Z");
 
+  const staticUrls: MetadataRoute.Sitemap = [
+    {
+      url: `${siteUrl}/contacto`,
+      lastModified: BUILD_DATE,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    },
+    {
+      url: `${siteUrl}/privacidad`,
+      lastModified: BUILD_DATE,
+      changeFrequency: "yearly" as const,
+      priority: 0.3,
+    },
+    {
+      url: `${siteUrl}/ofertas`,
+      lastModified: new Date(),
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    },
+  ];
+
   return [
     {
       url: siteUrl,
@@ -110,6 +132,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     // NOTA: /negocios no se incluye porque next.config.ts tiene un redirect 301 → /
     // Incluirla causaría una señal SEO contradictoria para Google.
+    ...staticUrls,
     ...categoriaUrls,
     ...efemerideUrls,
     ...negocioUrls,

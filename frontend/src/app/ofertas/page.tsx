@@ -1,9 +1,16 @@
 import { fetchFromStrapi } from "@/lib/strapi";
 import { Oferta } from "@/types/strapi";
 import OfferListClient from "./OfferListClient";
+import { canonicalPage } from "@/lib/seo";
 
 /** Dinámico: evita fallos/warnings de prerender cuando Strapi no responde en build. */
 export const dynamic = "force-dynamic";
+
+export const metadata = canonicalPage(
+  "/ofertas",
+  "Ofertas en San Rafael",
+  "Promos vigentes de negocios de San Rafael, Mendoza. Compará descuentos y contactá directo por WhatsApp."
+);
 
 export default async function OfertasPage() {
   try {

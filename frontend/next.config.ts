@@ -36,6 +36,22 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        // CMS leftover: Alojamientos still has slug `categoria`
+        source: "/categoria/categoria",
+        destination: "/categoria/alojamientos",
+        permanent: true,
+      },
+      {
+        source: "/categoria",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/efemerides",
+        destination: "/",
+        permanent: true,
+      },
+      {
         source: "/descargar",
         destination: "https://play.google.com/store/apps/details?id=com.sanrafael360.www.twa",
         permanent: false,

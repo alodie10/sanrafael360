@@ -1,10 +1,7 @@
-import type { Metadata } from "next";
 import GoogleOnlyAuthNotice from "@/components/auth/GoogleOnlyAuthNotice";
+import { noIndexPage } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Recuperar acceso | San Rafael 360",
-  robots: { index: false, follow: false },
-};
+export const metadata = noIndexPage("/olvide-password", "Recuperar acceso");
 
 export default function ForgotPasswordPage() {
   return (

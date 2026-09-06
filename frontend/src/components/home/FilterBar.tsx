@@ -13,6 +13,7 @@ import {
   resolveParentDocumentId,
   resolveParentSlug,
 } from "@/lib/categoria-utils";
+import { categoriaHref } from "@/lib/categoria-slug";
 
 interface FilterBarProps {
   categorias: Categoria[];
@@ -125,7 +126,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId }: FilterB
     );
     const Icon = isAll ? LayoutGrid : getCategoryIcon(cat.nombre);
     const label = isAll ? "Todos" : cat.nombre;
-    const href = isAll ? "/" : `/categoria/${cat.slug || cat.documentId}`;
+    const href = isAll ? "/" : categoriaHref(cat.slug || cat.documentId);
 
     return (
       <Link
@@ -173,7 +174,11 @@ export default function FilterBar({ categorias, selectedCategoryDocId }: FilterB
           >
             <PillCarousel>
               <Link
-                href={`/categoria/${resolveParentSlug(selectedCategory?.parent) || selectedCategory?.slug || activeParentId}`}
+                href={categoriaHref(
+                  resolveParentSlug(selectedCategory?.parent) ||
+                    selectedCategory?.slug ||
+                    activeParentId
+                )}
                 className={cn(
                   "flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-all border",
                   selectedCategoryDocId === activeParentId
@@ -187,7 +192,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId }: FilterB
                 const isSubActive = selectedCategoryDocId === sub.documentId;
                 return (
                   <Link
-                    href={`/categoria/${sub.slug || sub.documentId}`}
+                    href={categoriaHref(sub.slug || sub.documentId)}
                     key={sub.id}
                     className={cn(
                       "flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-all border",

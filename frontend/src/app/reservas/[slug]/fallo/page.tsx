@@ -1,10 +1,17 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { noIndexPage } from '@/lib/seo';
 import '@/components/reservas/reservas-public.css';
 
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ codigo?: string }>;
 };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  return noIndexPage(`/reservas/${slug}/fallo`, 'Pago no completado');
+}
 
 export default async function ReservaFalloPage({ params, searchParams }: Props) {
   const { slug } = await params;

@@ -4,6 +4,7 @@ import HomeClient from "@/components/home/HomeClient";
 import { getCategorias } from "@/lib/categorias";
 import { getHomeNegocios } from "@/lib/search-negocios";
 import { getSiteUrl } from "@/lib/site";
+import { toCmsCategoriaSlug } from "@/lib/categoria-slug";
 
 export const metadata: Metadata = {
   alternates: {
@@ -28,7 +29,12 @@ function resolveCategoryDocId(
   const normalized = catParam.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const found = categorias.find((c) => {
     const name = c.nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    return c.documentId === catParam || c.slug === catParam || name === normalized;
+    return (
+      c.documentId === catParam ||
+      c.slug === catParam ||
+      c.slug === toCmsCategoriaSlug(catParam) ||
+      name === normalized
+    );
   });
   return found?.documentId ?? null;
 }

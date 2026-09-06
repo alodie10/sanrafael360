@@ -3,11 +3,13 @@ import { authOptions } from "@/lib/auth";
 import { Heart } from "lucide-react";
 import Link from "next/link";
 import FavoritosClient from "./FavoritosClient";
+import { noIndexPage } from "@/lib/seo";
 
-export const metadata = {
-  title: "Mis Favoritos | San Rafael 360",
-  description: "Los lugares que más te gustaron de San Rafael.",
-};
+export const metadata = noIndexPage(
+  "/favoritos",
+  "Mis favoritos",
+  "Los lugares que más te gustaron de San Rafael."
+);
 
 export default async function FavoritosPage() {
   const session = await getServerSession(authOptions);
