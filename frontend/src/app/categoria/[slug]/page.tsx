@@ -1,11 +1,10 @@
-import { getCategorias } from "@/lib/categorias";
-import { fetchFromStrapi } from "@/lib/strapi";
-import { Negocio, Categoria } from "@/types/strapi";
+import { getCategoriaBySlug, getCategorias } from "@/lib/categorias";
+import { getNegociosByCategoriaSlug } from "@/lib/search-negocios";
 import BusinessGrid from "@/components/home/BusinessGrid";
 import FilterBar from "@/components/home/FilterBar";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { notFound, unstable_rethrow } from "next/navigation";
+import { notFound } from "next/navigation";
 import {
   isPlaceholderCategoriaSlug,
   toCmsCategoriaSlug,
@@ -139,13 +138,6 @@ function getCategoryContent(nombre: string): {
   };
 }
 
-// Helper para verificar si un negocio tiene Premium activo y vigente
-const isPremiumActive = (negocio: Negocio): boolean => {
-  if (!negocio?.is_premium) return false;
-  if (!negocio.premium_valid_until) return true; // Sin vencimiento = activo
-  return new Date(negocio.premium_valid_until) > new Date();
-};
-
 export default async function CategoriaPage({
   params,
 }: {
@@ -158,84 +150,13 @@ export default async function CategoriaPage({
     notFound();
   }
 
-  let categoria: Categoria | null = null;
-  let negocios: Negocio[] = [];
-  let categorias: any[] = [];
-
-  try {
-    const strapiToken = process.env.STRAPI_API_TOKEN;
-    const options = strapiToken
-      ? { headers: { Authorization: `Bearer ${strapiToken}` } }
-      : {};
-
-    // 1. Obtener la categoría
-    const catRes = await fetchFromStrapi(
-      `categorias?filters[slug][$eq]=${cmsSlug}&fields[0]=nombre&fields[1]=descripcion&fields[2]=documentId`,
-      options
-    );
-    categoria = catRes.data?.[0] || null;
-
-    if (categoria) {
-      // 1.5 Obtener todas las categorías para el FilterBar
-      categorias = await getCategorias(options);
-
-      // 2. Obtener negocios de esta categoría (paginando hasta traer todos)
-      let page = 1;
-      let pageCount = 1;
-
-      do {
-        const populate =
-          "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug" +
-          "&populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo" +
-          "&populate[logo][fields][0]=url&populate[imagen_portada][fields][0]=url" +
-          "&populate[owner][fields][0]=id" +
-          "&fields[0]=nombre&fields[1]=slug&fields[2]=direccion&fields[3]=is_premium" +
-          "&fields[4]=premium_valid_until&fields[5]=price_range&fields[6]=rating" +
-          "&fields[7]=review_count&fields[8]=google_rating&fields[9]=google_review_count" +
-          "&fields[10]=tripadvisor_rating&fields[11]=tripadvisor_review_count" +
-          "&fields[12]=reserva_url&fields[13]=reserva_habilitada&fields[14]=cta_link&fields[15]=cta_habilitado";
-        
-        const filters = `filters[$or][0][categoria][slug][$eq]=${cmsSlug}&filters[$or][1][categoria][parent][slug][$eq]=${cmsSlug}`;
-        const negRes = await fetchFromStrapi(
-          `negocios?${filters}&${populate}&sort=nombre:asc&pagination[page]=${page}&pagination[pageSize]=100`,
-          options
-        );
-        
-        if (negRes.data) {
-          negocios = [...negocios, ...negRes.data];
-        }
-        pageCount = negRes.meta?.pagination?.pageCount || 1;
-        page++;
-      } while (page <= pageCount);
-
-      // Ordenar los negocios (Premium primero)
-      if (negocios.length > 0) {
-        negocios.sort((a, b) => {
-          if (!a || !b) return 0;
-          const isAPremium = isPremiumActive(a);
-          const isBPremium = isPremiumActive(b);
-
-          if (isAPremium && !isBPremium) return -1;
-          if (!isAPremium && isBPremium) return 1;
-
-          // Desempate alfabético por defecto (seguro contra null)
-          const nombreA = a.nombre || "";
-          const nombreB = b.nombre || "";
-          return nombreA.localeCompare(nombreB);
-        });
-      }
-    }
-
-  } catch (error: any) {
-    // Si el error es de Next.js (notFound/redirect), lo relanzamos
-    unstable_rethrow(error);
-    console.error("Error cargando categoría:", error);
-  }
-
-  // Si no encontró categoría, llamamos a notFound fuera del catch (por seguridad)
+  const categoria = await getCategoriaBySlug(cmsSlug);
   if (!categoria) {
     notFound();
   }
+
+  const categorias = await getCategorias();
+  const negocios = await getNegociosByCategoriaSlug(cmsSlug);
 
   const { intro, faqs } = getCategoryContent(categoria.nombre);
 

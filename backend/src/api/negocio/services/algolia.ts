@@ -53,6 +53,8 @@ function buildAlgoliaObject(negocioData: any) {
     slug: negocioData.slug,
     descripcion: negocioData.descripcion,
     direccion: negocioData.direccion,
+    whatsapp: negocioData.whatsapp || null,
+    instagram_username: negocioData.instagram_username || null,
     latitud: negocioData.latitud,
     longitud: negocioData.longitud,
     is_premium: premium,

@@ -35,6 +35,23 @@
   --radius: 1rem;
 }
 
+/* Ambiente local: cian. Producción: oro original de :root. */
+html.is-dev-env {
+  --primary: 188 94% 53%;
+  --primary-foreground: 192 91% 9%;
+  --accent: 188 94% 32%;
+  --ring: 188 94% 53%;
+}
+
+html.is-dev-env::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 3px hsl(188 94% 53%);
+}
+
 @layer base {
   * {
     @apply border-border;

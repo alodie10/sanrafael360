@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { ReactNode } from "react";
-import { notFound, unstable_rethrow } from "next/navigation";
-import { fetchFromStrapi } from "@/lib/strapi";
+import { notFound } from "next/navigation";
+import { getCategoriaBySlug } from "@/lib/categorias";
 import { getSiteUrl } from "@/lib/site";
 import {
   isPlaceholderCategoriaSlug,
@@ -23,55 +23,38 @@ export async function generateMetadata({
     notFound();
   }
 
-  try {
-    const strapiToken = process.env.STRAPI_API_TOKEN;
-    const options = strapiToken
-      ? { headers: { Authorization: `Bearer ${strapiToken}` } }
-      : {};
-      
-    const res = await fetchFromStrapi(`categorias?filters[slug][$eq]=${cmsSlug}&fields[0]=nombre&fields[1]=descripcion`, options);
-    const categoria = res.data?.[0];
-
-    if (!categoria) {
-      notFound();
-    }
-
-    const publicSlug = toPublicCategoriaSlug(cmsSlug);
-    const currentYear = new Date().getFullYear();
-    const title = `Guía de ${categoria.nombre} en San Rafael, Mza (${currentYear})`;
-    const description = `✅ Descubrí lo mejor en ${categoria.nombre.toLowerCase()} en San Rafael, Mendoza. Compará opiniones, mirá fotos, horarios y contactá directo por WhatsApp. La guía más completa del ${currentYear}.`;
-
-    const canonicalUrl = `${SITE_URL}/categoria/${publicSlug}`;
-
-    return {
-      title,
-      description,
-      alternates: {
-        canonical: canonicalUrl,
-      },
-      openGraph: {
-        title,
-        description,
-        url: canonicalUrl,
-        siteName: "San Rafael 360",
-        locale: "es_AR",
-        type: "website",
-      },
-      twitter: {
-        card: "summary_large_image",
-        title,
-        description,
-        site: "@sanrafael360",
-      },
-    };
-  } catch (e: any) {
-    unstable_rethrow(e);
-    console.error(
-      `[SEO Critical Error] generateMetadata para categoría ${slug}:`,
-      e.message || e
-    );
+  const categoria = await getCategoriaBySlug(cmsSlug);
+  if (!categoria) {
     return { title: "San Rafael 360", robots: { index: false, follow: true } };
   }
+
+  const publicSlug = toPublicCategoriaSlug(cmsSlug);
+  const currentYear = new Date().getFullYear();
+  const title = `Guía de ${categoria.nombre} en San Rafael, Mza (${currentYear})`;
+  const description = `✅ Descubrí lo mejor en ${categoria.nombre.toLowerCase()} en San Rafael, Mendoza. Compará opiniones, mirá fotos, horarios y contactá directo por WhatsApp. La guía más completa del ${currentYear}.`;
+  const canonicalUrl = `${SITE_URL}/categoria/${publicSlug}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: "San Rafael 360",
+      locale: "es_AR",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      site: "@sanrafael360",
+    },
+  };
 }
 
 export default async function CategoriaLayout({
@@ -89,17 +72,7 @@ export default async function CategoriaLayout({
     notFound();
   }
   
-  let categoria = null;
-  try {
-    const strapiToken = process.env.STRAPI_API_TOKEN;
-    const options = strapiToken
-      ? { headers: { Authorization: `Bearer ${strapiToken}` } }
-      : {};
-    const res = await fetchFromStrapi(`categorias?filters[slug][$eq]=${cmsSlug}&fields[0]=nombre&fields[1]=descripcion`, options);
-    categoria = res.data?.[0];
-  } catch (e: any) {
-    console.error(`[SEO Layout Error] fetch categoría falló para ${slug}:`, e.message || e);
-  }
+  let categoria = await getCategoriaBySlug(cmsSlug);
 
   // Schema.org CollectionPage
   const schema = categoria ? {

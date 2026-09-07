@@ -98,7 +98,7 @@ export const CATEGORY_INTENT_GROUPS: { keys: string[]; terms: string[] }[] = [
   },
   {
     keys: ['interes_turistico'],
-    terms: ['dique', 'canon', 'mirador', 'cascada', 'visita'],
+    terms: ['dique', 'canon', 'mirador', 'cascada', 'visita', 'visitar', 'turismo', 'pasear'],
   },
   {
     keys: ['gastronomia'],

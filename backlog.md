@@ -118,6 +118,29 @@ Contexto: el claim→portal casi no se usa; Diego opera ~15 clientes a mano. Hac
 
 ---
 
+## Seguridad — dependencias (piggyback)
+
+No es un sprint aparte. **En cada cambio a `develop` que vaya a prod, el agente intenta 1 ítem S de esta lista** (si no toca el mismo archivo que el feature). Antes de cada `master`: veredicto de explotabilidad, no el recuento de npm.
+
+Reglas:
+- Prioridad = **riesgo real en la guía**, no el CVSS del advisory.
+- Prohibido `npm audit fix --force` (propone bajar a Strapi 4 o saltar Next a ciegas).
+- Overrides en `package.json` raíz, con `test:unit` + boot Strapi / build Next.
+- Snapshot audit 2026-09-04 (omit=dev): backend 53 (1 critical `tar`, 17 high); frontend 38 (1 critical `next-auth`, 9 high).
+
+| ID | Problema | Acción | Esfuerzo | Riesgo SR360 |
+|----|----------|--------|----------|--------------|
+| SEC-10 | `next-auth` ^4.24.7: homoglyph `@` en email/magic-link (GHSA-7rqj-j65f-68wh) | Pin `next-auth@4.24.15` | S | Bajo. **✅ en develop/prod (93f3ca7).** |
+| SEC-11 | Overrides raíz desactualizados (`lodash` 4.18.1, `axios` 1.18.1, `ws` 8.18.2, `uuid` 11.1.0) y siguen en audit | Subir overrides a versiones parcheadas; no `--force` | S | Bajo/medio: transitivas. Después de SEC-10. |
+| SEC-12 | `tar` critical DoS gzip-bomb vía Strapi (GHSA-23hp-3jrh-7fpw y siguientes) | Override `tar` ≥ parche (`>7.5.20`); verificar `strapi build` + boot. **No** bajar a Strapi 4 | M | Bajo: no extraemos .tar de usuarios públicos. |
+| SEC-13 | Next 16.2.10: DoS RSC + leftover middleware/proxy advisories | Minor Next parcheada (p. ej. 16.3.x) en cambio **dedicado**, no piggyback | M | Medio: superficie pública Next. Rama/commit propio. |
+| SEC-14 | `nodemailer` / `sharp` high, arrastrados por Strapi y Next | Cuando subamos Strapi o Next (SEC-12/13); no parche suelto | M | Bajo: mail va por Resend; imágenes por Cloudinary. |
+| SEC-15 | Promote muestra audit pero no lo interpreta | En el veredicto pre-`master`: críticos + explotabilidad + go/no-go (ya en protocolo) | S | Proceso. Se cumple desde este promote. |
+
+---
+
+---
+
 ## P3 — Nice-to-have
 
 | ID | Descripción | Notas |
@@ -136,13 +159,14 @@ Contexto: el claim→portal casi no se usa; Diego opera ~15 clientes a mano. Hac
 
 ```
 Sprint 4 ✅  →  Sprint 5 ✅  →  Sprint 6 (clientes + mail en develop)  →  DOC residual / FE-23..24
+         ↘  piggyback SEC-10 ✅ → SEC-11 → SEC-12 (deps; no bloquea producto)
 ```
 
 ### Próximo paso concreto
 
-1. **Sprint 6 en develop** — cargar 1 cliente, mail de prueba, vincular negocio (`docs/ops-clientes-avisos.md`).
-2. Luego: **DOC-02..06**, **FE-23 / FE-24**.
-3. Opcional: FE-12 capa API tipada.
+1. **Sprint 6 ops:** cargar 1 cliente, mail de prueba (`docs/ops-clientes-avisos.md`).
+2. **Próximo piggyback:** SEC-11 (overrides raíz).
+3. Luego: **DOC-02..06**, **FE-23 / FE-24**.
 
 ---
 

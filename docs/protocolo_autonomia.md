@@ -18,6 +18,7 @@ Para asegurar la agilidad del desarrollo, el equipo de Antigravity opera bajo un
 - **Desarrollo siempre en `develop`**: commits, pruebas locales y push diario van a `develop`.
 - Promoción: `./promote.sh` (tests + build + merge `develop` → `master` local); luego Diego pushea `master`.
 - Los agentes pueden commitear en `develop` si el usuario lo pide, pero **nunca** `git push origin master`.
+- **Vulnerabilidades (npm audit):** antes de cada push a `master`, el agente da veredicto (explotable en SR360 vs ruido de CVSS). Si hay una crítica **parcheable sin romper Strapi/Next**, se ataca en `develop` antes de promover. Prohibido `npm audit fix --force`. Ítems: `backlog.md` → SEC-10+.
 
 ---
 

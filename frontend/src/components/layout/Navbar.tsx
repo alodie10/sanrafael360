@@ -11,6 +11,7 @@ import Logo from "@/components/common/Logo";
 import { useSession, signOut } from "next-auth/react";
 import { Categoria } from "@/types/strapi";
 import { importGoogleMapsLibrary, getGoogleMapsLoader } from "@/lib/google-maps";
+import { isDevApp } from "@/lib/env";
 
 interface NavbarProps {
   categorias: Categoria[];
@@ -220,6 +221,14 @@ function NavbarInner({ categorias }: NavbarProps) {
           {/* Logo */}
           <div className="flex items-center gap-2">
             <Logo onClick={handleResetAll} className="hover:scale-105 transition-transform" />
+            {isDevApp() && (
+              <span
+                data-testid="dev-env-badge"
+                className="mt-0.5 md:mt-2 inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.22em] text-black"
+              >
+                DEV
+              </span>
+            )}
             <span className="text-[10px] text-white/20 font-mono mt-3 hidden md:block">
               {process.env.NEXT_PUBLIC_APP_VERSION || "v1.1"}
             </span>

@@ -240,8 +240,8 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
                     )}
                     {negocio.atributos && negocio.atributos.length > 0 && (
                       <div className="flex gap-1.5 flex-wrap">
-                        {(categoriaYaCubierta ? negocio.atributos : atributosFiltrados).map((attr) => (
-                          <div key={attr.documentId} className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 text-slate-400">
+                        {(categoriaYaCubierta ? negocio.atributos : atributosFiltrados).map((attr, index) => (
+                          <div key={attr.documentId || attr.nombre || `attr-${index}`} className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 text-slate-400">
                             {attr.nombre}
                           </div>
                         ))}
