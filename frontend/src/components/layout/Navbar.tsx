@@ -12,6 +12,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Categoria } from "@/types/strapi";
 import { importGoogleMapsLibrary, getGoogleMapsLoader } from "@/lib/google-maps";
 import { isDevApp } from "@/lib/env";
+import { setMobileSearchExpanded } from "@/lib/search-expanded";
 
 interface NavbarProps {
   categorias: Categoria[];
@@ -142,6 +143,19 @@ function NavbarInner({ categorias }: NavbarProps) {
     if (navRef.current) ro.observe(navRef.current);
     return () => ro.disconnect();
   }, [publishNavHeight, scrolled, isHoveringNav, mobileSearchCollapsed, isMenuOpen]);
+
+  useEffect(() => {
+    const syncSearchBlock = () => {
+      const mobile = window.matchMedia("(max-width: 767px)").matches;
+      setMobileSearchExpanded(mobile && showSearchBarMobile);
+    };
+    syncSearchBlock();
+    window.addEventListener("resize", syncSearchBlock);
+    return () => {
+      window.removeEventListener("resize", syncSearchBlock);
+      setMobileSearchExpanded(false);
+    };
+  }, [showSearchBarMobile]);
 
   // --- Resetear al cambiar de página ---
   useEffect(() => {
