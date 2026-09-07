@@ -75,3 +75,21 @@ export function applyInstagramFields(data: Record<string, unknown>): void {
     data.instagram_username = username || '';
   }
 }
+
+const IG_HREF_RE =
+  /(?:https?:\/\/)?(?:www\.)?(?:instagram\.com|instagr\.am)\/([A-Za-z0-9._]{1,30})/gi;
+
+/** Extrae handles únicos de HTML o texto libre (links de perfil, no posts). */
+export function extractInstagramHandlesFromText(text: string): string[] {
+  const found = new Set<string>();
+  for (const match of String(text || '').matchAll(IG_HREF_RE)) {
+    const username = normalizeInstagramUsername(match[0]);
+    if (username) found.add(username);
+  }
+  return [...found];
+}
+
+export function canonicalInstagramUrl(raw?: string | null): string | null {
+  const username = normalizeInstagramUsername(raw);
+  return username ? `https://www.instagram.com/${username}/` : null;
+}

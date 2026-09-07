@@ -36,6 +36,8 @@ id_rsa.pub
 # Local tooling binaries (cloudflared, etc.)
 .tools/
 scratch/bin/
+scratch/ig-*.json
+scratch/ig-scrape/
 
 # Obsidian settings
 .obsidian/

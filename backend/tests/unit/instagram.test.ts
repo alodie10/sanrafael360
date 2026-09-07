@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   applyInstagramFields,
   buildInstagramDmUrl,
+  canonicalInstagramUrl,
+  extractInstagramHandlesFromText,
   normalizeInstagramUsername,
   resolveInstagramUsername,
 } from '../../src/utils/instagram';
@@ -80,5 +82,24 @@ describe('applyInstagramFields', () => {
     const data: Record<string, unknown> = { trigger_discovery: true };
     applyInstagramFields(data);
     expect(data).not.toHaveProperty('instagram_username');
+  });
+});
+
+describe('extractInstagramHandlesFromText', () => {
+  it('pulls unique profile handles from HTML and ignores posts', () => {
+    const html = `
+      <a href="https://www.instagram.com/parrilla.de.la.finca/">IG</a>
+      <a href="https://instagram.com/p/AbC123/">post</a>
+      <p>también instagram.com/PARRILLA.de.la.finca?hl=es</p>
+    `;
+    expect(extractInstagramHandlesFromText(html)).toEqual(['parrilla.de.la.finca']);
+  });
+});
+
+describe('canonicalInstagramUrl', () => {
+  it('builds a clean profile URL from a messy handle', () => {
+    expect(canonicalInstagramUrl('@Hotel_Rex2024')).toBe(
+      'https://www.instagram.com/hotel_rex2024/'
+    );
   });
 });
