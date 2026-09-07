@@ -39,6 +39,10 @@ scratch/bin/
 scratch/ig-*.json
 scratch/ig-scrape/
 
+# Exports locales (no van al repo)
+outputs/_build_*.py
+outputs/premium-vencimientos*.xlsx
+
 # Obsidian settings
 .obsidian/
 

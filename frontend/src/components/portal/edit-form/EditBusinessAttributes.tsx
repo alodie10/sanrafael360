@@ -6,6 +6,14 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getStrapiUrl } from "@/lib/strapi";
 
+function normalizeTagName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 interface EditBusinessAttributesProps {
   atributosSeleccionados: string[];
   setAtributosSeleccionados: (val: string[]) => void;
@@ -33,13 +41,26 @@ export default function EditBusinessAttributes({
   };
 
   const handleCreateTag = async () => {
-    if (!newTag.trim()) return;
+    const trimmed = newTag.trim();
+    if (!trimmed) return;
+
+    const existing = availableAtributos.find(
+      (attr) => normalizeTagName(attr.nombre || "") === normalizeTagName(trimmed)
+    );
+    if (existing) {
+      if (!atributosSeleccionados.includes(existing.documentId)) {
+        setAtributosSeleccionados([...atributosSeleccionados, existing.documentId]);
+      }
+      setNewTag("");
+      toast.success("Esa etiqueta ya existía, la seleccioné");
+      return;
+    }
+
     setIsCreating(true);
     
     try {
       const strapiUrl = getStrapiUrl();
-      // Formatear slug simple
-      const slug = newTag.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
+      const slug = normalizeTagName(trimmed).replace(/[^a-z0-9]+/g, "-");
       
       const res = await fetch(`${strapiUrl}/api/atributos?status=published`, {
         method: "POST",
@@ -49,7 +70,7 @@ export default function EditBusinessAttributes({
         },
         body: JSON.stringify({
           data: {
-            nombre: newTag.trim(),
+            nombre: trimmed,
             slug: slug,
             tipo: "tag"
           }
