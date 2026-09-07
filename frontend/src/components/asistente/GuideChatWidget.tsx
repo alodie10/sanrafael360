@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { trackGuideEvent } from "@/lib/asistente/analytics";
+import { subscribeMobileSearchExpanded } from "@/lib/search-expanded";
 import GuideChatPanel from "./GuideChatPanel";
 import GuideRafiMark from "./GuideRafiMark";
 import styles from "./GuideChat.module.css";
@@ -26,12 +27,18 @@ export default function GuideChatWidget({
 }) {
   const pathname = usePathname() || "/";
   const [open, setOpen] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  if (isHiddenPath(pathname, allowlist)) return null;
+  useEffect(() => subscribeMobileSearchExpanded((expanded) => {
+    setSearchExpanded(expanded);
+    if (expanded) setOpen(false);
+  }), []);
+
+  if (isHiddenPath(pathname, allowlist) || searchExpanded) return null;
 
   return (
     <div data-testid="guide-chat-widget">
