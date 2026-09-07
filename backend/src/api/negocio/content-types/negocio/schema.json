@@ -41,6 +41,10 @@
     "instagram": {
       "type": "string"
     },
+    "instagram_username": {
+      "type": "string",
+      "description": "Usuario de Instagram sin @. Se usa para abrir el DM (ig.me) en prospección."
+    },
     "facebook": {
       "type": "string"
     },

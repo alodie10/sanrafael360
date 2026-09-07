@@ -6,6 +6,7 @@ import {
   Building2,
   CheckCircle2,
   ChevronDown,
+  Instagram,
   Loader2,
   MessageCircle,
   Phone,
@@ -20,12 +21,14 @@ import { rangeFromPreset } from "@/lib/performance-period";
 import PerformancePeriodFilter from "./PerformancePeriodFilter";
 import {
   composeFichaMensaje,
+  copyTextToClipboard,
   greetingNow,
   phoneForWhatsapp,
   type ProspeccionAlcanzado,
   type ProspeccionNegocio,
   type ProspeccionPlantilla,
 } from "@/lib/prospeccion";
+import { openInstagramDm, resolveInstagramUsername } from "@/lib/instagram";
 
 type Props = {
   jwt: string;
@@ -70,7 +73,7 @@ export default function AdminProspeccionPanel({
   const [endDate, setEndDate] = useState(initialRange.endDate);
   const [loading, setLoading] = useState(true);
   const [savingPlantilla, setSavingPlantilla] = useState(false);
-  const [sending, setSending] = useState<"saludo" | "ficha_mensaje" | null>(null);
+  const [sending, setSending] = useState<"saludo" | "ficha_mensaje" | "instagram" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [, setTick] = useState(0);
@@ -196,12 +199,51 @@ export default function AdminProspeccionPanel({
     }
   };
 
+  const enviarInstagram = async () => {
+    if (!selected) return;
+    setSending("instagram");
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch(`${STRAPI_URL}/api/prospeccion/enviar`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          negocioDocumentId: selected.documentId,
+          tipo: "ficha_mensaje",
+          canal: "instagram",
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(apiError(json, "No se pudo armar el Instagram"));
+      const texto = String(json.data?.texto || "");
+      const copied = texto ? await copyTextToClipboard(texto) : false;
+      const igUrl = json.data?.instagramUrl;
+      if (igUrl) openInstagramDm(igUrl);
+      setNotice(
+        copied
+          ? "Texto copiado. Pegalo en el chat de Instagram y envialo. Si no abre el DM, el texto sigue en el portapapeles."
+          : "Instagram abierto. Copiá el comunicado de la vista previa y pegalo en el chat."
+      );
+      await loadAlcanzados();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSending(null);
+    }
+  };
+
   const fichaUrl = selected?.slug ? `${getSiteUrl()}/negocios/${selected.slug}` : "";
   const saludo = greetingNow();
   const phone = phoneForWhatsapp(selected);
+  const igHandle = resolveInstagramUsername({
+    instagram_username: selected?.instagram_username,
+    instagram: selected?.instagram,
+  });
   const preview = plantilla
     ? composeFichaMensaje({ url: fichaUrl, ...plantilla })
     : "";
+  const editUrl = selected?.slug ? `/portal/negocios/${selected.slug}/editar` : "";
 
   if (loading) {
     return (
@@ -290,12 +332,19 @@ export default function AdminProspeccionPanel({
         )}
 
         {selected && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             <div className="rounded-2xl border border-white/5 bg-black/30 p-4 space-y-1">
               <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">WhatsApp</p>
               <p className="text-sm text-zinc-200 flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary" />
                 {phone || "Sin teléfono"}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/5 bg-black/30 p-4 space-y-1">
+              <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Instagram</p>
+              <p className="text-sm text-zinc-200 flex items-center gap-2">
+                <Instagram className="w-4 h-4 text-primary" />
+                {igHandle ? `@${igHandle}` : "Sin usuario"}
               </p>
             </div>
             <div className="rounded-2xl border border-white/5 bg-black/30 p-4 space-y-1">
@@ -322,12 +371,12 @@ export default function AdminProspeccionPanel({
           </pre>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3">
           <button
             type="button"
             onClick={() => enviar("saludo")}
             disabled={!selected || !phone || sending !== null}
-            className="flex-1 py-4 rounded-2xl bg-white/10 text-white font-black uppercase tracking-widest text-[11px] disabled:opacity-40 hover:bg-white/15 flex items-center justify-center gap-2"
+            className="flex-1 min-w-[180px] py-4 rounded-2xl bg-white/10 text-white font-black uppercase tracking-widest text-[11px] disabled:opacity-40 hover:bg-white/15 flex items-center justify-center gap-2"
             data-testid="prospeccion-enviar-saludo"
           >
             {sending === "saludo" ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
@@ -337,15 +386,40 @@ export default function AdminProspeccionPanel({
             type="button"
             onClick={() => enviar("ficha_mensaje")}
             disabled={!selected || !phone || sending !== null}
-            className="flex-1 py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-widest text-[11px] disabled:opacity-40 hover:bg-primary/90 flex items-center justify-center gap-2"
+            className="flex-1 min-w-[180px] py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-widest text-[11px] disabled:opacity-40 hover:bg-primary/90 flex items-center justify-center gap-2"
             data-testid="prospeccion-enviar-ficha"
           >
             {sending === "ficha_mensaje" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             Enviar ficha + mensaje
           </button>
+          <button
+            type="button"
+            onClick={enviarInstagram}
+            disabled={!selected || !igHandle || sending !== null}
+            className="flex-1 min-w-[180px] py-4 rounded-2xl bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white font-black uppercase tracking-widest text-[11px] disabled:opacity-40 hover:opacity-90 flex items-center justify-center gap-2"
+            data-testid="prospeccion-enviar-instagram"
+          >
+            {sending === "instagram" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Instagram className="w-4 h-4" />}
+            Enviar por Instagram
+          </button>
         </div>
         {selected && !phone && (
           <p className="text-xs text-amber-400">Este negocio no tiene teléfono de WhatsApp. Completalo en la ficha antes de enviar.</p>
+        )}
+        {selected && !igHandle && (
+          <p className="text-xs text-amber-400">
+            Este negocio no tiene usuario de Instagram. Cargalo en la ficha (solo el usuario, sin @)
+            {editUrl ? (
+              <>
+                {" "}
+                —{" "}
+                <a href={editUrl} className="underline hover:text-amber-300">
+                  editar ficha
+                </a>
+              </>
+            ) : null}
+            . Sin eso el botón de Instagram no sirve.
+          </p>
         )}
       </section>
 

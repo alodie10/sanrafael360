@@ -22,6 +22,7 @@ import EditBusinessOffers from "./edit-form/EditBusinessOffers";
 import ScheduleEditor from "./ScheduleEditor";
 import { safeReturnTo } from "@/lib/return-to";
 import { normalizeLocalPhoneDigits } from "@/lib/whatsapp";
+import { normalizeInstagramUsername } from "@/lib/instagram";
 
 interface EditBusinessFormProps {
   negocio: any;
@@ -45,6 +46,9 @@ export default function EditBusinessForm({ negocio, session, returnTo: returnToP
   const [website, setWebsite] = useState(negocio.website || "");
   const [facebook, setFacebook] = useState(negocio.facebook || "");
   const [instagram, setInstagram] = useState(negocio.instagram || "");
+  const [instagramUsername, setInstagramUsername] = useState(
+    negocio.instagram_username || normalizeInstagramUsername(negocio.instagram) || ""
+  );
   const [priceRange, setPriceRange] = useState(negocio.price_range || "Moderado");
   const [reservaHabilitada, setReservaHabilitada] = useState(negocio.reserva_habilitada ?? false);
   const [reservaUrl, setReservaUrl] = useState(negocio.reserva_url || "");
@@ -462,6 +466,7 @@ export default function EditBusinessForm({ negocio, session, returnTo: returnToP
         website,
         facebook,
         instagram,
+        instagram_username: normalizeInstagramUsername(instagramUsername) || instagramUsername.trim(),
         price_range: priceRange,
         reserva_habilitada: moduloSlug ? true : reservaHabilitada,
         reserva_url: moduloSlug ? moduloPath : reservaUrl,
@@ -579,6 +584,8 @@ export default function EditBusinessForm({ negocio, session, returnTo: returnToP
           setFacebook={setFacebook}
           instagram={instagram}
           setInstagram={setInstagram}
+          instagramUsername={instagramUsername}
+          setInstagramUsername={setInstagramUsername}
         />
 
         <EditBusinessGallery 

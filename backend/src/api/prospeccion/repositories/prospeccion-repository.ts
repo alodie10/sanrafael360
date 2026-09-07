@@ -38,7 +38,7 @@ export class ProspeccionRepository {
   async findNegocioByDocumentId(documentId: string) {
     return this.strapi.documents(NEGOCIO_UID).findOne({
       documentId,
-      fields: ['nombre', 'slug', 'whatsapp', 'telefono', 'documentId'],
+      fields: ['nombre', 'slug', 'whatsapp', 'telefono', 'instagram', 'instagram_username', 'documentId'],
       populate: NEGOCIO_POPULATE,
     });
   }
@@ -46,7 +46,7 @@ export class ProspeccionRepository {
   async searchNegocios(search: string) {
     return this.strapi.documents(NEGOCIO_UID).findMany({
       filters: { nombre: { $containsi: search.trim() } },
-      fields: ['nombre', 'slug', 'whatsapp', 'telefono', 'documentId'],
+      fields: ['nombre', 'slug', 'whatsapp', 'telefono', 'instagram', 'instagram_username', 'documentId'],
       populate: NEGOCIO_POPULATE,
       sort: ['nombre:asc'],
       limit: 20,
@@ -86,7 +86,7 @@ export class ProspeccionRepository {
       filters,
       populate: {
         negocio: {
-          fields: ['nombre', 'slug', 'whatsapp', 'telefono', 'documentId'],
+          fields: ['nombre', 'slug', 'whatsapp', 'telefono', 'instagram', 'instagram_username', 'documentId'],
           populate: NEGOCIO_POPULATE,
         },
       },

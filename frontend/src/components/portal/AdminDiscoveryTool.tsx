@@ -208,6 +208,7 @@ export default function AdminDiscoveryTool({
           slug: created.slug || slug,
           whatsapp: result.whatsapp || localPhone || null,
           telefono: localPhone || null,
+          instagram_username: created.instagram_username || null,
           categoriaNombre: categoryName || null,
         });
       }
