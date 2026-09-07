@@ -62,6 +62,7 @@ const RUBRO_STOP = new Set([
   "mas", "donde", "necesito", "busco", "quiero", "para", "que", "hay",
   "puedo", "podes", "puedes", "comprar", "compre", "venden", "vendo", "conseguir",
   "encontrar", "buenos", "buenas", "buen", "buena",
+  "hola", "holis", "gracias", "rafi",
 ]);
 
 const FOOD_NEEDLES = [
@@ -80,6 +81,15 @@ const FOOD_NEEDLES = [
 const RUBRO_SYNONYMS: Record<string, string[]> = {
   gomeria: ["gomeria", "gomerias", "neumatico", "neumaticos", "cubierta", "cubiertas"],
   gomerias: ["gomeria", "gomerias", "neumatico", "neumaticos", "cubierta", "cubiertas"],
+  rueda: ["gomeria", "gomerias", "neumatico", "neumaticos", "cubierta", "cubiertas", "balanceo"],
+  ruedas: ["gomeria", "gomerias", "neumatico", "neumaticos", "cubierta", "cubiertas", "balanceo"],
+  llanta: ["gomeria", "gomerias", "neumatico", "neumaticos", "cubierta", "cubiertas"],
+  llantas: ["gomeria", "gomerias", "neumatico", "neumaticos", "cubierta", "cubiertas"],
+  balancear: ["gomeria", "gomerias", "neumatico", "balanceo", "alineacion"],
+  balanceo: ["gomeria", "gomerias", "neumatico", "balanceo", "alineacion"],
+  alinear: ["gomeria", "gomerias", "neumatico", "balanceo", "alineacion"],
+  alineacion: ["gomeria", "gomerias", "neumatico", "balanceo", "alineacion"],
+  pinchazo: ["gomeria", "gomerias", "neumatico", "cubierta", "pinchazo"],
   resto: FOOD_NEEDLES,
   restaurante: FOOD_NEEDLES,
   restaurantes: FOOD_NEEDLES,
@@ -149,6 +159,7 @@ export function distinctiveRubroToken(rubro: string): string {
 }
 
 export function algoliaRubroQuery(rubro: string): string {
+  if (isTireRubro(rubro)) return "gomeria";
   const token = distinctiveRubroToken(rubro);
   if (!token) return rubro.trim();
   return rubroNeedles(token)[0] || token;
@@ -160,7 +171,31 @@ function haystackHasNeedle(haystack: string, needles: string[]): boolean {
 
 const WINE_TOKENS = new Set(["vino", "vinos", "bodega", "bodegas", "malbec", "vinoteca", "vinotecas"]);
 const TOURISM_TOKENS = new Set(["visitar", "visita", "turismo", "turistico", "turisticos", "pasear"]);
+const TIRE_TOKENS = new Set([
+  "rueda",
+  "ruedas",
+  "llanta",
+  "llantas",
+  "balancear",
+  "balanceo",
+  "alinear",
+  "alineacion",
+  "pinchazo",
+  "pinchada",
+  "pinchar",
+]);
 const BODEGA_PLACE = ["bodega", "bodegas", "vinoteca", "vinotecas"];
+const TIRE_PLACE = [
+  "gomeria",
+  "gomerias",
+  "gomero",
+  "neumatico",
+  "neumaticos",
+  "cubierta",
+  "cubiertas",
+  "balanceo",
+  "alineacion",
+];
 
 export function isWineRubro(rubro: string): boolean {
   return WINE_TOKENS.has(distinctiveRubroToken(rubro));
@@ -170,6 +205,12 @@ export function isTourismRubro(rubro: string): boolean {
   const n = normalizeGuideText(rubro);
   if (/\b(visitar|visita|turismo|turistico|pasear)\b/.test(n)) return true;
   return TOURISM_TOKENS.has(distinctiveRubroToken(rubro));
+}
+
+export function isTireRubro(rubro: string): boolean {
+  const n = normalizeGuideText(rubro);
+  if (/\b(balancear|balanceo|alinear|alineacion|pinchazo|pinchada|pinchar)\b/.test(n)) return true;
+  return TIRE_TOKENS.has(distinctiveRubroToken(rubro));
 }
 
 /** Evita que el LLM deje "lugares" y se pierda "visitar". */
@@ -189,10 +230,19 @@ function hitIsTouristPlace(hit: RubroHit): boolean {
   return categoria.includes("interes turistic") || categoria.includes("informacion turistic");
 }
 
+function hitIsTirePlace(hit: RubroHit): boolean {
+  const hay = normalizeGuideText(
+    [hit.nombre, hit.categoria, plainTextFromHtml(hit.descripcion || "")].filter(Boolean).join(" ")
+  );
+  if (haystackHasNeedle(hay, TIRE_PLACE)) return true;
+  return normalizeGuideText(hit.categoria || "").includes("gomer");
+}
+
 export function hitMatchesRubro(hit: RubroHit, rubro: string): boolean {
   const focus = distinctiveRubroToken(rubro) || rubro;
   if (isWineRubro(focus) || isWineRubro(rubro)) return hitIsBodegaPlace(hit);
   if (isTourismRubro(focus) || isTourismRubro(rubro)) return hitIsTouristPlace(hit);
+  if (isTireRubro(focus) || isTireRubro(rubro)) return hitIsTirePlace(hit);
   const needles = rubroNeedles(focus);
   if (!needles.length) return false;
   if (haystackHasNeedle(normalizeGuideText(hit.nombre), needles)) return true;

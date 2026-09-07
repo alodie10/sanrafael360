@@ -7,6 +7,8 @@ const SYSTEM = `Extraé filtros para buscar fichas en el directorio San Rafael 3
 Respondé JSON: {"intent":"search"|"clarify"|"anunciar","categoria":string|null,"zona":string|null,"keywords":string|null}.
 keywords = rubro, producto o necesidad (ej. gomería, resto, comer, visitar), NUNCA la zona.
 Si preguntan qué visitar o lugares para conocer, keywords=visitar.
+Si piden balancear rueda, alineación, cubiertas o pinchazo, keywords=gomería.
+Si el mensaje es saludo, gracias o no hay rubro (hola, buenas, qué tal), intent=clarify y keywords=null.
 zona = barrio/paraje (ej. Las Paredes, dique), o null.
 intent=clarify si falta el rubro. No inventes comercios ni horarios.`;
 

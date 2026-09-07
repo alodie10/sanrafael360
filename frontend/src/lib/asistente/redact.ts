@@ -16,6 +16,10 @@ export function clarifyPrompt(): string {
   return "¿Buscás un rubro puntual o una zona (centro, dique, valle grande)? Así te armo 2 o 3 fichas reales.";
 }
 
+export function greetingPrompt(): string {
+  return "Hola, decime un rubro o una zona (gomería, resto, centro…) y te armo 2 o 3 fichas reales.";
+}
+
 export function zonaClarifyPrompt(): string {
   return "¿En qué zona buscás bodegas? Centro, dique, valle grande, Las Paredes, Rama Caída…";
 }
