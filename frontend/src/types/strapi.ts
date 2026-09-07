@@ -79,6 +79,7 @@ export interface Negocio {
   website?: string;
   horarios_texto?: string;
   instagram?: string;
+  instagram_username?: string;
   facebook?: string;
   logo?: StrapiMedia;
   imagen_portada?: StrapiMedia;

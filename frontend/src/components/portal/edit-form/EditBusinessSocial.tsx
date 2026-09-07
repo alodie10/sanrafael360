@@ -1,6 +1,7 @@
 "use client";
 
 import { Globe, Phone, Facebook } from "lucide-react";
+import { normalizeInstagramUsername } from "@/lib/instagram";
 
 interface EditBusinessSocialProps {
   descripcion: string;
@@ -15,6 +16,8 @@ interface EditBusinessSocialProps {
   setFacebook: (val: string) => void;
   instagram: string;
   setInstagram: (val: string) => void;
+  instagramUsername: string;
+  setInstagramUsername: (val: string) => void;
 }
 
 export default function EditBusinessSocial({
@@ -29,7 +32,9 @@ export default function EditBusinessSocial({
   facebook,
   setFacebook,
   instagram,
-  setInstagram
+  setInstagram,
+  instagramUsername,
+  setInstagramUsername
 }: EditBusinessSocialProps) {
   return (
     <div className="space-y-8">
@@ -108,12 +113,33 @@ export default function EditBusinessSocial({
               className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             />
           </div>
-          <div className="space-y-2 md:col-span-2">
+          <div className="space-y-2">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-2 font-heading">
                <div className="w-4 h-4 rounded bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center">
                  <div className="w-2.5 h-2.5 border border-white rounded-full" />
                </div> 
-               Instagram
+               Usuario de Instagram
+            </label>
+            <input 
+              type="text"
+              value={instagramUsername}
+              onChange={(e) => setInstagramUsername(e.target.value)}
+              onBlur={() => {
+                const normalized = normalizeInstagramUsername(instagramUsername);
+                if (normalized) setInstagramUsername(normalized);
+              }}
+              placeholder="tunegocio"
+              autoComplete="off"
+              data-testid="negocio-instagram-username"
+              className="w-full px-5 py-3.5 bg-slate-800 border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+            />
+            <p className="text-[11px] text-slate-500 ml-1">
+              Solo el usuario, sin @. Lo usa el botón Enviar por Instagram.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-2 font-heading">
+               Instagram (URL pública)
             </label>
             <input 
               type="text"

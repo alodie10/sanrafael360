@@ -31,6 +31,8 @@ export class NegocioRepository {
         'nombre',
         'slug',
         'descripcion',
+        'instagram',
+        'instagram_username',
         'is_premium',
         'premium_valid_until',
         'estado_reclamo',

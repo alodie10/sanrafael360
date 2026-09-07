@@ -772,6 +772,7 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     horarios_texto: Schema.Attribute.String;
     imagen_portada: Schema.Attribute.Media<'images'>;
     instagram: Schema.Attribute.String;
+    instagram_username: Schema.Attribute.String;
     is_premium: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     latitud: Schema.Attribute.Float;
     locale: Schema.Attribute.String & Schema.Attribute.Private;

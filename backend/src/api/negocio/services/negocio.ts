@@ -8,6 +8,7 @@ import { assertNegocioClaimable } from '../../../utils/claim-validation';
 import { logActivity } from '../../../utils/strapi-utils';
 import { getAdminClaimEmail, getOwnerResolutionEmail } from './templates/email-templates';
 import { DiscoveryService } from '../../../services/discovery-service';
+import { applyInstagramFields } from '../../../utils/instagram';
 
 const discoveryService = new DiscoveryService();
 
@@ -78,6 +79,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     }
     const updateData = { ...data };
     forbiddenFields.forEach(f => delete updateData[f]);
+    applyInstagramFields(updateData);
 
     // Limpieza de categoría para evitar Invalid relations
     if (!updateData.categoria || updateData.categoria === "" || updateData.categoria === "undefined") {

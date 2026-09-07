@@ -4,6 +4,8 @@ export type ProspeccionNegocio = {
   slug: string;
   whatsapp: string | null;
   telefono: string | null;
+  instagram?: string | null;
+  instagram_username?: string | null;
   categoriaNombre: string | null;
 };
 
@@ -57,4 +59,29 @@ export function composeFichaMensaje(input: {
 
 export function phoneForWhatsapp(negocio: ProspeccionNegocio | null): string {
   return String(negocio?.whatsapp || negocio?.telefono || "").trim();
+}
+
+export async function copyTextToClipboard(text: string): Promise<boolean> {
+  const value = String(text || "");
+  if (!value) return false;
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
+  } catch {
+    // fallback below
+  }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = value;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
 }

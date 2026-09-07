@@ -1,6 +1,7 @@
 import { NotFoundError, ValidationError } from '../../../utils/errors';
 import { greetingNow } from '../../../utils/prospeccion-saludo';
 import { buildWhatsappUrl } from '../../../utils/whatsapp';
+import { buildInstagramDmUrl, resolveInstagramUsername } from '../../../utils/instagram';
 import { createUserRepository, type UserRepository } from '../../../repositories/user-repository';
 import {
   DEFAULT_PROSPECCION_PLANTILLA,
@@ -17,6 +18,7 @@ import {
 } from '../repositories/prospeccion-repository';
 
 export type EnviarTipo = 'saludo' | 'ficha_mensaje';
+export type EnviarCanal = 'whatsapp' | 'instagram';
 
 export function mapNegocioForPanel(negocio: any) {
   if (!negocio) return null;
@@ -26,6 +28,11 @@ export function mapNegocioForPanel(negocio: any) {
     slug: negocio.slug,
     whatsapp: negocio.whatsapp || null,
     telefono: negocio.telefono || null,
+    instagram: negocio.instagram || null,
+    instagram_username: resolveInstagramUsername({
+      instagram_username: negocio.instagram_username,
+      instagram: negocio.instagram,
+    }),
     categoriaNombre: negocio.categoria?.nombre || null,
   };
 }
@@ -98,28 +105,47 @@ async function upsertContacto(
   await repo.createContacto({ ...patch, negocio: negocioDocumentId });
 }
 
-async function enviarWhatsapp(
-  repo: ProspeccionRepository,
-  userRepo: UserRepository,
-  userId: number,
-  negocioDocumentId: string,
-  tipo: EnviarTipo
-) {
-  const negocio = await repo.findNegocioByDocumentId(negocioDocumentId);
-  if (!negocio) throw new NotFoundError('Negocio');
+function destinosForCanal(negocio: any, canal: EnviarCanal, texto: string) {
+  if (canal === 'instagram') {
+    const instagramUrl = buildInstagramDmUrl(
+      resolveInstagramUsername({
+        instagram_username: negocio.instagram_username,
+        instagram: negocio.instagram,
+      })
+    );
+    if (!instagramUrl) {
+      throw new ValidationError('El negocio no tiene un usuario de Instagram válido');
+    }
+    return { whatsappUrl: null as string | null, instagramUrl };
+  }
 
   const phone = negocio.whatsapp || negocio.telefono;
-  const plantilla = await plantillaForUser(repo, userRepo, userId);
-  const texto = composeEnvioTexto(negocio, tipo, plantilla);
   const whatsappUrl = buildWhatsappUrl(phone, texto);
   if (!whatsappUrl) {
     throw new ValidationError('El negocio no tiene un teléfono de WhatsApp válido');
   }
+  return { whatsappUrl, instagramUrl: null as string | null };
+}
+
+async function enviarMensaje(
+  repo: ProspeccionRepository,
+  userRepo: UserRepository,
+  userId: number,
+  negocioDocumentId: string,
+  tipo: EnviarTipo,
+  canal: EnviarCanal
+) {
+  const negocio = await repo.findNegocioByDocumentId(negocioDocumentId);
+  if (!negocio) throw new NotFoundError('Negocio');
+
+  const plantilla = await plantillaForUser(repo, userRepo, userId);
+  const texto = composeEnvioTexto(negocio, tipo, plantilla);
+  const destinos = destinosForCanal(negocio, canal, texto);
 
   if (tipo === 'ficha_mensaje') {
     await upsertContacto(repo, negocioDocumentId, tipo);
   }
-  return { whatsappUrl, texto, negocio: mapNegocioForPanel(negocio) };
+  return { ...destinos, texto, negocio: mapNegocioForPanel(negocio) };
 }
 
 export function createProspeccionService(strapi: any) {
@@ -149,7 +175,11 @@ export function createProspeccionService(strapi: any) {
       if (!negocio) throw new NotFoundError('Negocio');
       return mapNegocioForPanel(negocio);
     },
-    enviar: (userId: number, negocioDocumentId: string, tipo: EnviarTipo) =>
-      enviarWhatsapp(repo, userRepo, userId, negocioDocumentId, tipo),
+    enviar: (
+      userId: number,
+      negocioDocumentId: string,
+      tipo: EnviarTipo,
+      canal: EnviarCanal = 'whatsapp'
+    ) => enviarMensaje(repo, userRepo, userId, negocioDocumentId, tipo, canal),
   };
 }
