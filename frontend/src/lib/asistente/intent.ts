@@ -36,35 +36,60 @@ export function detectCommand(message: string): { command: GuideCommand; zona?: 
 }
 
 const GENERIC_ZONA = /^(san rafael|mendoza|la ciudad|aca|acá|aqui|aquí)$/i;
-const KNOWN_ZONAS = new Set([
-  "centro",
-  "dique",
+const KNOWN_ZONAS = [
   "valle grande",
   "las paredes",
   "rama caida",
   "cuadro nacional",
-  "el nihuil",
-  "real del padre",
-  "villa 25 de mayo",
   "cuadro benegas",
-]);
+  "villa 25 de mayo",
+  "real del padre",
+  "el nihuil",
+  "centro",
+  "dique",
+];
 const RUBRO_ZONA_RE = /^(.+?)\s+(?:en|cerca de|cerca del|por)\s+(.+)$/i;
 
 export function isGenericZona(value: string): boolean {
-  return GENERIC_ZONA.test(value.trim());
+  return GENERIC_ZONA.test(normalizeGuideText(value));
+}
+
+/** "el centro de san rafael" → "centro". No tratar un pedido completo como zona. */
+export function canonicalizeZona(value: string | null | undefined): string | null {
+  if (!value) return null;
+  let n = normalizeGuideText(value);
+  if (!n || isGenericZona(n)) return null;
+  const known = (s: string) => KNOWN_ZONAS.find((zona) => zona === s) || null;
+  if (known(n)) return n;
+
+  n = n.replace(/\b(san rafael|mendoza)\b/g, " ").replace(/\s+/g, " ").trim();
+  if (!n || isGenericZona(n)) return null;
+  if (known(n)) return n;
+
+  n = n.replace(/^(en|por|de|del)\s+/, "").trim();
+  if (known(n)) return n;
+
+  const noArticle = n.replace(/^(el|la|los|las)\s+/, "").replace(/\s+(de|del)$/, "").trim();
+  if (known(noArticle)) return noArticle;
+
+  n = n.replace(/\s+(de|del)$/, "").trim();
+  if (known(n)) return n;
+  if (isGenericZona(n) || n.length < 3) return null;
+  return n;
 }
 
 export function isKnownZona(value: string): boolean {
-  return KNOWN_ZONAS.has(normalizeGuideText(value));
+  const zona = canonicalizeZona(value);
+  return Boolean(zona && KNOWN_ZONAS.includes(zona));
 }
 
 export function splitRubroZona(message: string): { keywords: string; zona: string | null } {
   const text = message.trim();
   const match = text.match(RUBRO_ZONA_RE);
   if (!match?.[1] || !match[2]) return { keywords: text, zona: null };
-  const zona = match[2].trim();
+  const zona = canonicalizeZona(match[2]);
   const keywords = match[1].trim();
-  if (!keywords || isGenericZona(zona)) return { keywords: text, zona: null };
+  if (!keywords || !zona) return { keywords: text, zona: null };
   return { keywords, zona };
 }
 
@@ -82,10 +107,10 @@ export function isFollowUpMessage(message: string): boolean {
 export function followUpZona(message: string): string | null {
   const text = message.trim();
   const cerca = detectCommand(text);
-  if (cerca?.command === "cerca" && cerca.zona) return cerca.zona;
-  if (isKnownZona(text) && !isGenericZona(text)) return text;
+  if (cerca?.command === "cerca" && cerca.zona) return canonicalizeZona(cerca.zona);
+  if (isKnownZona(text) && !isGenericZona(text)) return canonicalizeZona(text);
   const en = text.match(FOLLOW_EN_RE);
-  if (en?.[2] && !isGenericZona(en[2])) return en[2].trim();
+  if (en?.[2] && !isGenericZona(en[2])) return canonicalizeZona(en[2]);
   return splitRubroZona(text).zona;
 }
 

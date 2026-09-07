@@ -63,6 +63,7 @@ const RUBRO_STOP = new Set([
   "puedo", "podes", "puedes", "comprar", "compre", "venden", "vendo", "conseguir",
   "encontrar", "buenos", "buenas", "buen", "buena",
   "hola", "holis", "gracias", "rafi",
+  "dime", "decime", "dijime", "mostra", "mostrame", "indica", "indicame",
 ]);
 
 const FOOD_NEEDLES = [

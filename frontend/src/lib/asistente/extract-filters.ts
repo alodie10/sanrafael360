@@ -8,8 +8,9 @@ Respondé JSON: {"intent":"search"|"clarify"|"anunciar","categoria":string|null,
 keywords = rubro, producto o necesidad (ej. gomería, resto, comer, visitar), NUNCA la zona.
 Si preguntan qué visitar o lugares para conocer, keywords=visitar.
 Si piden balancear rueda, alineación, cubiertas o pinchazo, keywords=gomería.
+Si piden dónde comer / restorán / parrilla, keywords=comer.
+zona = barrio/paraje corto (centro, dique, Las Paredes), NUNCA "San Rafael" ni la frase completa.
 Si el mensaje es saludo, gracias o no hay rubro (hola, buenas, qué tal), intent=clarify y keywords=null.
-zona = barrio/paraje (ej. Las Paredes, dique), o null.
 intent=clarify si falta el rubro. No inventes comercios ni horarios.`;
 
 function asOptionalString(value: unknown): string | null {
