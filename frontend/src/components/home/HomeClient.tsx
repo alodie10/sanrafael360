@@ -17,7 +17,7 @@ import {
 } from "@/lib/search-negocios";
 import { isStrapiUnreachableError } from "@/lib/strapi";
 import { useRouter, usePathname } from "next/navigation";
-import { buildSearchExplanation, matchRank } from "@/lib/search-match";
+import { buildSearchExplanation, isPremiumListingActive, matchRank } from "@/lib/search-match";
 import { toCmsCategoriaSlug } from "@/lib/categoria-slug";
 
 const normalizeText = (str: string) => {
@@ -26,12 +26,6 @@ const normalizeText = (str: string) => {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
-};
-
-const isPremiumActive = (negocio: Negocio): boolean => {
-  if (!negocio.is_premium) return false;
-  if (!negocio.premium_valid_until) return true;
-  return new Date(negocio.premium_valid_until) > new Date();
 };
 
 function resolveCategoryFromParam(
@@ -270,24 +264,18 @@ export default function HomeClient({ categorias, initialNegocios }: HomeClientPr
   const sortedNegocios = useMemo(() => {
     const hasTextQuery = searchQuery.trim().length > 0;
     return [...searchResults].sort((a, b) => {
+      const prem = Number(isPremiumListingActive(b)) - Number(isPremiumListingActive(a));
+      if (prem) return prem;
       if (hasTextQuery) {
         const matchDelta = matchRank(a.searchMatch) - matchRank(b.searchMatch);
         if (matchDelta !== 0) return matchDelta;
       }
-
-      const isAPremium = isPremiumActive(a);
-      const isBPremium = isPremiumActive(b);
-
-      if (isAPremium && !isBPremium) return -1;
-      if (!isAPremium && isBPremium) return 1;
-
       if (userLocation && a.latitud && a.longitud && b.latitud && b.longitud) {
         const distA = getDistance(userLocation.lat, userLocation.lng, a.latitud, a.longitud);
         const distB = getDistance(userLocation.lat, userLocation.lng, b.latitud, b.longitud);
-        return distA - distB;
+        if (distA !== distB) return distA - distB;
       }
-
-      return a.nombre.localeCompare(b.nombre);
+      return (a.nombre || "").localeCompare(b.nombre || "", "es");
     });
   }, [searchResults, userLocation, searchQuery]);
 

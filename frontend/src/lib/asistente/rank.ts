@@ -1,4 +1,15 @@
+import { expandIntent, hitMatchesExpansion, preferIntentHits } from "./expand-intent";
+import {
+  distinctiveRubroToken,
+  haystackHasNeedle,
+  normalizeGuideText,
+  textHasRubroNeedle,
+  usefulRubroTokens,
+} from "./text";
 import type { RankableHit } from "./types";
+
+export { distinctiveRubroToken, normalizeGuideText, textHasRubroNeedle } from "./text";
+export { preferIntentHits };
 
 export type ZonaHit = RankableHit & {
   nombre: string;
@@ -30,16 +41,6 @@ export function excludeHitIds<T extends RankableHit>(hits: T[], excludeIds: stri
   return hits.filter((hit) => !blocked.has(hit.objectID));
 }
 
-export function normalizeGuideText(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[?¿!¡.,;:"“”]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 /** Zona es constraint, no query: no devolver un restorán de Las Paredes si pediste gomería. */
 export function filterHitsByZona<T extends ZonaHit>(hits: T[], zona: string | null): T[] {
   const needle = zona ? normalizeGuideText(zona) : "";
@@ -56,62 +57,17 @@ export type RubroHit = ZonaHit & {
   descripcion?: string | null;
 };
 
-const RUBRO_STOP = new Set([
-  "de", "del", "la", "el", "los", "las", "y", "o", "a", "en", "con", "una", "un",
-  "otro", "otra", "otros", "otras", "lugar", "lugares", "cerca", "cercano", "cercana",
-  "mas", "donde", "necesito", "busco", "quiero", "para", "que", "hay",
-  "puedo", "podes", "puedes", "comprar", "compre", "venden", "vendo", "conseguir",
-  "encontrar", "buenos", "buenas", "buen", "buena",
-  "hola", "holis", "gracias", "rafi",
-  "dime", "decime", "dijime", "mostra", "mostrame", "indica", "indicame",
-]);
-
 const FOOD_NEEDLES = [
-  "resto",
-  "restaurante",
-  "restaurantes",
-  "restaurant",
-  "comida",
-  "comidas",
-  "comedor",
-  "comedores",
-  "parrilla",
-  "parrillas",
-  "gastronomia",
+  "resto", "restaurante", "restaurantes", "restaurant", "comida", "comidas",
+  "comedor", "comedores", "parrilla", "parrillas", "gastronomia",
 ];
 const RUBRO_SYNONYMS: Record<string, string[]> = {
   gomeria: ["gomeria", "gomerias", "neumatico", "neumaticos", "cubierta", "cubiertas"],
-  gomerias: ["gomeria", "gomerias", "neumatico", "neumaticos", "cubierta", "cubiertas"],
-  rueda: ["gomeria", "gomerias", "neumatico", "neumaticos", "cubierta", "cubiertas", "balanceo"],
-  ruedas: ["gomeria", "gomerias", "neumatico", "neumaticos", "cubierta", "cubiertas", "balanceo"],
-  llanta: ["gomeria", "gomerias", "neumatico", "neumaticos", "cubierta", "cubiertas"],
-  llantas: ["gomeria", "gomerias", "neumatico", "neumaticos", "cubierta", "cubiertas"],
-  balancear: ["gomeria", "gomerias", "neumatico", "balanceo", "alineacion"],
-  balanceo: ["gomeria", "gomerias", "neumatico", "balanceo", "alineacion"],
-  alinear: ["gomeria", "gomerias", "neumatico", "balanceo", "alineacion"],
-  alineacion: ["gomeria", "gomerias", "neumatico", "balanceo", "alineacion"],
-  pinchazo: ["gomeria", "gomerias", "neumatico", "cubierta", "pinchazo"],
   resto: FOOD_NEEDLES,
   restaurante: FOOD_NEEDLES,
-  restaurantes: FOOD_NEEDLES,
-  restaurant: FOOD_NEEDLES,
   comer: [...FOOD_NEEDLES, "comer"],
-  comida: FOOD_NEEDLES,
-  comidas: FOOD_NEEDLES,
-  eventos: ["evento", "eventos", "salon", "salones"],
-  evento: ["evento", "eventos", "salon", "salones"],
   alfajor: ["alfajor", "alfajores"],
   alfajores: ["alfajor", "alfajores"],
-  vino: ["bodega", "bodegas", "vinoteca", "vino", "vinos", "malbec"],
-  vinos: ["bodega", "bodegas", "vinoteca", "vino", "vinos", "malbec"],
-  bodega: ["bodega", "bodegas"],
-  bodegas: ["bodega", "bodegas"],
-  malbec: ["bodega", "bodegas", "malbec", "vino", "vinos"],
-  visitar: ["turistico", "turismo", "visita", "visitar", "pasear"],
-  visita: ["turistico", "turismo", "visita", "visitar"],
-  turismo: ["turistico", "turismo", "visita", "visitar"],
-  turistico: ["turistico", "turismo"],
-  pasear: ["turistico", "turismo", "pasear", "visitar"],
 };
 
 export function plainTextFromHtml(value: unknown): string {
@@ -133,118 +89,43 @@ export function excerptText(value: string, max = 280): string {
   return `${value.slice(0, max).trim()}…`;
 }
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-/** Evita que "comer" matchee "comercio"; sí acepta plural simple (gomería/gomerías). */
-export function textHasRubroNeedle(haystack: string, needle: string): boolean {
-  if (!haystack || !needle) return false;
-  return new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(needle)}(?:es|s)?(?:[^a-z0-9]|$)`).test(haystack);
-}
-
 export function rubroNeedles(rubro: string): string[] {
-  const tokens = normalizeGuideText(rubro)
-    .split(/\s+/)
-    .filter((token) => token.length >= 3 && !RUBRO_STOP.has(token));
-  const expanded = tokens.flatMap((token) => RUBRO_SYNONYMS[token] || [token]);
+  const expanded = usefulRubroTokens(rubro).flatMap((token) => RUBRO_SYNONYMS[token] || [token]);
   return [...new Set(expanded)];
 }
 
-/** En "dónde puedo comprar alfajores" la query útil es el producto, no el verbo. */
-export function distinctiveRubroToken(rubro: string): string {
-  const tokens = normalizeGuideText(rubro)
-    .split(/\s+/)
-    .filter((token) => token.length >= 3 && !RUBRO_STOP.has(token));
-  return tokens[tokens.length - 1] || "";
-}
-
 export function algoliaRubroQuery(rubro: string): string {
-  if (isTireRubro(rubro)) return "gomeria";
+  const expansion = expandIntent(rubro);
+  if (expansion.queries[0]) return expansion.queries[0];
   const token = distinctiveRubroToken(rubro);
   if (!token) return rubro.trim();
   return rubroNeedles(token)[0] || token;
 }
 
-function haystackHasNeedle(haystack: string, needles: string[]): boolean {
-  return Boolean(haystack && needles.some((needle) => textHasRubroNeedle(haystack, needle)));
-}
-
-const WINE_TOKENS = new Set(["vino", "vinos", "bodega", "bodegas", "malbec", "vinoteca", "vinotecas"]);
-const TOURISM_TOKENS = new Set(["visitar", "visita", "turismo", "turistico", "turisticos", "pasear"]);
-const TIRE_TOKENS = new Set([
-  "rueda",
-  "ruedas",
-  "llanta",
-  "llantas",
-  "balancear",
-  "balanceo",
-  "alinear",
-  "alineacion",
-  "pinchazo",
-  "pinchada",
-  "pinchar",
-]);
-const BODEGA_PLACE = ["bodega", "bodegas", "vinoteca", "vinotecas"];
-const TIRE_PLACE = [
-  "gomeria",
-  "gomerias",
-  "gomero",
-  "neumatico",
-  "neumaticos",
-  "cubierta",
-  "cubiertas",
-  "balanceo",
-  "alineacion",
-];
-
 export function isWineRubro(rubro: string): boolean {
-  return WINE_TOKENS.has(distinctiveRubroToken(rubro));
+  return expandIntent(rubro).key === "vino";
 }
 
-export function isTourismRubro(rubro: string): boolean {
-  const n = normalizeGuideText(rubro);
-  if (/\b(visitar|visita|turismo|turistico|pasear)\b/.test(n)) return true;
-  return TOURISM_TOKENS.has(distinctiveRubroToken(rubro));
-}
-
-export function isTireRubro(rubro: string): boolean {
-  const n = normalizeGuideText(rubro);
-  if (/\b(balancear|balanceo|alinear|alineacion|pinchazo|pinchada|pinchar)\b/.test(n)) return true;
-  return TIRE_TOKENS.has(distinctiveRubroToken(rubro));
-}
-
-/** Evita que el LLM deje "lugares" y se pierda "visitar". */
+/** Evita que el LLM deje un verbo y se pierda la clave del mapa. */
 export function coerceGuideKeywords(message: string, keywords: string | null): string {
+  const mapped = expandIntent(message).key || expandIntent(keywords || "").key;
+  if (mapped) return mapped;
   const raw = (keywords || message).trim();
-  if (isTourismRubro(message) || isTourismRubro(raw)) return "visitar";
   return distinctiveRubroToken(raw) ? raw : message;
 }
 
-function hitIsBodegaPlace(hit: RubroHit): boolean {
-  const hay = normalizeGuideText([hit.nombre, hit.categoria].filter(Boolean).join(" "));
-  return haystackHasNeedle(hay, BODEGA_PLACE);
-}
-
-function hitIsTouristPlace(hit: RubroHit): boolean {
-  const categoria = normalizeGuideText(hit.categoria || "");
-  return categoria.includes("interes turistic") || categoria.includes("informacion turistic");
-}
-
-function hitIsTirePlace(hit: RubroHit): boolean {
-  const hay = normalizeGuideText(
-    [hit.nombre, hit.categoria, plainTextFromHtml(hit.descripcion || "")].filter(Boolean).join(" ")
-  );
-  if (haystackHasNeedle(hay, TIRE_PLACE)) return true;
-  return normalizeGuideText(hit.categoria || "").includes("gomer");
-}
-
 export function hitMatchesRubro(hit: RubroHit, rubro: string): boolean {
-  const focus = distinctiveRubroToken(rubro) || rubro;
-  if (isWineRubro(focus) || isWineRubro(rubro)) return hitIsBodegaPlace(hit);
-  if (isTourismRubro(focus) || isTourismRubro(rubro)) return hitIsTouristPlace(hit);
-  if (isTireRubro(focus) || isTireRubro(rubro)) return hitIsTirePlace(hit);
-  const needles = rubroNeedles(focus);
+  const expansion = expandIntent(rubro);
+  if (expansion.key) {
+    return hitMatchesExpansion(
+      {
+        ...hit,
+        descripcion: plainTextFromHtml(hit.descripcion || ""),
+      },
+      expansion
+    );
+  }
+  const needles = rubroNeedles(distinctiveRubroToken(rubro) || rubro);
   if (!needles.length) return false;
   if (haystackHasNeedle(normalizeGuideText(hit.nombre), needles)) return true;
   if (haystackHasNeedle(normalizeGuideText(plainTextFromHtml(hit.descripcion || "")), needles)) {
@@ -259,4 +140,9 @@ export function hitMatchesRubro(hit: RubroHit, rubro: string): boolean {
 export function filterHitsByRubro<T extends RubroHit>(hits: T[], rubro: string | null): T[] {
   if (!rubro?.trim()) return hits;
   return hits.filter((hit) => hitMatchesRubro(hit, rubro));
+}
+
+/** Compat tests: hospitales primero dentro de salud. */
+export function preferHospitalHits<T extends RubroHit>(hits: T[], rubro: string | null): T[] {
+  return preferIntentHits(hits, expandIntent(rubro || ""));
 }

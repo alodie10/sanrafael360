@@ -662,6 +662,133 @@ export interface ApiEfemerideEfemeride extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiGuideExpansionGuideExpansion
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'guide_expansions';
+  info: {
+    description: 'Mapa intenci\u00F3n \u2192 queries/categor\u00EDas Algolia';
+    displayName: 'Guide expansion';
+    pluralName: 'guide-expansions';
+    singularName: 'guide-expansion';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<true>;
+    aliases: Schema.Attribute.JSON;
+    categories: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    edited_by: Schema.Attribute.String;
+    exclude_name_needles: Schema.Attribute.JSON;
+    key: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::guide-expansion.guide-expansion'
+    > &
+      Schema.Attribute.Private;
+    match_mode: Schema.Attribute.Enumeration<
+      ['default', 'category', 'category_or_name', 'name_or_desc']
+    > &
+      Schema.Attribute.DefaultTo<'default'>;
+    notas: Schema.Attribute.Text;
+    prefer_name_needles: Schema.Attribute.JSON;
+    publishedAt: Schema.Attribute.DateTime;
+    queries: Schema.Attribute.JSON;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiGuideMissGuideMiss extends Struct.CollectionTypeSchema {
+  collectionName: 'guide_misses';
+  info: {
+    description: 'Queries del asistente sin resultados';
+    displayName: 'Guide miss';
+    pluralName: 'guide-misses';
+    singularName: 'guide-miss';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    categories_tried: Schema.Attribute.JSON;
+    count: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<1>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<
+      ['pendiente', 'resuelto', 'ignorado']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'pendiente'>;
+    expanded_queries: Schema.Attribute.JSON;
+    last_seen_at: Schema.Attribute.DateTime;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::guide-miss.guide-miss'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    query_norm: Schema.Attribute.String & Schema.Attribute.Required;
+    raw_query: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiGuideSettingGuideSetting extends Struct.SingleTypeSchema {
+  collectionName: 'guide_settings';
+  info: {
+    description: 'Copy y pausa del asistente Rafi';
+    displayName: 'Guide settings';
+    pluralName: 'guide-settings';
+    singularName: 'guide-setting';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    copy_cta_anunciar: Schema.Attribute.Text;
+    copy_cta_anunciar_url: Schema.Attribute.String;
+    copy_intro: Schema.Attribute.Text;
+    copy_no_results: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::guide-setting.guide-setting'
+    > &
+      Schema.Attribute.Private;
+    paused: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiLeadLead extends Struct.CollectionTypeSchema {
   collectionName: 'leads';
   info: {
@@ -1838,6 +1965,9 @@ declare module '@strapi/strapi' {
       'api::cliente.cliente': ApiClienteCliente;
       'api::daily-stat.daily-stat': ApiDailyStatDailyStat;
       'api::efemeride.efemeride': ApiEfemerideEfemeride;
+      'api::guide-expansion.guide-expansion': ApiGuideExpansionGuideExpansion;
+      'api::guide-miss.guide-miss': ApiGuideMissGuideMiss;
+      'api::guide-setting.guide-setting': ApiGuideSettingGuideSetting;
       'api::lead.lead': ApiLeadLead;
       'api::negocio.negocio': ApiNegocioNegocio;
       'api::oferta.oferta': ApiOfertaOferta;

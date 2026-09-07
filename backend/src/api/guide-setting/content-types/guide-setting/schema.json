@@ -1,0 +1,32 @@
+{
+  "kind": "singleType",
+  "collectionName": "guide_settings",
+  "info": {
+    "singularName": "guide-setting",
+    "pluralName": "guide-settings",
+    "displayName": "Guide settings",
+    "description": "Copy y pausa del asistente Rafi"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "paused": {
+      "type": "boolean",
+      "default": false,
+      "required": true
+    },
+    "copy_intro": {
+      "type": "text"
+    },
+    "copy_no_results": {
+      "type": "text"
+    },
+    "copy_cta_anunciar": {
+      "type": "text"
+    },
+    "copy_cta_anunciar_url": {
+      "type": "string"
+    }
+  }
+}

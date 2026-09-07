@@ -1,10 +1,10 @@
-import { getAsistenteConfig } from "./config";
+import { liveConfig } from "./live-store";
 import { completeChat } from "./openai";
 import { excerptText, keepOnlySourceHits } from "./rank";
 import type { GuideFicha } from "./types";
 
 export function templateRedact(hits: GuideFicha[]): string {
-  if (!hits.length) return getAsistenteConfig().copyNoResults;
+  if (!hits.length) return liveConfig().copyNoResults;
   const bits = hits.map((hit) => {
     const hint = hit.categoria || excerptText(hit.descripcion || "", 80);
     return hint ? `${hit.nombre} (${hint})` : hit.nombre;
@@ -25,7 +25,7 @@ export function zonaClarifyPrompt(): string {
 }
 
 export async function redactFromHits(query: string, hits: GuideFicha[]): Promise<string> {
-  if (!hits.length) return getAsistenteConfig().copyNoResults;
+  if (!hits.length) return liveConfig().copyNoResults;
 
   const payload = hits.map((hit) => ({
     nombre: hit.nombre,

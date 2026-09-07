@@ -112,6 +112,40 @@ export function matchRank(field: SearchMatchField | undefined): number {
   return MATCH_RANK[field];
 }
 
+export function isPremiumListingActive(negocio: {
+  is_premium?: boolean;
+  premium_valid_until?: string | null;
+}): boolean {
+  if (!negocio.is_premium) return false;
+  if (!negocio.premium_valid_until) return true;
+  return new Date(negocio.premium_valid_until) > new Date();
+}
+
+/** Premium que coincidió siempre arriba; después calidad del match. */
+export function compareMatchingPremiumFirst(
+  a: {
+    is_premium?: boolean;
+    premium_valid_until?: string | null;
+    searchMatch?: SearchMatchField;
+    nombre?: string;
+  },
+  b: {
+    is_premium?: boolean;
+    premium_valid_until?: string | null;
+    searchMatch?: SearchMatchField;
+    nombre?: string;
+  },
+  hasTextQuery: boolean
+): number {
+  const prem = Number(isPremiumListingActive(b)) - Number(isPremiumListingActive(a));
+  if (prem) return prem;
+  if (hasTextQuery) {
+    const matchDelta = matchRank(a.searchMatch) - matchRank(b.searchMatch);
+    if (matchDelta !== 0) return matchDelta;
+  }
+  return (a.nombre || "").localeCompare(b.nombre || "", "es");
+}
+
 function countPhrase(n: number, singular: string, plural: string): string {
   return n === 1 ? `1 ${singular}` : `${n} ${plural}`;
 }

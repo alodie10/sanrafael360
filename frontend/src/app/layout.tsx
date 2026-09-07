@@ -10,7 +10,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import { Toaster } from "sonner";
 import { getSiteUrl } from "@/lib/site";
 import { isDevApp } from "@/lib/env";
-import { getAsistenteConfig } from "@/lib/asistente/config";
+import { loadGuideRuntime, resolveLiveAsistenteConfig } from "@/lib/asistente/live-store";
 import GuideChatWidget from "@/components/asistente/GuideChatWidget";
 import "./globals.css";
 
@@ -107,7 +107,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const categorias = await getCategorias();
-  const asistente = getAsistenteConfig();
+  const runtime = await loadGuideRuntime();
+  const asistente = resolveLiveAsistenteConfig(runtime);
 
   return (
     <html

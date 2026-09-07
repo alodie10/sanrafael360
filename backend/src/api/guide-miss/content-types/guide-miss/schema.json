@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "guide_misses",
+  "info": {
+    "singularName": "guide-miss",
+    "pluralName": "guide-misses",
+    "displayName": "Guide miss",
+    "description": "Queries del asistente sin resultados"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "raw_query": {
+      "type": "string",
+      "required": true
+    },
+    "query_norm": {
+      "type": "string",
+      "required": true
+    },
+    "expanded_queries": {
+      "type": "json"
+    },
+    "categories_tried": {
+      "type": "json"
+    },
+    "count": {
+      "type": "integer",
+      "default": 1,
+      "min": 1
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["pendiente", "resuelto", "ignorado"],
+      "default": "pendiente",
+      "required": true
+    },
+    "last_seen_at": {
+      "type": "datetime"
+    }
+  }
+}

@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { trackGuideEvent } from "@/lib/asistente/analytics";
 import { postGuideTurn } from "@/lib/asistente/client";
-import type { GuideCta, GuideFicha, GuideHistoryItem, GuideResponseType } from "@/lib/asistente/types";
+import type { GuideCta, GuideFicha, GuideHistoryItem, GuideMissTrace, GuideResponseType } from "@/lib/asistente/types";
 import { GuideAnunciarCta, GuideFichaCard } from "./GuideFichaCard";
 import GuideRafiMark from "./GuideRafiMark";
 import styles from "./GuideChat.module.css";
@@ -21,7 +21,7 @@ function nextId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function trackResult(type: GuideResponseType, hits: GuideFicha[]) {
+function trackResult(type: GuideResponseType, hits: GuideFicha[], miss?: GuideMissTrace) {
   if (type === "results") {
     trackGuideEvent("guide_results_shown", {
       n: hits.length,
@@ -29,7 +29,13 @@ function trackResult(type: GuideResponseType, hits: GuideFicha[]) {
     });
     return;
   }
-  if (type === "empty") trackGuideEvent("guide_no_results");
+  if (type === "empty") {
+    trackGuideEvent("guide_no_results", {
+      raw_query: miss?.raw_query,
+      expanded_queries: miss?.expanded_queries,
+      categories_tried: miss?.categories_tried,
+    });
+  }
   if (type === "anunciar") trackGuideEvent("guide_cta_anunciar");
   if (type === "error") trackGuideEvent("guide_error");
 }
@@ -75,7 +81,7 @@ export default function GuideChatPanel({
       .map((line) => ({ role: line.role, content: line.content }));
 
     const result = await postGuideTurn({ message, history, excludeIds: shownIds });
-    trackResult(result.type, result.hits);
+    trackResult(result.type, result.hits, result.miss);
 
     if (result.type === "reset") {
       setShownIds([]);

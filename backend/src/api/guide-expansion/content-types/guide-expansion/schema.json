@@ -1,0 +1,51 @@
+{
+  "kind": "collectionType",
+  "collectionName": "guide_expansions",
+  "info": {
+    "singularName": "guide-expansion",
+    "pluralName": "guide-expansions",
+    "displayName": "Guide expansion",
+    "description": "Mapa intención → queries/categorías Algolia"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "key": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "aliases": {
+      "type": "json"
+    },
+    "queries": {
+      "type": "json"
+    },
+    "categories": {
+      "type": "json"
+    },
+    "match_mode": {
+      "type": "enumeration",
+      "enum": ["default", "category", "category_or_name", "name_or_desc"],
+      "default": "default"
+    },
+    "exclude_name_needles": {
+      "type": "json"
+    },
+    "prefer_name_needles": {
+      "type": "json"
+    },
+    "activo": {
+      "type": "boolean",
+      "default": true,
+      "required": true
+    },
+    "notas": {
+      "type": "text"
+    },
+    "edited_by": {
+      "type": "string"
+    }
+  }
+}

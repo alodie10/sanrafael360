@@ -1,5 +1,6 @@
 import { algoliasearch } from 'algoliasearch';
 import { ALGOLIA_INDEX_SETTINGS } from './algolia-index-settings';
+import { guideSynonymHits } from './algolia-synonyms';
 import { buildSearchKeywords } from './search-keywords';
 
 const APP_ID = process.env.ALGOLIA_APP_ID || '';
@@ -28,8 +29,14 @@ export async function applyAlgoliaIndexSettings() {
       indexName: INDEX_NAME,
       indexSettings: ALGOLIA_INDEX_SETTINGS,
     });
+    await client.saveSynonyms({
+      indexName: INDEX_NAME,
+      synonymHit: guideSynonymHits(),
+      replaceExistingSynonyms: false,
+      forwardToReplicas: true,
+    });
     settingsApplied = true;
-    console.log(`[Algolia] Index settings applied on ${INDEX_NAME}`);
+    console.log(`[Algolia] Index settings and guide synonyms applied on ${INDEX_NAME}`);
   } catch (error) {
     console.error('[Algolia] Error applying index settings:', error);
   }

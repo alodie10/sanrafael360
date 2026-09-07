@@ -24,5 +24,6 @@ export async function postGuideTurn(input: {
     text: payload.text || "No pude consultar el directorio ahora. Probá la búsqueda de arriba.",
     hits: Array.isArray(payload.hits) ? payload.hits : [],
     cta: payload.cta,
+    miss: payload.miss,
   };
 }

@@ -13,6 +13,7 @@ export const ALGOLIA_SEARCHABLE_ATTRIBUTES = [
 export const ALGOLIA_INDEX_SETTINGS = {
   searchableAttributes: [...ALGOLIA_SEARCHABLE_ATTRIBUTES],
   attributesToHighlight: [...ALGOLIA_SEARCHABLE_ATTRIBUTES],
+  attributesForFaceting: ['filterOnly(categoria)', 'filterOnly(slug)'],
   typoTolerance: true as const,
   disableTypoToleranceOnAttributes: ['descripcion'],
   minWordSizefor1Typo: 4,

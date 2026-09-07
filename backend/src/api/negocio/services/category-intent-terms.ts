@@ -71,7 +71,7 @@ export const CATEGORY_INTENT_GROUPS: { keys: string[]; terms: string[] }[] = [
   },
   {
     keys: ['salud_bienestar', 'salud_y_bienestar'],
-    terms: ['farmacia', 'kinesiologia', 'dentista', 'odontologo', 'turno medico', 'gimnasio'],
+    terms: ['farmacia', 'kinesiologia', 'dentista', 'odontologo', 'turno medico', 'medico', 'clinica', 'hospital', 'centro medico', 'gimnasio'],
   },
   {
     keys: ['servicios_profesionales'],
