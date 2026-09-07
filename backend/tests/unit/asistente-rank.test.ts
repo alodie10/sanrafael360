@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isFollowUpMessage, lastNeedQuery, needsZonaClarify, splitRubroZona } from "../../../frontend/src/lib/asistente/intent";
+import { isChitchatMessage, isFollowUpMessage, lastNeedQuery, needsZonaClarify, splitRubroZona } from "../../../frontend/src/lib/asistente/intent";
 import {
   algoliaRubroQuery,
   coerceGuideKeywords,
@@ -241,6 +241,56 @@ describe("asistente rubro constraint", () => {
         "qué lugares visitar"
       )
     ).toBe(false);
+  });
+
+  it("maps balancear rueda to gomería and drops a restaurant that mentions rueda", () => {
+    expect(algoliaRubroQuery("balancear rueda")).toBe("gomeria");
+    expect(
+      hitMatchesRubro(
+        {
+          objectID: "gomeria",
+          nombre: "Neumaticos Moreno",
+          categoria: "Talleres Mecánicos - Gomerías",
+          descripcion: "Balanceo y alineación de cubiertas.",
+        },
+        "balancear rueda"
+      )
+    ).toBe(true);
+    expect(
+      hitMatchesRubro(
+        {
+          objectID: "resto",
+          nombre: "El Quincho de la Rueda",
+          categoria: "Gastronomía",
+          descripcion: "Hola, parrilla y rueda de vinos en el centro.",
+        },
+        "balancear rueda"
+      )
+    ).toBe(false);
+  });
+});
+
+describe("chitchat does not become a rubro", () => {
+  it("treats hola and gracias as chitchat", () => {
+    expect(isChitchatMessage("hola")).toBe(true);
+    expect(isChitchatMessage("Hola!")).toBe(true);
+    expect(isChitchatMessage("buenas tardes")).toBe(true);
+    expect(isChitchatMessage("gracias")).toBe(true);
+    expect(isChitchatMessage("balancear rueda")).toBe(false);
+    expect(isChitchatMessage("hola, busco gomería")).toBe(false);
+  });
+
+  it("does not keep hola as the last need", () => {
+    expect(
+      lastNeedQuery(
+        [
+          { role: "user", content: "hola" },
+          { role: "assistant", content: "preguntame" },
+          { role: "user", content: "gomería" },
+        ],
+        ""
+      )
+    ).toBe("gomería");
   });
 });
 

@@ -11,8 +11,17 @@ const FOLLOW_EN_RE = /^(en|por)\s+(.+)$/i;
 
 export type GuideCommand = "limpiar" | "otras" | "cerca";
 
+const CHITCHAT_RE =
+  /^(hola+|holis|hello|hi|hey|buenas( dias| tardes| noches)?|buen dia|buenos dias|que tal|hola que tal|como estas|como va|todo bien|gracias|ok+|oka|dale|listo|chau|adios|rafi|hola rafi|hey rafi)$/;
+
 export function detectAnunciar(message: string): boolean {
   return ANUNCIAR_RE.test(message.trim());
+}
+
+/** Saludo o muletilla: no buscar fichas (Algolia matchea "hola" con descripciones). */
+export function isChitchatMessage(message: string): boolean {
+  const n = normalizeGuideText(message);
+  return !n || CHITCHAT_RE.test(n);
 }
 
 export function detectCommand(message: string): { command: GuideCommand; zona?: string } | null {
@@ -87,7 +96,13 @@ export function lastNeedQuery(
   for (let i = history.length - 1; i >= 0; i -= 1) {
     if (history[i].role !== "user") continue;
     const content = history[i].content.trim();
-    if (!content || isFollowUpMessage(content) || ANUNCIAR_RE.test(content) || LIMPIAR_RE.test(content)) {
+    if (
+      !content ||
+      isFollowUpMessage(content) ||
+      isChitchatMessage(content) ||
+      ANUNCIAR_RE.test(content) ||
+      LIMPIAR_RE.test(content)
+    ) {
       continue;
     }
     return content;
@@ -96,7 +111,8 @@ export function lastNeedQuery(
 }
 
 export function isVagueFilters(filters: ParsedFilters): boolean {
-  return !filters.categoria && !filters.keywords;
+  const need = filters.keywords || filters.categoria;
+  return !need || isChitchatMessage(need);
 }
 
 export function needsZonaClarify(filters: ParsedFilters): boolean {

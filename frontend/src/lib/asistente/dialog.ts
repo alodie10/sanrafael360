@@ -1,9 +1,9 @@
 import { getAsistenteConfig } from "./config";
 import { extractFiltersWithLlm } from "./extract-filters";
-import { detectAnunciar, detectCommand, followUpZona, isFollowUpMessage, isGenericZona, isVagueFilters, lastNeedQuery, needsZonaClarify, splitRubroZona } from "./intent";
+import { detectAnunciar, detectCommand, followUpZona, isChitchatMessage, isFollowUpMessage, isGenericZona, isVagueFilters, lastNeedQuery, needsZonaClarify, splitRubroZona } from "./intent";
 import { coerceGuideKeywords } from "./rank";
 import { recommendFichasViaAlgolia } from "./recommend";
-import { clarifyPrompt, redactFromHits, zonaClarifyPrompt } from "./redact";
+import { clarifyPrompt, greetingPrompt, redactFromHits, zonaClarifyPrompt } from "./redact";
 import type { GuideTurnInput, GuideTurnResult, ParsedFilters } from "./types";
 
 function anunciarResult(): GuideTurnResult {
@@ -67,6 +67,9 @@ async function searchFichas(
 export async function handleGuideTurn(input: GuideTurnInput): Promise<GuideTurnResult> {
   const message = input.message.trim();
   if (detectAnunciar(message)) return anunciarResult();
+  if (isChitchatMessage(message)) {
+    return { type: "clarify", text: greetingPrompt(), hits: [] };
+  }
 
   const command = detectCommand(message);
   if (command?.command === "limpiar") {
