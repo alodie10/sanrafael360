@@ -36,15 +36,25 @@ export default function ReviewSection({ negocioId, ownerId, initialRating = 0, i
   }, [session]);
 
   const fetchReviews = async () => {
+    if (!negocioId) {
+      setLoading(false);
+      return;
+    }
     try {
       const strapiUrl = getStrapiUrl();
-      const res = await fetch(`${strapiUrl}/api/reviews?filters[negocio][documentId][$eq]=${negocioId}&populate=autor&sort=createdAt:desc`, {
-        cache: 'no-store'
-      });
+      const res = await fetch(
+        `${strapiUrl}/api/reviews?filters[negocio][documentId][$eq]=${negocioId}&populate=autor&sort=createdAt:desc`,
+        { cache: "no-store" }
+      );
+      if (!res.ok) {
+        setReviews([]);
+        return;
+      }
       const data = await res.json();
       setReviews(data.data || []);
-    } catch (e) {
-      console.error("Error fetching reviews", e);
+    } catch {
+      // Strapi local suele estar caído en dev; la ficha igual se sirve desde Algolia.
+      setReviews([]);
     } finally {
       setLoading(false);
     }

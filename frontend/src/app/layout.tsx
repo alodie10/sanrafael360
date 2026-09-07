@@ -9,7 +9,12 @@ import IOSInstallPrompt from "@/components/layout/IOSInstallPrompt";
 import BottomNav from "@/components/layout/BottomNav";
 import { Toaster } from "sonner";
 import { getSiteUrl } from "@/lib/site";
+import { isDevApp } from "@/lib/env";
+import { getAsistenteConfig } from "@/lib/asistente/config";
+import GuideChatWidget from "@/components/asistente/GuideChatWidget";
 import "./globals.css";
+
+const isDev = isDevApp();
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,7 +32,7 @@ const playfair = Playfair_Display({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#FFBF00",
+  themeColor: isDev ? "#22D3EE" : "#FFBF00",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -42,15 +47,17 @@ export const metadata: Metadata = {
   // No poner canonical global aquí: se hereda en 404/páginas hijas y genera
   // "Duplicada sin canónica" / soft-404 apuntando al home en Search Console.
   title: {
-    default: "San Rafael 360 — Descubrí la ciudad",
-    template: "%s | San Rafael 360",
+    default: isDev
+      ? "[DEV] San Rafael 360 — Descubrí la ciudad"
+      : "San Rafael 360 — Descubrí la ciudad",
+    template: isDev ? "[DEV] %s | San Rafael 360" : "%s | San Rafael 360",
   },
   description: "El directorio definitivo de negocios, restaurantes, hoteles y atracciones de San Rafael, Mendoza. Tu guía local completa.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "SR360",
+    title: isDev ? "SR360 DEV" : "SR360",
   },
   openGraph: {
     title: "San Rafael 360",
@@ -100,9 +107,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const categorias = await getCategorias();
+  const asistente = getAsistenteConfig();
 
   return (
-    <html lang="es" className={`${inter.variable} ${outfit.variable} ${playfair.variable}`}>
+    <html
+      lang="es"
+      data-env={isDev ? "dev" : "prod"}
+      className={`${inter.variable} ${outfit.variable} ${playfair.variable}${isDev ? " is-dev-env" : ""}`}
+    >
       <body>
         <script
           type="application/ld+json"
@@ -116,6 +128,11 @@ export default async function RootLayout({
               <Navbar categorias={categorias} />
               {children}
               <BottomNav />
+              {asistente.enabled ? (
+                <Suspense fallback={null}>
+                  <GuideChatWidget intro={asistente.copyIntro} allowlist={asistente.pageAllowlist} />
+                </Suspense>
+              ) : null}
               <SmartAppBanner />
               <IOSInstallPrompt />
               <SpeedInsights />

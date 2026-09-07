@@ -5,6 +5,7 @@ import { ShieldCheck, LayoutDashboard, ExternalLink, Settings } from "lucide-rea
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
+import { isDevApp } from "@/lib/env";
 
 export default function MasterBar() {
   const { data: session } = useSession();
@@ -43,6 +44,11 @@ export default function MasterBar() {
             <span className="text-[10px] font-black uppercase tracking-widest text-white">
               {isAdmin ? 'Master Admin' : 'Panel Propietario'}
             </span>
+            {isDevApp() && (
+              <span className="rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-black tracking-[0.18em] text-black">
+                DEV
+              </span>
+            )}
           </div>
           <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
           <p className="text-[10px] text-zinc-500 uppercase font-bold hidden md:block">
