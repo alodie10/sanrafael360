@@ -12,6 +12,15 @@ export type GuideFicha = {
   keywords?: string | null;
   /** Descripción en texto plano (sin HTML), para filtrar y redactar. */
   descripcion?: string | null;
+  coverUrl?: string | null;
+  rating?: number | null;
+  reviewCount?: number | null;
+};
+
+export type GuideMissTrace = {
+  raw_query: string;
+  expanded_queries: string[];
+  categories_tried: string[];
 };
 
 export type GuideHistoryItem = {
@@ -37,6 +46,7 @@ export type GuideTurnResult = {
   text: string;
   hits: GuideFicha[];
   cta?: GuideCta;
+  miss?: GuideMissTrace;
 };
 
 export type GuideTurnInput = {

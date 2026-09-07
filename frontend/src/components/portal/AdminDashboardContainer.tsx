@@ -15,6 +15,7 @@ import {
   CalendarDays,
   CalendarHeart,
   Megaphone,
+  Bot,
 } from "lucide-react";
 import { getStrapiUrl } from "@/lib/strapi";
 import Link from "next/link";
@@ -33,10 +34,11 @@ import AdminClientesPanel from "./AdminClientesPanel";
 import PerformancePeriodFilter from "./PerformancePeriodFilter";
 import AdminProspeccionPanel from "./AdminProspeccionPanel";
 import AdminEfemeridesPanel from "./AdminEfemeridesPanel";
+import AdminChatbotPanel from "./AdminChatbotPanel";
 import type { ProspeccionNegocio } from "@/lib/prospeccion";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
-  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats' | 'payments' | 'clientes' | 'prospeccion' | 'efemerides'>('payments');
+  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats' | 'payments' | 'clientes' | 'prospeccion' | 'efemerides' | 'chatbot'>('payments');
   const [claims, setClaims] = useState(initialClaims);
   const [supportCount, setSupportCount] = useState(0);
   const [leadsCount, setLeadsCount] = useState(0);
@@ -220,6 +222,16 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
               <span>Efemérides</span>
             </button>
 
+            <button
+              type="button"
+              onClick={() => setActiveTab('chatbot')}
+              className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'chatbot' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+              data-testid="admin-chatbot-nav"
+            >
+              <Bot className="w-4 h-4" />
+              <span>Chatbot</span>
+            </button>
+
             
             <button 
               onClick={() => setActiveTab('support')}
@@ -352,6 +364,13 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
 
             {activeTab === 'efemerides' && (
               <AdminEfemeridesPanel jwt={session.jwt as string} />
+            )}
+
+            {activeTab === 'chatbot' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Chatbot / Asistente guía</h2>
+                <AdminChatbotPanel jwt={session.jwt as string} />
+              </div>
             )}
 
             {activeTab === 'payments' && (

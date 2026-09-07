@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { ALGOLIA_INDEX_SETTINGS } from '../../src/api/negocio/services/algolia-index-settings';
-import { buildSearchExplanation, matchFieldFromAlgoliaHit, matchFieldFromText, queryVariants } from '../../../frontend/src/lib/search-match';
+import {
+  buildSearchExplanation,
+  compareMatchingPremiumFirst,
+  matchFieldFromAlgoliaHit,
+  matchFieldFromText,
+  queryVariants,
+} from '../../../frontend/src/lib/search-match';
 
 describe('Algolia index settings', () => {
   it('searches nombre, rubro, intent keywords, tags, then description', () => {
@@ -25,6 +31,29 @@ describe('Algolia index settings', () => {
 
   it('keeps premium as custom ranking after attribute order', () => {
     expect(ALGOLIA_INDEX_SETTINGS.customRanking).toEqual(['desc(is_premium)']);
+  });
+});
+
+describe('listing premium-first among matches', () => {
+  it('puts a matching premium ahead of a free nombre hit', () => {
+    const premium = { nombre: 'Lidherma', is_premium: true, searchMatch: 'descripcion' as const };
+    const free = { nombre: 'Hospital Español', is_premium: false, searchMatch: 'nombre' as const };
+    expect(compareMatchingPremiumFirst(premium, free, true)).toBeLessThan(0);
+    expect([free, premium].sort((a, b) => compareMatchingPremiumFirst(a, b, true)).map((n) => n.nombre))
+      .toEqual(['Lidherma', 'Hospital Español']);
+  });
+
+  it('ignores expired premium', () => {
+    const expired = {
+      nombre: 'Zeta vencido',
+      is_premium: true,
+      premium_valid_until: '2020-01-01T00:00:00.000Z',
+      searchMatch: 'nombre' as const,
+    };
+    const active = { nombre: 'Alfa premium', is_premium: true, searchMatch: 'descripcion' as const };
+    expect(
+      [expired, active].sort((a, b) => compareMatchingPremiumFirst(a, b, true)).map((n) => n.nombre)
+    ).toEqual(['Alfa premium', 'Zeta vencido']);
   });
 });
 

@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import GuideChatPanel from "@/components/asistente/GuideChatPanel";
-import { getAsistenteConfig } from "@/lib/asistente/config";
+import { loadGuideRuntime, resolveLiveAsistenteConfig } from "@/lib/asistente/live-store";
 import { getSiteUrl } from "@/lib/site";
 
 const siteUrl = getSiteUrl();
@@ -13,8 +13,9 @@ export const metadata: Metadata = {
   alternates: { canonical: `${siteUrl}/asistente` },
 };
 
-export default function AsistentePage() {
-  const config = getAsistenteConfig();
+export default async function AsistentePage() {
+  const runtime = await loadGuideRuntime();
+  const config = resolveLiveAsistenteConfig(runtime);
   if (!config.enabled) {
     return (
       <main className="min-h-[60vh] px-4 pt-28 pb-24">

@@ -1,13 +1,14 @@
-import { getAsistenteConfig } from "./config";
+import { persistGuideMiss, loadGuideRuntime, liveConfig } from "./live-store";
 import { extractFiltersWithLlm } from "./extract-filters";
 import { detectAnunciar, detectCommand, followUpZona, isChitchatMessage, isFollowUpMessage, canonicalizeZona, isVagueFilters, lastNeedQuery, needsZonaClarify, splitRubroZona } from "./intent";
+import { matchIntentKey } from "./expand-intent";
 import { coerceGuideKeywords, distinctiveRubroToken } from "./rank";
 import { recommendFichasViaAlgolia } from "./recommend";
 import { clarifyPrompt, greetingPrompt, redactFromHits, zonaClarifyPrompt } from "./redact";
-import type { GuideTurnInput, GuideTurnResult, ParsedFilters } from "./types";
+import type { GuideTurnInput, GuideTurnResult, ParsedFilters, GuideMissTrace } from "./types";
 
 function anunciarResult(): GuideTurnResult {
-  const config = getAsistenteConfig();
+  const config = liveConfig();
   return {
     type: "anunciar",
     text: config.copyCtaAnunciar,
@@ -25,7 +26,8 @@ function stripZonaPhrase(text: string, zona: string | null): string {
 
 function resolveFilters(message: string, extracted: ParsedFilters | null): ParsedFilters {
   const split = splitRubroZona(message);
-  const zonaRaw = extracted?.zona || split.zona;
+  const mapped = Boolean(matchIntentKey(message));
+  const zonaRaw = split.zona || (!mapped ? extracted?.zona : null);
   const zona = canonicalizeZona(zonaRaw);
   const rawKeywords = (zona ? split.keywords : extracted?.keywords) || split.keywords || message;
   return {
@@ -35,13 +37,28 @@ function resolveFilters(message: string, extracted: ParsedFilters | null): Parse
   };
 }
 
-function emptyResult(filters: ParsedFilters): GuideTurnResult {
-  const config = getAsistenteConfig();
+function emptyResult(filters: ParsedFilters, miss?: GuideMissTrace): GuideTurnResult {
+  if (miss) {
+    logGuideNoResults(miss);
+    void persistGuideMiss(miss);
+  }
+  const config = liveConfig();
   const need = distinctiveRubroToken(filters.keywords || filters.categoria || "") || "eso";
   const text = filters.zona
     ? `No encontré opciones para ${need} en ${filters.zona}. Probá otra zona o usá la búsqueda de arriba.`
     : config.copyNoResults;
-  return { type: "empty", text, hits: [] };
+  return { type: "empty", text, hits: [], miss };
+}
+
+function logGuideNoResults(miss: GuideMissTrace): void {
+  console.info(
+    JSON.stringify({
+      event: "guide_no_results",
+      raw_query: miss.raw_query,
+      expanded_queries: miss.expanded_queries,
+      categories_tried: miss.categories_tried,
+    })
+  );
 }
 
 async function searchFichas(
@@ -50,8 +67,8 @@ async function searchFichas(
   query: string
 ): Promise<GuideTurnResult> {
   try {
-    const { hits } = await recommendFichasViaAlgolia(filters, excludeIds);
-    if (!hits.length) return emptyResult(filters);
+    const { hits, trace } = await recommendFichasViaAlgolia(filters, excludeIds, query);
+    if (!hits.length) return emptyResult(filters, trace);
     const text = await redactFromHits(query, hits);
     return { type: "results", text, hits };
   } catch {
@@ -64,6 +81,7 @@ async function searchFichas(
 }
 
 export async function handleGuideTurn(input: GuideTurnInput): Promise<GuideTurnResult> {
+  await loadGuideRuntime(true);
   const message = input.message.trim();
   if (detectAnunciar(message)) return anunciarResult();
   if (isChitchatMessage(message)) {
@@ -72,7 +90,7 @@ export async function handleGuideTurn(input: GuideTurnInput): Promise<GuideTurnR
 
   const command = detectCommand(message);
   if (command?.command === "limpiar") {
-    return { type: "reset", text: getAsistenteConfig().copyIntro, hits: [] };
+    return { type: "reset", text: liveConfig().copyIntro, hits: [] };
   }
   if (command?.command === "otras" || command?.command === "cerca" || isFollowUpMessage(message)) {
     const previous = lastNeedQuery(input.history, "");

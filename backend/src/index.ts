@@ -392,6 +392,17 @@ export default {
         strapi.log.error('❌ Error en seed de plantilla de prospección:', err.message);
       }
 
+      // 11. SEED DICCIONARIO DEL ASISTENTE (idempotente)
+      try {
+        const { seedGuideExpansionsIfEmpty } = require('./api/guide-expansion/services/seed-expansions');
+        const seeded = await seedGuideExpansionsIfEmpty(strapi);
+        if (seeded > 0) {
+          strapi.log.info(`[Guide] Sembradas ${seeded} expansiones iniciales.`);
+        }
+      } catch (err: any) {
+        strapi.log.error('❌ Error en seed de expansiones del asistente:', err.message);
+      }
+
     } catch (error) {
       strapi.log.error('❌ Error general en bootstrap:', error);
     }

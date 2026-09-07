@@ -1,0 +1,83 @@
+{
+  "medico": {
+    "aliases": [
+      "medico",
+      "medica",
+      "medicos",
+      "doctor",
+      "doctora",
+      "centro medico",
+      "turno medico",
+      "hospital",
+      "clinica",
+      "consultorio",
+      "sanatorio"
+    ],
+    "queries": ["hospital", "clinica", "medico", "salud", "consultorio", "sanatorio"],
+    "categories": ["Salud y Bienestar"],
+    "excludeNameNeedles": ["gimnasio", "fitness", "gym", "crossfit", "farmacia", "spa"],
+    "preferNameNeedles": ["hospital", "clinica", "sanatorio", "consultorio"]
+  },
+  "dentista": {
+    "aliases": ["dentista", "odontologo", "odontologia"],
+    "queries": ["dentista", "odontologo"],
+    "categories": ["Salud y Bienestar"]
+  },
+  "comer": {
+    "aliases": [
+      "comer",
+      "comida",
+      "restaurante",
+      "restaurantes",
+      "restoran",
+      "resto",
+      "parrilla",
+      "parrillas",
+      "almorzar",
+      "cenar"
+    ],
+    "queries": ["restaurante", "restaurant", "comida", "gastronomia", "parrilla", "resto"],
+    "categories": ["Gastronomía", "Restaurante", "Pizzería", "Hamburguesería", "Cervecería"]
+  },
+  "gomeria": {
+    "aliases": [
+      "gomeria",
+      "gomerias",
+      "neumatico",
+      "neumaticos",
+      "cubierta",
+      "cubiertas",
+      "rueda",
+      "ruedas",
+      "llanta",
+      "llantas",
+      "balancear",
+      "balanceo",
+      "alinear",
+      "alineacion",
+      "pinchazo",
+      "pinchada"
+    ],
+    "queries": ["gomeria", "neumatico", "cubierta", "balanceo"],
+    "categories": ["Talleres Mecánicos - Gomerías"],
+    "match": "name_or_desc"
+  },
+  "vino": {
+    "aliases": ["vino", "vinos", "bodega", "bodegas", "malbec", "vinoteca", "vinotecas"],
+    "queries": ["bodega", "vino", "malbec"],
+    "categories": ["Bodegas"],
+    "match": "category_or_name",
+    "preferNameNeedles": ["bodega"]
+  },
+  "visitar": {
+    "aliases": ["visitar", "visita", "turismo", "turistico", "turisticos", "pasear"],
+    "queries": ["turistico", "turismo"],
+    "categories": ["Interés Turístico", "Información Turística"],
+    "match": "category"
+  },
+  "cabana": {
+    "aliases": ["cabana", "cabanas"],
+    "queries": ["cabana", "cabanas"],
+    "categories": ["Cabañas"]
+  }
+}

@@ -8,6 +8,7 @@ import {
   filterHitsByZona,
   hitMatchesRubro,
   keepOnlySourceHits,
+  preferHospitalHits,
   rankHitsPremiumFirst,
   takeTopHits,
 } from "../../../frontend/src/lib/asistente/rank";
@@ -29,6 +30,18 @@ describe("asistente rank", () => {
     expect(rankHitsPremiumFirst(hits, false).map((h) => h.objectID)).toEqual(
       hits.map((h) => h.objectID)
     );
+  });
+
+  it("keeps matching premium ahead of a free hospital name", () => {
+    expect(
+      preferHospitalHits(
+        [
+          { objectID: "hospital-espanol", nombre: "Hospital Español", categoria: "Salud y Bienestar", is_premium: false },
+          { objectID: "lidherma", nombre: "Distribuidora Lidherma", categoria: "Salud y Bienestar", is_premium: true },
+        ],
+        "necesito un medico"
+      ).map((hit) => hit.objectID)
+    ).toEqual(["lidherma", "hospital-espanol"]);
   });
 
   it("takes only the top 2–3 real hits", () => {
@@ -133,7 +146,7 @@ describe("splitRubroZona", () => {
       keywords: "dime donde comer",
       zona: "centro",
     });
-    expect(algoliaRubroQuery("dime donde comer")).toBe("resto");
+    expect(algoliaRubroQuery("dime donde comer")).toBe("restaurante");
   });
 });
 
@@ -312,6 +325,51 @@ describe("asistente rubro constraint", () => {
       )
     ).toBe(false);
   });
+
+  it("maps medico and centro medico to salud, not a gym in the same category", () => {
+    expect(algoliaRubroQuery("necesito un medico")).toBe("hospital");
+    expect(algoliaRubroQuery("centro medico")).toBe("hospital");
+    expect(coerceGuideKeywords("necesito un medico", null)).toBe("medico");
+    expect(
+      hitMatchesRubro(
+        {
+          objectID: "hospital-espanol",
+          nombre: "Hospital Español",
+          categoria: "Salud y Bienestar",
+        },
+        "necesito un medico"
+      )
+    ).toBe(true);
+    expect(
+      hitMatchesRubro(
+        {
+          objectID: "schestakow",
+          nombre: "Hospital Teodoro J. Schestakow",
+          categoria: "Salud y Bienestar",
+        },
+        "centro medico"
+      )
+    ).toBe(true);
+    expect(
+      hitMatchesRubro(
+        {
+          objectID: "gym",
+          nombre: "Absolute Fitness",
+          categoria: "Salud y Bienestar",
+        },
+        "centro medico"
+      )
+    ).toBe(false);
+    expect(
+      preferHospitalHits(
+        [
+          { objectID: "kine", nombre: "Kinesiología Sur", categoria: "Salud y Bienestar", is_premium: false },
+          { objectID: "hospital-espanol", nombre: "Hospital Español", categoria: "Salud y Bienestar", is_premium: false },
+        ],
+        "necesito un medico"
+      ).map((hit) => hit.objectID)
+    ).toEqual(["hospital-espanol", "kine"]);
+  });
 });
 
 describe("chitchat does not become a rubro", () => {
@@ -345,6 +403,10 @@ describe("follow-up keeps the original need", () => {
 
   it("treats las paredes as a zona follow-up", () => {
     expect(isFollowUpMessage("Las Paredes")).toBe(true);
+  });
+
+  it("does not treat centro medico as a zona follow-up", () => {
+    expect(isFollowUpMessage("centro medico")).toBe(false);
   });
 
   it("reads the last real need, not the follow-up", () => {

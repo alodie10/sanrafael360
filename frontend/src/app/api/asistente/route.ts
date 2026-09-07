@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAsistenteConfig } from "@/lib/asistente/config";
+import { loadGuideRuntime, resolveLiveAsistenteConfig } from "@/lib/asistente/live-store";
 import { handleGuideTurn } from "@/lib/asistente/dialog";
 import { parseGuideRequest } from "@/lib/asistente/parse-request";
 import {
@@ -9,6 +9,11 @@ import {
 } from "@/lib/asistente/rate-limit";
 
 export const dynamic = "force-dynamic";
+
+async function currentConfig() {
+  const runtime = await loadGuideRuntime();
+  return resolveLiveAsistenteConfig(runtime);
+}
 
 function pausedResponse() {
   return NextResponse.json(
@@ -21,8 +26,7 @@ function pausedResponse() {
   );
 }
 
-function publicConfig() {
-  const config = getAsistenteConfig();
+function publicConfig(config: Awaited<ReturnType<typeof currentConfig>>) {
   return {
     enabled: config.enabled,
     copyIntro: config.copyIntro,
@@ -31,13 +35,13 @@ function publicConfig() {
 }
 
 export async function GET() {
-  const config = getAsistenteConfig();
+  const config = await currentConfig();
   if (!config.enabled) return pausedResponse();
-  return NextResponse.json(publicConfig());
+  return NextResponse.json(publicConfig(config));
 }
 
 export async function POST(request: NextRequest) {
-  const config = getAsistenteConfig();
+  const config = await currentConfig();
   if (!config.enabled) return pausedResponse();
 
   const now = Date.now();
