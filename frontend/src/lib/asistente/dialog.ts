@@ -1,7 +1,7 @@
 import { getAsistenteConfig } from "./config";
 import { extractFiltersWithLlm } from "./extract-filters";
-import { detectAnunciar, detectCommand, followUpZona, isChitchatMessage, isFollowUpMessage, isGenericZona, isVagueFilters, lastNeedQuery, needsZonaClarify, splitRubroZona } from "./intent";
-import { coerceGuideKeywords } from "./rank";
+import { detectAnunciar, detectCommand, followUpZona, isChitchatMessage, isFollowUpMessage, canonicalizeZona, isVagueFilters, lastNeedQuery, needsZonaClarify, splitRubroZona } from "./intent";
+import { coerceGuideKeywords, distinctiveRubroToken } from "./rank";
 import { recommendFichasViaAlgolia } from "./recommend";
 import { clarifyPrompt, greetingPrompt, redactFromHits, zonaClarifyPrompt } from "./redact";
 import type { GuideTurnInput, GuideTurnResult, ParsedFilters } from "./types";
@@ -26,7 +26,7 @@ function stripZonaPhrase(text: string, zona: string | null): string {
 function resolveFilters(message: string, extracted: ParsedFilters | null): ParsedFilters {
   const split = splitRubroZona(message);
   const zonaRaw = extracted?.zona || split.zona;
-  const zona = zonaRaw && !isGenericZona(zonaRaw) ? zonaRaw : null;
+  const zona = canonicalizeZona(zonaRaw);
   const rawKeywords = (zona ? split.keywords : extracted?.keywords) || split.keywords || message;
   return {
     categoria: extracted?.categoria || null,
@@ -37,11 +37,10 @@ function resolveFilters(message: string, extracted: ParsedFilters | null): Parse
 
 function emptyResult(filters: ParsedFilters): GuideTurnResult {
   const config = getAsistenteConfig();
-  const rubro = filters.keywords || filters.categoria;
-  const text =
-    filters.zona && rubro
-      ? `No encontré ${rubro} en ${filters.zona}. Probá otra zona o usá la búsqueda de arriba.`
-      : config.copyNoResults;
+  const need = distinctiveRubroToken(filters.keywords || filters.categoria || "") || "eso";
+  const text = filters.zona
+    ? `No encontré opciones para ${need} en ${filters.zona}. Probá otra zona o usá la búsqueda de arriba.`
+    : config.copyNoResults;
   return { type: "empty", text, hits: [] };
 }
 

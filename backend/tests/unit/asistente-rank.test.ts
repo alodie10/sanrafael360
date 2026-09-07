@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isChitchatMessage, isFollowUpMessage, lastNeedQuery, needsZonaClarify, splitRubroZona } from "../../../frontend/src/lib/asistente/intent";
+import { isChitchatMessage, isFollowUpMessage, lastNeedQuery, needsZonaClarify, splitRubroZona, canonicalizeZona } from "../../../frontend/src/lib/asistente/intent";
 import {
   algoliaRubroQuery,
   coerceGuideKeywords,
@@ -78,6 +78,41 @@ describe("asistente zona constraint", () => {
     ]);
   });
 
+  it("matches centro in the ficha name, not the whole phrase el centro de san rafael", () => {
+    expect(
+      filterHitsByZona(
+        [
+          {
+            objectID: "ambar",
+            is_premium: true,
+            nombre: "AMBAR Beauty & Spa (Centro de San Rafael)",
+            zona: "San Martín 100",
+          },
+          {
+            objectID: "dique",
+            is_premium: false,
+            nombre: "Parrilla del Dique",
+            zona: "Valle Grande",
+          },
+        ],
+        "centro"
+      ).map((h) => h.objectID)
+    ).toEqual(["ambar"]);
+    expect(
+      filterHitsByZona(
+        [
+          {
+            objectID: "ambar",
+            is_premium: true,
+            nombre: "AMBAR Beauty & Spa (Centro de San Rafael)",
+            zona: "San Martín 100",
+          },
+        ],
+        "el centro de san rafael"
+      )
+    ).toHaveLength(0);
+  });
+
   it("does not treat other businesses in the zona as a match for a different rubro set", () => {
     const gomerias = fichas.filter((h) => h.nombre.toLowerCase().includes("gomer"));
     expect(filterHitsByZona(gomerias, "las paredes").map((h) => h.objectID)).toEqual(["gomeria-lp"]);
@@ -90,6 +125,15 @@ describe("splitRubroZona", () => {
       keywords: "gomería",
       zona: "las paredes",
     });
+  });
+
+  it("maps dime donde comer en el centro de san rafael to comer + centro", () => {
+    expect(canonicalizeZona("el centro de san rafael")).toBe("centro");
+    expect(splitRubroZona("dime donde comer en el centro de san rafael")).toEqual({
+      keywords: "dime donde comer",
+      zona: "centro",
+    });
+    expect(algoliaRubroQuery("dime donde comer")).toBe("resto");
   });
 });
 
