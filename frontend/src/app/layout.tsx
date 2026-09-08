@@ -75,6 +75,12 @@ export const metadata: Metadata = {
     apple: "/icons/icon-192.png",
     shortcut: "/icons/icon-192.png",
   },
+  // Meta Business: verificación de dominio (HTML estático en <head>, no JS).
+  verification: {
+    other: {
+      "facebook-domain-verification": "tgynjqb8nch4z7fk909uk4enqz9gp8",
+    },
+  },
 };
 
 import { FavoritesProvider } from "@/context/FavoritesContext";
