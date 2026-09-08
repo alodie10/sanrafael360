@@ -33,48 +33,52 @@ export default async function EfemeridePage({
 
   return (
     <main className="min-h-screen bg-background pb-20" data-testid="efemeride-public-page">
-      <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 px-4 text-center border-b border-white/5 bg-slate-900/50 overflow-hidden">
+      <section className="relative flex min-h-[32rem] md:min-h-[36rem] flex-col overflow-hidden border-b border-white/5 pt-24 md:pt-28">
         {coverUrl && (
           <>
             <Image
               src={coverUrl}
-              alt={efemeride.nombre}
+              alt=""
               fill
               priority
-              className="object-cover opacity-30"
+              className="object-cover object-center opacity-95 brightness-[1.25] contrast-[1.4] saturate-110 md:opacity-85 md:brightness-[1.15] md:contrast-[1.25]"
               sizes="100vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-slate-950/70 to-background pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-background pointer-events-none" />
           </>
         )}
         {!coverUrl && (
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
         )}
 
-        <div className="max-w-4xl mx-auto relative z-10">
+        <div className="relative z-10 px-4 pt-4 text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-primary mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-slate-200 hover:text-primary transition-colors drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
           >
             <ArrowLeft className="w-4 h-4" /> Volver al Inicio
           </Link>
+        </div>
 
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-            Efeméride
-          </p>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            {efemeride.nombre} en <span className="text-primary italic">San Rafael</span>
-          </h1>
-          {efemeride.descripcion && (
-            <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
-              {efemeride.descripcion}
+        <div className="relative z-10 mt-auto px-4 pb-10 md:pb-14 text-center">
+          <div className="mx-auto max-w-4xl">
+            <p className="mb-3 text-[10px] font-black uppercase tracking-[0.3em] text-primary drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+              Efeméride
             </p>
-          )}
-          {hastaLabel && (
-            <p className="mt-4 text-xs font-bold uppercase tracking-widest text-primary/80">
-              Vigente hasta {hastaLabel}
-            </p>
-          )}
+            <h1 className="mb-3 text-3xl font-bold text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.95)] md:mb-4 md:text-5xl">
+              {efemeride.nombre} en <span className="text-primary italic">San Rafael</span>
+            </h1>
+            {efemeride.descripcion && (
+              <p className="mx-auto max-w-2xl text-base leading-relaxed text-slate-100 drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)] md:text-lg">
+                {efemeride.descripcion}
+              </p>
+            )}
+            {hastaLabel && (
+              <p className="mt-3 text-xs font-bold uppercase tracking-widest text-primary drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] md:mt-4">
+                Vigente hasta {hastaLabel}
+              </p>
+            )}
+          </div>
         </div>
       </section>
 
