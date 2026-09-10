@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { ReactNode } from "react";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { fetchEfemeridePublic } from "@/lib/efemerides";
 import { getSiteUrl } from "@/lib/site";
@@ -46,7 +45,7 @@ export default async function EfemerideLayout({
   children,
   params,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
