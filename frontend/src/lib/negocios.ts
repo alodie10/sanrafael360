@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { cache } from "@/lib/react-cache";
 import { fetchFromStrapi } from "@/lib/strapi";
 import { canUseAlgoliaSearch } from "@/lib/search-config";
 import { getNegocioFromAlgoliaBySlug } from "@/lib/search-negocios";

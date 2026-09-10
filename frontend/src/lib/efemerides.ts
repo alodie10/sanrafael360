@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { cache } from "@/lib/react-cache";
 import { getStrapiUrl } from "@/lib/strapi";
 import type { EfemeridePublic } from "@/types/strapi";
 

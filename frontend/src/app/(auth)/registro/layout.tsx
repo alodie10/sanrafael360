@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { noIndexPage } from "@/lib/seo";
 
 export const metadata = noIndexPage(
@@ -7,6 +6,10 @@ export const metadata = noIndexPage(
   "Registrate en San Rafael 360 con Google para reclamar tu negocio o guardar favoritos."
 );
 
-export default function RegistroLayout({ children }: { children: ReactNode }) {
+export default function RegistroLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return children;
 }

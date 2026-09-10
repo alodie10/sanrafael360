@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { cache } from "@/lib/react-cache";
 import { fetchFromStrapi, isStrapiUnreachableError } from "@/lib/strapi";
 import { canUseAlgoliaSearch, shouldUseStrapiSearchForHome } from "@/lib/search-config";
 import { Atributo, Categoria, Negocio } from "@/types/strapi";
