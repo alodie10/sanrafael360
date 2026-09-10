@@ -6,7 +6,7 @@
   "scripts": {
     "start": "cd backend && npm run start",
     "build": "npm run build:all",
-    "build:all": "rm -rf backend/dist backend/.strapi && cd backend && npm install && npm run build && cd ../frontend && npm install && npm run build",
+    "build:all": "rm -rf backend/dist backend/.strapi && npm install && npm run build --workspace=backend && npm run build --workspace=frontend",
     "info": "echo 'Proyecto San Rafael 360. Desarrollo 100% Remoto.'",
     "test:unit": "cd backend && npm run test:unit",
     "test:integration": "cd backend && npm run test:integration",
@@ -32,9 +32,11 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "lodash": "4.18.1",
-    "ws": "8.18.2",
-    "axios": "1.18.1",
+    "ws": "8.21.3",
+    "axios": "1.20.0",
     "serialize-javascript": "6.0.2",
-    "uuid": "11.1.0"
+    "uuid": "11.1.1",
+    "tar": "7.5.22",
+    "next": "16.3.4"
   }
 }
