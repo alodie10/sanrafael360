@@ -3,6 +3,7 @@ import { getNegociosByCategoriaSlug } from "@/lib/search-negocios";
 import BusinessGrid from "@/components/home/BusinessGrid";
 import FilterBar from "@/components/home/FilterBar";
 import Link from "next/link";
+import { serializeJsonLd } from "@/lib/json-ld";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import {
@@ -180,7 +181,7 @@ export default async function CategoriaPage({
     <main className="min-h-screen bg-background pb-20">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqSchema) }}
       />
 
       {/* HEADER DE CATEGORÍA */}

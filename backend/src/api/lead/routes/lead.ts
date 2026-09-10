@@ -1,3 +1,7 @@
 import { factories } from '@strapi/strapi';
 
-export default factories.createCoreRouter('api::lead.lead' as any);
+/** Core CRUD cerrado: el inbox admin usa /leads/admin + convert. */
+export default factories.createCoreRouter('api::lead.lead' as any, {
+  only: [],
+  config: {},
+});

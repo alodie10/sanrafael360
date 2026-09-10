@@ -1,84 +1,14 @@
 import { Core } from '@strapi/strapi';
 import { createDailyStatRepository } from './api/daily-stat/repositories/daily-stat-repository';
 import { seedJaditekReservaComercio } from './api/reserva-comercio/services/seed-jaditek';
+import { syncUntrustedRestPermissions } from './bootstrap/rest-permissions';
 
 export default {
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     try {
       strapi.log.info('🚀 Iniciando configuración de San Rafael 360...');
 
-      // 1. CONFIGURACIÓN AUTOMÁTICA DE PERMISOS (Blindaje de API)
-      const roleTypes = ['authenticated', 'residente', 'propietario', 'public'];
-      
-      for (const roleType of roleTypes) {
-        const role = await strapi.query('plugin::users-permissions.role').findOne({
-          where: { type: roleType },
-        });
-
-        if (role) {
-          const actions = [
-            'api::categoria.categoria.find',
-            'api::categoria.categoria.findOne',
-            'api::negocio.negocio.find',
-            'api::negocio.negocio.findOne',
-            'api::negocio.negocio.stats',
-            'api::negocio.negocio.claim',
-            'api::negocio.negocio.getstatstimeseries',
-            'api::negocio.negocio.getStatsSummary',
-            'api::review.review.find',
-            'api::review.review.findOne',
-            'api::review.review.create', // Permiso vital para reseñas
-            'api::atributo.atributo.find',
-            'api::atributo.atributo.findOne',
-            'api::atributo.atributo.create',
-            'api::pago.pago.find',
-            'api::pago.pago.findOne',
-            // Módulo reservas: lectura pública de comercio + recursos (grilla)
-            'api::reserva-comercio.reserva-comercio.find',
-            'api::reserva-comercio.reserva-comercio.findOne',
-            'api::reserva-recurso.reserva-recurso.find',
-            'api::reserva-recurso.reserva-recurso.findOne',
-          ];
-
-          if (roleType === 'authenticated') {
-            actions.push(
-              'api::efemeride.efemeride.adminlist',
-              'api::efemeride.efemeride.adminget',
-              'api::efemeride.efemeride.adminupdate',
-              'api::efemeride.efemeride.adminpremiumpicker',
-              'api::cliente.cliente.adminlist',
-              'api::cliente.cliente.admincreate',
-              'api::cliente.cliente.adminupdate',
-              'api::cliente.cliente.admindelete',
-              'api::cliente.cliente.adminlinknegocios',
-              'api::cliente.cliente.adminunlinknegocio',
-              'api::cliente.cliente.adminnegociospicker',
-              'api::cliente.cliente.adminmailtest',
-              'api::cliente.cliente.adminmailbroadcast',
-              'api::lead.lead.convert',
-              'api::lead.lead.find',
-              'api::lead.lead.findOne'
-            );
-          }
-
-          for (const action of actions) {
-            try {
-              const existingPermission = await strapi.query('plugin::users-permissions.permission').findOne({
-                where: { action, role: role.id },
-              });
-
-              if (!existingPermission) {
-                await strapi.query('plugin::users-permissions.permission').create({
-                  data: { action, role: role.id, target: null },
-                });
-                strapi.log.debug(`   ✅ Permiso añadido (${roleType}): ${action}`);
-              }
-            } catch (permErr: any) {
-              strapi.log.error(`   ❌ Error en permiso ${action}: ${permErr.message}`);
-            }
-          }
-        }
-      }
+      await syncUntrustedRestPermissions(strapi);
       strapi.log.info('✅ Configuración de permisos de API finalizada.');
 
       // 2. Asegurar que existan los roles personalizados

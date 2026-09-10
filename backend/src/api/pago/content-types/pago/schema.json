@@ -44,6 +44,7 @@
     },
     "detalles_mp": {
       "type": "json",
+      "private": true,
       "description": "Carga completa del webhook para auditoría"
     },
     "external_reference": {
