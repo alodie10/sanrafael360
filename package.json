@@ -37,6 +37,8 @@
     "serialize-javascript": "6.0.2",
     "uuid": "11.1.1",
     "tar": "7.5.22",
-    "next": "16.3.4"
+    "next": "16.3.4",
+    "eslint-config-next": "16.3.4",
+    "@next/eslint-plugin-next": "16.3.4"
   }
 }
