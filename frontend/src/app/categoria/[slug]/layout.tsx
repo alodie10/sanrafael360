@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getCategoriaBySlug } from "@/lib/categorias";
 import { getSiteUrl } from "@/lib/site";
@@ -61,7 +60,7 @@ export default async function CategoriaLayout({
   children,
   params,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;

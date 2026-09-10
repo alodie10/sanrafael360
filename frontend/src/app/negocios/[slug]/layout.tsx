@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { ReactNode } from "react";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { getNegocioBySlug } from "@/lib/negocios";
 import { LocalBusinessSchema } from "@/components/business/LocalBusinessSchema";
@@ -87,7 +86,7 @@ export default async function BusinessLayout({
   children,
   params,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
