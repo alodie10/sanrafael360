@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { fetchEfemeridePublic } from "@/lib/efemerides";
 import { getSiteUrl } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 const SITE_URL = getSiteUrl();
 
@@ -73,7 +74,7 @@ export default async function EfemerideLayout({
       {schema && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }}
         />
       )}
       {children}

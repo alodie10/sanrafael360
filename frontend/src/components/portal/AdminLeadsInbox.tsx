@@ -37,7 +37,7 @@ export default function AdminLeadsInbox({ jwt, onConverted, onGoToDiscovery }: {
 
   const fetchLeads = async () => {
     try {
-      const res = await fetch(`${STRAPI_URL}/api/leads?sort=createdAt:desc&populate[negocio_vinculado][fields][0]=nombre`, {
+      const res = await fetch(`${STRAPI_URL}/api/leads/admin?sort=createdAt:desc&populate[negocio_vinculado][fields][0]=nombre`, {
         headers: { Authorization: `Bearer ${jwt}` }
       });
       const data = await res.json();
@@ -100,7 +100,7 @@ export default function AdminLeadsInbox({ jwt, onConverted, onGoToDiscovery }: {
 
   const updateLeadStatus = async (documentId: string, status: string) => {
     try {
-      await fetch(`${STRAPI_URL}/api/leads/${documentId}`, {
+      await fetch(`${STRAPI_URL}/api/leads/admin/${documentId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

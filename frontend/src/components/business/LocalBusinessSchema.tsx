@@ -2,6 +2,7 @@ import { Negocio } from "@/types/strapi";
 import { getStrapiMedia } from "@/lib/strapi";
 import { getSiteUrl } from "@/lib/site";
 import { toPublicCategoriaSlug } from "@/lib/categoria-slug";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 // --- Mapeos ---
 
@@ -232,11 +233,11 @@ export function LocalBusinessSchema({ negocio }: LocalBusinessSchemaProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(cleanSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(cleanSchema) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbSchema) }}
       />
     </>
   );

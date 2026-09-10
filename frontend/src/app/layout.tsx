@@ -87,6 +87,7 @@ import { FavoritesProvider } from "@/context/FavoritesContext";
 import MetaPixel from "@/components/layout/MetaPixel";
 import { Suspense } from "react";
 import { getCategorias } from "@/lib/categorias";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 // Schema.org WebSite — habilita el Sitelinks Searchbox de Google
 const websiteSchema = {
@@ -125,7 +126,7 @@ export default async function RootLayout({
       <body>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }}
         />
         <Toaster richColors position="top-right" />
         <SessionProvider>

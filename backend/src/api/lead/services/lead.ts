@@ -95,4 +95,16 @@ export default factories.createCoreService('api::lead.lead', ({ strapi }) => ({
       userId: user.id,
     };
   },
+
+  async adminList(query: Record<string, any> = {}) {
+    const repo = createLeadRepository(strapi);
+    return repo.listForAdmin(query);
+  },
+
+  async adminUpdateEstado(documentId: string, estado: string) {
+    const repo = createLeadRepository(strapi);
+    const lead = await repo.findByDocumentId(documentId);
+    if (!lead) throw new NotFoundError('Lead');
+    return repo.updateEstado(documentId, estado);
+  },
 }));

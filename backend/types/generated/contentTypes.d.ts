@@ -1019,7 +1019,7 @@ export interface ApiPagoPago extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    detalles_mp: Schema.Attribute.JSON;
+    detalles_mp: Schema.Attribute.JSON & Schema.Attribute.Private;
     estado: Schema.Attribute.Enumeration<
       ['pendiente', 'aprobado', 'rechazado', 'cancelado']
     > &

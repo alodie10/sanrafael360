@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCategoriaBySlug } from "@/lib/categorias";
 import { getSiteUrl } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/json-ld";
 import {
   isPlaceholderCategoriaSlug,
   toCmsCategoriaSlug,
@@ -87,7 +88,7 @@ export default async function CategoriaLayout({
       {schema && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }}
         />
       )}
       {children}

@@ -68,7 +68,7 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
       }
 
       // Conteo de Leads
-      const resLeads = await fetch(`${strapiUrl}/api/leads?filters[estado][$eq]=nuevo&pagination[limit]=1`, {
+      const resLeads = await fetch(`${strapiUrl}/api/leads/admin?filters[estado][$eq]=nuevo&pagination[limit]=1`, {
         headers: { Authorization: `Bearer ${session.jwt}` }
       });
       if (resLeads.ok) {
