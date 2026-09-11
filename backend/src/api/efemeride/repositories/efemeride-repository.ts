@@ -23,6 +23,7 @@ const ADMIN_POPULATE = {
     fields: ['nombre', 'slug', 'documentId', 'is_premium', 'premium_valid_until'],
     populate: { categoria: { fields: ['nombre', 'slug'] } },
   },
+  participantes_externos: true,
 };
 
 const PUBLIC_POPULATE = {
@@ -37,6 +38,7 @@ const PUBLIC_POPULATE = {
       ofertas: true,
     },
   },
+  participantes_externos: true,
 };
 
 export class EfemerideRepository {
@@ -77,7 +79,7 @@ export class EfemerideRepository {
   async findPublishedList() {
     return this.docs().findMany({
       status: 'published',
-      fields: ['nombre', 'slug', 'descripcion', 'vigente_desde', 'vigente_hasta'],
+      fields: ['nombre', 'slug', 'tipo', 'descripcion', 'vigente_desde', 'vigente_hasta'],
       populate: {
         encabezado: { fields: ['url', 'alternativeText', 'width', 'height'] },
       },
@@ -88,6 +90,44 @@ export class EfemerideRepository {
 
   async update(documentId: string, data: Record<string, unknown>, status: 'draft' | 'published') {
     return this.docs().update({ documentId, data, status });
+  }
+
+  async create(data: Record<string, unknown>, status: 'draft' | 'published') {
+    return this.docs().create({ data, status });
+  }
+
+  async delete(documentId: string) {
+    return this.docs().delete({ documentId });
+  }
+
+  async publish(documentId: string) {
+    return this.docs().publish({ documentId });
+  }
+
+  async unpublish(documentId: string) {
+    return this.docs().unpublish({ documentId });
+  }
+
+  async slugTaken(slug: string, excludeDocumentId?: string) {
+    const query = {
+      filters: { slug: { $eq: slug } },
+      fields: ['documentId'],
+      limit: 1,
+    };
+    const [published, drafts] = await Promise.all([
+      this.docs().findMany({ ...query, status: 'published' }),
+      this.docs().findMany({ ...query, status: 'draft' }),
+    ]);
+    const row = published[0] || drafts[0];
+    if (!row) return false;
+    return row.documentId !== excludeDocumentId;
+  }
+
+  async uploadFiles(files: any) {
+    return this.strapi.plugin('upload').service('upload').upload({
+      data: {},
+      files,
+    });
   }
 
   async findPremiumNegocios() {

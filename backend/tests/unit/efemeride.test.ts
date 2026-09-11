@@ -5,6 +5,11 @@ import {
   isPremiumActivo,
   formatParticipanteLabel,
   buildPublicItems,
+  normalizeTipo,
+  normalizeHttpUrl,
+  sanitizeParticipantesExternos,
+  countParticipantes,
+  slugifyNombre,
 } from '../../src/api/efemeride/services/efemeride-utils';
 
 const NOW = new Date('2026-09-04T15:00:00.000Z');
@@ -124,5 +129,54 @@ describe('buildPublicItems', () => {
     expect(items.map((i) => i.kind)).toEqual(['oferta', 'negocio']);
     expect(items[0].oferta?.titulo).toBe('2x1');
     expect((items[1].negocio as any).nombre).toBe('Beta');
+  });
+});
+
+describe('tipo y participantes externos', () => {
+  it('defaults unknown tipo to efemeride', () => {
+    expect(normalizeTipo(undefined)).toBe('efemeride');
+    expect(normalizeTipo('feria')).toBe('feria');
+  });
+
+  it('normalizes urls without protocol and rejects javascript', () => {
+    expect(normalizeHttpUrl('instagram.com/taller')).toEqual({
+      ok: true,
+      url: 'https://instagram.com/taller',
+    });
+    expect(normalizeHttpUrl('javascript:alert(1)')).toEqual({ ok: false });
+    expect(normalizeHttpUrl('')).toEqual({ ok: true, url: null });
+  });
+
+  it('skips empty rows and keeps optional links', () => {
+    const result = sanitizeParticipantesExternos([
+      { nombre: '  Taller Sur  ', url: 'https://tallersur.com' },
+      { nombre: 'Puesto de miel', url: '' },
+      { nombre: '   ' },
+    ]);
+    expect(result).toEqual({
+      ok: true,
+      items: [
+        { nombre: 'Taller Sur', url: 'https://tallersur.com/' },
+        { nombre: 'Puesto de miel', url: null },
+      ],
+    });
+  });
+
+  it('counts feria participantes from the free list', () => {
+    expect(
+      countParticipantes({
+        tipo: 'feria',
+        negocios: [{ documentId: 'n1' }],
+        participantes_externos: [{ nombre: 'A' }, { nombre: 'B' }],
+      })
+    ).toBe(2);
+    expect(countParticipantes({ tipo: 'efemeride', negocios: [{}, {}] })).toBe(2);
+  });
+});
+
+describe('slugifyNombre', () => {
+  it('strips accents and punctuation', () => {
+    expect(slugifyNombre('Día del Padre')).toBe('dia-del-padre');
+    expect(slugifyNombre('  Feria de Emprendedores!! ')).toBe('feria-de-emprendedores');
   });
 });

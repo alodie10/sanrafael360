@@ -145,10 +145,18 @@ export interface StrapiUser {
   favoritos?: Negocio[];
 }
 
+export type EfemerideTipo = "efemeride" | "feria";
+
+export interface ParticipanteExterno {
+  nombre: string;
+  url?: string | null;
+}
+
 export interface Efemeride {
   documentId: string;
   nombre: string;
   slug: string;
+  tipo?: EfemerideTipo;
   descripcion?: string | null;
   encabezado?: StrapiMedia | null;
   vigente_desde?: string | null;
@@ -157,6 +165,7 @@ export interface Efemeride {
   vigente?: boolean;
   participantesCount?: number;
   negocios?: string[];
+  participantes_externos?: ParticipanteExterno[];
 }
 
 export type EfemeridePublicItem =
@@ -167,11 +176,13 @@ export interface EfemeridePublic {
   documentId: string;
   nombre: string;
   slug: string;
+  tipo?: EfemerideTipo;
   descripcion?: string | null;
   encabezado?: StrapiMedia | null;
   vigente_desde?: string | null;
   vigente_hasta?: string | null;
   items: EfemeridePublicItem[];
+  participantes_externos?: ParticipanteExterno[];
 }
 
 export interface EfemeridePremiumPickerItem {

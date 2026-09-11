@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_efemeride_participante_externos",
+  "info": {
+    "displayName": "Participante externo",
+    "icon": "bulletList",
+    "description": "Emprendimiento o comercio que no figura en SR360"
+  },
+  "options": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "url": {
+      "type": "string"
+    }
+  }
+}

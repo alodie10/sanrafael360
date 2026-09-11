@@ -6,6 +6,7 @@ import { createNegocioRepository } from '../repositories/negocio-repository';
 import { createPortalAdminService } from '../services/portal-admin';
 import { createUserRepository } from '../../../repositories/user-repository';
 import { getAdminEmails, userHasAdminAccess, resolveAdminUser } from '../../../utils/admin-access';
+import { adminCreateNegocio as createNegocioManual } from '../services/admin-create-negocio';
 
 export default factories.createCoreController('api::negocio.negocio', ({ strapi }) => ({
   async find(ctx) {
@@ -155,6 +156,11 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     const repo = createNegocioRepository(strapi);
     const data = await repo.findPendingClaims(['owner', 'logo', 'documentacion_reclamo']);
     return ctx.send({ success: true, data });
+  }),
+
+  adminCreate: asyncHandler(async (ctx) => {
+    const data = await createNegocioManual(strapi, ctx.request.body || {});
+    ctx.send({ data });
   }),
 
   adminResolveClaim: asyncHandler(async (ctx) => {

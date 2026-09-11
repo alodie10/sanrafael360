@@ -172,6 +172,30 @@ export class NegocioRepository {
     const { createNotificationService } = await import('../../../services/notification-service');
     return createNotificationService(this.strapi).sendAdminEmail(subject, html);
   }
+
+  async create(data: Record<string, unknown>, status: 'draft' | 'published' = 'published') {
+    return this.strapi.documents('api::negocio.negocio').create({ data, status });
+  }
+
+  async slugTaken(slug: string) {
+    const query = {
+      filters: { slug: { $eq: slug } },
+      fields: ['documentId'],
+      limit: 1,
+    };
+    const [published, drafts] = await Promise.all([
+      this.strapi.documents('api::negocio.negocio').findMany({ ...query, status: 'published' }),
+      this.strapi.documents('api::negocio.negocio').findMany({ ...query, status: 'draft' }),
+    ]);
+    return Boolean(published[0] || drafts[0]);
+  }
+
+  async findCategoriaByDocumentId(documentId: string) {
+    return this.strapi.documents('api::categoria.categoria').findOne({
+      documentId,
+      fields: ['nombre', 'slug', 'documentId'],
+    });
+  }
 }
 
 export const createNegocioRepository = (strapi: any) => new NegocioRepository(strapi);

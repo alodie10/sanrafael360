@@ -1,5 +1,18 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
+export interface EfemerideParticipanteExterno extends Struct.ComponentSchema {
+  collectionName: 'components_efemeride_participante_externos';
+  info: {
+    description: 'Emprendimiento o comercio que no figura en SR360';
+    displayName: 'Participante externo';
+    icon: 'bulletList';
+  };
+  attributes: {
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    url: Schema.Attribute.String;
+  };
+}
+
 export interface SharedSchedule extends Struct.ComponentSchema {
   collectionName: 'components_shared_schedules';
   info: {
@@ -29,6 +42,7 @@ export interface SharedSchedule extends Struct.ComponentSchema {
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
+      'efemeride.participante-externo': EfemerideParticipanteExterno;
       'shared.schedule': SharedSchedule;
     }
   }

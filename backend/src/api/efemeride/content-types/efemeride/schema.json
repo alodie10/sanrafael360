@@ -4,8 +4,8 @@
   "info": {
     "singularName": "efemeride",
     "pluralName": "efemerides",
-    "displayName": "Efeméride",
-    "description": "Categoría temporal (Día del Maestro, Día del Padre, etc.) con encabezado, slug y vigencia"
+    "displayName": "Efemérides y Ferias",
+    "description": "Fecha conmemorativa o feria temporal, con encabezado, slug, vigencia y participantes"
   },
   "options": {
     "draftAndPublish": true
@@ -19,6 +19,11 @@
       "type": "uid",
       "targetField": "nombre",
       "required": true
+    },
+    "tipo": {
+      "type": "enumeration",
+      "enum": ["efemeride", "feria"],
+      "default": "efemeride"
     },
     "descripcion": {
       "type": "text",
@@ -37,13 +42,19 @@
     },
     "vigente_hasta": {
       "type": "datetime",
-      "description": "Fecha tope. Pasada esta fecha la efeméride deja de mostrarse en público."
+      "description": "Fecha tope. Pasada esta fecha deja de mostrarse en público."
     },
     "negocios": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::negocio.negocio",
       "inversedBy": "efemerides"
+    },
+    "participantes_externos": {
+      "type": "component",
+      "repeatable": true,
+      "component": "efemeride.participante-externo",
+      "description": "Listado libre de emprendimientos que no figuran en SR360 (ferias)"
     }
   }
 }

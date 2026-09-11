@@ -17,10 +17,13 @@ export async function generateMetadata({
     const efemeride = await fetchEfemeridePublic(slug);
     if (!efemeride) notFound();
 
+    const isFeria = efemeride.tipo === "feria";
     const title = `${efemeride.nombre} en San Rafael | SR360`;
     const description =
       efemeride.descripcion ||
-      `Descubrí los comercios de San Rafael que participan de ${efemeride.nombre}. Ofertas y fichas en un solo lugar.`;
+      (isFeria
+        ? `Emprendimientos que participan de ${efemeride.nombre} en San Rafael.`
+        : `Descubrí los comercios de San Rafael que participan de ${efemeride.nombre}. Ofertas y fichas en un solo lugar.`);
     const canonicalUrl = `${SITE_URL}/efemerides/${slug}`;
 
     return {
@@ -64,7 +67,9 @@ export default async function EfemerideLayout({
         name: `${efemeride.nombre} en San Rafael`,
         description:
           efemeride.descripcion ||
-          `Directorio temporal de ${efemeride.nombre} en San Rafael, Mendoza.`,
+          (efemeride.tipo === "feria"
+            ? `Listado de emprendimientos de ${efemeride.nombre} en San Rafael, Mendoza.`
+            : `Directorio temporal de ${efemeride.nombre} en San Rafael, Mendoza.`),
         url: `${SITE_URL}/efemerides/${slug}`,
       }
     : null;
