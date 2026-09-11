@@ -28,6 +28,26 @@ export default factories.createCoreController('api::efemeride.efemeride' as any,
     ctx.send({ data });
   }),
 
+  adminCreate: asyncHandler(async (ctx) => {
+    assertAdmin(ctx);
+    const data = await strapi.service('api::efemeride.efemeride').createFicha(ctx.request.body || {});
+    ctx.send({ data });
+  }),
+
+  adminDelete: asyncHandler(async (ctx) => {
+    assertAdmin(ctx);
+    const data = await strapi.service('api::efemeride.efemeride').deleteFicha(ctx.params.documentId);
+    ctx.send({ data });
+  }),
+
+  adminUploadEncabezado: asyncHandler(async (ctx) => {
+    assertAdmin(ctx);
+    const data = await strapi
+      .service('api::efemeride.efemeride')
+      .uploadEncabezado((ctx.request as any).files);
+    ctx.send({ data });
+  }),
+
   adminPremiumPicker: asyncHandler(async (ctx) => {
     assertAdmin(ctx);
     const data = await strapi.service('api::efemeride.efemeride').listPremiumPicker();

@@ -48,6 +48,12 @@ export function isStrapiUnreachableError(error: unknown): boolean {
   return error instanceof StrapiUnreachableError;
 }
 
+/** Fetch del browser cuando Strapi no está (Next 16 lo muestra como overlay si se loguea el TypeError). */
+export function isBrowserNetworkError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return /failed to fetch|networkerror|load failed|fetch failed/i.test(error.message);
+}
+
 function buildFetchInit(
   options: RequestInit,
   headers: Record<string, string>

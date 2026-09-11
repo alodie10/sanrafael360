@@ -4,10 +4,10 @@ export default function EfemerideNotFound() {
   return (
     <div className="min-h-[50vh] flex flex-col items-center justify-center px-6 text-center pt-32">
       <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-        Efeméride
+        Efemérides y Ferias
       </p>
       <h1 className="text-3xl md:text-4xl font-serif font-bold text-white mb-4 italic">
-        Esta efeméride no está vigente
+        Esta fecha o feria no está vigente
       </h1>
       <p className="text-slate-400 max-w-md mb-8">
         El enlace no existe o la fecha tope ya pasó.

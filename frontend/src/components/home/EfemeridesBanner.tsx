@@ -40,14 +40,20 @@ export default function EfemeridesBanner() {
     <div className="w-full bg-primary/90 text-black px-4 py-2.5 flex items-center justify-center relative shadow-md z-40">
       <div className="flex items-center justify-center gap-3 text-xs md:text-sm font-black uppercase tracking-wider w-full max-w-7xl mx-auto px-6 flex-wrap">
         <CalendarHeart className="w-4 h-4 shrink-0" />
-        {items.map((item) => (
-          <Link
-            key={item.documentId}
-            href={`/efemerides/${item.slug}`}
-            className="hover:opacity-80 transition-opacity underline-offset-4 hover:underline"
-          >
-            {item.nombre}
-          </Link>
+        {items.map((item, index) => (
+          <span key={item.documentId} className="inline-flex items-center gap-3">
+            {index > 0 && (
+              <span className="text-black/45 text-xs leading-none select-none" aria-hidden="true">
+                •
+              </span>
+            )}
+            <Link
+              href={`/efemerides/${item.slug}`}
+              className="hover:opacity-80 transition-opacity underline-offset-4 hover:underline"
+            >
+              {item.nombre}
+            </Link>
+          </span>
         ))}
       </div>
       <button

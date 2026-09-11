@@ -16,8 +16,9 @@ import {
   CalendarHeart,
   Megaphone,
   Bot,
+  Building2,
 } from "lucide-react";
-import { getStrapiUrl } from "@/lib/strapi";
+import { getStrapiUrl, isBrowserNetworkError } from "@/lib/strapi";
 import Link from "next/link";
 import type { PeriodPreset } from "@/lib/performance-period";
 import { rangeFromPreset } from "@/lib/performance-period";
@@ -25,6 +26,7 @@ import AdminClaimCard from "./AdminClaimCard";
 import AdminSupportInbox from "./AdminSupportInbox";
 import AdminLeadsInbox from "./AdminLeadsInbox";
 import AdminDiscoveryTool from "./AdminDiscoveryTool";
+import AdminCreateNegocioPanel from "./AdminCreateNegocioPanel";
 import ActivityLogView from "./ActivityLogView";
 import AdminPaymentsView from "./AdminPaymentsView";
 import PortalStats from "./PortalStats";
@@ -38,7 +40,7 @@ import AdminChatbotPanel from "./AdminChatbotPanel";
 import type { ProspeccionNegocio } from "@/lib/prospeccion";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
-  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'discovery' | 'stats' | 'payments' | 'clientes' | 'prospeccion' | 'efemerides' | 'chatbot'>('payments');
+  const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'alta-negocio' | 'discovery' | 'stats' | 'payments' | 'clientes' | 'prospeccion' | 'efemerides' | 'chatbot'>('payments');
   const [claims, setClaims] = useState(initialClaims);
   const [supportCount, setSupportCount] = useState(0);
   const [leadsCount, setLeadsCount] = useState(0);
@@ -75,8 +77,10 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
         const data = await resLeads.json();
         setLeadsCount(data.meta.pagination.total);
       }
-    } catch (e) {
-      console.error("Error fetching counts", e);
+    } catch (error) {
+      if (!isBrowserNetworkError(error)) {
+        console.warn("[admin] No se pudieron cargar los conteos del panel");
+      }
     }
   };
 
@@ -195,6 +199,16 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
             </button>
 
             <button 
+              type="button"
+              onClick={() => setActiveTab('alta-negocio')}
+              className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'alta-negocio' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+              data-testid="admin-alta-negocio-nav"
+            >
+              <Building2 className="w-4 h-4" /> 
+              <span>Crear negocio</span>
+            </button>
+
+            <button 
               onClick={() => setActiveTab('discovery')}
               className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'discovery' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
             >
@@ -218,8 +232,8 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
               className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'efemerides' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
               data-testid="admin-efemerides-nav"
             >
-              <CalendarHeart className="w-4 h-4" />
-              <span>Efemérides</span>
+              <CalendarHeart className="w-4 h-4 shrink-0" />
+              <span className="leading-tight text-left">Efemérides y Ferias</span>
             </button>
 
             <button
@@ -335,6 +349,12 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
                     <p className="text-zinc-500 font-serif italic text-xl">No hay reclamos pendientes.</p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'alta-negocio' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <AdminCreateNegocioPanel jwt={session.jwt as string} />
               </div>
             )}
 

@@ -6,6 +6,7 @@ import { fetchEfemeridePublic } from "@/lib/efemerides";
 import { getStrapiMedia } from "@/lib/strapi";
 import { formatCalendarDate } from "@/lib/calendar-date";
 import EfemeridePublicGrid from "@/components/efemerides/EfemeridePublicGrid";
+import FeriaParticipantesList from "@/components/efemerides/FeriaParticipantesList";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function EfemeridePage({
 
   if (!efemeride) notFound();
 
+  const isFeria = efemeride.tipo === "feria";
   const coverUrl = efemeride.encabezado?.url ? getStrapiMedia(efemeride.encabezado.url) : null;
   const hastaLabel = efemeride.vigente_hasta
     ? formatCalendarDate(efemeride.vigente_hasta, { day: "numeric", month: "long" })
@@ -64,7 +66,7 @@ export default async function EfemeridePage({
         <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-7 pt-16 text-center md:pb-10 md:pt-20">
           <div className="mx-auto max-w-4xl">
             <p className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary md:mb-3">
-              Efeméride
+              {isFeria ? "Feria" : "Efeméride"}
             </p>
             <h1 className="mb-2 text-2xl font-bold leading-tight text-white md:mb-3 md:text-5xl">
               {efemeride.nombre} en <span className="text-primary italic">San Rafael</span>
@@ -84,12 +86,23 @@ export default async function EfemeridePage({
       </section>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xl font-bold text-white tracking-tight">
-            Explorá {efemeride.items.length} opciones
-          </h2>
-        </div>
-        <EfemeridePublicGrid items={efemeride.items} />
+        {isFeria ? (
+          <>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-bold text-white tracking-tight">Quiénes participan</h2>
+            </div>
+            <FeriaParticipantesList items={efemeride.participantes_externos || []} />
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-bold text-white tracking-tight">
+                Explorá {efemeride.items.length} opciones
+              </h2>
+            </div>
+            <EfemeridePublicGrid items={efemeride.items} />
+          </>
+        )}
       </div>
     </main>
   );

@@ -6,17 +6,22 @@ import {
   CalendarHeart,
   ExternalLink,
   Loader2,
+  Plus,
   Save,
   Search,
+  Trash2,
 } from "lucide-react";
 import { getStrapiUrl, getStrapiMedia } from "@/lib/strapi";
+import { slugifyEfemeride } from "@/lib/efemerides";
 import {
   dateInputToEndOfDayISO,
   dateInputToStartOfDayISO,
   formatCalendarDate,
   toDateInputValue,
 } from "@/lib/calendar-date";
-import type { Efemeride, EfemeridePremiumPickerItem } from "@/types/strapi";
+import type { Efemeride, EfemeridePremiumPickerItem, EfemerideTipo, ParticipanteExterno } from "@/types/strapi";
+import FeriaParticipantesEditor from "./FeriaParticipantesEditor";
+import EfemerideIdentityEditor from "./EfemerideIdentityEditor";
 
 type Props = { jwt: string };
 
@@ -28,6 +33,24 @@ function statusBadge(item: Efemeride) {
     return { label: "Vencida", className: "bg-red-500/15 text-red-300" };
   }
   return { label: "Vigente", className: "bg-emerald-500/15 text-emerald-300" };
+}
+
+function tipoLabel(tipo?: EfemerideTipo) {
+  return tipo === "feria" ? "Feria" : "Efeméride";
+}
+
+function emptyFicha(): Efemeride {
+  return {
+    documentId: "",
+    nombre: "",
+    slug: "",
+    tipo: "efemeride",
+    descripcion: "",
+    encabezado: null,
+    publicationStatus: "draft",
+    negocios: [],
+    participantes_externos: [],
+  };
 }
 
 export default function AdminEfemeridesPanel({ jwt }: Props) {
@@ -44,13 +67,26 @@ export default function AdminEfemeridesPanel({ jwt }: Props) {
   const [picker, setPicker] = useState<EfemeridePremiumPickerItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [ficha, setFicha] = useState<Efemeride | null>(null);
+  const [tipo, setTipo] = useState<EfemerideTipo>("efemeride");
+  const [nombre, setNombre] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [descripcion, setDescripcion] = useState("");
+  const [publicado, setPublicado] = useState(true);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [removeCover, setRemoveCover] = useState(false);
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
   const [selectedNegocios, setSelectedNegocios] = useState<string[]>([]);
+  const [participantesExternos, setParticipantesExternos] = useState<ParticipanteExterno[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isNew = Boolean(ficha) && !selectedId;
 
   const loadList = useCallback(async () => {
     const res = await fetch(`${strapiUrl}/api/efemerides/admin`, { headers: authHeaders });
@@ -76,9 +112,38 @@ export default function AdminEfemeridesPanel({ jwt }: Props) {
       .finally(() => setLoading(false));
   }, [loadList, loadPicker]);
 
+  const hydrateFicha = (data: Efemeride, nextId: string | null) => {
+    setSelectedId(nextId);
+    setFicha(data);
+    setTipo(data.tipo === "feria" ? "feria" : "efemeride");
+    setNombre(data.nombre || "");
+    setSlug(data.slug || "");
+    setSlugTouched(Boolean(nextId));
+    setDescripcion(data.descripcion || "");
+    setPublicado(data.publicationStatus === "published" || !nextId);
+    setDesde(toDateInputValue(data.vigente_desde));
+    setHasta(toDateInputValue(data.vigente_hasta));
+    setSelectedNegocios(data.negocios || []);
+    setParticipantesExternos(data.participantes_externos || []);
+    setCoverFile(null);
+    setRemoveCover(false);
+    setCoverPreview(data.encabezado?.url ? getStrapiMedia(data.encabezado.url) : null);
+    setSearch("");
+  };
+
+  const openCreate = () => {
+    setError(null);
+    hydrateFicha(emptyFicha(), null);
+    setPublicado(true);
+  };
+
+  const closeFicha = () => {
+    setFicha(null);
+    setSelectedId(null);
+  };
+
   const openFicha = async (documentId: string) => {
     setError(null);
-    setSelectedId(documentId);
     try {
       const res = await fetch(`${strapiUrl}/api/efemerides/admin/${documentId}`, {
         headers: authHeaders,
@@ -88,43 +153,87 @@ export default function AdminEfemeridesPanel({ jwt }: Props) {
         setError(json?.error?.message || "No se pudo abrir la ficha");
         return;
       }
-      const data = json.data as Efemeride;
-      setFicha(data);
-      setDesde(toDateInputValue(data.vigente_desde));
-      setHasta(toDateInputValue(data.vigente_hasta));
-      setSelectedNegocios(data.negocios || []);
-      setSearch("");
+      hydrateFicha(json.data as Efemeride, documentId);
     } catch (e: any) {
       setError(e.message || "No se pudo abrir la ficha");
     }
   };
 
+  const uploadCover = async (file: File) => {
+    const form = new FormData();
+    form.append("encabezado", file);
+    const res = await fetch(`${strapiUrl}/api/efemerides/admin/encabezado`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${jwt}` },
+      body: form,
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json?.error?.message || "No se pudo subir la imagen");
+    return json.data?.id as number;
+  };
+
   const saveFicha = async () => {
-    if (!selectedId) return;
+    if (!nombre.trim()) {
+      setError("El nombre es obligatorio");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`${strapiUrl}/api/efemerides/admin/${selectedId}`, {
-        method: "PUT",
+      let encabezadoId: number | null | undefined;
+      if (coverFile) encabezadoId = await uploadCover(coverFile);
+      else if (removeCover) encabezadoId = null;
+
+      const body = {
+        nombre: nombre.trim(),
+        slug: slug.trim() || slugifyEfemeride(nombre),
+        descripcion,
+        tipo,
+        publicado,
+        vigente_desde: desde ? dateInputToStartOfDayISO(desde) : null,
+        vigente_hasta: hasta ? dateInputToEndOfDayISO(hasta) : null,
+        negocioIds: selectedNegocios,
+        participantes_externos: participantesExternos,
+        ...(encabezadoId !== undefined ? { encabezadoId } : {}),
+      };
+
+      const url = selectedId
+        ? `${strapiUrl}/api/efemerides/admin/${selectedId}`
+        : `${strapiUrl}/api/efemerides/admin`;
+      const res = await fetch(url, {
+        method: selectedId ? "PUT" : "POST",
         headers: authHeaders,
-        body: JSON.stringify({
-          vigente_desde: desde ? dateInputToStartOfDayISO(desde) : null,
-          vigente_hasta: hasta ? dateInputToEndOfDayISO(hasta) : null,
-          negocioIds: selectedNegocios,
-        }),
+        body: JSON.stringify(body),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error?.message || "No se pudo guardar");
       const data = json.data as Efemeride;
-      setFicha(data);
-      setDesde(toDateInputValue(data.vigente_desde));
-      setHasta(toDateInputValue(data.vigente_hasta));
-      setSelectedNegocios(data.negocios || []);
+      hydrateFicha(data, data.documentId);
       await loadList();
     } catch (e: any) {
       setError(e.message || "Error al guardar");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const deleteFicha = async (documentId: string) => {
+    if (!confirm("¿Eliminar este registro? Deja de verse en el sitio público.")) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`${strapiUrl}/api/efemerides/admin/${documentId}`, {
+        method: "DELETE",
+        headers: authHeaders,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error?.message || "No se pudo eliminar");
+      closeFicha();
+      await loadList();
+    } catch (e: any) {
+      setError(e.message || "Error al eliminar");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -148,43 +257,43 @@ export default function AdminEfemeridesPanel({ jwt }: Props) {
     );
   }
 
-  if (ficha && selectedId) {
-    const cover = ficha.encabezado?.url ? getStrapiMedia(ficha.encabezado.url) : null;
-    const badge = statusBadge(ficha);
+  if (ficha) {
+    const badge = statusBadge({
+      ...ficha,
+      publicationStatus: publicado ? "published" : "draft",
+    });
     return (
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8" data-testid="admin-efemerides-ficha">
         <button
           type="button"
-          onClick={() => { setFicha(null); setSelectedId(null); }}
+          onClick={closeFicha}
           className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white"
         >
           <ArrowLeft className="w-4 h-4" /> Volver al listado
         </button>
 
-        <div className="rounded-[2rem] overflow-hidden border border-white/10 bg-white/[0.03]">
-          {cover && (
-            <div className="h-40 w-full bg-cover bg-center" style={{ backgroundImage: `url(${cover})` }} />
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-2xl font-serif font-bold text-white italic">
+            {isNew ? "Nueva ficha" : nombre || ficha.nombre}
+          </h2>
+          <span className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/10 text-zinc-200">
+            {tipoLabel(tipo)}
+          </span>
+          {!isNew && (
+            <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${badge.className}`}>
+              {badge.label}
+            </span>
           )}
-          <div className="p-6 md:p-8 space-y-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-2xl font-serif font-bold text-white italic">{ficha.nombre}</h2>
-              <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${badge.className}`}>
-                {badge.label}
-              </span>
-            </div>
-            <p className="text-xs text-zinc-500 font-mono">/{ficha.slug}</p>
-            {ficha.descripcion && <p className="text-sm text-zinc-400">{ficha.descripcion}</p>}
-            {ficha.publicationStatus === "published" && (
-              <a
-                href={`/efemerides/${ficha.slug}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:underline"
-              >
-                Ver página pública <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            )}
-          </div>
+          {!isNew && publicado && slug && (
+            <a
+              href={`/efemerides/${slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:underline"
+            >
+              Ver página pública <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
         </div>
 
         {error && (
@@ -192,10 +301,67 @@ export default function AdminEfemeridesPanel({ jwt }: Props) {
         )}
 
         <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 space-y-4">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Tipo de registro</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setTipo("efemeride")}
+              className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-colors ${
+                tipo === "efemeride"
+                  ? "bg-primary text-black border-primary"
+                  : "bg-black/20 text-zinc-400 border-white/10 hover:text-white"
+              }`}
+              data-testid="efemeride-tipo-efemeride"
+            >
+              Efeméride
+            </button>
+            <button
+              type="button"
+              onClick={() => setTipo("feria")}
+              className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-colors ${
+                tipo === "feria"
+                  ? "bg-primary text-black border-primary"
+                  : "bg-black/20 text-zinc-400 border-white/10 hover:text-white"
+              }`}
+              data-testid="efemeride-tipo-feria"
+            >
+              Feria
+            </button>
+          </div>
+        </section>
+
+        <EfemerideIdentityEditor
+          nombre={nombre}
+          slug={slug}
+          descripcion={descripcion}
+          publicado={publicado}
+          coverPreview={coverPreview}
+          onNombre={(value) => {
+            setNombre(value);
+            if (!slugTouched) setSlug(slugifyEfemeride(value));
+          }}
+          onSlug={(value) => {
+            setSlugTouched(true);
+            setSlug(value);
+          }}
+          onDescripcion={setDescripcion}
+          onPublicado={setPublicado}
+          onCoverFile={(file) => {
+            if (!file) return;
+            setCoverFile(file);
+            setRemoveCover(false);
+            setCoverPreview(URL.createObjectURL(file));
+          }}
+          onRemoveCover={() => {
+            setCoverFile(null);
+            setRemoveCover(true);
+            setCoverPreview(null);
+          }}
+        />
+
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 space-y-4">
           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Vigencia</h3>
-          <p className="text-sm text-zinc-400">
-            Pasada la fecha tope, la página pública se desactiva sola.
-          </p>
+          <p className="text-sm text-zinc-400">Pasada la fecha tope, la página pública se desactiva sola.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="space-y-2">
               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Desde</span>
@@ -220,72 +386,100 @@ export default function AdminEfemeridesPanel({ jwt }: Props) {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-              Participantes premium ({selectedNegocios.length})
-            </h3>
-            <div className="relative w-full md:w-72">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar negocio o rubro"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-black/40 border border-white/10 text-sm text-white"
-                data-testid="efemeride-picker-search"
-              />
+        {tipo === "feria" ? (
+          <FeriaParticipantesEditor items={participantesExternos} onChange={setParticipantesExternos} />
+        ) : (
+          <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                Participantes premium ({selectedNegocios.length})
+              </h3>
+              <div className="relative w-full md:w-72">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar negocio o rubro"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-black/40 border border-white/10 text-sm text-white"
+                  data-testid="efemeride-picker-search"
+                />
+              </div>
             </div>
-          </div>
-          <div className="max-h-[28rem] overflow-y-auto space-y-1 pr-1" data-testid="efemeride-picker-list">
-            {filteredPicker.map((p) => {
-              const checked = selectedNegocios.includes(p.documentId);
-              return (
-                <label
-                  key={p.documentId}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer border transition-colors ${
-                    checked
-                      ? "bg-primary/10 border-primary/30"
-                      : "bg-black/20 border-transparent hover:border-white/10"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleNegocio(p.documentId)}
-                    className="accent-primary w-4 h-4"
-                    data-testid={`efemeride-check-${p.documentId}`}
-                  />
-                  <span className="text-sm text-white">{p.label}</span>
-                </label>
-              );
-            })}
-            {filteredPicker.length === 0 && (
-              <p className="text-sm text-zinc-500 py-8 text-center">No hay clientes premium para mostrar.</p>
-            )}
-          </div>
-        </section>
+            <div className="max-h-[28rem] overflow-y-auto space-y-1 pr-1" data-testid="efemeride-picker-list">
+              {filteredPicker.map((p) => {
+                const checked = selectedNegocios.includes(p.documentId);
+                return (
+                  <label
+                    key={p.documentId}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer border transition-colors ${
+                      checked
+                        ? "bg-primary/10 border-primary/30"
+                        : "bg-black/20 border-transparent hover:border-white/10"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleNegocio(p.documentId)}
+                      className="accent-primary w-4 h-4"
+                      data-testid={`efemeride-check-${p.documentId}`}
+                    />
+                    <span className="text-sm text-white">{p.label}</span>
+                  </label>
+                );
+              })}
+              {filteredPicker.length === 0 && (
+                <p className="text-sm text-zinc-500 py-8 text-center">No hay clientes premium para mostrar.</p>
+              )}
+            </div>
+          </section>
+        )}
 
-        <button
-          type="button"
-          disabled={saving}
-          onClick={saveFicha}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
-          data-testid="efemeride-save"
-        >
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Guardar ficha
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            disabled={saving}
+            onClick={saveFicha}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+            data-testid="efemeride-save"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {isNew ? "Crear ficha" : "Guardar ficha"}
+          </button>
+          {!isNew && selectedId && (
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => deleteFicha(selectedId)}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-red-500/30 text-red-300 text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+              data-testid="efemeride-delete"
+            >
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              Eliminar
+            </button>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8" data-testid="admin-efemerides-panel">
-      <div>
-        <h2 className="text-2xl font-serif font-bold text-white mb-2 italic">Efemérides</h2>
-        <p className="text-sm text-zinc-400 max-w-2xl">
-          Creá el encabezado y el slug en Strapi (Content Manager → Efeméride). Acá listás, abrís la ficha, definís la vigencia y elegís quiénes participan.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-serif font-bold text-white mb-2 italic">Efemérides y Ferias</h2>
+          <p className="text-sm text-zinc-400 max-w-2xl">
+            Creá, editá o borré fechas y ferias acá. El tipo define si los participantes salen de SR360 o de un listado libre.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={openCreate}
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-black text-[10px] font-black uppercase tracking-widest"
+          data-testid="efemeride-create"
+        >
+          <Plus className="w-4 h-4" /> Nueva ficha
+        </button>
       </div>
 
       {error && (
@@ -295,41 +489,55 @@ export default function AdminEfemeridesPanel({ jwt }: Props) {
       {list.length === 0 ? (
         <div className="bg-zinc-950/40 border border-white/5 rounded-[2.5rem] p-16 text-center">
           <CalendarHeart className="w-12 h-12 text-primary mx-auto mb-4 opacity-20" />
-          <p className="text-zinc-500 font-serif italic text-xl">Todavía no hay efemérides.</p>
-          <p className="text-sm text-zinc-600 mt-2">Crealas en Strapi como hacés con las categorías.</p>
+          <p className="text-zinc-500 font-serif italic text-xl">Todavía no hay efemérides ni ferias.</p>
+          <p className="text-sm text-zinc-600 mt-2">Usá “Nueva ficha” para cargar la primera.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {list.map((item) => {
             const badge = statusBadge(item);
             return (
-              <button
+              <div
                 key={item.documentId}
-                type="button"
-                onClick={() => openFicha(item.documentId)}
-                className="w-full text-left rounded-2xl border border-white/10 bg-white/[0.03] hover:border-primary/40 px-6 py-5 transition-all"
-                data-testid={`efemeride-row-${item.documentId}`}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] hover:border-primary/40 px-6 py-5 transition-all flex flex-wrap items-center gap-3"
               >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
+                <button
+                  type="button"
+                  onClick={() => openFicha(item.documentId)}
+                  className="flex-1 text-left min-w-[12rem]"
+                  data-testid={`efemeride-row-${item.documentId}`}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
                     <p className="text-lg font-serif font-bold text-white">{item.nombre}</p>
-                    <p className="text-xs text-zinc-500 font-mono mt-1">/efemerides/{item.slug}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                      {item.participantesCount || 0} participantes
-                    </span>
-                    {item.vigente_hasta && (
-                      <span className="text-[10px] text-zinc-400">
-                        Hasta {formatCalendarDate(item.vigente_hasta)}
-                      </span>
-                    )}
-                    <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${badge.className}`}>
-                      {badge.label}
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10 text-zinc-400">
+                      {tipoLabel(item.tipo)}
                     </span>
                   </div>
+                  <p className="text-xs text-zinc-500 font-mono mt-1">/efemerides/{item.slug}</p>
+                </button>
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    {item.participantesCount || 0} participantes
+                  </span>
+                  {item.vigente_hasta && (
+                    <span className="text-[10px] text-zinc-400">
+                      Hasta {formatCalendarDate(item.vigente_hasta)}
+                    </span>
+                  )}
+                  <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${badge.className}`}>
+                    {badge.label}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => deleteFicha(item.documentId)}
+                    className="p-2 rounded-xl text-zinc-500 hover:text-red-300 hover:bg-red-500/10"
+                    aria-label={`Eliminar ${item.nombre}`}
+                    data-testid={`efemeride-delete-${item.documentId}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>

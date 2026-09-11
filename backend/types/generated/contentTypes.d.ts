@@ -630,8 +630,8 @@ export interface ApiDailyStatDailyStat extends Struct.CollectionTypeSchema {
 export interface ApiEfemerideEfemeride extends Struct.CollectionTypeSchema {
   collectionName: 'efemerides';
   info: {
-    description: 'Categor\u00EDa temporal (D\u00EDa del Maestro, D\u00EDa del Padre, etc.) con encabezado, slug y vigencia';
-    displayName: 'Efem\u00E9ride';
+    description: 'Fecha conmemorativa o feria temporal, con encabezado, slug, vigencia y participantes';
+    displayName: 'Efem\u00E9rides y Ferias';
     pluralName: 'efemerides';
     singularName: 'efemeride';
   };
@@ -652,8 +652,14 @@ export interface ApiEfemerideEfemeride extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     negocios: Schema.Attribute.Relation<'manyToMany', 'api::negocio.negocio'>;
     nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    participantes_externos: Schema.Attribute.Component<
+      'efemeride.participante-externo',
+      true
+    >;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'nombre'> & Schema.Attribute.Required;
+    tipo: Schema.Attribute.Enumeration<['efemeride', 'feria']> &
+      Schema.Attribute.DefaultTo<'efemeride'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

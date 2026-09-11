@@ -2,6 +2,16 @@ import { cache } from "@/lib/react-cache";
 import { getStrapiUrl } from "@/lib/strapi";
 import type { EfemeridePublic } from "@/types/strapi";
 
+export function slugifyEfemeride(value: string): string {
+  return (value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 80);
+}
+
 export const fetchEfemeridePublic = cache(async function fetchEfemeridePublic(
   slug: string,
   options: RequestInit = {}

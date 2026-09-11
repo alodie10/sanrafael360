@@ -57,6 +57,16 @@ export default {
     },
     {
       method: 'POST',
+      path: '/negocios/admin',
+      handler: 'negocio.adminCreate',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['global::require-admin', 'api::negocio.admin-create-negocio-validator'],
+      },
+    },
+    {
+      method: 'POST',
       path: '/negocios/admin/resolve-claim/:id',
       handler: 'negocio.adminResolveClaim',
       config: {

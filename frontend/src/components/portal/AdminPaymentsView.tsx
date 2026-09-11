@@ -14,7 +14,7 @@ import {
   ChevronRight,
   Plus, X, Trash2, History
 } from "lucide-react";
-import { getStrapiUrl } from "@/lib/strapi";
+import { getStrapiUrl, isBrowserNetworkError } from "@/lib/strapi";
 // Formateo nativo para evitar dependencias extra
 const formatDate = (dateString: string) => {
   if (!dateString) return "N/A";
@@ -126,7 +126,9 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
         }
         setData(json.data || []);
       } catch (err) {
-        console.error("Error fetching admin payments data:", err);
+        if (!isBrowserNetworkError(err)) {
+          console.warn("[admin] No se pudieron cargar los pagos");
+        }
       } finally {
         setLoading(false);
       }
