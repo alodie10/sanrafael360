@@ -1,18 +1,19 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { Check, Copy, Loader2, Plus, Save } from "lucide-react";
+import { Check, Copy, Loader2, Plus, Save, Upload } from "lucide-react";
 import { dateInputToEndOfDayISO, dateInputToStartOfDayISO } from "@/lib/calendar-date";
 import {
   formatMendoza,
   guideAdminApi,
   listToInput,
   type GuideExpansionRow,
+  type GuideMaterialRow,
   type GuideMissRow,
   type GuideSettingsRow,
 } from "@/lib/guide-admin";
 
-type InnerTab = "misses" | "diccionario" | "ajustes";
+type InnerTab = "misses" | "diccionario" | "material" | "ajustes";
 type Props = { jwt: string };
 
 const MATCH_OPTIONS = [
@@ -68,12 +69,21 @@ export default function AdminChatbotPanel({ jwt }: Props) {
   const [fromMissId, setFromMissId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [categoryNames, setCategoryNames] = useState<string[]>([]);
+  const [materials, setMaterials] = useState<GuideMaterialRow[]>([]);
+  const [materialDraft, setMaterialDraft] = useState({
+    titulo: "",
+    cuerpo: "",
+    activo: true,
+    origen: "pegado" as "pegado" | "archivo",
+    nombre_archivo: "",
+  });
+  const [editingMaterialId, setEditingMaterialId] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [missRows, expRows, sets, cats] = await Promise.all([
+      const [missRows, expRows, sets, cats, matRows] = await Promise.all([
         api.listMisses({
           estado,
           q,
@@ -83,11 +93,13 @@ export default function AdminChatbotPanel({ jwt }: Props) {
         api.listExpansions(),
         api.getSettings(),
         api.listCategoryNames().catch(() => [] as string[]),
+        api.listMaterials().catch(() => [] as GuideMaterialRow[]),
       ]);
       setMisses(missRows);
       setExpansions(expRows);
       setSettings(sets);
       setCategoryNames(cats);
+      setMaterials(matRows);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo cargar el módulo");
     } finally {
@@ -146,6 +158,38 @@ export default function AdminChatbotPanel({ jwt }: Props) {
     }
   };
 
+  const onSaveMaterial = async (event: FormEvent) => {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+    try {
+      const saved = await api.saveMaterial(
+        {
+          titulo: materialDraft.titulo,
+          cuerpo: materialDraft.cuerpo,
+          activo: materialDraft.activo,
+          origen: materialDraft.origen,
+          nombre_archivo: materialDraft.nombre_archivo,
+        },
+        editingMaterialId || undefined
+      );
+      setNotice("Material guardado. Rafi lo toma en el próximo mensaje.");
+      setEditingMaterialId(saved.documentId);
+      setMaterialDraft({
+        titulo: saved.titulo,
+        cuerpo: saved.cuerpo,
+        activo: saved.activo,
+        origen: saved.origen,
+        nombre_archivo: saved.nombre_archivo || "",
+      });
+      await loadAll();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo guardar el material");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const tabBtn = (id: InnerTab, label: string) => (
     <button
       type="button"
@@ -162,11 +206,12 @@ export default function AdminChatbotPanel({ jwt }: Props) {
   return (
     <div className="space-y-6" data-testid="admin-chatbot-panel">
       <p className="text-sm text-zinc-400">
-        Misses del chat, diccionario de expansiones y pausa/copy. Sin redeploy para un sinónimo nuevo.
+        Misses, diccionario de búsqueda y material de ciudad. El material no reemplaza las fichas.
       </p>
       <div className="flex flex-wrap gap-2">
         {tabBtn("misses", "Sin resultado")}
         {tabBtn("diccionario", "Diccionario")}
+        {tabBtn("material", "Material")}
         {tabBtn("ajustes", "Ajustes")}
       </div>
       {error ? <p className="text-sm text-red-400">{error}</p> : null}
@@ -222,6 +267,47 @@ export default function AdminChatbotPanel({ jwt }: Props) {
               .then(loadAll)
               .catch((e) => setError(e instanceof Error ? e.message : "No se pudo actualizar"))
           }
+        />
+      ) : null}
+
+      {tab === "material" && !loading ? (
+        <MaterialView
+          materials={materials}
+          draft={materialDraft}
+          setDraft={setMaterialDraft}
+          editingId={editingMaterialId}
+          saving={saving}
+          onSubmit={onSaveMaterial}
+          onEdit={(row) => {
+            setEditingMaterialId(row.documentId);
+            setMaterialDraft({
+              titulo: row.titulo,
+              cuerpo: row.cuerpo,
+              activo: row.activo,
+              origen: row.origen,
+              nombre_archivo: row.nombre_archivo || "",
+            });
+          }}
+          onNew={() => {
+            setEditingMaterialId(null);
+            setMaterialDraft({ titulo: "", cuerpo: "", activo: true, origen: "pegado", nombre_archivo: "" });
+          }}
+          onToggle={(row) =>
+            api
+              .saveMaterial({ activo: !row.activo }, row.documentId)
+              .then(loadAll)
+              .catch((e) => setError(e instanceof Error ? e.message : "No se pudo actualizar"))
+          }
+          onDelete={(id) => {
+            if (!window.confirm("¿Borrar este material?")) return;
+            api.deleteMaterial(id).then(() => {
+              if (editingMaterialId === id) {
+                setEditingMaterialId(null);
+                setMaterialDraft({ titulo: "", cuerpo: "", activo: true, origen: "pegado", nombre_archivo: "" });
+              }
+              return loadAll();
+            }).catch((e) => setError(e instanceof Error ? e.message : "No se pudo borrar"));
+          }}
         />
       ) : null}
 
@@ -566,5 +652,141 @@ function SettingsView({
         Guardar ajustes
       </button>
     </form>
+  );
+}
+
+type MaterialDraft = {
+  titulo: string;
+  cuerpo: string;
+  activo: boolean;
+  origen: "pegado" | "archivo";
+  nombre_archivo: string;
+};
+
+async function readMaterialFile(file: File): Promise<Pick<MaterialDraft, "titulo" | "cuerpo" | "origen" | "nombre_archivo">> {
+  if (!/\.(txt|md)$/i.test(file.name)) throw new Error("Subí un .txt o .md");
+  if (file.size > 50_000) throw new Error("El archivo supera 50 KB");
+  const cuerpo = (await file.text()).trim();
+  if (cuerpo.length < 20) throw new Error("El archivo está vacío o es demasiado corto");
+  return {
+    titulo: file.name.replace(/\.(txt|md)$/i, ""),
+    cuerpo,
+    origen: "archivo",
+    nombre_archivo: file.name,
+  };
+}
+
+function MaterialView({
+  materials,
+  draft,
+  setDraft,
+  editingId,
+  saving,
+  onSubmit,
+  onEdit,
+  onNew,
+  onToggle,
+  onDelete,
+}: {
+  materials: GuideMaterialRow[];
+  draft: MaterialDraft;
+  setDraft: (next: MaterialDraft) => void;
+  editingId: string | null;
+  saving: boolean;
+  onSubmit: (event: FormEvent) => void;
+  onEdit: (row: GuideMaterialRow) => void;
+  onNew: () => void;
+  onToggle: (row: GuideMaterialRow) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="grid lg:grid-cols-2 gap-8">
+      <form onSubmit={onSubmit} className="space-y-3 bg-white/5 border border-white/10 rounded-3xl p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-serif italic text-xl">{editingId ? "Editar material" : "Nuevo material"}</h3>
+          <button type="button" onClick={onNew} className="text-[10px] uppercase tracking-widest text-zinc-400">
+            <Plus className="w-3 h-3 inline" /> Nuevo
+          </button>
+        </div>
+        <p className="text-[11px] text-zinc-500">
+          Pegá notas de ciudad o subí .txt/.md. Rafi lo usa como contexto; no recomienda comercios que no estén en el directorio.
+        </p>
+        <label className="block text-xs text-zinc-400 space-y-1">
+          <span className="uppercase tracking-widest text-[10px]">Título</span>
+          <input
+            value={draft.titulo}
+            onChange={(e) => setDraft({ ...draft, titulo: e.target.value })}
+            className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white"
+          />
+        </label>
+        <label className="block text-xs text-zinc-400 space-y-1">
+          <span className="uppercase tracking-widest text-[10px]">Texto</span>
+          <textarea
+            value={draft.cuerpo}
+            onChange={(e) => setDraft({ ...draft, cuerpo: e.target.value, origen: draft.origen === "archivo" ? draft.origen : "pegado" })}
+            className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white min-h-40"
+            data-testid="admin-chatbot-material-body"
+          />
+        </label>
+        <label className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-400 cursor-pointer">
+          <Upload className="w-3 h-3" />
+          Subir .txt o .md
+          <input
+            type="file"
+            accept=".txt,.md,text/plain,text/markdown"
+            className="hidden"
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (!file) return;
+              try {
+                const next = await readMaterialFile(file);
+                setDraft({ ...draft, ...next, activo: draft.activo });
+              } catch (error) {
+                window.alert(error instanceof Error ? error.message : "No se pudo leer el archivo");
+              }
+            }}
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-zinc-300">
+          <input
+            type="checkbox"
+            checked={draft.activo}
+            onChange={(e) => setDraft({ ...draft, activo: e.target.checked })}
+          />
+          Activo
+        </label>
+        <button
+          type="submit"
+          disabled={saving}
+          className="inline-flex items-center gap-2 bg-primary text-black font-black uppercase tracking-widest text-[10px] px-4 py-3 rounded-xl"
+          data-testid="admin-chatbot-save-material"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          Guardar
+        </button>
+      </form>
+      <div className="space-y-3">
+        {materials.map((row) => (
+          <article key={row.documentId} className="border border-white/10 rounded-2xl p-4 space-y-2">
+            <div className="flex justify-between gap-3">
+              <strong className="text-white">{row.titulo}</strong>
+              <span className={`text-[10px] uppercase ${row.activo ? "text-emerald-400" : "text-zinc-500"}`}>
+                {row.activo ? "activo" : "off"}
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500 line-clamp-3">{row.cuerpo}</p>
+            <div className="flex flex-wrap gap-3 text-[10px] uppercase tracking-widest">
+              <button type="button" className="text-primary" onClick={() => onEdit(row)}>Editar</button>
+              <button type="button" className="text-zinc-400" onClick={() => onToggle(row)}>
+                {row.activo ? "Desactivar" : "Activar"}
+              </button>
+              <button type="button" className="text-zinc-500" onClick={() => onDelete(row.documentId)}>Borrar</button>
+            </div>
+          </article>
+        ))}
+        {!materials.length ? <p className="text-zinc-500 italic">Todavía no hay material.</p> : null}
+      </div>
+    </div>
   );
 }

@@ -1,8 +1,9 @@
-import { persistGuideMiss, loadGuideRuntime, liveConfig } from "./live-store";
+import { persistGuideMiss, loadGuideRuntime, liveConfig, peekGuideRuntime } from "./live-store";
 import { greetingTurn, resolveGuideTurn } from "./conversation";
 import { distinctiveRubroToken } from "./rank";
 import { recommendFichasViaAlgolia } from "./recommend";
-import { redactFromHits } from "./redact";
+import { redactFromHits, redactFromMaterial } from "./redact";
+import { materialSnippets } from "./knowledge";
 import type { GuideTurnInput, GuideTurnResult, ParsedFilters, GuideMissTrace } from "./types";
 
 function anunciarResult(): GuideTurnResult {
@@ -47,8 +48,17 @@ async function searchFichas(
 ): Promise<GuideTurnResult> {
   try {
     const { hits, trace } = await recommendFichasViaAlgolia(filters, excludeIds, query);
-    if (!hits.length) return emptyResult(filters, trace);
-    const text = await redactFromHits(query, hits, input.history);
+    const snippets = materialSnippets(query, peekGuideRuntime()?.materials || []);
+    if (!hits.length) {
+      const fromMaterial = await redactFromMaterial(query, snippets, input.history);
+      if (fromMaterial) {
+        logGuideNoResults(trace);
+        void persistGuideMiss(trace);
+        return { type: "empty", text: fromMaterial, hits: [], miss: trace };
+      }
+      return emptyResult(filters, trace);
+    }
+    const text = await redactFromHits(query, hits, input.history, snippets);
     return { type: "results", text, hits };
   } catch {
     return {

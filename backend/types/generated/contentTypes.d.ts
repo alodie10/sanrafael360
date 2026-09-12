@@ -714,6 +714,45 @@ export interface ApiGuideExpansionGuideExpansion
   };
 }
 
+export interface ApiGuideMaterialGuideMaterial
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'guide_materials';
+  info: {
+    description: 'Textos que Rafi usa como contexto, no como fichas';
+    displayName: 'Guide material';
+    pluralName: 'guide-materials';
+    singularName: 'guide-material';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    cuerpo: Schema.Attribute.Text & Schema.Attribute.Required;
+    edited_by: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::guide-material.guide-material'
+    > &
+      Schema.Attribute.Private;
+    nombre_archivo: Schema.Attribute.String;
+    origen: Schema.Attribute.Enumeration<['pegado', 'archivo']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'pegado'>;
+    publishedAt: Schema.Attribute.DateTime;
+    titulo: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiGuideMissGuideMiss extends Struct.CollectionTypeSchema {
   collectionName: 'guide_misses';
   info: {
@@ -1972,6 +2011,7 @@ declare module '@strapi/strapi' {
       'api::daily-stat.daily-stat': ApiDailyStatDailyStat;
       'api::efemeride.efemeride': ApiEfemerideEfemeride;
       'api::guide-expansion.guide-expansion': ApiGuideExpansionGuideExpansion;
+      'api::guide-material.guide-material': ApiGuideMaterialGuideMaterial;
       'api::guide-miss.guide-miss': ApiGuideMissGuideMiss;
       'api::guide-setting.guide-setting': ApiGuideSettingGuideSetting;
       'api::lead.lead': ApiLeadLead;

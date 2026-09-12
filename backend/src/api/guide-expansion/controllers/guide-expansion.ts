@@ -43,8 +43,7 @@ export default factories.createCoreController('api::guide-expansion.guide-expans
   }),
 
   publicRuntime: asyncHandler(async (ctx) => {
-    const expansions = await strapi.service('api::guide-expansion.guide-expansion').activeIntentMap();
-    const settings = await strapi.service('api::guide-setting.guide-setting').getSettings();
-    ctx.send({ data: { expansions, settings } });
+    const data = await strapi.service('api::guide-expansion.guide-expansion').getPublicRuntime();
+    ctx.send({ data });
   }),
 }));

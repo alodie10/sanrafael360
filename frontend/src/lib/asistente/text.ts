@@ -12,6 +12,8 @@ const RUBRO_STOP = new Set([
   "persona", "personas", "gente", "pax", "adulto", "adultos",
   "abrir", "abra", "abierto", "abierta", "horario", "horarios",
   "precio", "precios", "barato", "barata", "caro", "cara",
+  "recomienda", "recomiendas", "recomientas", "recomendar", "recomendame",
+  "sugeris", "sugieres", "sugerir", "sugerime",
 ]);
 
 const ZONA_WORDS = new Set([
@@ -86,6 +88,33 @@ export function distinctiveRubroToken(rubro: string): string {
   const withoutZona = tokens.filter((token) => !ZONA_WORDS.has(token));
   const pool = withoutZona.length ? withoutZona : tokens;
   return pool[pool.length - 1] || "";
+}
+
+/** Distancia 1 para typos típicos: pelqueria ↔ peluqueria. Tokens cortos no. */
+export function isCloseToken(a: string, b: string): boolean {
+  const left = normalizeGuideText(a);
+  const right = normalizeGuideText(b);
+  if (!left || !right) return false;
+  if (left === right) return true;
+  if (left.length < 6 || right.length < 6) return false;
+  if (Math.abs(left.length - right.length) > 1) return false;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < left.length && j < right.length) {
+    if (left[i] === right[j]) {
+      i += 1;
+      j += 1;
+      continue;
+    }
+    if (++edits > 1) return false;
+    if (left.length === right.length) {
+      i += 1;
+      j += 1;
+    } else if (left.length > right.length) i += 1;
+    else j += 1;
+  }
+  return edits + (left.length - i) + (right.length - j) <= 1;
 }
 
 export function extraSearchTerms(text: string): string | null {

@@ -1,5 +1,6 @@
 import { getAsistenteConfig, type AsistenteConfig } from "./config";
 import type { IntentMap } from "./expand-intent";
+import type { GuideMaterial } from "./knowledge";
 
 export type GuideLiveSettings = {
   paused: boolean;
@@ -14,6 +15,8 @@ export type GuideLiveSettings = {
 export type GuideRuntime = {
   expansions: IntentMap;
   settings: GuideLiveSettings;
+  categories?: string[];
+  materials?: GuideMaterial[];
 };
 
 export function resolveLiveAsistenteConfig(runtime: GuideRuntime | null): AsistenteConfig {

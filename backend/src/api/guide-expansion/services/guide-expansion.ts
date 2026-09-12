@@ -129,4 +129,14 @@ export default factories.createCoreService('api::guide-expansion.guide-expansion
     }
     return map;
   },
+
+  async getPublicRuntime() {
+    const [expansions, settings, categories, materials] = await Promise.all([
+      this.activeIntentMap(),
+      strapi.service('api::guide-setting.guide-setting').getSettings(),
+      this.catalogCategoryNames(),
+      strapi.service('api::guide-material.guide-material').listForRuntime(),
+    ]);
+    return { expansions, settings, categories, materials };
+  },
 }));

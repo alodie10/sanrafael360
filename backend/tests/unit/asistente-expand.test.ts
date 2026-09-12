@@ -11,7 +11,8 @@ import {
   preferIntentHits,
 } from "../../../frontend/src/lib/asistente/expand-intent";
 import { algoliaRubroQuery, coerceGuideKeywords, hitMatchesRubro } from "../../../frontend/src/lib/asistente/rank";
-import { stripNeedPhrases } from "../../../frontend/src/lib/asistente/text";
+import { distinctiveRubroToken, isCloseToken, stripNeedPhrases } from "../../../frontend/src/lib/asistente/text";
+import { materialSnippets } from "../../../frontend/src/lib/asistente/knowledge";
 
 const hospitalEspanol = {
   objectID: "hospital-espanol",
@@ -66,6 +67,9 @@ describe("guide intent map", () => {
     expect(matchIntentKey("hotel con pileta")).toBe("hotel");
     expect(matchIntentKey("dónde dormir")).toBe("hotel");
     expect(matchIntentKey("farmacia de turno")).toBe("farmacia");
+    expect(matchIntentKey("que pelqueria me recomientas?")).toBe("peluqueria");
+    expect(matchIntentKey("peluquería")).toBe("peluqueria");
+    expect(matchIntentKey("barbería cerca")).toBe("peluqueria");
     expect(expandIntent("dónde comer").queries.length).toBeGreaterThan(0);
     expect(hitMatchesRubro(
       { objectID: "gomeria", nombre: "Neumaticos Moreno", categoria: "Talleres Mecánicos - Gomerías" },
@@ -75,6 +79,17 @@ describe("guide intent map", () => {
       { objectID: "obrador", nombre: "L´OBRADOR", categoria: "Gastronomía" },
       "dónde comer"
     )).toBe(true);
+    expect(hitMatchesRubro(
+      { objectID: "almafuerte", nombre: "PELUQUERÍAS ALMAFUERTE", categoria: "Belleza & Estética" },
+      "que pelqueria me recomientas?"
+    )).toBe(true);
+    expect(hitMatchesRubro(
+      { objectID: "mafalda", nombre: "MAFALDA Insumos para Peluquerías", categoria: "Belleza & Estética" },
+      "peluquería"
+    )).toBe(false);
+    expect(isCloseToken("pelqueria", "peluqueria")).toBe(true);
+    expect(isCloseToken("hotel", "hostel")).toBe(false);
+    expect(distinctiveRubroToken("que pelqueria me recomientas")).toBe("pelqueria");
   });
 
   it("uses a live expansion from the admin store without redeploying the seed JSON", () => {
@@ -138,5 +153,42 @@ describe("guide intent map", () => {
     const plan = expansionSearchPlan(expansion, "mate");
     expect(plan.some((item) => item.query === "Productos Regionales" && !item.filters)).toBe(true);
     expect(plan.some((item) => item.query === "mate" && !item.filters)).toBe(false);
+  });
+
+  it("covers catalog categories that are not hand-tuned in the seed", () => {
+    expect(matchIntentKey("necesito una ferretería")).toBe("ferreterias");
+    expect(matchIntentKey("dónde hay sushi")).toBe("sushi");
+    expect(matchIntentKey("necesito un plomero")).toBe("servicios_para_el_hogar_y_tecno");
+    expect(matchIntentKey("alquiler de auto")).toBe("alquiler_venta_de_autos");
+    expect(expandIntent("ferretería").categories).toContain("Ferreterías");
+    expect(hitMatchesRubro(
+      { objectID: "ferre", nombre: "Don José", categoria: "Ferreterías" },
+      "necesito una ferretería"
+    )).toBe(true);
+  });
+
+  it("does not let the category floor steal hotel or peluquería", () => {
+    expect(matchIntentKey("hotel con pileta")).toBe("hotel");
+    expect(matchIntentKey("dónde dormir")).toBe("hotel");
+    expect(matchIntentKey("que pelqueria me recomientas?")).toBe("peluqueria");
+    expect(matchIntentKey("pasaje a buenos aires")).toBe("agencia_de_viajes");
+  });
+});
+
+describe("guide material snippets", () => {
+  it("pulls the dique note and ignores unrelated text", () => {
+    const materials = [
+      {
+        titulo: "Zonas",
+        cuerpo: "Cuando dicen el dique, en San Rafael suele ser Valle Grande o Los Reyunos.\n\nEl centro es la planta urbana alrededor de San Martín.",
+      },
+      {
+        titulo: "Vendimia",
+        cuerpo: "La vendimia local suele caer en marzo, con actos en el departamento.",
+      },
+    ];
+    const hits = materialSnippets("qué es el dique", materials);
+    expect(hits[0]).toMatch(/Valle Grande/);
+    expect(hits.join(" ")).not.toMatch(/vendimia/i);
   });
 });

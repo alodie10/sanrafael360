@@ -115,5 +115,26 @@
     "aliases": ["veterinaria", "veterinario", "veterinarias", "mascota", "mascotas"],
     "queries": ["veterinaria", "mascotas"],
     "categories": ["Mascotas y Veterinarias", "Mascotas y veterinarias"]
+  },
+  "peluqueria": {
+    "aliases": [
+      "peluqueria",
+      "peluquerias",
+      "pelqueria",
+      "peluquero",
+      "peluquera",
+      "barberia",
+      "barberias",
+      "barbero",
+      "barber",
+      "salon de belleza",
+      "corte de pelo",
+      "corte de cabello"
+    ],
+    "queries": ["peluqueria", "barberia", "barber", "salon de belleza"],
+    "categories": ["Belleza & Estética"],
+    "match": "name_or_desc",
+    "excludeNameNeedles": ["insumos", "distribuidora", "canina"],
+    "preferNameNeedles": ["peluqueria", "barberia"]
   }
 }
