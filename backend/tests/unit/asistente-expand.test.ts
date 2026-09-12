@@ -63,6 +63,9 @@ describe("guide intent map", () => {
     expect(matchIntentKey("gomería")).toBe("gomeria");
     expect(matchIntentKey("dónde comer")).toBe("comer");
     expect(matchIntentKey("cabañas")).toBe("cabana");
+    expect(matchIntentKey("hotel con pileta")).toBe("hotel");
+    expect(matchIntentKey("dónde dormir")).toBe("hotel");
+    expect(matchIntentKey("farmacia de turno")).toBe("farmacia");
     expect(expandIntent("dónde comer").queries.length).toBeGreaterThan(0);
     expect(hitMatchesRubro(
       { objectID: "gomeria", nombre: "Neumaticos Moreno", categoria: "Talleres Mecánicos - Gomerías" },
@@ -85,6 +88,14 @@ describe("guide intent map", () => {
     });
     expect(matchIntentKey("necesito masajista")).toBe("masajista");
     expect(expandIntent("necesito masajista").queries).toContain("masaje");
+  });
+
+  it("keeps seed intents when the live map only overrides one key", () => {
+    applyLiveIntentMap({
+      gomeria: frontendMap.gomeria,
+    });
+    expect(matchIntentKey("necesito hotel")).toBe("hotel");
+    expect(matchIntentKey("gomería")).toBe("gomeria");
   });
 
   it("matches quiero mate to a live mate expansion", () => {

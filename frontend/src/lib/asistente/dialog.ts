@@ -1,10 +1,8 @@
 import { persistGuideMiss, loadGuideRuntime, liveConfig } from "./live-store";
-import { extractFiltersWithLlm } from "./extract-filters";
-import { detectAnunciar, detectCommand, followUpZona, isChitchatMessage, isFollowUpMessage, canonicalizeZona, isVagueFilters, lastNeedQuery, needsZonaClarify, splitRubroZona } from "./intent";
-import { matchIntentKey } from "./expand-intent";
-import { coerceGuideKeywords, distinctiveRubroToken } from "./rank";
+import { greetingTurn, resolveGuideTurn } from "./conversation";
+import { distinctiveRubroToken } from "./rank";
 import { recommendFichasViaAlgolia } from "./recommend";
-import { clarifyPrompt, greetingPrompt, redactFromHits, zonaClarifyPrompt } from "./redact";
+import { redactFromHits } from "./redact";
 import type { GuideTurnInput, GuideTurnResult, ParsedFilters, GuideMissTrace } from "./types";
 
 function anunciarResult(): GuideTurnResult {
@@ -14,26 +12,6 @@ function anunciarResult(): GuideTurnResult {
     text: config.copyCtaAnunciar,
     hits: [],
     cta: { label: "Escribinos", href: config.copyCtaAnunciarUrl },
-  };
-}
-
-function stripZonaPhrase(text: string, zona: string | null): string {
-  if (!text || !zona) return text;
-  const escaped = zona.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const stripped = text.replace(new RegExp(escaped, "ig"), " ").replace(/\s+/g, " ").trim();
-  return stripped || text;
-}
-
-function resolveFilters(message: string, extracted: ParsedFilters | null): ParsedFilters {
-  const split = splitRubroZona(message);
-  const mapped = Boolean(matchIntentKey(message));
-  const zonaRaw = split.zona || (!mapped ? extracted?.zona : null);
-  const zona = canonicalizeZona(zonaRaw);
-  const rawKeywords = (zona ? split.keywords : extracted?.keywords) || split.keywords || message;
-  return {
-    categoria: extracted?.categoria || null,
-    zona,
-    keywords: coerceGuideKeywords(message, stripZonaPhrase(rawKeywords, zona)),
   };
 }
 
@@ -62,6 +40,7 @@ function logGuideNoResults(miss: GuideMissTrace): void {
 }
 
 async function searchFichas(
+  input: GuideTurnInput,
   filters: ParsedFilters,
   excludeIds: string[],
   query: string
@@ -69,7 +48,7 @@ async function searchFichas(
   try {
     const { hits, trace } = await recommendFichasViaAlgolia(filters, excludeIds, query);
     if (!hits.length) return emptyResult(filters, trace);
-    const text = await redactFromHits(query, hits);
+    const text = await redactFromHits(query, hits, input.history);
     return { type: "results", text, hits };
   } catch {
     return {
@@ -82,40 +61,14 @@ async function searchFichas(
 
 export async function handleGuideTurn(input: GuideTurnInput): Promise<GuideTurnResult> {
   await loadGuideRuntime(true);
-  const message = input.message.trim();
-  if (detectAnunciar(message)) return anunciarResult();
-  if (isChitchatMessage(message)) {
-    return { type: "clarify", text: greetingPrompt(), hits: [] };
-  }
-
-  const command = detectCommand(message);
-  if (command?.command === "limpiar") {
+  const resolved = await resolveGuideTurn(input);
+  if (resolved.kind === "anunciar") return anunciarResult();
+  if (resolved.kind === "chitchat") return greetingTurn();
+  if (resolved.kind === "reset") {
     return { type: "reset", text: liveConfig().copyIntro, hits: [] };
   }
-  if (command?.command === "otras" || command?.command === "cerca" || isFollowUpMessage(message)) {
-    const previous = lastNeedQuery(input.history, "");
-    if (!previous) return { type: "clarify", text: clarifyPrompt(), hits: [] };
-    const base = resolveFilters(previous, null);
-    const explicitZona = followUpZona(message);
-    const isOtro = command?.command === "otras" || /^(otro|otra|otros|otras)\b/i.test(message);
-    const filters = {
-      ...base,
-      zona: explicitZona || (isOtro ? null : base.zona),
-    };
-    if (needsZonaClarify(filters)) {
-      return { type: "clarify", text: zonaClarifyPrompt(), hits: [] };
-    }
-    return searchFichas(filters, input.excludeIds, previous);
+  if (resolved.kind === "clarify") {
+    return { type: "clarify", text: resolved.text, hits: [] };
   }
-
-  const extracted = await extractFiltersWithLlm(message);
-  if (extracted?.intent === "anunciar") return anunciarResult();
-  const filters = resolveFilters(message, extracted);
-  if (isVagueFilters(filters)) {
-    return { type: "clarify", text: clarifyPrompt(), hits: [] };
-  }
-  if (needsZonaClarify(filters)) {
-    return { type: "clarify", text: zonaClarifyPrompt(), hits: [] };
-  }
-  return searchFichas(filters, input.excludeIds, message);
+  return searchFichas(input, resolved.filters, resolved.excludeIds, resolved.query);
 }

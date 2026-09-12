@@ -6,7 +6,35 @@ const RUBRO_STOP = new Set([
   "encontrar", "buenos", "buenas", "buen", "buena",
   "hola", "holis", "gracias", "rafi",
   "dime", "decime", "dijime", "mostra", "mostrame", "indica", "indicame",
+  "preferible", "preferiblemente", "posible", "tambien", "entonces", "mejor",
+  "hoy", "ahora", "manana", "noche", "tarde", "manana",
+  "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo",
+  "persona", "personas", "gente", "pax", "adulto", "adultos",
+  "abrir", "abra", "abierto", "abierta", "horario", "horarios",
+  "precio", "precios", "barato", "barata", "caro", "cara",
 ]);
+
+const ZONA_WORDS = new Set([
+  "centro", "dique", "paredes", "valle", "grande", "nihuil", "benegas",
+  "nacional", "rama", "caida", "mayo", "cuadro", "villa", "padre", "real",
+]);
+
+const EXTRA_KEEP = [
+  "pileta", "piscina", "estacionamiento", "wifi", "desayuno", "delivery",
+  "familiar", "quincho", "asador", "mascotas", "pet", "accesible",
+];
+
+const ZONA_SEARCH_ALIASES: Record<string, string[]> = {
+  dique: ["dique", "valle grande", "nihuil", "reyunos", "atuel"],
+  "valle grande": ["valle grande", "dique", "atuel", "reyunos"],
+  "el nihuil": ["nihuil", "dique"],
+};
+
+export function zonaSearchNeedles(zona: string | null | undefined): string[] {
+  const n = normalizeGuideText(zona || "");
+  if (n.length < 3) return [];
+  return ZONA_SEARCH_ALIASES[n] || [n];
+}
 
 export function normalizeGuideText(value: string): string {
   return value
@@ -52,10 +80,21 @@ export function usefulRubroTokens(rubro: string): string[] {
     .filter((token) => token.length >= 3 && !RUBRO_STOP.has(token));
 }
 
-/** En "dónde puedo comprar alfajores" la query útil es el producto, no el verbo. */
+/** En "dónde puedo comprar alfajores" la query útil es el producto, no el verbo ni la zona. */
 export function distinctiveRubroToken(rubro: string): string {
   const tokens = usefulRubroTokens(rubro);
-  return tokens[tokens.length - 1] || "";
+  const withoutZona = tokens.filter((token) => !ZONA_WORDS.has(token));
+  const pool = withoutZona.length ? withoutZona : tokens;
+  return pool[pool.length - 1] || "";
+}
+
+export function extraSearchTerms(text: string): string | null {
+  const n = normalizeGuideText(text);
+  if (!n) return null;
+  const found = EXTRA_KEEP.filter((term) => textHasRubroNeedle(n, term));
+  const people = n.match(/\b(\d{1,2})\s*(personas?|pax|gente)\b/);
+  if (people?.[1]) found.push(people[1], "personas");
+  return found.length ? [...new Set(found)].join(" ") : null;
 }
 
 /** Quita "necesito/busco/quiero" y deja el rubro. Un reintento si Algolia dio 0. */

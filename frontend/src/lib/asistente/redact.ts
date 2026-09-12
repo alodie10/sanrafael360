@@ -1,7 +1,8 @@
 import { liveConfig } from "./live-store";
 import { completeChat } from "./openai";
 import { excerptText, keepOnlySourceHits } from "./rank";
-import type { GuideFicha } from "./types";
+import { normalizeGuideText } from "./text";
+import type { GuideFicha, GuideHistoryItem } from "./types";
 
 export function templateRedact(hits: GuideFicha[]): string {
   if (!hits.length) return liveConfig().copyNoResults;
@@ -24,7 +25,21 @@ export function zonaClarifyPrompt(): string {
   return "¿En qué zona buscás bodegas? Centro, dique, valle grande, Las Paredes, Rama Caída…";
 }
 
-export async function redactFromHits(query: string, hits: GuideFicha[]): Promise<string> {
+function draftCitesHits(drafted: string, hits: GuideFicha[]): boolean {
+  const draft = normalizeGuideText(drafted);
+  return hits.some((hit) => {
+    const name = normalizeGuideText(hit.nombre);
+    if (draft.includes(name)) return true;
+    const tokens = name.split(" ").filter((token) => token.length >= 5);
+    return tokens.some((token) => draft.includes(token));
+  });
+}
+
+export async function redactFromHits(
+  query: string,
+  hits: GuideFicha[],
+  history: GuideHistoryItem[] = []
+): Promise<string> {
   if (!hits.length) return liveConfig().copyNoResults;
 
   const payload = hits.map((hit) => ({
@@ -36,15 +51,13 @@ export async function redactFromHits(query: string, hits: GuideFicha[]): Promise
     descripcion: hit.descripcion,
   }));
 
-  const system = `Redactá en es-AR (vos), máximo 2 oraciones. Citá SOLO estos hits de SR360. Usá la descripción para decir qué es el lugar, sin copiar el HTML ni inventar horarios, precios, distancias u otros comercios. No hagas pitch comercial.`;
-  const user = `Consulta: ${query}\nHits: ${JSON.stringify(payload)}`;
-  const drafted = await completeChat({ system, user });
+  const system = `Redactá en es-AR (vos), 2 a 4 oraciones. Atendé TODA la consulta (zona, ocasión, atributos), no solo la primera frase.
+Citá SOLO estos hits de SR360. Usá la descripción para decir qué es el lugar, sin copiar HTML ni inventar horarios, precios, distancias u otros comercios.
+Si pidieron algo que no está en los hits, decilo sin inventar. No hagas pitch comercial.`;
+  const user = `Consulta completa: ${query}\nHits: ${JSON.stringify(payload)}`;
+  const drafted = await completeChat({ system, user, history, maxTokens: 420 });
   if (!drafted) return templateRedact(hits);
-
-  const mentionedUnknown = !hits.some((hit) =>
-    drafted.toLowerCase().includes(hit.nombre.toLowerCase())
-  );
-  if (mentionedUnknown) return templateRedact(hits);
+  if (!draftCitesHits(drafted, hits)) return templateRedact(hits);
   return drafted;
 }
 

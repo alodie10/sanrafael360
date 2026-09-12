@@ -4,7 +4,8 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { trackGuideEvent } from "@/lib/asistente/analytics";
 import { postGuideTurn } from "@/lib/asistente/client";
 import type { GuideCta, GuideFicha, GuideHistoryItem, GuideMissTrace, GuideResponseType } from "@/lib/asistente/types";
-import { GuideAnunciarCta, GuideFichaCard } from "./GuideFichaCard";
+import { GuideAnunciarCta } from "./GuideFichaCard";
+import { GuideFichaCarousel } from "./GuideFichaCarousel";
 import GuideRafiMark from "./GuideRafiMark";
 import styles from "./GuideChat.module.css";
 
@@ -56,13 +57,25 @@ export default function GuideChatPanel({
   const [loading, setLoading] = useState(false);
   const [shownIds, setShownIds] = useState<string[]>([]);
   const threadRef = useRef<HTMLDivElement>(null);
+  const latestTurnRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (variant === "page") trackGuideEvent("guide_chat_opened");
   }, [variant]);
 
   useEffect(() => {
-    threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight });
+    const thread = threadRef.current;
+    if (!thread) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const behavior: ScrollBehavior = reduce ? "auto" : "smooth";
+    const frame = window.requestAnimationFrame(() => {
+      if (loading || !latestTurnRef.current) {
+        thread.scrollTo({ top: thread.scrollHeight, behavior });
+        return;
+      }
+      thread.scrollTo({ top: Math.max(0, latestTurnRef.current.offsetTop - 6), behavior });
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [lines, loading]);
 
   async function onSubmit(event: FormEvent) {
@@ -77,7 +90,7 @@ export default function GuideChatPanel({
 
     const history: GuideHistoryItem[] = lines
       .filter((line) => line.id !== "intro")
-      .slice(-8)
+      .slice(-12)
       .map((line) => ({ role: line.role, content: line.content }));
 
     const result = await postGuideTurn({ message, history, excludeIds: shownIds });
@@ -128,18 +141,16 @@ export default function GuideChatPanel({
         ) : null}
       </header>
       <div className={`${styles.thread} no-scrollbar`} ref={threadRef}>
-        {lines.map((line) => (
-          <div key={line.id}>
+        {lines.map((line, index) => (
+          <div
+            key={line.id}
+            className={styles.turn}
+            ref={index === lines.length - 1 ? latestTurnRef : undefined}
+          >
             <p className={line.role === "user" ? styles.bubbleUser : styles.bubbleAssist}>
               {line.content}
             </p>
-            {line.hits?.length ? (
-              <div className={styles.cards}>
-                {line.hits.map((hit) => (
-                  <GuideFichaCard key={hit.objectID} hit={hit} />
-                ))}
-              </div>
-            ) : null}
+            {line.hits?.length ? <GuideFichaCarousel hits={line.hits} /> : null}
             {line.cta ? (
               <div className={styles.ctas}>
                 <GuideAnunciarCta cta={line.cta} />
@@ -159,7 +170,7 @@ export default function GuideChatPanel({
           data-testid="guide-chat-input"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder="Gomería, dónde comer, anunciar…"
+          placeholder="Hotel con pileta cerca del dique…"
           maxLength={500}
           disabled={loading}
           aria-label="Mensaje para Rafi"

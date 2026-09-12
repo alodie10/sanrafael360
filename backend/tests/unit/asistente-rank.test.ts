@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { isChitchatMessage, isFollowUpMessage, lastNeedQuery, needsZonaClarify, splitRubroZona, canonicalizeZona } from "../../../frontend/src/lib/asistente/intent";
+import { isChitchatMessage, isFollowUpMessage, lastNeedQuery, needsZonaClarify, splitRubroZona, canonicalizeZona, composeNeedQuery, stripLeadChitchat, zonaFromQuery, resolveFilters } from "../../../frontend/src/lib/asistente/intent";
+import { extraSearchTerms } from "../../../frontend/src/lib/asistente/text";
 import {
   algoliaRubroQuery,
   coerceGuideKeywords,
   excludeHitIds,
   filterHitsByRubro,
   filterHitsByZona,
+  GUIDE_ALGOLIA_TUNING,
   hitMatchesRubro,
   keepOnlySourceHits,
   preferHospitalHits,
@@ -124,6 +126,28 @@ describe("asistente zona constraint", () => {
         "el centro de san rafael"
       )
     ).toHaveLength(0);
+  });
+
+  it("maps dique to valle grande in the ficha name", () => {
+    expect(
+      filterHitsByZona(
+        [
+          {
+            objectID: "valle",
+            is_premium: true,
+            nombre: "Valle Grande Hotel de Montaña",
+            zona: "Ruta 173",
+          },
+          {
+            objectID: "centro",
+            is_premium: false,
+            nombre: "Hotel San Rafael Centro",
+            zona: "Mitre 200, San Rafael",
+          },
+        ],
+        "dique"
+      ).map((hit) => hit.objectID)
+    ).toEqual(["valle"]);
   });
 
   it("does not treat other businesses in the zona as a match for a different rubro set", () => {
@@ -420,5 +444,53 @@ describe("follow-up keeps the original need", () => {
         ""
       )
     ).toBe("gomería en las paredes");
+  });
+
+  it("keeps hotel when the user refines with pileta and zona", () => {
+    const history = [
+      { role: "user" as const, content: "Hola. Busco un hotel con pileta." },
+      { role: "assistant" as const, content: "Encontré estas opciones" },
+    ];
+    expect(isFollowUpMessage("que sea para 4 personas cerca del dique", "Hola. Busco un hotel con pileta.")).toBe(true);
+    expect(composeNeedQuery("que sea para 4 personas cerca del dique", history)).toContain("hotel");
+    expect(lastNeedQuery([...history, { role: "user", content: "que sea para 4 personas cerca del dique" }], "")).toContain("hotel");
+  });
+
+  it("does not treat a new rubro as a follow-up", () => {
+    expect(isFollowUpMessage("ahora busco dentista", "gomería")).toBe(false);
+  });
+
+  it("does not treat a full hotel query as a zona follow-up", () => {
+    const query = "Hola. Necesito un hotel. Preferiblemente en el dique y que tenga pileta.";
+    expect(isFollowUpMessage(query)).toBe(false);
+    const filters = resolveFilters(query, null);
+    expect(filters.keywords).toBe("hotel");
+    expect(filters.zona).toBe("dique");
+    expect(filters.extra).toMatch(/pileta/);
+  });
+});
+
+describe("conversation understands the whole message", () => {
+  it("drops a leading hola and keeps the need", () => {
+    expect(stripLeadChitchat("Hola. Necesito una gomería en el centro.")).toMatch(/gomería/i);
+    expect(isChitchatMessage("Hola. Necesito una gomería en el centro.")).toBe(false);
+  });
+
+  it("reads zona and pileta from every sentence, not just the first", () => {
+    const filters = resolveFilters(
+      "Hola. Necesito un hotel. Preferiblemente en el dique y que tenga pileta.",
+      null
+    );
+    expect(filters.keywords).toBe("hotel");
+    expect(filters.zona).toBe("dique");
+    expect(filters.extra).toMatch(/pileta/);
+    expect(canonicalizeZona("el centro el sábado")).toBe("centro");
+    expect(zonaFromQuery("centro medico")).toBeNull();
+    expect(extraSearchTerms("hotel con pileta para 4 personas")).toMatch(/pileta/);
+  });
+
+  it("keeps lastWords so the product is not dropped from long Spanish questions", () => {
+    expect(GUIDE_ALGOLIA_TUNING.removeWordsIfNoResults).toBe("lastWords");
+    expect(GUIDE_ALGOLIA_TUNING.queryLanguages).toEqual(["es"]);
   });
 });
