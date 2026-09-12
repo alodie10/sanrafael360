@@ -129,7 +129,11 @@
       "barber",
       "salon de belleza",
       "corte de pelo",
-      "corte de cabello"
+      "corte de cabello",
+      "cortar el pelo",
+      "cortarme el pelo",
+      "cortarse el pelo",
+      "cortarme el cabello"
     ],
     "queries": ["peluqueria", "barberia", "barber", "salon de belleza"],
     "categories": ["Belleza & Estética"],
