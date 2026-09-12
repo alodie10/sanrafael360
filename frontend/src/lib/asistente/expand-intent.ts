@@ -1,5 +1,15 @@
+import { buildCategoryFloor, FALLBACK_CATEGORIES } from "./catalog-floor";
 import intentMap from "./intent-map.json";
-import { distinctiveRubroToken, haystackHasNeedle, lexicalVariants, normalizeGuideText, stripNeedPhrases, textHasRubroNeedle } from "./text";
+import {
+  distinctiveRubroToken,
+  haystackHasNeedle,
+  isCloseToken,
+  lexicalVariants,
+  normalizeGuideText,
+  stripNeedPhrases,
+  textHasRubroNeedle,
+  usefulRubroTokens,
+} from "./text";
 
 export type IntentEntry = {
   aliases?: string[];
@@ -25,14 +35,18 @@ export type { IntentMap };
 
 const seedMap = intentMap as IntentMap;
 let liveMap: IntentMap | null = null;
+let catalogNames: string[] = FALLBACK_CATEGORIES;
 
-export function applyLiveIntentMap(map: IntentMap | null): void {
+export function applyLiveIntentMap(map: IntentMap | null, categories?: string[] | null): void {
   liveMap = map && Object.keys(map).length ? map : null;
+  if (categories !== undefined) {
+    catalogNames = categories?.filter(Boolean).length ? categories.filter(Boolean) : FALLBACK_CATEGORIES;
+  }
 }
 
 export function loadIntentMap(): IntentMap {
-  if (!liveMap) return seedMap;
-  return { ...seedMap, ...liveMap };
+  const floor = buildCategoryFloor(catalogNames, seedMap);
+  return { ...floor, ...seedMap, ...(liveMap || {}) };
 }
 
 export function intentKeys(): string[] {
@@ -46,6 +60,13 @@ function textHasAlias(haystack: string, alias: string): boolean {
   return textHasRubroNeedle(haystack, needle);
 }
 
+function aliasMatchesHay(hay: string, needle: string): boolean {
+  if (textHasAlias(hay, needle)) return true;
+  if (lexicalVariants(hay).some((variant) => textHasAlias(variant, needle))) return true;
+  if (needle.includes(" ")) return false;
+  return usefulRubroTokens(hay).some((token) => isCloseToken(token, needle));
+}
+
 /** Match por alias/clave. También “quiero mate” → key `mate`. */
 export function matchIntentKey(raw: string): string | null {
   const hays = [...new Set([normalizeGuideText(raw), stripNeedPhrases(raw)].filter(Boolean))];
@@ -57,9 +78,7 @@ export function matchIntentKey(raw: string): string | null {
       for (const alias of [key, ...aliases]) {
         for (const base of [...new Set([normalizeGuideText(alias), stripNeedPhrases(alias)].filter(Boolean))]) {
           for (const needle of lexicalVariants(base)) {
-            if (!textHasAlias(hay, needle) && !lexicalVariants(hay).some((variant) => textHasAlias(variant, needle))) {
-              continue;
-            }
+            if (!aliasMatchesHay(hay, needle)) continue;
             if (!best || needle.length > best.len) best = { key, len: needle.length };
           }
         }

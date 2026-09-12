@@ -14,6 +14,7 @@ export type GuideLiveSettings = {
 export type GuideRuntime = {
   expansions: IntentMap;
   settings: GuideLiveSettings;
+  categories?: string[];
 };
 
 export function resolveLiveAsistenteConfig(runtime: GuideRuntime | null): AsistenteConfig {

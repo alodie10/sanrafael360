@@ -468,6 +468,12 @@ describe("follow-up keeps the original need", () => {
     expect(filters.zona).toBe("dique");
     expect(filters.extra).toMatch(/pileta/);
   });
+
+  it("maps a misspelled peluquería ask to the beauty intent", () => {
+    const filters = resolveFilters("que pelqueria me recomientas?", null);
+    expect(filters.keywords).toBe("peluqueria");
+    expect(isFollowUpMessage("que pelqueria me recomientas?")).toBe(false);
+  });
 });
 
 describe("conversation understands the whole message", () => {

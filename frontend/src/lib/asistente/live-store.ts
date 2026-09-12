@@ -35,13 +35,13 @@ async function fetchRuntime(): Promise<GuideRuntime | null> {
 
 export async function loadGuideRuntime(force = false): Promise<GuideRuntime | null> {
   if (!force && cache && Date.now() - cache.at < GUIDE_RUNTIME_TTL_MS) {
-    applyLiveIntentMap(cache.data.expansions);
+    applyLiveIntentMap(cache.data.expansions, cache.data.categories);
     return cache.data;
   }
   const data = await fetchRuntime();
   if (!data) return cache?.data || null;
   cache = { at: Date.now(), data };
-  applyLiveIntentMap(data.expansions);
+  applyLiveIntentMap(data.expansions, data.categories);
   return data;
 }
 
