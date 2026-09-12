@@ -15,11 +15,12 @@ import {
   excludeHitIds,
   filterHitsByRubro,
   filterHitsByZona,
+  GUIDE_ALGOLIA_TUNING,
   plainTextFromHtml,
   rankHitsPremiumFirst,
   takeTopHits,
 } from "./rank";
-import { stripNeedPhrases } from "./text";
+import { normalizeGuideText, stripNeedPhrases, textHasRubroNeedle, zonaSearchNeedles } from "./text";
 import type { GuideFicha, GuideMissTrace, ParsedFilters } from "./types";
 
 type SearchClient = {
@@ -48,9 +49,7 @@ function assistantSearchRequest(query: string, filters?: string) {
     filters: filters || undefined,
     restrictSearchableAttributes: ["categoria", "search_keywords", "atributos", "nombre", "descripcion"],
     attributesToRetrieve: RETRIEVE_FIELDS,
-    removeStopWords: true,
-    ignorePlurals: true,
-    removeWordsIfNoResults: "firstWords",
+    ...GUIDE_ALGOLIA_TUNING,
   };
 }
 
@@ -117,28 +116,57 @@ async function retrieveExpanded(
   };
 }
 
+function preferConstraintHits(hits: GuideFicha[], extra: string): GuideFicha[] {
+  const needles = extra.split(/\s+/).map((item) => item.trim()).filter(Boolean);
+  if (!needles.length) return hits;
+  return hits.slice().sort((a, b) => {
+    const score = (hit: GuideFicha) => {
+      const hay = normalizeGuideText(
+        [hit.nombre, hit.categoria, hit.keywords, hit.descripcion].filter(Boolean).join(" ")
+      );
+      return needles.reduce((acc, needle) => acc + (textHasRubroNeedle(hay, needle) ? 1 : 0), 0);
+    };
+    return score(b) - score(a);
+  });
+}
+
+function constraintQueries(rubro: string, extraTerms: string, zona: string | null): string[] {
+  const base = algoliaRubroQuery(rubro);
+  const out: string[] = [];
+  if (extraTerms) out.push(`${base} ${extraTerms}`, extraTerms);
+  for (const needle of zonaSearchNeedles(zona)) {
+    out.push(`${base} ${needle}`);
+  }
+  return [...new Set(out.filter(Boolean))];
+}
+
 async function retrieveWithFallbacks(
   client: SearchClient,
   expansion: IntentExpansion,
   rubro: string,
   rawQuery: string,
+  extraTerms: string,
+  zona: string | null,
   trace: GuideMissTrace
 ): Promise<GuideFicha[]> {
   const first = await retrieveExpanded(client, expansion, algoliaRubroQuery(rubro));
-  trace.expanded_queries = first.queries;
+  const extraQueries = constraintQueries(rubro, extraTerms, zona);
+  const extraHits = extraQueries.length
+    ? await searchAlgolia(client, extraQueries.map((query) => assistantSearchRequest(query)))
+    : [];
+  const combined = mergeHits([first.hits, extraHits]);
+  trace.expanded_queries = [...new Set([...first.queries, ...extraQueries])];
   trace.categories_tried = first.categories;
-  if (first.hits.length) return first.hits;
+  if (combined.length) return combined;
 
-  if (!expansion.key) {
-    const extra = await proposeSearchKeywords(rawQuery || rubro);
-    trace.expanded_queries = [...new Set([...trace.expanded_queries, ...extra])];
-    if (extra.length) {
-      const extraHits = await searchAlgolia(
-        client,
-        extra.slice(0, 5).map((query) => assistantSearchRequest(query))
-      );
-      if (extraHits.length) return extraHits;
-    }
+  const proposed = await proposeSearchKeywords(rawQuery || rubro);
+  trace.expanded_queries = [...new Set([...trace.expanded_queries, ...proposed])];
+  if (proposed.length) {
+    const proposedHits = await searchAlgolia(
+      client,
+      proposed.slice(0, 5).map((query) => assistantSearchRequest(query))
+    );
+    if (proposedHits.length) return proposedHits;
   }
 
   const stripped = stripNeedPhrases(rawQuery || rubro);
@@ -164,11 +192,23 @@ export async function recommendFichasViaAlgolia(
     process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || "",
     process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY || ""
   ) as unknown as SearchClient;
+  const extraTerms = filters.extra?.trim() || "";
   const expansion = expandIntent(rawQuery || rubro);
-  const mapped = await retrieveWithFallbacks(client, expansion, rubro, rawQuery, trace);
+  const mapped = await retrieveWithFallbacks(
+    client,
+    expansion,
+    rubro,
+    rawQuery,
+    extraTerms,
+    filters.zona,
+    trace
+  );
   const sameNeed = applyNeedFilter(mapped, expansion, rubro);
   const inZona = filterHitsByZona(sameNeed, filters.zona);
   const config = getAsistenteConfig();
-  const ranked = preferIntentHits(excludeHitIds(inZona, excludeIds), expansion);
-  return { hits: takeTopHits(rankHitsPremiumFirst(ranked, true), config.maxResults), trace };
+  const ranked = rankHitsPremiumFirst(
+    preferConstraintHits(preferIntentHits(excludeHitIds(inZona, excludeIds), expansion), extraTerms),
+    true
+  );
+  return { hits: takeTopHits(ranked, config.maxResults), trace };
 }

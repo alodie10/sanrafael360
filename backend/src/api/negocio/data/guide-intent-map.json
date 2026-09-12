@@ -79,5 +79,41 @@
     "aliases": ["cabana", "cabanas"],
     "queries": ["cabana", "cabanas"],
     "categories": ["Cabañas"]
+  },
+  "hotel": {
+    "aliases": [
+      "hotel",
+      "hoteles",
+      "alojamiento",
+      "hospedaje",
+      "dormir",
+      "apart hotel",
+      "apart-hotel"
+    ],
+    "queries": ["hotel"],
+    "categories": ["Hoteles", "Apart Hoteles", "Hostels", "Posadas"],
+    "match": "category_or_name",
+    "preferNameNeedles": ["hotel"]
+  },
+  "farmacia": {
+    "aliases": ["farmacia", "farmacias", "remedio", "remedios", "medicamento"],
+    "queries": ["farmacia"],
+    "categories": ["Farmacias"]
+  },
+  "helado": {
+    "aliases": ["helado", "helados", "heladeria", "heladerias"],
+    "queries": ["heladeria", "helado"],
+    "categories": ["Heladería", "Heladerías"],
+    "match": "name_or_desc"
+  },
+  "pizza": {
+    "aliases": ["pizza", "pizzas", "pizzeria", "pizzerias", "comer pizza"],
+    "queries": ["pizza", "pizzeria"],
+    "categories": ["Pizzería"]
+  },
+  "veterinaria": {
+    "aliases": ["veterinaria", "veterinario", "veterinarias", "mascota", "mascotas"],
+    "queries": ["veterinaria", "mascotas"],
+    "categories": ["Mascotas y Veterinarias", "Mascotas y veterinarias"]
   }
 }

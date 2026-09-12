@@ -59,6 +59,7 @@ export type ParsedFilters = {
   categoria: string | null;
   zona: string | null;
   keywords: string | null;
+  extra?: string | null;
 };
 
 export type RankableHit = {

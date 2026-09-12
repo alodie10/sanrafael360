@@ -1,7 +1,7 @@
 import type { GuideHistoryItem, GuideTurnInput } from "./types";
 
 const MAX_MESSAGE = 500;
-const MAX_HISTORY = 10;
+const MAX_HISTORY = 12;
 const MAX_EXCLUDE = 20;
 
 function asHistory(value: unknown): GuideHistoryItem[] {

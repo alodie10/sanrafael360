@@ -5,6 +5,7 @@ import {
   normalizeGuideText,
   textHasRubroNeedle,
   usefulRubroTokens,
+  zonaSearchNeedles,
 } from "./text";
 import type { RankableHit } from "./types";
 
@@ -43,11 +44,11 @@ export function excludeHitIds<T extends RankableHit>(hits: T[], excludeIds: stri
 
 /** Zona es constraint, no query: no devolver un restorán de Las Paredes si pediste gomería. */
 export function filterHitsByZona<T extends ZonaHit>(hits: T[], zona: string | null): T[] {
-  const needle = zona ? normalizeGuideText(zona) : "";
-  if (needle.length < 3) return hits;
+  const needles = zonaSearchNeedles(zona);
+  if (!needles.length) return hits;
   return hits.filter((hit) => {
     const haystack = normalizeGuideText([hit.zona, hit.nombre].filter(Boolean).join(" "));
-    return haystack.includes(needle);
+    return needles.some((needle) => haystack.includes(needle));
   });
 }
 
@@ -93,6 +94,13 @@ export function rubroNeedles(rubro: string): string[] {
   const expanded = usefulRubroTokens(rubro).flatMap((token) => RUBRO_SYNONYMS[token] || [token]);
   return [...new Set(expanded)];
 }
+
+export const GUIDE_ALGOLIA_TUNING = {
+  queryLanguages: ["es"] as const,
+  ignorePlurals: ["es"] as const,
+  removeStopWords: ["es"] as const,
+  removeWordsIfNoResults: "lastWords" as const,
+};
 
 export function algoliaRubroQuery(rubro: string): string {
   const expansion = expandIntent(rubro);

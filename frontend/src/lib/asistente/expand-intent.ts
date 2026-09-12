@@ -31,7 +31,8 @@ export function applyLiveIntentMap(map: IntentMap | null): void {
 }
 
 export function loadIntentMap(): IntentMap {
-  return liveMap || seedMap;
+  if (!liveMap) return seedMap;
+  return { ...seedMap, ...liveMap };
 }
 
 export function intentKeys(): string[] {
