@@ -67,11 +67,17 @@ export default function EfemerideIdentityEditor({
       <div className="space-y-3">
         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Imagen de encabezado</span>
         {coverPreview && (
-          <div
-            className="h-36 w-full rounded-2xl bg-cover bg-center border border-white/10"
-            style={{ backgroundImage: `url(${coverPreview})` }}
-          />
+          <div className="flex justify-center rounded-2xl border border-white/10 bg-black/40 p-3">
+            <img
+              src={coverPreview}
+              alt="Vista previa del encabezado"
+              className="max-h-64 w-auto max-w-full object-contain rounded-xl"
+            />
+          </div>
         )}
+        <p className="text-xs text-zinc-500">
+          Si el afiche es vertical (Stories o foto de celular), en la landing se muestra entero como poster, sin recortar.
+        </p>
         <div className="flex flex-wrap gap-3">
           <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-zinc-200 cursor-pointer hover:text-white">
             <ImagePlus className="w-4 h-4" />

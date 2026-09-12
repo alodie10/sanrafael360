@@ -1,5 +1,6 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Instagram } from "lucide-react";
 import type { ParticipanteExterno } from "@/types/strapi";
+import styles from "./FeriaParticipantesList.module.css";
 
 function safeHttpUrl(raw?: string | null): string | null {
   if (!raw) return null;
@@ -12,17 +13,78 @@ function safeHttpUrl(raw?: string | null): string | null {
   }
 }
 
+function isInstagram(href: string): boolean {
+  try {
+    const host = new URL(href).hostname.replace(/^www\./, "");
+    return host === "instagram.com" || host.endsWith(".instagram.com");
+  } catch {
+    return false;
+  }
+}
+
+function initials(nombre: string): string {
+  const parts = nombre.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "•";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
+
+function ParticipantCard({ item, index }: { item: ParticipanteExterno; index: number }) {
+  const href = safeHttpUrl(item.url);
+  const instagram = href ? isInstagram(href) : false;
+  const inner = (
+    <>
+      <span className={styles.avatar} aria-hidden>
+        {initials(item.nombre)}
+      </span>
+      <span className={styles.body}>
+        <span className={styles.name}>{item.nombre}</span>
+        {href && (
+          <span className={styles.cta}>
+            {instagram ? <Instagram className="w-3.5 h-3.5" /> : <ExternalLink className="w-3.5 h-3.5" />}
+            {instagram ? "Instagram" : "Visitar"}
+          </span>
+        )}
+      </span>
+    </>
+  );
+
+  if (!href) {
+    return (
+      <li>
+        <div className={styles.card}>{inner}</div>
+      </li>
+    );
+  }
+
+  return (
+    <li>
+      <a
+        className={styles.card}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-testid={`feria-participante-${index}`}
+      >
+        {inner}
+      </a>
+    </li>
+  );
+}
+
 export default function FeriaParticipantesList({
   items,
+  variant = "grid",
 }: {
   items: ParticipanteExterno[];
+  variant?: "grid" | "rail";
 }) {
   if (items.length === 0) {
     return (
-      <div className="text-center py-24 px-6 bg-slate-900/20 rounded-[3rem] border border-white/5">
-        <div className="text-5xl mb-6 opacity-30">🧺</div>
-        <h3 className="text-xl font-bold text-white mb-2">Todavía no hay participantes</h3>
-        <p className="text-slate-400 max-w-sm mx-auto">
+      <div className={styles.empty} data-variant={variant}>
+        <div className={styles.emptyIcon}>🧺</div>
+        <h3 className={styles.emptyTitle}>Todavía no hay participantes</h3>
+        <p className={styles.emptyLead}>
           Esta feria está activa, pero aún no se cargó el listado de emprendimientos.
         </p>
       </div>
@@ -31,33 +93,13 @@ export default function FeriaParticipantesList({
 
   return (
     <ul
-      className="rounded-[2rem] border border-white/10 bg-white/[0.03] overflow-hidden divide-y divide-white/5"
+      className={variant === "rail" ? styles.rail : styles.list}
       data-testid="feria-participantes-list"
+      data-variant={variant}
     >
-      {items.map((item, index) => {
-        const href = safeHttpUrl(item.url);
-        return (
-          <li
-            key={`${item.nombre}-${index}`}
-            className="flex items-center justify-between gap-4 px-6 py-4 md:px-8 md:py-5"
-          >
-            <span className="flex items-start gap-3 text-white">
-              <span className="mt-2 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-              <span className="text-base md:text-lg font-medium leading-snug">{item.nombre}</span>
-            </span>
-            {href && (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:underline shrink-0"
-              >
-                Visitar <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            )}
-          </li>
-        );
-      })}
+      {items.map((item, index) => (
+        <ParticipantCard key={`${item.nombre}-${index}`} item={item} index={index} />
+      ))}
     </ul>
   );
 }

@@ -1,0 +1,347 @@
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding:
+    calc(var(--navbar-height, 72px) + var(--master-bar-height, 0px) + var(--app-banner-height, 0px) + 0.5rem)
+    1.25rem calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  background: #050505;
+}
+
+.ambient,
+.veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ambient {
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ambientInner {
+  position: absolute;
+  inset: -18%;
+  filter: blur(42px) saturate(1.2);
+  transform: scale(1.08);
+  opacity: 0.5;
+}
+
+.ambientImg {
+  object-fit: cover;
+  object-position: center;
+}
+
+.veil {
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.28) 38%, rgba(0, 0, 0, 0.78) 100%);
+}
+
+.inner {
+  position: relative;
+  z-index: 2;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  text-decoration: none;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+  transition: color 0.2s ease;
+}
+
+.back:hover {
+  color: hsl(var(--primary));
+}
+
+.stage {
+  display: grid;
+  grid-template-areas:
+    "main"
+    "poster"
+    "roster"
+    "meta";
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.copy {
+  display: contents;
+}
+
+.copyMain {
+  grid-area: main;
+  text-align: center;
+  animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.copyMeta {
+  grid-area: meta;
+  text-align: center;
+  animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.poster {
+  --poster-max: min(
+    42svh,
+    calc(
+      100svh
+      - var(--navbar-height, 72px)
+      - var(--master-bar-height, 0px)
+      - var(--app-banner-height, 0px)
+      - 15.5rem
+    )
+  );
+  grid-area: poster;
+  position: relative;
+  justify-self: center;
+  width: min(100%, 22.5rem);
+  aspect-ratio: var(--poster-w, 9) / var(--poster-h, 16);
+  max-height: var(--poster-max);
+  max-width: min(100%, calc(var(--poster-max) * (var(--poster-w, 9) / var(--poster-h, 16))));
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: #0a0a0a;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 28px 70px -24px rgba(0, 0, 0, 0.85);
+  animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+}
+
+.posterImg {
+  object-fit: contain;
+}
+
+.kicker {
+  margin: 0 0 0.4rem;
+  color: hsl(var(--primary));
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-outfit), sans-serif;
+  font-size: clamp(1.45rem, 6.2vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.accent {
+  color: hsl(var(--primary));
+  font-family: var(--font-playfair), Georgia, serif;
+  font-style: italic;
+  font-weight: 600;
+}
+
+.lead {
+  margin: 0 auto;
+  max-width: 36rem;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.until {
+  margin: 0.75rem 0 0;
+  color: hsl(var(--primary));
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.roster {
+  grid-area: roster;
+  animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both;
+}
+
+.rosterHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.75rem;
+  margin-bottom: 0.7rem;
+}
+
+.rosterTitle {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.rosterCount {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.rosterList {
+  min-height: 0;
+}
+
+.rosterListWrap {
+  position: relative;
+  min-height: 0;
+}
+
+.rosterMore {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 1.75rem 0 0.2rem;
+  background: linear-gradient(180deg, transparent, rgba(5, 5, 5, 0.94) 55%);
+  color: hsl(var(--primary));
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .hero {
+    padding: calc(var(--navbar-height, 80px) + var(--master-bar-height, 0px) + 1rem) 2rem 3rem;
+  }
+
+  .copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    grid-area: copy;
+    min-height: 0;
+  }
+
+  .copyMain,
+  .copyMeta {
+    text-align: inherit;
+  }
+
+  .hero[data-orientation="portrait"] .stage {
+    grid-template-areas: "poster copy";
+    grid-template-columns: minmax(240px, 36%) minmax(0, 1fr);
+    gap: 2.75rem;
+    align-items: stretch;
+  }
+
+  .hero[data-orientation="portrait"] .poster {
+    justify-self: end;
+    align-self: start;
+    max-height: min(72vh, 700px);
+    max-width: min(
+      100%,
+      calc(min(72vh, 700px) * (var(--poster-w, 9) / var(--poster-h, 16)))
+    );
+  }
+
+  .hero[data-orientation="portrait"] .roster {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero[data-orientation="portrait"] .rosterListWrap {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .hero[data-orientation="portrait"] .rosterList {
+    max-height: 100%;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.35) transparent;
+  }
+
+  .hero[data-orientation="portrait"] .copy {
+    text-align: left;
+    justify-content: flex-start;
+    padding-top: 0.15rem;
+    max-height: min(72vh, 700px);
+  }
+
+  .hero[data-orientation="portrait"] .lead {
+    margin-inline: 0;
+    font-size: 1rem;
+  }
+
+  .hero[data-orientation="portrait"] .title {
+    font-size: clamp(1.85rem, 3vw, 2.7rem);
+  }
+
+  .hero[data-orientation="landscape"] .stage {
+    grid-template-areas:
+      "poster"
+      "copy";
+  }
+
+  .hero[data-orientation="landscape"] .copy {
+    text-align: center;
+  }
+
+  .hero[data-orientation="landscape"] .roster {
+    width: min(100%, 34rem);
+    margin-inline: auto;
+    text-align: left;
+  }
+
+  .hero[data-orientation="landscape"] .poster {
+    width: min(100%, 58rem);
+    max-height: min(52vh, 460px);
+    max-width: min(
+      100%,
+      calc(min(52vh, 460px) * (var(--poster-w, 16) / var(--poster-h, 9)))
+    );
+  }
+
+  .hero[data-orientation="landscape"] .title {
+    font-size: clamp(2.1rem, 4vw, 3.4rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster,
+  .copyMain,
+  .copyMeta,
+  .roster {
+    animation: none;
+  }
+}
