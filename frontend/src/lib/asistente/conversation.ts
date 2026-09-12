@@ -17,7 +17,9 @@ import { clarifyPrompt, greetingPrompt, zonaClarifyPrompt } from "./redact";
 import type { GuideTurnInput, ParsedFilters } from "./types";
 
 export type ResolvedGuideTurn =
-  | { kind: "anunciar" | "chitchat" | "reset" }
+  | { kind: "anunciar" }
+  | { kind: "chitchat" }
+  | { kind: "reset" }
   | { kind: "clarify"; text: string }
   | { kind: "search"; filters: ParsedFilters; query: string; excludeIds: string[] };
 
