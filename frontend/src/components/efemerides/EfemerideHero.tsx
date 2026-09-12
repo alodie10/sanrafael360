@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -8,6 +8,8 @@ import { formatCalendarDate } from "@/lib/calendar-date";
 import type { EfemeridePublic, ParticipanteExterno, StrapiMedia } from "@/types/strapi";
 import FeriaParticipantesList from "@/components/efemerides/FeriaParticipantesList";
 import FeriaRosterScroll from "@/components/efemerides/FeriaRosterScroll";
+import EfemeridePoster, { EfemeridePosterLightbox } from "@/components/efemerides/EfemeridePoster";
+import { POSTER_HERO_ID } from "@/components/efemerides/efemeridePosterIds";
 import styles from "./EfemerideHero.module.css";
 
 function coverOrientation(media?: StrapiMedia | null, tipo?: string) {
@@ -34,42 +36,6 @@ function HeroAmbient({ src }: { src: string }) {
       </div>
       <div className={styles.veil} />
     </>
-  );
-}
-
-function HeroPoster({
-  src,
-  alt,
-  width,
-  height,
-  sizes,
-}: {
-  src: string;
-  alt: string;
-  width: number;
-  height: number;
-  sizes: string;
-}) {
-  return (
-    <figure
-      className={styles.poster}
-      data-testid="efemeride-poster"
-      style={
-        {
-          "--poster-w": String(width),
-          "--poster-h": String(height),
-        } as CSSProperties
-      }
-    >
-      <Image
-        src={optimizeCloudinaryUrl(src, "c_limit,w_1400,q_auto,f_auto")}
-        alt={alt}
-        fill
-        sizes={sizes}
-        className={styles.posterImg}
-        priority
-      />
-    </figure>
   );
 }
 
@@ -137,42 +103,46 @@ export default function EfemerideHero({ efemeride }: { efemeride: EfemeridePubli
   const posterH = efemeride.encabezado?.height || (orientation === "portrait" ? 16 : 9);
 
   return (
-    <section
-      className={styles.hero}
-      data-orientation={orientation}
-      data-testid="efemeride-hero"
-    >
-      {coverUrl && <HeroAmbient src={coverUrl} />}
-      {!coverUrl && <div className={styles.veil} />}
+    <>
+      <section
+        id={POSTER_HERO_ID}
+        className={styles.hero}
+        data-orientation={orientation}
+        data-testid="efemeride-hero"
+      >
+        {coverUrl && <HeroAmbient src={coverUrl} />}
+        {!coverUrl && <div className={styles.veil} />}
 
-      <div className={styles.inner}>
-        <Link href="/" className={styles.back}>
-          <ArrowLeft className="w-4 h-4" /> Volver al Inicio
-        </Link>
-        <div className={styles.stage}>
-          {coverUrl && (
-            <HeroPoster
-              src={coverUrl}
-              alt={efemeride.nombre}
-              width={posterW}
-              height={posterH}
-              sizes={
-                orientation === "landscape"
-                  ? "(min-width: 900px) 920px, 100vw"
-                  : "(min-width: 900px) 420px, 90vw"
-              }
-            />
-          )}
-          <HeroCopy
-            isFeria={isFeria}
-            nombre={efemeride.nombre}
-            descripcion={efemeride.descripcion}
-            hastaLabel={hastaLabel}
-          >
-            {isFeria && <FeriaRoster items={efemeride.participantes_externos || []} />}
-          </HeroCopy>
+        <div className={styles.inner}>
+          <Link href="/" className={styles.back}>
+            <ArrowLeft className="w-4 h-4" /> Volver al Inicio
+          </Link>
+          <div className={styles.stage}>
+            {coverUrl && (
+              <EfemeridePoster
+                src={coverUrl}
+                alt={efemeride.nombre}
+                width={posterW}
+                height={posterH}
+                sizes={
+                  orientation === "landscape"
+                    ? "(min-width: 900px) 920px, 100vw"
+                    : "(min-width: 900px) 420px, 90vw"
+                }
+              />
+            )}
+            <HeroCopy
+              isFeria={isFeria}
+              nombre={efemeride.nombre}
+              descripcion={efemeride.descripcion}
+              hastaLabel={hastaLabel}
+            >
+              {isFeria && <FeriaRoster items={efemeride.participantes_externos || []} />}
+            </HeroCopy>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+      {coverUrl && <EfemeridePosterLightbox src={coverUrl} alt={efemeride.nombre} />}
+    </>
   );
 }

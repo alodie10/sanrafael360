@@ -108,17 +108,108 @@
   aspect-ratio: var(--poster-w, 9) / var(--poster-h, 16);
   max-height: var(--poster-max);
   max-width: min(100%, calc(var(--poster-max) * (var(--poster-w, 9) / var(--poster-h, 16))));
+  padding: 0;
+  border: none;
   border-radius: 1.25rem;
   overflow: hidden;
   background: #0a0a0a;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.14),
     0 28px 70px -24px rgba(0, 0, 0, 0.85);
+  cursor: zoom-in;
   animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
 }
 
 .posterImg {
   object-fit: contain;
+  pointer-events: none;
+}
+
+.posterHint {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.55rem;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  pointer-events: none;
+}
+
+.posterOpen {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.posterOpen:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: -4px;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.94);
+}
+
+.lightbox:target {
+  display: grid;
+}
+
+.lightboxBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  cursor: zoom-out;
+}
+
+.lightboxImg {
+  position: relative;
+  z-index: 1;
+  max-width: min(100vw - 1.5rem, 72rem);
+  max-height: calc(100svh - 1.5rem);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0.75rem;
+}
+
+.lightboxClose {
+  position: absolute;
+  top: calc(0.75rem + env(safe-area-inset-top, 0px));
+  right: 0.75rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+}
+
+.lightboxClose:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+:global(body):has(.lightbox:target) {
+  overflow: hidden;
 }
 
 .kicker {
