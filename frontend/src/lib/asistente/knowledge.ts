@@ -31,15 +31,14 @@ function splitChunks(item: GuideMaterial): MaterialChunk[] {
 /** Párrafos del material que hablan de la consulta. No son fichas. */
 export function materialSnippets(query: string, materials: GuideMaterial[], max = 3): string[] {
   const tokens = materialTokens(query);
-  if (!materials.length) return [];
-  if (!tokens.length) {
-    return materials.slice(0, max).map((item) => excerptText(`${item.titulo}: ${item.cuerpo}`, 700));
-  }
+  if (!tokens.length || !materials.length) return [];
   const scored = materials.flatMap(splitChunks).map((chunk) => ({
     chunk,
     score: tokens.reduce((acc, token) => acc + (textHasRubroNeedle(chunk.hay, token) ? 1 : 0), 0),
   }));
-  const ranked = scored.filter((row) => row.score > 0).sort((a, b) => b.score - a.score);
-  if (ranked.length) return ranked.slice(0, max).map((row) => row.chunk.text);
-  return materials.slice(0, max).map((item) => excerptText(`${item.titulo}: ${item.cuerpo}`, 700));
+  return scored
+    .filter((row) => row.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, max)
+    .map((row) => row.chunk.text);
 }

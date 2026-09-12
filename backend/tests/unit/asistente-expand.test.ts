@@ -70,6 +70,7 @@ describe("guide intent map", () => {
     expect(matchIntentKey("que pelqueria me recomientas?")).toBe("peluqueria");
     expect(matchIntentKey("peluquería")).toBe("peluqueria");
     expect(matchIntentKey("barbería cerca")).toBe("peluqueria");
+    expect(matchIntentKey("necesito cortarme el pelo")).toBe("peluqueria");
     expect(expandIntent("dónde comer").queries.length).toBeGreaterThan(0);
     expect(hitMatchesRubro(
       { objectID: "gomeria", nombre: "Neumaticos Moreno", categoria: "Talleres Mecánicos - Gomerías" },
@@ -196,6 +197,16 @@ describe("guide material snippets", () => {
     const hits = materialSnippets("qué es el dique", materials);
     expect(hits[0]).toMatch(/Valle Grande/);
     expect(hits.join(" ")).not.toMatch(/vendimia/i);
+  });
+
+  it("does not dump an about page when the user wants a haircut", () => {
+    const about = {
+      titulo: "Acerca de",
+      cuerpo:
+        "San Rafael 360 es un directorio digital de la ciudad de San Rafael, Mendoza, que conecta a turistas y residentes con los mejores negocios.",
+    };
+    expect(materialSnippets("necesito cortarme el pelo", [about, pricing])).toEqual([]);
+    expect(matchIntentKey("necesito cortarme el pelo")).toBe("peluqueria");
   });
 
   it("answers a pricing FAQ from the uploaded title even without a rubro", () => {
