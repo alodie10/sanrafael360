@@ -35,10 +35,14 @@ function draftCitesHits(drafted: string, hits: GuideFicha[]): boolean {
   });
 }
 
+const HIT_RULES = `Citá SOLO estos hits de SR360. Usá la descripción para decir qué es el lugar, sin copiar HTML ni inventar horarios, precios, distancias u otros comercios.
+El material es contexto de ciudad/reglas. No lo uses para nombrar comercios que no estén en los hits. Si pidieron algo que no está en los hits, decilo sin inventar. No hagas pitch comercial.`;
+
 export async function redactFromHits(
   query: string,
   hits: GuideFicha[],
-  history: GuideHistoryItem[] = []
+  history: GuideHistoryItem[] = [],
+  snippets: string[] = []
 ): Promise<string> {
   if (!hits.length) return liveConfig().copyNoResults;
 
@@ -52,13 +56,26 @@ export async function redactFromHits(
   }));
 
   const system = `Redactá en es-AR (vos), 2 a 4 oraciones. Atendé TODA la consulta (zona, ocasión, atributos), no solo la primera frase.
-Citá SOLO estos hits de SR360. Usá la descripción para decir qué es el lugar, sin copiar HTML ni inventar horarios, precios, distancias u otros comercios.
-Si pidieron algo que no está en los hits, decilo sin inventar. No hagas pitch comercial.`;
-  const user = `Consulta completa: ${query}\nHits: ${JSON.stringify(payload)}`;
+${HIT_RULES}`;
+  const material = snippets.length ? `\nMaterial: ${JSON.stringify(snippets)}` : "";
+  const user = `Consulta completa: ${query}\nHits: ${JSON.stringify(payload)}${material}`;
   const drafted = await completeChat({ system, user, history, maxTokens: 420 });
   if (!drafted) return templateRedact(hits);
   if (!draftCitesHits(drafted, hits)) return templateRedact(hits);
   return drafted;
+}
+
+export async function redactFromMaterial(
+  query: string,
+  snippets: string[],
+  history: GuideHistoryItem[] = []
+): Promise<string | null> {
+  if (!snippets.length) return null;
+  const system = `Redactá en es-AR (vos), 2 a 4 oraciones. Usá SOLO el material para hechos de ciudad (zonas, cómo moverse, qué es un lugar).
+No recomiendes comercios ni inventes nombres, fichas, horarios o precios. Si el material no alcanza, devolvé vacío.`;
+  const user = `Consulta: ${query}\nMaterial: ${JSON.stringify(snippets)}`;
+  const drafted = await completeChat({ system, user, history, maxTokens: 280 });
+  return drafted?.trim() || null;
 }
 
 export function safeHits(hits: GuideFicha[], source: GuideFicha[]): GuideFicha[] {

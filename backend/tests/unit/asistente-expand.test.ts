@@ -12,6 +12,7 @@ import {
 } from "../../../frontend/src/lib/asistente/expand-intent";
 import { algoliaRubroQuery, coerceGuideKeywords, hitMatchesRubro } from "../../../frontend/src/lib/asistente/rank";
 import { distinctiveRubroToken, isCloseToken, stripNeedPhrases } from "../../../frontend/src/lib/asistente/text";
+import { materialSnippets } from "../../../frontend/src/lib/asistente/knowledge";
 
 const hospitalEspanol = {
   objectID: "hospital-espanol",
@@ -171,5 +172,23 @@ describe("guide intent map", () => {
     expect(matchIntentKey("dónde dormir")).toBe("hotel");
     expect(matchIntentKey("que pelqueria me recomientas?")).toBe("peluqueria");
     expect(matchIntentKey("pasaje a buenos aires")).toBe("agencia_de_viajes");
+  });
+});
+
+describe("guide material snippets", () => {
+  it("pulls the dique note and ignores unrelated text", () => {
+    const materials = [
+      {
+        titulo: "Zonas",
+        cuerpo: "Cuando dicen el dique, en San Rafael suele ser Valle Grande o Los Reyunos.\n\nEl centro es la planta urbana alrededor de San Martín.",
+      },
+      {
+        titulo: "Vendimia",
+        cuerpo: "La vendimia local suele caer en marzo, con actos en el departamento.",
+      },
+    ];
+    const hits = materialSnippets("qué es el dique", materials);
+    expect(hits[0]).toMatch(/Valle Grande/);
+    expect(hits.join(" ")).not.toMatch(/vendimia/i);
   });
 });

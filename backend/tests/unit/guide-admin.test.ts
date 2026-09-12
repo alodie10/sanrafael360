@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ValidationError } from "../../src/utils/errors";
 import { validateExpansionInput } from "../../src/api/guide-expansion/services/expansion-validate";
+import { validateMaterialInput } from "../../src/api/guide-material/services/material-validate";
 import { asStringList, canonicalizeCategoryNames, stripNeedPhrases } from "../../src/api/guide-expansion/services/guide-text";
 import { resolveLiveAsistenteConfig } from "../../../frontend/src/lib/asistente/live-config";
 
@@ -56,5 +57,18 @@ describe("live asistente settings", () => {
     expect(paused.enabled).toBe(false);
     expect(paused.copyIntro).toBe("Intro panel");
     expect(paused.copyNoResults).toBe("Sin fichas panel");
+  });
+});
+
+describe("guide material", () => {
+  it("requires a real title and body", () => {
+    expect(() => validateMaterialInput({})).toThrow(ValidationError);
+    expect(() => validateMaterialInput({ titulo: "ab", cuerpo: "texto demasiado corto" })).toThrow(/titulo/);
+    const ok = validateMaterialInput({
+      titulo: "Dique y Valle Grande",
+      cuerpo: "Cuando la gente dice el dique, en San Rafael suele ser Valle Grande o Los Reyunos.",
+    });
+    expect(ok.titulo).toBe("Dique y Valle Grande");
+    expect(ok.cuerpo).toMatch(/Valle Grande/);
   });
 });

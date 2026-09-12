@@ -37,6 +37,17 @@ export type GuideSettingsRow = {
   algolia_index: string;
 };
 
+export type GuideMaterialRow = {
+  documentId: string;
+  titulo: string;
+  cuerpo: string;
+  activo: boolean;
+  origen: "pegado" | "archivo";
+  nombre_archivo: string;
+  edited_by: string | null;
+  updatedAt?: string;
+};
+
 function authHeaders(jwt: string): HeadersInit {
   return { Authorization: `Bearer ${jwt}`, "Content-Type": "application/json" };
 }
@@ -111,6 +122,24 @@ export function guideAdminApi(jwt: string) {
       });
       const json = await readJson(res);
       return json.data as GuideSettingsRow;
+    },
+    async listMaterials() {
+      const res = await fetch(`${base}/materials`, { headers, cache: "no-store" });
+      const json = await readJson(res);
+      return (json.data || []) as GuideMaterialRow[];
+    },
+    async saveMaterial(body: Record<string, unknown>, id?: string) {
+      const res = await fetch(id ? `${base}/materials/${id}` : `${base}/materials`, {
+        method: id ? "PATCH" : "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+      const json = await readJson(res);
+      return json.data as GuideMaterialRow;
+    },
+    async deleteMaterial(id: string) {
+      const res = await fetch(`${base}/materials/${id}`, { method: "DELETE", headers });
+      await readJson(res);
     },
   };
 }

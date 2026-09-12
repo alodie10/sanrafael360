@@ -1,0 +1,40 @@
+{
+  "kind": "collectionType",
+  "collectionName": "guide_materials",
+  "info": {
+    "singularName": "guide-material",
+    "pluralName": "guide-materials",
+    "displayName": "Guide material",
+    "description": "Textos que Rafi usa como contexto, no como fichas"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "titulo": {
+      "type": "string",
+      "required": true
+    },
+    "cuerpo": {
+      "type": "text",
+      "required": true
+    },
+    "activo": {
+      "type": "boolean",
+      "default": true,
+      "required": true
+    },
+    "origen": {
+      "type": "enumeration",
+      "enum": ["pegado", "archivo"],
+      "default": "pegado",
+      "required": true
+    },
+    "nombre_archivo": {
+      "type": "string"
+    },
+    "edited_by": {
+      "type": "string"
+    }
+  }
+}
