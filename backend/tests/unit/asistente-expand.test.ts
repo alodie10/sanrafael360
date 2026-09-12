@@ -176,6 +176,12 @@ describe("guide intent map", () => {
 });
 
 describe("guide material snippets", () => {
+  const pricing = {
+    titulo: "Cuanto cuesta publicar en la guía?",
+    cuerpo:
+      "El abono Premium es de $40.000 el trimestre, e incluye:\n\n• Galería de fotos y videos\n• WhatsApp, Mapa y Redes",
+  };
+
   it("pulls the dique note and ignores unrelated text", () => {
     const materials = [
       {
@@ -190,5 +196,11 @@ describe("guide material snippets", () => {
     const hits = materialSnippets("qué es el dique", materials);
     expect(hits[0]).toMatch(/Valle Grande/);
     expect(hits.join(" ")).not.toMatch(/vendimia/i);
+  });
+
+  it("answers a pricing FAQ from the uploaded title even without a rubro", () => {
+    const hits = materialSnippets("cuanto cuesta publicar?", [pricing]);
+    expect(hits[0]).toMatch(/40\.000/);
+    expect(hits[0]).toMatch(/Premium/i);
   });
 });

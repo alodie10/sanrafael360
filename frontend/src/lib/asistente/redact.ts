@@ -71,11 +71,12 @@ export async function redactFromMaterial(
   history: GuideHistoryItem[] = []
 ): Promise<string | null> {
   if (!snippets.length) return null;
-  const system = `Redactá en es-AR (vos), 2 a 4 oraciones. Usá SOLO el material para hechos de ciudad (zonas, cómo moverse, qué es un lugar).
-No recomiendes comercios ni inventes nombres, fichas, horarios o precios. Si el material no alcanza, devolvé vacío.`;
+  const system = `Redactá en es-AR (vos), 2 a 4 oraciones. Usá SOLO el material.
+Si el material trae precio, plan, horario o regla, citálo tal cual. No inventes cifras ni comercios que no estén escritos.
+No recomiendes fichas del directorio. Si el material responde la consulta, contestá.`;
   const user = `Consulta: ${query}\nMaterial: ${JSON.stringify(snippets)}`;
   const drafted = await completeChat({ system, user, history, maxTokens: 280 });
-  return drafted?.trim() || null;
+  return drafted?.trim() || snippets[0] || null;
 }
 
 export function safeHits(hits: GuideFicha[], source: GuideFicha[]): GuideFicha[] {

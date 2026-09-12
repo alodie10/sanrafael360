@@ -1,6 +1,7 @@
 import { persistGuideMiss, loadGuideRuntime, liveConfig, peekGuideRuntime } from "./live-store";
 import { greetingTurn, resolveGuideTurn } from "./conversation";
 import { distinctiveRubroToken } from "./rank";
+import { expandIntent } from "./expand-intent";
 import { recommendFichasViaAlgolia } from "./recommend";
 import { redactFromHits, redactFromMaterial } from "./redact";
 import { materialSnippets } from "./knowledge";
@@ -47,8 +48,14 @@ async function searchFichas(
   query: string
 ): Promise<GuideTurnResult> {
   try {
+    const materials = peekGuideRuntime()?.materials || [];
+    const snippets = materialSnippets(query, materials);
+    const hasRubro = Boolean(expandIntent(query).key || expandIntent(filters.keywords || "").key);
+    if (!hasRubro && snippets.length) {
+      const fromMaterial = await redactFromMaterial(query, snippets, input.history);
+      if (fromMaterial) return { type: "clarify", text: fromMaterial, hits: [] };
+    }
     const { hits, trace } = await recommendFichasViaAlgolia(filters, excludeIds, query);
-    const snippets = materialSnippets(query, peekGuideRuntime()?.materials || []);
     if (!hits.length) {
       const fromMaterial = await redactFromMaterial(query, snippets, input.history);
       if (fromMaterial) {
