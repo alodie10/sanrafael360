@@ -12,9 +12,20 @@ export const metadata = canonicalPage(
   "Promos vigentes de negocios de San Rafael, Mendoza. Compará descuentos y contactá directo por WhatsApp."
 );
 
+const OFERTAS_POPULATE =
+  "filters[activa][$eq]=true&filters[publishedAt][$notNull]=true&populate[negocio][populate][0]=logo&populate[negocio][populate][1]=imagen_portada&populate[negocio][populate][2]=categoria&sort=publishedAt:desc";
+
+async function fetchActiveOfertas() {
+  try {
+    return await fetchFromStrapi(`ofertas?populate[0]=banners&${OFERTAS_POPULATE}`);
+  } catch {
+    return fetchFromStrapi(`ofertas?${OFERTAS_POPULATE}`);
+  }
+}
+
 export default async function OfertasPage() {
   try {
-    const res = await fetchFromStrapi("ofertas?filters[activa][$eq]=true&filters[publishedAt][$notNull]=true&populate[negocio][populate][0]=logo&populate[negocio][populate][1]=imagen_portada&populate[negocio][populate][2]=categoria&sort=publishedAt:desc");
+    const res = await fetchActiveOfertas();
     const ofertas = res.data as Oferta[];
     return <OfferListClient initialOfertas={ofertas} />;
   } catch (error) {

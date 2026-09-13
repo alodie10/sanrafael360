@@ -5,12 +5,15 @@ import { Tag } from "lucide-react";
 import { getStrapiMedia } from "@/lib/strapi";
 import { formatCalendarDate } from "@/lib/calendar-date";
 import { Oferta } from "@/types/strapi";
+import { isBannerOffer } from "@/lib/oferta-banners";
+import OfferBannerCard from "./OfferBannerCard";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function OfferCard({ oferta, index = 0 }: { oferta: Oferta, index?: number }) {
   const negocio = oferta.negocio;
   if (!negocio) return null;
+  if (isBannerOffer(oferta)) return <OfferBannerCard oferta={oferta} index={index} />;
 
   const coverUrl = negocio.imagen_portada?.url || negocio.logo?.url;
   const businessSlug = negocio.slug || negocio.documentId;

@@ -3,9 +3,16 @@
 import { useState, useEffect } from "react";
 import { Tag, Plus, Edit2, Trash2, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Oferta } from "@/types/strapi";
+import { Oferta, StrapiMedia } from "@/types/strapi";
 import { fetchFromStrapi, getStrapiUrl } from "@/lib/strapi";
 import { OFERTA_DESCRIPCION_MAX } from "@/lib/oferta-constants";
+import {
+  galleryImageIds,
+  parseFormatoVisual,
+  selectableFichaImages,
+  type FormatoVisualOferta,
+} from "@/lib/oferta-banners";
+import OfferFormatPicker from "./OfferFormatPicker";
 import {
   dateInputToEndOfDayISO,
   dateInputToStartOfDayISO,
@@ -31,9 +38,11 @@ function parseTipoOferta(value: string): TipoOferta {
 interface EditBusinessOffersProps {
   negocioId: string;
   session: any;
+  gallery: StrapiMedia[];
+  cover?: StrapiMedia | null;
 }
 
-export default function EditBusinessOffers({ negocioId, session }: EditBusinessOffersProps) {
+export default function EditBusinessOffers({ negocioId, session, gallery, cover }: EditBusinessOffersProps) {
   const [ofertas, setOfertas] = useState<Oferta[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,6 +59,13 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
   const [validaDesde, setValidaDesde] = useState("");
   const [validaHasta, setValidaHasta] = useState("");
   const [activa, setActiva] = useState(true);
+  const [formatoVisual, setFormatoVisual] = useState<FormatoVisualOferta>("Ficha");
+  const [bannerIds, setBannerIds] = useState<number[]>([]);
+  const pickerImages = selectableFichaImages(gallery, cover);
+
+  const toggleBannerId = (id: number) => {
+    setBannerIds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+  };
 
   useEffect(() => {
     fetchOfertas();
@@ -58,7 +74,7 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
   const fetchOfertas = async () => {
     try {
       const res = await fetchFromStrapi(
-        `ofertas?filters[negocio][documentId][$eq]=${negocioId}&filters[publishedAt][$notNull]=true&sort=publishedAt:desc`,
+        `ofertas?filters[negocio][documentId][$eq]=${negocioId}&filters[publishedAt][$notNull]=true&populate[0]=banners&sort=publishedAt:desc`,
         { headers: { Authorization: `Bearer ${session.jwt}` } }
       );
       // Deduplicar por documentId: el JWT autenticado puede devolver draft+published del mismo documento
@@ -90,6 +106,8 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
     setValidaDesde("");
     setValidaHasta("");
     setActiva(true);
+    setFormatoVisual("Ficha");
+    setBannerIds([]);
     setIsModalOpen(true);
   };
 
@@ -104,6 +122,8 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
     setValidaDesde(toDateInputValue(oferta.valida_desde));
     setValidaHasta(toDateInputValue(oferta.valida_hasta));
     setActiva(oferta.activa ?? true);
+    setFormatoVisual(parseFormatoVisual(oferta.formato_visual));
+    setBannerIds(galleryImageIds(oferta));
     setIsModalOpen(true);
   };
 
@@ -137,6 +157,9 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
     if (descripcion.length > OFERTA_DESCRIPCION_MAX) {
       return toast.error(`La descripción no puede superar ${OFERTA_DESCRIPCION_MAX} caracteres (tenés ${descripcion.length}).`);
     }
+    if (formatoVisual === "Banners" && bannerIds.length === 0) {
+      return toast.error("Elegí al menos una foto de la galería para el carousel.");
+    }
 
     setIsSaving(true);
     try {
@@ -157,6 +180,10 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
           valida_desde: validaDesde ? dateInputToStartOfDayISO(validaDesde) : null,
           valida_hasta: validaHasta ? dateInputToEndOfDayISO(validaHasta) : null,
           activa,
+          formato_visual: formatoVisual,
+          banners: formatoVisual === "Banners"
+            ? pickerImages.filter((item) => bannerIds.includes(item.id)).map((item) => item.id)
+            : [],
           negocio: negocioId // Relation
         }
       };
@@ -203,7 +230,9 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
             <Tag className="w-7 h-7 text-[#FFBF00]" />
             Mis Ofertas
           </h2>
-          <p className="text-slate-400 mt-2">Gestiona las ofertas y promociones de tu negocio.</p>
+          <p className="text-slate-400 mt-2">
+            Elegí ficha clásica o banners de la galería. Las fotos se suben en Galería, no acá.
+          </p>
         </div>
         
         <button
@@ -232,6 +261,11 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
                   {oferta.tipo_oferta && oferta.tipo_oferta !== "Descuento" && (
                     <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-[10px] uppercase font-black rounded-md border border-indigo-500/30">
                       {oferta.tipo_oferta === "Promocion2x1" ? "2x1" : oferta.tipo_oferta}
+                    </span>
+                  )}
+                  {oferta.formato_visual === "Banners" && (
+                    <span className="px-2 py-0.5 bg-[#FFBF00]/15 text-[#FFBF00] text-[10px] uppercase font-black rounded-md border border-[#FFBF00]/30">
+                      Banners
                     </span>
                   )}
                 </h4>
@@ -268,19 +302,19 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative my-8">
-            <div className="p-6 md:p-8 flex flex-col gap-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white">
-                  {editingOferta ? "Editar Oferta" : "Nueva Oferta"}
-                </h3>
-                <button onClick={() => setIsModalOpen(false)} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-full transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-xl max-h-[min(92dvh,calc(100dvh-2rem))] flex flex-col overflow-hidden shadow-2xl relative">
+            <div className="shrink-0 px-6 md:px-8 pt-6 md:pt-8 pb-4 flex items-center justify-between border-b border-white/5">
+              <h3 className="text-xl font-bold text-white">
+                {editingOferta ? "Editar Oferta" : "Nueva Oferta"}
+              </h3>
+              <button onClick={() => setIsModalOpen(false)} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              <form onSubmit={handleSave} className="flex flex-col gap-5">
+            <form onSubmit={handleSave} className="flex flex-col min-h-0 flex-1">
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 md:px-8 py-5 flex flex-col gap-5">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Título *</label>
                   <input 
@@ -307,6 +341,15 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
                     <option value="Experiencia">Experiencia (degustación, tour, etc.)</option>
                   </select>
                 </div>
+
+                <OfferFormatPicker
+                  formato={formatoVisual}
+                  onFormato={setFormatoVisual}
+                  gallery={pickerImages}
+                  selectedIds={bannerIds}
+                  onToggle={toggleBannerId}
+                  coverId={cover?.id}
+                />
 
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
@@ -390,24 +433,25 @@ export default function EditBusinessOffers({ negocioId, session }: EditBusinessO
                   </div>
                 </label>
 
-                <div className="flex gap-3 pt-4 border-t border-white/5">
-                  <button 
-                    type="button" 
-                    onClick={() => setIsModalOpen(false)}
-                    className="flex-1 py-3 text-white bg-white/5 hover:bg-white/10 font-bold rounded-xl transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    type="submit" 
-                    disabled={isSaving}
-                    className="flex-1 py-3 bg-[#FFBF00] hover:bg-[#FFBF00]/90 text-black font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-[#FFBF00]/20 flex items-center justify-center"
-                  >
-                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Guardar"}
-                  </button>
-                </div>
-              </form>
-            </div>
+              </div>
+
+              <div className="shrink-0 px-6 md:px-8 py-4 border-t border-white/5 flex gap-3 bg-zinc-900">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 py-3 text-white bg-white/5 hover:bg-white/10 font-bold rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isSaving}
+                  className="flex-1 py-3 bg-[#FFBF00] hover:bg-[#FFBF00]/90 text-black font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-[#FFBF00]/20 flex items-center justify-center"
+                >
+                  {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Guardar"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

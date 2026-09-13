@@ -537,7 +537,12 @@ export default function EditBusinessForm({ negocio, session, returnTo: returnToP
       />
 
       <div className="max-w-4xl mx-auto space-y-12">
-        <EditBusinessOffers negocioId={negocio.documentId} session={session} />
+        <EditBusinessOffers
+          negocioId={negocio.documentId}
+          session={session}
+          gallery={existingGallery}
+          cover={negocio.imagen_portada}
+        />
 
         <EditBusinessIdentity 
           nombre={nombre}

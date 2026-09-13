@@ -1017,6 +1017,7 @@ export interface ApiOfertaOferta extends Struct.CollectionTypeSchema {
   };
   attributes: {
     activa: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    banners: Schema.Attribute.Media<'images', true>;
     condiciones: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1025,6 +1026,8 @@ export interface ApiOfertaOferta extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 255;
       }>;
+    formato_visual: Schema.Attribute.Enumeration<['Ficha', 'Banners']> &
+      Schema.Attribute.DefaultTo<'Ficha'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',

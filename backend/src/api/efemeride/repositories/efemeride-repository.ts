@@ -35,7 +35,9 @@ const PUBLIC_POPULATE = {
       logo: { fields: ['url'] },
       imagen_portada: { fields: ['url'] },
       owner: { fields: ['id'] },
-      ofertas: true,
+      ofertas: {
+        populate: { banners: { fields: ['url', 'alternativeText', 'width', 'height'] } },
+      },
     },
   },
   participantes_externos: true,

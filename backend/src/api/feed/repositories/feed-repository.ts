@@ -18,6 +18,7 @@ export class FeedRepository {
       },
       status: 'published',
       populate: {
+        banners: true,
         negocio: {
           populate: ['imagen_portada', 'logo', 'categoria'],
         },
