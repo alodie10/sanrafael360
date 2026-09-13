@@ -48,6 +48,19 @@
       "type": "boolean",
       "default": false
     },
+    "formato_visual": {
+      "type": "enumeration",
+      "enum": ["Ficha", "Banners"],
+      "default": "Ficha",
+      "description": "Ficha arma la tarjeta con título y precios. Banners usa fotos ya subidas en la galería del negocio."
+    },
+    "banners": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": ["images"],
+      "description": "Fotos de la galería del negocio elegidas para el carousel de la oferta."
+    },
     "negocio": {
       "type": "relation",
       "relation": "manyToOne",

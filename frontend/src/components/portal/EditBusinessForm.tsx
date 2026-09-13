@@ -23,6 +23,7 @@ import ScheduleEditor from "./ScheduleEditor";
 import { safeReturnTo } from "@/lib/return-to";
 import { normalizeLocalPhoneDigits } from "@/lib/whatsapp";
 import { normalizeInstagramUsername } from "@/lib/instagram";
+import type { StrapiMedia } from "@/types/strapi";
 
 interface EditBusinessFormProps {
   negocio: any;
@@ -537,7 +538,12 @@ export default function EditBusinessForm({ negocio, session, returnTo: returnToP
       />
 
       <div className="max-w-4xl mx-auto space-y-12">
-        <EditBusinessOffers negocioId={negocio.documentId} session={session} />
+        <EditBusinessOffers
+          negocioId={negocio.documentId}
+          session={session}
+          gallery={existingGallery as StrapiMedia[]}
+          cover={negocio.imagen_portada}
+        />
 
         <EditBusinessIdentity 
           nombre={nombre}

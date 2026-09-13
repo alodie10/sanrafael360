@@ -3,6 +3,7 @@ export interface StrapiMedia {
   documentId?: string;
   url: string;
   name: string;
+  mime?: string;
   alternativeText?: string;
   width?: number;
   height?: number;
@@ -61,6 +62,8 @@ export interface Oferta {
   valida_hasta: string;
   condiciones?: string;
   activa: boolean;
+  formato_visual?: "Ficha" | "Banners";
+  banners?: StrapiMedia[];
   negocio?: Negocio;
 }
 

@@ -12,7 +12,7 @@ const NEGOCIO_DETAIL_POPULATE =
   "populate[galeria][fields][0]=url&" +
   "populate[schedules]=*&" +
   "populate[owner][fields][0]=id&" +
-  "populate[ofertas]=true&" +
+  "populate[ofertas][populate][banners][fields][0]=url&populate[ofertas][populate][banners][fields][1]=width&populate[ofertas][populate][banners][fields][2]=height&" +
   "populate[reserva_comercio][fields][0]=slug&populate[reserva_comercio][fields][1]=nombre&" +
   "fields[0]=nombre&fields[1]=descripcion&fields[2]=direccion&fields[3]=telefono&" +
   "fields[4]=whatsapp&fields[5]=website&fields[6]=instagram&fields[7]=facebook&" +
