@@ -70,7 +70,7 @@ export default function DirectoryListingClient({
     <main className={styles.page} data-testid="business-directory-listing">
       <article className={styles.panel}>
         <AdminListingActions
-          jwt={session?.jwt}
+          jwt={session?.jwt ?? undefined}
           documentId={negocio.documentId}
           nombre={negocio.nombre}
           editHref={buildBusinessEditHref(slug)}

@@ -34,7 +34,7 @@ export default function DirectoryListingCard({
   return (
     <article className={styles.card} data-testid="directory-listing-card">
       <AdminListingActions
-        jwt={session?.jwt}
+        jwt={session?.jwt ?? undefined}
         documentId={negocio.documentId}
         nombre={negocio.nombre}
         editHref={editHref}
