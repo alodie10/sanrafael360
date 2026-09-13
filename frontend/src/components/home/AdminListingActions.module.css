@@ -1,0 +1,62 @@
+.overlay {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 3;
+}
+
+.inline,
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.inline {
+  margin: 0 0 1.15rem;
+}
+
+.footer {
+  margin-top: auto;
+  order: 5;
+}
+
+.iconBtn {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: hsl(var(--primary) / 0.92);
+  color: #000;
+}
+
+.deleteBtn,
+.purgeBtn {
+  border: 0;
+  cursor: pointer;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.deleteBtn {
+  background: hsl(0 72% 42%);
+  color: #fff;
+}
+
+.purgeBtn {
+  background: hsl(var(--muted) / 0.9);
+  color: hsl(var(--foreground));
+}
+
+.deleteBtn:disabled,
+.purgeBtn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}

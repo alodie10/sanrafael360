@@ -15,7 +15,6 @@ import {
   X,
 } from "lucide-react";
 import { STRAPI_URL } from "@/lib/strapi";
-import { getSiteUrl } from "@/lib/site";
 import type { PeriodPreset } from "@/lib/performance-period";
 import { rangeFromPreset } from "@/lib/performance-period";
 import PerformancePeriodFilter from "./PerformancePeriodFilter";
@@ -23,6 +22,7 @@ import {
   composeFichaMensaje,
   copyTextToClipboard,
   greetingNow,
+  guideHomeUrl,
   phoneForWhatsapp,
   type ProspeccionAlcanzado,
   type ProspeccionNegocio,
@@ -187,9 +187,9 @@ export default function AdminProspeccionPanel({
       if (!res.ok) throw new Error(apiError(json, "No se pudo armar el WhatsApp"));
       window.open(json.data.whatsappUrl, "_blank", "noopener,noreferrer");
       if (tipo === "saludo") {
-        setNotice("WhatsApp abierto con el saludo. Si el número funciona, enviá la ficha para registrarlo.");
+        setNotice("WhatsApp abierto con el saludo. Si el número funciona, enviá el mensaje para registrarlo.");
       } else {
-        setNotice("WhatsApp abierto con la ficha y el mensaje. Quedó registrado en contactos alcanzados.");
+        setNotice("WhatsApp abierto con el link de la guía y el mensaje. Quedó registrado en contactos alcanzados.");
         await loadAlcanzados();
       }
     } catch (e: any) {
@@ -233,7 +233,7 @@ export default function AdminProspeccionPanel({
     }
   };
 
-  const fichaUrl = selected?.slug ? `${getSiteUrl()}/negocios/${selected.slug}` : "";
+  const guiaUrl = guideHomeUrl();
   const saludo = greetingNow();
   const phone = phoneForWhatsapp(selected);
   const igHandle = resolveInstagramUsername({
@@ -241,7 +241,7 @@ export default function AdminProspeccionPanel({
     instagram: selected?.instagram,
   });
   const preview = plantilla
-    ? composeFichaMensaje({ url: fichaUrl, ...plantilla })
+    ? composeFichaMensaje({ url: guiaUrl, ...plantilla })
     : "";
   const editUrl = selected?.slug ? `/portal/negocios/${selected.slug}/editar` : "";
 
@@ -352,14 +352,14 @@ export default function AdminProspeccionPanel({
               <p className="text-sm text-zinc-200">{saludo}</p>
             </div>
             <div className="rounded-2xl border border-white/5 bg-black/30 p-4 space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Ficha</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Guía</p>
               <a
-                href={fichaUrl}
+                href={guiaUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="text-sm text-primary truncate block"
               >
-                {fichaUrl}
+                {guiaUrl}
               </a>
             </div>
           </div>
@@ -390,7 +390,7 @@ export default function AdminProspeccionPanel({
             data-testid="prospeccion-enviar-ficha"
           >
             {sending === "ficha_mensaje" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            Enviar ficha + mensaje
+            Enviar mensaje
           </button>
           <button
             type="button"
@@ -441,7 +441,7 @@ export default function AdminProspeccionPanel({
         {editingPlantilla && draft && (
           <div className="space-y-4 pt-2">
             <label className="block space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Texto debajo de la ficha</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Invitación (debajo del link)</span>
               <textarea
                 value={draft.texto_ficha}
                 onChange={(e) => setDraft({ ...draft, texto_ficha: e.target.value })}

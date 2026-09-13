@@ -10,6 +10,8 @@ describe('rest-permissions (AppSec)', () => {
     expect(REVOKE_UNTRUSTED_REST_ACTIONS).toContain('api::pago.pago.findOne');
     expect(REVOKE_UNTRUSTED_REST_ACTIONS).toContain('api::lead.lead.find');
     expect(REVOKE_UNTRUSTED_REST_ACTIONS).toContain('api::lead.lead.findOne');
+    expect(REVOKE_UNTRUSTED_REST_ACTIONS).toContain('api::negocio.negocio.admindelete');
+    expect(REVOKE_UNTRUSTED_REST_ACTIONS).toContain('api::negocio.negocio.adminpurgemedia');
   });
 
   it('no vuelve a otorgar pagos ni leads en el set público', () => {

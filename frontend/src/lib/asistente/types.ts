@@ -8,6 +8,7 @@ export type GuideFicha = {
   is_premium: boolean;
   whatsapp: string | null;
   instagram_username: string | null;
+  telefono: string | null;
   /** Texto de categoría + keywords Algolia, solo para filtrar rubro. */
   keywords?: string | null;
   /** Descripción en texto plano (sin HTML), para filtrar y redactar. */

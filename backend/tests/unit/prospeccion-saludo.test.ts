@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { greetingForHour, greetingNow, hourInTimeZone } from '../../src/utils/prospeccion-saludo';
-import { composeFichaMensaje, resolveFirma } from '../../src/api/prospeccion/plantilla-defaults';
+import { composeFichaMensaje, migratePlantillaCopy, resolveFirma } from '../../src/api/prospeccion/plantilla-defaults';
 
 describe('greetingForHour', () => {
   it('returns Buen día from 6 through 11', () => {
@@ -45,15 +45,15 @@ describe('composeFichaMensaje', () => {
   it('joins url, caption, pitch and signature with blank lines', () => {
     expect(
       composeFichaMensaje({
-        url: 'https://www.sanrafael360.com/negocios/jc',
-        texto_ficha: '¡Mirá este comercio en San Rafael 360!',
+        url: 'https://www.sanrafael360.com',
+        texto_ficha: 'Si querés publicar con nosotros, esta es nuestra guía.',
         mensaje: 'Oferta premium',
         firma: 'Diego Alonso',
       })
     ).toBe(
       [
-        'https://www.sanrafael360.com/negocios/jc',
-        '¡Mirá este comercio en San Rafael 360!',
+        'https://www.sanrafael360.com',
+        'Si querés publicar con nosotros, esta es nuestra guía.',
         'Oferta premium',
         'Diego Alonso',
       ].join('\n\n')
@@ -72,5 +72,20 @@ describe('resolveFirma', () => {
     expect(resolveFirma('', 'Mi nombre es Diego Alonso')).toBe(
       'Mi nombre es Diego Alonso'
     );
+  });
+});
+
+describe('migratePlantillaCopy', () => {
+  it('replaces the old ficha pitch with the publish invite', () => {
+    const migrated = migratePlantillaCopy({
+      texto_ficha: '¡Mirá este comercio en San Rafael 360!',
+      mensaje: 'Bienvenido a la guía local San Rafael 360. Por tener tu comercio en San Rafael ya pertenecés a nuestra guía.',
+      firma: 'Diego',
+    });
+    expect(migrated.texto_ficha).toBe(
+      'Si querés publicar con nosotros, esta es nuestra guía.'
+    );
+    expect(migrated.mensaje).toContain('Por $40.000 el trimestre');
+    expect(migrated.mensaje).not.toMatch(/pertenec/);
   });
 });

@@ -20,6 +20,20 @@ function instagramHref(username: string): string {
 }
 
 export function GuideFichaCard({ hit }: { hit: GuideFicha }) {
+  if (!hit.url) {
+    return (
+      <article className={`${styles.card} ${styles.cardDirectory}`} data-testid="guide-ficha-card">
+        <div className={styles.cardBody}>
+          {hit.categoria ? <span className={styles.dirRubro}>{hit.categoria}</span> : null}
+          <span className={styles.cardName}>{hit.nombre}</span>
+          <a className={styles.dirSubscribe} href="/contacto">
+            ¿Querés suscribirte?
+          </a>
+        </div>
+      </article>
+    );
+  }
+
   const wa = hit.whatsapp
     ? buildWhatsappUrl(hit.whatsapp, `Hola ${hit.nombre}, te vi en San Rafael 360`)
     : null;

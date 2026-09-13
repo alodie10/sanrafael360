@@ -3,6 +3,7 @@ import { notFound, unstable_rethrow } from "next/navigation";
 import { getNegocioBySlug } from "@/lib/negocios";
 import { LocalBusinessSchema } from "@/components/business/LocalBusinessSchema";
 import { getSiteUrl } from "@/lib/site";
+import { showsPublicFicha } from "@/lib/search-match";
 
 const SITE_URL = getSiteUrl();
 const OG_DEFAULT_IMAGE = `${SITE_URL}/og-default.jpg`;
@@ -21,23 +22,17 @@ export async function generateMetadata({
       notFound();
     }
 
-    // Título optimizado para CTR local (Intención de búsqueda)
-    const title = `${negocio.nombre} en San Rafael: Opiniones, Horarios y Contacto | SR360`;
-
-    // Descripción optimizada para CTR con Call to Action fuerte
-    const description = `Todo sobre ${negocio.nombre} en San Rafael, Mendoza. ✅ Conocé opiniones reales, fotos, horarios actualizados, teléfono y ubicación en el directorio más completo.`;
-
-    // Imagen para Open Graph — con dimensiones explícitas para redes
-    const ogImageUrl =
-      negocio.imagen_portada?.url || negocio.logo?.url || OG_DEFAULT_IMAGE;
-
+    const premium = showsPublicFicha(negocio);
+    const title = premium
+      ? `${negocio.nombre} en San Rafael: Opiniones, Horarios y Contacto | SR360`
+      : `${negocio.nombre} — Directorio San Rafael 360`;
+    const description = premium
+      ? `Todo sobre ${negocio.nombre} en San Rafael, Mendoza. ✅ Conocé opiniones reales, fotos, horarios actualizados, teléfono y ubicación en el directorio más completo.`
+      : `${negocio.nombre}${negocio.categoria?.nombre ? ` · ${negocio.categoria.nombre}` : ""}${negocio.direccion ? ` · ${negocio.direccion}` : ""}`;
+    const ogImageUrl = premium
+      ? negocio.imagen_portada?.url || negocio.logo?.url || OG_DEFAULT_IMAGE
+      : OG_DEFAULT_IMAGE;
     const canonicalUrl = `${SITE_URL}/negocios/${negocio.slug}`;
-
-    // Lógica para prevenir indexación de contenido pobre (igual que en sitemap.ts)
-    const hasDescription =
-      typeof negocio.descripcion === "string" && negocio.descripcion.trim().length >= 30;
-    const hasImage = !!negocio.imagen_portada?.url;
-    const hasMinimumContent = hasDescription || hasImage;
 
     return {
       title,
@@ -45,9 +40,9 @@ export async function generateMetadata({
       alternates: {
         canonical: canonicalUrl,
       },
-      robots: hasMinimumContent
+      robots: premium
         ? { index: true, follow: true }
-        : { index: false, follow: true }, // Evita indexar perfiles casi vacíos
+        : { index: false, follow: false },
       openGraph: {
         title,
         description,
@@ -100,7 +95,9 @@ export default async function BusinessLayout({
 
   return (
     <>
-      {negocio && <LocalBusinessSchema negocio={negocio} />}
+      {negocio && showsPublicFicha(negocio) ? (
+        <LocalBusinessSchema negocio={negocio} />
+      ) : null}
       {children}
     </>
   );

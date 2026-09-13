@@ -13,10 +13,13 @@ import { useSession } from "next-auth/react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { buildBusinessEditHref } from "@/lib/return-to";
+import { adminDeleteNegocio } from "@/lib/admin-listing";
 
 const FavoritesModal = dynamic(() => import('../auth/FavoritesModal'), { ssr: false });
 import { toast } from "sonner";
 import { useFavorites } from "@/context/FavoritesContext";
+import { isPremiumListingActive, showsPublicFicha } from "@/lib/search-match";
+import DirectoryListingCard from "./DirectoryListingCard";
 
 /** Grid: 2 / 3 / 4 / 5 cols — evita pedir variantes de 33–100vw. */
 const CARD_IMAGE_SIZES =
@@ -28,12 +31,14 @@ interface BusinessCardProps {
   negocio: Negocio;
   index?: number;
   priority?: boolean;
+  onDeleted?: (documentId: string) => void;
 }
 
 export default function BusinessCard({
   negocio,
   index = 0,
   priority = false,
+  onDeleted,
 }: BusinessCardProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
@@ -60,12 +65,10 @@ export default function BusinessCard({
   const isAdmin = session?.user?.role === 'Admin';
   const isOwner = sessionUserId && ownerId && sessionUserId === ownerId;
   const canManage = isAdmin || isOwner;
-  
-  let isValidPremium = negocio.is_premium;
-  if (isValidPremium && negocio.premium_valid_until) {
-    if (new Date() > new Date(negocio.premium_valid_until)) {
-      isValidPremium = false;
-    }
+  const isValidPremium = isPremiumListingActive(negocio);
+
+  if (!showsPublicFicha(negocio)) {
+    return <DirectoryListingCard negocio={negocio} onDeleted={onDeleted} />;
   }
 
   const isFav = isFavorite(businessId);
@@ -107,13 +110,7 @@ export default function BusinessCard({
 
   return (
     <div className="relative z-0 isolate h-full group">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: Math.min(index, 5) * 0.05 }}
-        viewport={{ once: true }}
-        className="relative z-0 isolate flex flex-col gap-3 w-full h-full"
-      >
+      <div className="relative z-0 isolate flex flex-col gap-3 w-full h-full">
         {/* Portada Cuadrada (1:1) — acciones dentro para que overflow-hidden las recorte al scroll */}
         <div className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden bg-slate-800">
           {optimizedCover ? (
@@ -210,6 +207,27 @@ export default function BusinessCard({
                 <Settings className="w-5 h-5" />
               </Link>
             )}
+            {isAdmin && session?.jwt && !isValidPremium ? (
+              <button
+                type="button"
+                data-testid="admin-delete-negocio"
+                className="h-10 px-3 bg-red-700 text-white rounded-full shadow-2xl text-[10px] font-black uppercase tracking-wide hover:scale-105 active:scale-95 transition-all"
+                onClick={async (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  if (!confirm(`¿Borrar "${negocio.nombre}"? Esta acción no se puede deshacer.`)) return;
+                  try {
+                    await adminDeleteNegocio(session.jwt as string, businessId);
+                    toast.success("Negocio borrado.");
+                    onDeleted?.(businessId);
+                  } catch (err: unknown) {
+                    toast.error(err instanceof Error ? err.message : "No se pudo borrar.");
+                  }
+                }}
+              >
+                Borrar
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -259,7 +277,7 @@ export default function BusinessCard({
             </span>
           ) : null}
         </Link>
-      </motion.div>
+      </div>
 
       {/* Login Modal para Favoritos */}
       {showLoginModal && (

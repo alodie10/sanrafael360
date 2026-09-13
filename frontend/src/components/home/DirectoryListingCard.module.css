@@ -1,0 +1,56 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-height: 8.5rem;
+  padding: 1.05rem 2.7rem 1.1rem 1.15rem;
+  border: 1px solid hsl(var(--border) / 0.75);
+  border-radius: 1.15rem;
+  background:
+    linear-gradient(180deg, hsl(var(--card) / 0.95), hsl(240 8% 4%)),
+    hsl(var(--card));
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.28);
+}
+
+.rubro {
+  max-width: 100%;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: hsl(var(--primary) / 0.88);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nombre {
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1.25;
+  color: #fff;
+  text-wrap: balance;
+}
+
+.subscribe {
+  align-self: flex-start;
+  margin-top: 0.45rem;
+  padding: 0.32rem 0.72rem;
+  border-radius: 999px;
+  background: hsl(var(--primary));
+  color: #000;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  line-height: 1.25;
+  transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+.subscribe:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}

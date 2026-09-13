@@ -121,22 +121,73 @@ export function isPremiumListingActive(negocio: {
   return new Date(negocio.premium_valid_until) > new Date();
 }
 
-/** Premium que coincidió siempre arriba; después calidad del match. */
+function foldLabel(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function categoryLabels(categoria: unknown): string[] {
+  if (!categoria) return [];
+  if (typeof categoria === "string") return [categoria];
+  if (typeof categoria !== "object") return [];
+  const row = categoria as { nombre?: string; slug?: string; parent?: unknown };
+  return [
+    ...(row.nombre ? [row.nombre] : []),
+    ...(row.slug ? [row.slug] : []),
+    ...categoryLabels(row.parent),
+  ];
+}
+
+export function isTouristInterestCategory(negocio: { categoria?: unknown }): boolean {
+  return categoryLabels(negocio.categoria).some(
+    (label) => foldLabel(label) === "interes turistico"
+  );
+}
+
+/** Ficha pública: socio premium vigente o rubro Interés Turístico. */
+export function showsPublicFicha(negocio: {
+  is_premium?: boolean;
+  premium_valid_until?: string | null;
+  categoria?: unknown;
+}): boolean {
+  return isPremiumListingActive(negocio) || isTouristInterestCategory(negocio);
+}
+
+/** Sin flag premium, sin vigencia y fuera de Interés Turístico. */
+export function neverBeenPremium(negocio: {
+  is_premium?: boolean;
+  premium_valid_until?: string | null;
+  categoria?: unknown;
+}): boolean {
+  if (isTouristInterestCategory(negocio)) return false;
+  if (negocio.is_premium) return false;
+  return !negocio.premium_valid_until;
+}
+
+/** Fichas públicas arriba; premium pago delante de Interés Turístico. */
 export function compareMatchingPremiumFirst(
   a: {
     is_premium?: boolean;
     premium_valid_until?: string | null;
+    categoria?: unknown;
     searchMatch?: SearchMatchField;
     nombre?: string;
   },
   b: {
     is_premium?: boolean;
     premium_valid_until?: string | null;
+    categoria?: unknown;
     searchMatch?: SearchMatchField;
     nombre?: string;
   },
   hasTextQuery: boolean
 ): number {
+  const ficha = Number(showsPublicFicha(b)) - Number(showsPublicFicha(a));
+  if (ficha) return ficha;
   const prem = Number(isPremiumListingActive(b)) - Number(isPremiumListingActive(a));
   if (prem) return prem;
   if (hasTextQuery) {

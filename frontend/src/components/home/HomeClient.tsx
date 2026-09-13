@@ -17,7 +17,7 @@ import {
 } from "@/lib/search-negocios";
 import { isStrapiUnreachableError } from "@/lib/strapi";
 import { useRouter, usePathname } from "next/navigation";
-import { buildSearchExplanation, isPremiumListingActive, matchRank } from "@/lib/search-match";
+import { buildSearchExplanation, showsPublicFicha, isPremiumListingActive, matchRank } from "@/lib/search-match";
 import { toCmsCategoriaSlug } from "@/lib/categoria-slug";
 
 const normalizeText = (str: string) => {
@@ -264,6 +264,8 @@ export default function HomeClient({ categorias, initialNegocios }: HomeClientPr
   const sortedNegocios = useMemo(() => {
     const hasTextQuery = searchQuery.trim().length > 0;
     return [...searchResults].sort((a, b) => {
+      const ficha = Number(showsPublicFicha(b)) - Number(showsPublicFicha(a));
+      if (ficha) return ficha;
       const prem = Number(isPremiumListingActive(b)) - Number(isPremiumListingActive(a));
       if (prem) return prem;
       if (hasTextQuery) {

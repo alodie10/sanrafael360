@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Search, MapPin, Globe, Phone, Clock, Plus, Loader2, CheckCircle2, AlertCircle, Building2, Zap } from "lucide-react";
 import { STRAPI_URL } from "@/lib/strapi";
 import { normalizeLocalPhoneDigits } from "@/lib/whatsapp";
+import { adminPurgeNeverPremiumMediaBatch } from "@/lib/admin-listing";
 import type { ProspeccionNegocio } from "@/lib/prospeccion";
 
 interface DiscoveryData {
@@ -39,6 +40,8 @@ export default function AdminDiscoveryTool({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [activarPrecarga, setActivarPrecarga] = useState(true);
+  const [purgingMedia, setPurgingMedia] = useState(false);
+  const [purgeNotice, setPurgeNotice] = useState<string | null>(null);
 
   const GOOGLE_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -182,20 +185,6 @@ export default function AdminDiscoveryTool({
         throw new Error(strapiMsg || "Error al crear el negocio en la base de datos.");
       }
 
-      // Ejecutar Auto-Discovery nativo para descargar fotos y sincronizar reseñas
-      if (createdData.data?.documentId) {
-        const formData = new FormData();
-        formData.append("data", JSON.stringify({ trigger_discovery: true }));
-
-        await fetch(`${STRAPI_URL}/api/negocios/${createdData.data.documentId}/portal-update`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
-          body: formData,
-        });
-      }
-
       setSuccess(true);
       setResult(null);
       setSearchTerm("");
@@ -216,6 +205,29 @@ export default function AdminDiscoveryTool({
       setError(err.message);
     } finally {
       setImporting(false);
+    }
+  };
+
+  const handlePurgeNeverPremiumMedia = async () => {
+    if (!confirm("¿Borrar de Cloudinary las fotos de todos los negocios que nunca fueron premium? El directorio se queda, sin imágenes.")) {
+      return;
+    }
+    setPurgingMedia(true);
+    setError(null);
+    setPurgeNotice(null);
+    try {
+      const payload = await adminPurgeNeverPremiumMediaBatch(jwt);
+      const purged = payload.data?.purged ?? 0;
+      const removed = payload.data?.removed ?? 0;
+      setPurgeNotice(
+        purged
+          ? `Se limpiaron ${removed} archivo(s) en ${purged} negocio(s). Si quedan más, volvé a pulsar.`
+          : "No había fotos de nunca-premium para borrar en este lote."
+      );
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setPurgingMedia(false);
     }
   };
 
@@ -252,8 +264,24 @@ export default function AdminDiscoveryTool({
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Analizar Link"}
             </button>
           </div>
+          <button
+            type="button"
+            data-testid="admin-purge-never-premium-media"
+            onClick={handlePurgeNeverPremiumMedia}
+            disabled={purgingMedia}
+            className="mt-4 px-6 py-3 border border-white/15 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:border-white/30 transition-all disabled:opacity-50"
+          >
+            {purgingMedia ? "Limpiando fotos…" : "Limpiar fotos de nunca-premium"}
+          </button>
         </div>
       </div>
+
+      {purgeNotice && (
+        <div className="p-6 bg-green-500/10 border border-green-500/20 rounded-[2rem] flex items-center gap-4 text-green-400 animate-in fade-in zoom-in max-w-2xl mx-auto">
+          <CheckCircle2 className="w-6 h-6 shrink-0" />
+          <p className="text-sm font-medium">{purgeNotice}</p>
+        </div>
+      )}
 
       {error && (
         <div className="p-6 bg-red-500/10 border border-red-500/20 rounded-[2rem] flex items-center gap-4 text-red-400 animate-in fade-in zoom-in max-w-2xl mx-auto">
@@ -276,33 +304,14 @@ export default function AdminDiscoveryTool({
           {/* Left Column: Visual Confirmation */}
           <div className="lg:col-span-8 space-y-8">
             <div className="bg-zinc-950/40 border border-white/10 rounded-[2.5rem] overflow-hidden">
-              {/* Cover Photo */}
-              <div className="relative h-64 w-full bg-zinc-900">
-                {result.photo_reference ? (
-                  <img 
-                    src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${result.photo_reference}&key=${GOOGLE_KEY}`}
-                    alt={result.nombre}
-                    className="w-full h-full object-cover opacity-60"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-zinc-700">
-                    <Building2 className="w-20 h-20 opacity-20" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                <div className="absolute bottom-8 left-8 right-8">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex text-primary">
-                      {[...Array(5)].map((_, i) => (
-                        <span key={i} className={i < Math.floor(result.rating || 0) ? "text-primary" : "text-zinc-700"}>★</span>
-                      ))}
-                    </div>
-                    <span className="text-[10px] text-zinc-400 font-black uppercase tracking-widest">
-                      {result.rating} ({result.user_ratings_total} reseñas en Google)
-                    </span>
-                  </div>
-                  <h2 className="text-4xl font-serif font-bold text-white italic leading-tight">{result.nombre}</h2>
-                </div>
+              <div className="relative min-h-40 w-full bg-zinc-900 px-8 py-10">
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-3">
+                  Importación sin fotos
+                </p>
+                <h2 className="text-4xl font-serif font-bold text-white italic leading-tight">{result.nombre}</h2>
+                <p className="mt-3 text-sm text-zinc-400">
+                  Las imágenes de Google Places no se descargan. La galería queda para fichas Premium.
+                </p>
               </div>
 
               {/* Map View */}

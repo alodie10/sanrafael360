@@ -8,6 +8,7 @@ import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
 import { buildHeroCarouselImages } from "@/lib/hero-carousel";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
+import { showsPublicFicha } from "@/lib/search-match";
 
 interface BusinessHeroProps {
   negocio: Negocio;
@@ -17,10 +18,7 @@ interface BusinessHeroProps {
 export default function BusinessHero({ negocio, businessStatus }: BusinessHeroProps) {
   const logoUrl = negocio.logo?.url;
 
-  let isValidPremium = negocio.is_premium || false;
-  if (isValidPremium && negocio.premium_valid_until && new Date() > new Date(negocio.premium_valid_until)) {
-    isValidPremium = false;
-  }
+  const isValidPremium = showsPublicFicha(negocio);
 
   const images = buildHeroCarouselImages(negocio, isValidPremium);
 

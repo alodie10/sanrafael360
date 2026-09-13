@@ -6,7 +6,8 @@ import { createUserRepository, type UserRepository } from '../../../repositories
 import {
   DEFAULT_PROSPECCION_PLANTILLA,
   composeFichaMensaje,
-  fichaUrlForSlug,
+  guideHomeUrl,
+  migratePlantillaCopy,
   resolveFirma,
   type ProspeccionPlantillaFields,
 } from '../plantilla-defaults';
@@ -39,9 +40,23 @@ export function mapNegocioForPanel(negocio: any) {
 
 async function ensurePlantilla(repo: ProspeccionRepository) {
   const existing = await repo.findPlantilla();
-  if (existing) return plantillaFromDoc(existing);
-  const created = await repo.createPlantilla(DEFAULT_PROSPECCION_PLANTILLA);
-  return plantillaFromDoc(created);
+  if (!existing) {
+    const created = await repo.createPlantilla(DEFAULT_PROSPECCION_PLANTILLA);
+    return plantillaFromDoc(created);
+  }
+  const current = plantillaFromDoc(existing);
+  const migrated = migratePlantillaCopy(current);
+  if (
+    migrated.texto_ficha !== current.texto_ficha ||
+    migrated.mensaje !== current.mensaje
+  ) {
+    await repo.updatePlantilla(existing.documentId, {
+      texto_ficha: migrated.texto_ficha,
+      mensaje: migrated.mensaje,
+    });
+    return migrated;
+  }
+  return current;
 }
 
 async function plantillaForUser(
@@ -77,10 +92,10 @@ async function updatePlantilla(
   return plantillaForUser(repo, userRepo, userId);
 }
 
-function composeEnvioTexto(negocio: any, tipo: EnviarTipo, plantilla: ProspeccionPlantillaFields) {
+function composeEnvioTexto(tipo: EnviarTipo, plantilla: ProspeccionPlantillaFields) {
   if (tipo === 'saludo') return greetingNow();
   return composeFichaMensaje({
-    url: fichaUrlForSlug(negocio.slug),
+    url: guideHomeUrl(),
     ...plantilla,
   });
 }
@@ -139,7 +154,7 @@ async function enviarMensaje(
   if (!negocio) throw new NotFoundError('Negocio');
 
   const plantilla = await plantillaForUser(repo, userRepo, userId);
-  const texto = composeEnvioTexto(negocio, tipo, plantilla);
+  const texto = composeEnvioTexto(tipo, plantilla);
   const destinos = destinosForCanal(negocio, canal, texto);
 
   if (tipo === 'ficha_mensaje') {

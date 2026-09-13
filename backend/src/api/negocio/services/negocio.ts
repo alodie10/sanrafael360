@@ -9,6 +9,8 @@ import { logActivity } from '../../../utils/strapi-utils';
 import { getAdminClaimEmail, getOwnerResolutionEmail } from './templates/email-templates';
 import { DiscoveryService } from '../../../services/discovery-service';
 import { applyInstagramFields } from '../../../utils/instagram';
+import { shouldDownloadPlacesPhotos } from '../../../utils/premium-vigencia';
+import fs from 'fs';
 
 const discoveryService = new DiscoveryService();
 
@@ -53,7 +55,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
 
   async updatePortal(id: string, user: any, data: any, files: any) {
     const repo = createNegocioRepository(strapi);
-    const negocio = await repo.findById(id, ['owner']);
+    const negocio = await repo.findById(id, ['owner', 'categoria']);
     if (!negocio) throw new NotFoundError('Negocio');
 
     const roleName = user.role?.name?.toLowerCase();
@@ -119,7 +121,36 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
           strapi.log.info(`[PortalUpdate] Auto-Discovery exitoso. Rating: ${discovery.data.rating}`);
 
           // ---- LÓGICA DE FOTOS INTELIGENTE ----
-          if (discovery.data.photo_references && discovery.data.photo_references.length > 0) {
+          const canDownloadPhotos = shouldDownloadPlacesPhotos({
+            is_premium: updateData.is_premium ?? negocio.is_premium,
+            premium_valid_until: updateData.premium_valid_until ?? negocio.premium_valid_until,
+            categoria: negocio.categoria,
+          });
+          // #region agent log
+          try {
+            fs.appendFileSync(
+              '/Users/diego/Documents/GitHub/sanrafael360/.cursor/debug-e1f910.log',
+              JSON.stringify({
+                sessionId: 'e1f910',
+                runId: 'pre-fix',
+                hypothesisId: 'B',
+                location: 'negocio.ts:updatePortal',
+                message: 'places photo download gate',
+                data: {
+                  nombre: negocio.nombre,
+                  canDownloadPhotos,
+                  photoRefs: discovery.data.photo_references?.length || 0,
+                },
+                timestamp: Date.now(),
+              }) + '\n'
+            );
+          } catch {}
+          // #endregion
+          if (
+            canDownloadPhotos &&
+            discovery.data.photo_references &&
+            discovery.data.photo_references.length > 0
+          ) {
             const negocioDB = await repo.findById(id, ['imagen_portada', 'galeria']);
             
             const isUploadingCover = !!(updateData.imagen_portada || files?.imagen_portada || files?.['files.imagen_portada']);

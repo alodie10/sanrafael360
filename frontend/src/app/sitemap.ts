@@ -6,6 +6,7 @@ import {
   categoriaHref,
   isPlaceholderCategoriaSlug,
 } from "@/lib/categoria-slug";
+import { showsPublicFicha } from "@/lib/search-match";
 
 /** Forzar render dinámico: evita warnings de build cuando Strapi no está levantado. */
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Traemos slug, updatedAt, is_premium y campos de calidad de contenido
     const res = await fetchFromStrapi(
-      "negocios?fields[0]=slug&fields[1]=updatedAt&fields[2]=is_premium&fields[3]=premium_valid_until&fields[4]=descripcion&populate[imagen_portada][fields][0]=url&pagination[pageSize]=1000",
+      "negocios?fields[0]=slug&fields[1]=updatedAt&fields[2]=is_premium&fields[3]=premium_valid_until&fields[4]=descripcion&populate[imagen_portada][fields][0]=url&populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&pagination[pageSize]=1000",
       options
     );
     negocios = res.data || [];
@@ -34,30 +35,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
   }
 
-  const isPremiumActive = (n: any): boolean => {
-    if (!n.is_premium) return false;
-    if (!n.premium_valid_until) return true;
-    return new Date(n.premium_valid_until) > new Date();
-  };
-
-  // Solo incluir en el sitemap negocios con contenido mínimo:
-  // descripción >= 30 caracteres O imagen de portada cargada.
-  // Evita que Google indexe páginas vacías que consumen crawl budget.
-  const hasMinimumContent = (n: any): boolean => {
-    const hasDescription =
-      typeof n.descripcion === "string" && n.descripcion.trim().length >= 30;
-    const hasImage = !!n.imagen_portada?.url;
-    return hasDescription || hasImage;
-  };
-
   const negocioUrls: MetadataRoute.Sitemap = negocios
-    .filter((n: any) => n.slug && hasMinimumContent(n))
+    .filter((n: any) => n.slug && showsPublicFicha(n))
     .map((n: any) => ({
       url: `${siteUrl}/negocios/${n.slug}`,
       lastModified: n.updatedAt ? new Date(n.updatedAt) : new Date(),
       changeFrequency: "weekly" as const,
-      // Los negocios premium tienen prioridad levemente mayor → Google los recrawlea antes
-      priority: isPremiumActive(n) ? 0.9 : 0.8,
+      priority: 0.9,
     }));
 
   let categorias: any[] = [];
