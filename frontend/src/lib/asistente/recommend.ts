@@ -29,7 +29,7 @@ type SearchClient = {
 
 const RETRIEVE_FIELDS = [
   "objectID", "nombre", "slug", "categoria", "direccion", "descripcion",
-  "is_premium", "whatsapp", "instagram_username", "search_keywords", "atributos",
+  "is_premium", "whatsapp", "instagram_username", "telefono", "search_keywords", "atributos",
   "imagen_portada", "rating", "review_count", "google_rating", "google_review_count",
 ];
 

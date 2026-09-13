@@ -1,3 +1,5 @@
+import { getSiteUrl } from "@/lib/site";
+
 export type ProspeccionNegocio = {
   documentId: string;
   nombre: string;
@@ -55,6 +57,10 @@ export function composeFichaMensaje(input: {
     .map((part) => String(part || "").trim())
     .filter(Boolean)
     .join("\n\n");
+}
+
+export function guideHomeUrl(): string {
+  return getSiteUrl();
 }
 
 export function phoneForWhatsapp(negocio: ProspeccionNegocio | null): string {

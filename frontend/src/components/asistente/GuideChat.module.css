@@ -403,6 +403,36 @@
   color: hsl(var(--muted-foreground));
 }
 
+.cardDirectory {
+  min-height: 0;
+}
+
+.cardDirectory .cardBody {
+  padding: 0.85rem 0.95rem 0.95rem;
+  gap: 0.28rem;
+}
+
+.dirRubro {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: hsl(var(--primary) / 0.9);
+}
+
+.dirSubscribe {
+  justify-self: start;
+  margin-top: 0.25rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
 .ctas {
   display: flex;
   flex-wrap: wrap;

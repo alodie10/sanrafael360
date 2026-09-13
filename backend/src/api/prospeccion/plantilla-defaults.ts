@@ -1,7 +1,7 @@
 export const DEFAULT_PROSPECCION_PLANTILLA = {
-  texto_ficha: '¡Mirá este comercio en San Rafael 360!',
+  texto_ficha: 'Si querés publicar con nosotros, esta es nuestra guía.',
   mensaje: [
-    'Bienvenido a la guía local San Rafael 360. Por tener tu comercio en San Rafael ya pertenecés a nuestra guía. Si querés formar parte de nuestros clientes premium te cuento que por 40.000 $ el trimestre podemos darte:',
+    'Por $40.000 el trimestre podemos darte:',
     '• Galería de fotos y videos',
     '• Mapas y GPS directos',
     '• Botones de contactos a todas tus redes',
@@ -11,6 +11,11 @@ export const DEFAULT_PROSPECCION_PLANTILLA = {
   ].join('\n'),
   firma: 'Mi nombre es Diego Alonso, dueño de sanrafael360.com',
 };
+
+const LEGACY_TEXTO_FICHA = [
+  '¡Mirá este comercio en San Rafael 360!',
+  'Tenés tu ficha en San Rafael 360',
+];
 
 export type ProspeccionPlantillaFields = {
   texto_ficha: string;
@@ -44,6 +49,20 @@ export function getPublicSiteUrl(): string {
   ).replace(/\/$/, '');
 }
 
-export function fichaUrlForSlug(slug: string): string {
-  return `${getPublicSiteUrl()}/negocios/${slug}`;
+/** Home pública de la guía. Ya no se manda el link de un negocio puntual. */
+export function guideHomeUrl(): string {
+  return getPublicSiteUrl();
+}
+
+export function migratePlantillaCopy(current: ProspeccionPlantillaFields): ProspeccionPlantillaFields {
+  const texto = String(current.texto_ficha || '').trim();
+  const mensaje = String(current.mensaje || '').trim();
+  const next = { ...current, texto_ficha: texto, mensaje };
+  if (LEGACY_TEXTO_FICHA.includes(texto) || /tu ficha en san rafael/i.test(texto)) {
+    next.texto_ficha = DEFAULT_PROSPECCION_PLANTILLA.texto_ficha;
+  }
+  if (/ya pertenec[eé]s a nuestra gu[ií]a/i.test(mensaje) || /bienvenido a la gu[ií]a local/i.test(mensaje)) {
+    next.mensaje = DEFAULT_PROSPECCION_PLANTILLA.mensaje;
+  }
+  return next;
 }

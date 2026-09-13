@@ -60,6 +60,7 @@ const NEGOCIO_SEARCH_POPULATE = [
   "fields[16]=reserva_habilitada",
   "fields[17]=cta_link",
   "fields[18]=cta_habilitado",
+  "fields[19]=telefono",
 ].join("&");
 
 function buildNegociosSearchPath({ query, localidad, categoryDocId }: HomeSearchParams): string {
@@ -156,6 +157,7 @@ function mapAlgoliaHit(hit: Record<string, unknown>, query?: string): Negocio {
     nombre: hit.nombre as string,
     descripcion: hit.descripcion as string | undefined,
     direccion: hit.direccion as string,
+    telefono: typeof hit.telefono === "string" ? hit.telefono : undefined,
     whatsapp: typeof hit.whatsapp === "string" ? hit.whatsapp : undefined,
     instagram_username:
       typeof hit.instagram_username === "string" ? hit.instagram_username : undefined,
@@ -334,7 +336,8 @@ const CATEGORIA_NEGOCIOS_POPULATE =
   "&fields[4]=premium_valid_until&fields[5]=price_range&fields[6]=rating" +
   "&fields[7]=review_count&fields[8]=google_rating&fields[9]=google_review_count" +
   "&fields[10]=tripadvisor_rating&fields[11]=tripadvisor_review_count" +
-  "&fields[12]=reserva_url&fields[13]=reserva_habilitada&fields[14]=cta_link&fields[15]=cta_habilitado";
+  "&fields[12]=reserva_url&fields[13]=reserva_habilitada&fields[14]=cta_link&fields[15]=cta_habilitado" +
+  "&fields[16]=telefono";
 
 async function fetchNegociosFromStrapiByCategoriaSlug(cmsSlug: string): Promise<Negocio[]> {
   try {

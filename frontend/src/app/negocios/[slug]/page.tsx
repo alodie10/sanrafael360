@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import BusinessDetailClient from "./BusinessDetailClient";
+import DirectoryListingClient from "./DirectoryListingClient";
 import { getNegocioBySlug } from "@/lib/negocios";
+import { showsPublicFicha } from "@/lib/search-match";
 
 export default async function BusinessDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -9,6 +11,10 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
 
   if (!negocio) {
     notFound();
+  }
+
+  if (!showsPublicFicha(negocio)) {
+    return <DirectoryListingClient initialNegocio={negocio} slug={slug} />;
   }
 
   return <BusinessDetailClient initialNegocio={negocio} slug={slug} />;

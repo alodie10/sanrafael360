@@ -25,6 +25,7 @@ import {
   isOpenDuringAnySchedule,
 } from "@/lib/schedules";
 import { descriptionToSafeText } from "@/lib/safe-text";
+import { showsPublicFicha } from "@/lib/search-match";
 
 export default function BusinessDetailClient({ initialNegocio, slug }: { initialNegocio: Negocio; slug: string }) {
   const [negocio, setNegocio] = useState<Negocio | null>(initialNegocio);
@@ -202,10 +203,7 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
   const businessStatus = getBusinessStatus();
   const ownerId = String(negocio.owner?.id || negocio.owner?.documentId || "");
   
-  let isValidPremium = negocio?.is_premium || false;
-  if (isValidPremium && negocio?.premium_valid_until && new Date() > new Date(negocio.premium_valid_until)) {
-    isValidPremium = false;
-  }
+  const isValidPremium = showsPublicFicha(negocio);
 
   return (
     <main data-testid="business-detail-page" className="min-h-screen bg-background pb-20">

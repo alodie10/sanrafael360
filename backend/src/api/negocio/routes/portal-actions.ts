@@ -136,5 +136,35 @@ export default {
         middlewares: ['global::require-admin'],
       },
     },
+    {
+      method: 'POST',
+      path: '/negocios/admin/purge-never-premium-media',
+      handler: 'negocio.adminPurgeNeverPremiumMedia',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['global::require-admin'],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/negocios/admin/:documentId/purge-media',
+      handler: 'negocio.adminPurgeMedia',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['global::require-admin'],
+      },
+    },
+    {
+      method: 'DELETE',
+      path: '/negocios/admin/:documentId',
+      handler: 'negocio.adminDelete',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['global::require-admin'],
+      },
+    },
   ],
 };

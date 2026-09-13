@@ -7,6 +7,7 @@ import { createPortalAdminService } from '../services/portal-admin';
 import { createUserRepository } from '../../../repositories/user-repository';
 import { getAdminEmails, userHasAdminAccess, resolveAdminUser } from '../../../utils/admin-access';
 import { adminCreateNegocio as createNegocioManual } from '../services/admin-create-negocio';
+import { createAdminNegocioCleanupService } from '../services/admin-negocio-cleanup';
 
 export default factories.createCoreController('api::negocio.negocio', ({ strapi }) => ({
   async find(ctx) {
@@ -290,5 +291,22 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     const { documentId } = ctx.params;
     await createPortalAdminService(strapi).deletePago(documentId);
     return ctx.send({ success: true });
+  }),
+
+  adminDelete: asyncHandler(async (ctx) => {
+    const { documentId } = ctx.params;
+    const data = await createAdminNegocioCleanupService(strapi).deleteNegocio(documentId);
+    return ctx.send({ success: true, data });
+  }),
+
+  adminPurgeMedia: asyncHandler(async (ctx) => {
+    const { documentId } = ctx.params;
+    const data = await createAdminNegocioCleanupService(strapi).purgeNeverPremiumMedia(documentId);
+    return ctx.send({ success: true, data });
+  }),
+
+  adminPurgeNeverPremiumMedia: asyncHandler(async (ctx) => {
+    const data = await createAdminNegocioCleanupService(strapi).purgeNeverPremiumMediaBatch();
+    return ctx.send({ success: true, data });
   }),
 }));

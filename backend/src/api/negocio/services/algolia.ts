@@ -2,6 +2,7 @@ import { algoliasearch } from 'algoliasearch';
 import { ALGOLIA_INDEX_SETTINGS } from './algolia-index-settings';
 import { guideSynonymHits } from './algolia-synonyms';
 import { buildSearchKeywords } from './search-keywords';
+import { isPremiumListingActive, showsPublicFicha } from '../../../utils/premium-vigencia';
 
 const APP_ID = process.env.ALGOLIA_APP_ID || '';
 const ADMIN_KEY = process.env.ALGOLIA_ADMIN_KEY || '';
@@ -42,26 +43,22 @@ export async function applyAlgoliaIndexSettings() {
   }
 }
 
-function isPremiumActive(negocioData: { is_premium?: boolean; premium_valid_until?: string | null }): boolean {
-  if (!negocioData.is_premium) return false;
-  if (!negocioData.premium_valid_until) return true;
-  return new Date(negocioData.premium_valid_until) > new Date();
-}
-
 function mediaUrl(media: { url?: string } | null | undefined) {
   return media?.url ? { url: media.url } : null;
 }
 
 function buildAlgoliaObject(negocioData: any) {
-  const premium = isPremiumActive(negocioData);
+  const premium = isPremiumListingActive(negocioData);
+  const ficha = showsPublicFicha(negocioData);
   return {
     objectID: negocioData.documentId,
     nombre: negocioData.nombre,
     slug: negocioData.slug,
     descripcion: negocioData.descripcion,
     direccion: negocioData.direccion,
-    whatsapp: negocioData.whatsapp || null,
-    instagram_username: negocioData.instagram_username || null,
+    telefono: negocioData.telefono || null,
+    whatsapp: ficha ? negocioData.whatsapp || null : null,
+    instagram_username: ficha ? negocioData.instagram_username || null : null,
     latitud: negocioData.latitud,
     longitud: negocioData.longitud,
     is_premium: premium,
@@ -77,8 +74,8 @@ function buildAlgoliaObject(negocioData: any) {
     google_review_count: negocioData.google_review_count || 0,
     tripadvisor_rating: negocioData.tripadvisor_rating || 0,
     tripadvisor_review_count: negocioData.tripadvisor_review_count || 0,
-    imagen_portada: mediaUrl(negocioData.imagen_portada),
-    logo: mediaUrl(negocioData.logo),
+    imagen_portada: ficha ? mediaUrl(negocioData.imagen_portada) : null,
+    logo: ficha ? mediaUrl(negocioData.logo) : null,
     owner: negocioData.owner ? { documentId: negocioData.owner.documentId || negocioData.owner.id } : null,
     ofertas: negocioData.ofertas
       ?.filter((o: any) => o.activa)

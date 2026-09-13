@@ -196,6 +196,23 @@ export class NegocioRepository {
       fields: ['nombre', 'slug', 'documentId'],
     });
   }
+
+  async delete(documentId: string) {
+    return this.strapi.documents('api::negocio.negocio').delete({ documentId });
+  }
+
+  async findNeverPremiumWithMedia(limit = 40) {
+    return this.strapi.documents('api::negocio.negocio').findMany({
+      filters: {
+        $or: [{ is_premium: { $eq: false } }, { is_premium: { $null: true } }],
+        premium_valid_until: { $null: true },
+      },
+      populate: ['logo', 'imagen_portada', 'galeria', 'categoria'],
+      fields: ['documentId', 'nombre', 'is_premium', 'premium_valid_until'],
+      limit,
+      status: 'published',
+    });
+  }
 }
 
 export const createNegocioRepository = (strapi: any) => new NegocioRepository(strapi);

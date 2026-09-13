@@ -1,5 +1,6 @@
 import { normalizeInstagramUsername } from "@/lib/instagram";
 import { normalizeWhatsappDigits } from "@/lib/whatsapp";
+import { isTouristInterestCategory } from "@/lib/search-match";
 import { excerptText, plainTextFromHtml } from "./rank";
 import type { GuideFicha } from "./types";
 
@@ -46,21 +47,26 @@ export function mapAlgoliaHitToFicha(hit: Record<string, unknown>): GuideFicha |
   const slug = asString(hit.slug);
   if (!objectID || !nombre || !slug) return null;
   const reviews = ratingFromHit(hit);
+  const isPremium = Boolean(hit.is_premium);
+  const isFicha = isPremium || isTouristInterestCategory({ categoria: hit.categoria });
 
   return {
     objectID,
     nombre,
     slug,
-    url: `/negocios/${slug}`,
+    url: isFicha ? `/negocios/${slug}` : "",
     categoria: asString(hit.categoria),
     zona: asString(hit.direccion),
-    is_premium: Boolean(hit.is_premium),
-    whatsapp: normalizeWhatsappDigits(asString(hit.whatsapp)),
-    instagram_username: normalizeInstagramUsername(asString(hit.instagram_username)),
+    is_premium: isPremium,
+    telefono: asString(hit.telefono) || asString(hit.whatsapp),
+    whatsapp: isFicha ? normalizeWhatsappDigits(asString(hit.whatsapp)) : null,
+    instagram_username: isFicha
+      ? normalizeInstagramUsername(asString(hit.instagram_username))
+      : null,
     keywords: keywordsFromHit(hit),
     descripcion: excerptText(plainTextFromHtml(hit.descripcion)) || null,
-    coverUrl: coverFromHit(hit),
-    rating: reviews?.rating ?? null,
-    reviewCount: reviews?.count ?? null,
+    coverUrl: isFicha ? coverFromHit(hit) : null,
+    rating: isFicha ? reviews?.rating ?? null : null,
+    reviewCount: isFicha ? reviews?.count ?? null : null,
   };
 }
