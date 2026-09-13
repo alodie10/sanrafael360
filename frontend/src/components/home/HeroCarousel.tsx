@@ -5,11 +5,11 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const defaultImages = [
-  '/images/hero/lago-y-montana.jpg',
-  '/images/hero/laguna-encantada.jpg',
-  '/images/hero/rafting.jpg',
-  '/images/hero/rio-atuel-sosneado.jpg',
-  '/images/hero/sosneado.jpg',
+  '/images/hero/vinedos-san-rafael.jpg',
+  '/images/hero/canon-del-atuel.jpg',
+  '/images/hero/valle-grande.jpg',
+  '/images/hero/bodega-barricas.jpg',
+  '/images/hero/gastronomia-san-rafael.jpg',
 ];
 
 export default function HeroCarousel() {
@@ -45,7 +45,7 @@ export default function HeroCarousel() {
   };
 
   return (
-    <div className="absolute inset-0 overflow-hidden -z-10">
+    <div className="absolute inset-0 overflow-hidden z-0">
       <AnimatePresence mode="wait">
         <motion.div
             key={defaultImages[current]}
@@ -57,18 +57,17 @@ export default function HeroCarousel() {
         >
           <Image
               src={defaultImages[current]}
-              alt="San Rafael"
+              alt="San Rafael, Mendoza"
               fill
               priority={current === 0}
               sizes="100vw"
-              quality={70}
-              className="object-cover brightness-[0.65] contrast-[1.1]"
+              quality={75}
+              className="object-cover brightness-[0.85] contrast-[1.05]"
               onError={() => handleImageError(defaultImages[current])}
           />
         </motion.div>
       </AnimatePresence>
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-background/40" />
-      <div className="absolute inset-0 bg-black/10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-black/20 pointer-events-none" />
     </div>
   );
 }
