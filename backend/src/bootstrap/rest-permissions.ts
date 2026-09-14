@@ -37,6 +37,7 @@ export const REVOKE_UNTRUSTED_REST_ACTIONS = [
   'api::efemeride.efemeride.adminuploadencabezado',
   'api::efemeride.efemeride.adminpremiumpicker',
   'api::negocio.negocio.admincreate',
+  'api::negocio.negocio.adminlistpagos',
   'api::negocio.negocio.admindelete',
   'api::negocio.negocio.adminpurgemedia',
   'api::negocio.negocio.adminpurgeneverpremiummedia',

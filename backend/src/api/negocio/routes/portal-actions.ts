@@ -99,6 +99,16 @@ export default {
       },
     },
     {
+      method: 'GET',
+      path: '/negocios/admin/pagos',
+      handler: 'negocio.adminListPagos',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['global::require-admin', 'api::negocio.admin-pagos-list-validator'],
+      },
+    },
+    {
       method: 'POST',
       path: '/negocios/admin/pagos',
       handler: 'negocio.cargarPagoPortal',

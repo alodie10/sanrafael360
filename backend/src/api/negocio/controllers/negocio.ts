@@ -265,6 +265,20 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
     return ctx.send({ success: true });
   }),
 
+  adminListPagos: asyncHandler(async (ctx) => {
+    const { search, filterType, month } = ctx.query as {
+      search?: string;
+      filterType?: 'all' | 'premium' | 'expired' | 'expiring';
+      month?: string;
+    };
+    const payload = await createPortalAdminService(strapi).listAdminPagos({
+      search,
+      filterType,
+      month,
+    });
+    return ctx.send(payload);
+  }),
+
   cargarPagoPortal: asyncHandler(async (ctx) => {
     const { monto, estado, fecha_pago, external_reference, negocio, extendMonths } = ctx.request.body;
     const newPago = await createPortalAdminService(strapi).createManualPago({
