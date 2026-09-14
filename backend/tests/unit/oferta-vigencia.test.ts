@@ -3,6 +3,7 @@ import {
   isOfertaEnVentana,
   mergePublicVigenciaFilters,
   planVigenciaUpdates,
+  shouldAutoPublish,
   stampActivaOnPayload,
 } from '../../src/api/oferta/services/oferta-vigencia';
 
@@ -101,11 +102,23 @@ describe('planVigenciaUpdates', () => {
   });
 });
 
+
 describe('mergePublicVigenciaFilters', () => {
   it('keeps caller filters and forces the date window', () => {
     const merged = mergePublicVigenciaFilters({ activa: { $eq: true } }, NOW);
     expect(merged.activa).toEqual({ $eq: true });
     expect(merged.valida_desde).toEqual({ $lte: NOW.toISOString() });
     expect(merged.valida_hasta).toEqual({ $gte: NOW.toISOString() });
+  });
+});
+
+describe('shouldAutoPublish', () => {
+  it('skips already published or in-flight documents', () => {
+    const publishing = new Set(['busy']);
+    expect(shouldAutoPublish({ documentId: 'n1', publishedAt: '2026-09-14T10:00:00.000Z' }, publishing)).toBe(
+      false
+    );
+    expect(shouldAutoPublish({ documentId: 'busy' }, publishing)).toBe(false);
+    expect(shouldAutoPublish({ documentId: 'draft' }, publishing)).toBe(true);
   });
 });

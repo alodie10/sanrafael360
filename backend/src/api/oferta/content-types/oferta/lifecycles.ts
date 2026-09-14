@@ -1,6 +1,9 @@
 import { syncNegocioToAlgolia } from '../../../negocio/services/algolia';
 import { createOfertaRepository } from '../../repositories/oferta-repository';
-import { stampActivaOnPayload } from '../../services/oferta-vigencia';
+import { shouldAutoPublish, stampActivaOnPayload } from '../../services/oferta-vigencia';
+
+const publishingSet = new Set<string>();
+const algoliaQueued = new Set<string>();
 
 async function stampActivaFromDates(event: any, isUpdate: boolean) {
   const data = event.params?.data;
@@ -27,8 +30,36 @@ function extractNegocioId(data: any): string | null {
   return null;
 }
 
-// Guarda los documentIds que estamos publicando para evitar loops afterCreate -> publish -> afterUpdate -> publish
-const publishingSet = new Set<string>();
+function scheduleAlgoliaSync(negocioId: string | null) {
+  if (!negocioId || algoliaQueued.has(negocioId)) return;
+  algoliaQueued.add(negocioId);
+  setImmediate(async () => {
+    try {
+      await syncNegocioToAlgolia(negocioId);
+    } catch (err) {
+      strapi.log.error('[Oferta Lifecycle] Error syncing Algolia:', err);
+    } finally {
+      algoliaQueued.delete(negocioId);
+    }
+  });
+}
+
+async function resolveNegocioId(documentId: string | null, fromPayload: string | null) {
+  if (fromPayload) return fromPayload;
+  if (!documentId) return null;
+  try {
+    const fullOferta = await strapi.documents('api::oferta.oferta').findOne({
+      documentId,
+      populate: ['negocio'],
+    });
+    if (fullOferta?.negocio) {
+      return String(fullOferta.negocio.documentId || fullOferta.negocio.id);
+    }
+  } catch (err) {
+    strapi.log.error('[Oferta Lifecycle] Error resolving negocio:', err);
+  }
+  return null;
+}
 
 export default {
   async beforeCreate(event: any) {
@@ -42,12 +73,11 @@ export default {
   async afterCreate(event: any) {
     const { result } = event;
     const documentId = result?.documentId ? String(result.documentId) : null;
-    const negocioId = extractNegocioId(event.params.data);
+    if (documentId && publishingSet.has(documentId)) return;
 
-    // Fire-and-forget: retornamos inmediatamente al portal y procesamos en background
-    setImmediate(async () => {
-      if (documentId && !publishingSet.has(documentId)) {
-        publishingSet.add(documentId);
+    if (documentId && shouldAutoPublish(result, publishingSet)) {
+      publishingSet.add(documentId);
+      setImmediate(async () => {
         try {
           await strapi.documents('api::oferta.oferta').publish({ documentId });
           strapi.log.info(`[Oferta Lifecycle] Oferta ${documentId} publicada automáticamente.`);
@@ -56,99 +86,35 @@ export default {
         } finally {
           publishingSet.delete(documentId);
         }
-      }
+      });
+    }
 
-      // Intentamos obtener el negocioId del payload primero, si no, lo buscamos en DB
-      let resolvedNegocioId = negocioId;
-      if (!resolvedNegocioId && documentId) {
-        try {
-          const fullOferta = await strapi.documents('api::oferta.oferta').findOne({
-            documentId,
-            populate: ['negocio'],
-          });
-          if (fullOferta?.negocio) {
-            resolvedNegocioId = String(fullOferta.negocio.documentId || fullOferta.negocio.id);
-          }
-        } catch (err) {
-          strapi.log.error('[Oferta Lifecycle] Error resolving negocio after create:', err);
-        }
-      }
-
-      if (resolvedNegocioId) {
-        try {
-          await syncNegocioToAlgolia(resolvedNegocioId);
-        } catch (err) {
-          strapi.log.error('[Oferta Lifecycle] Error syncing Algolia after create:', err);
-        }
-      }
+    const payloadNegocioId = extractNegocioId(event.params.data);
+    setImmediate(async () => {
+      scheduleAlgoliaSync(await resolveNegocioId(documentId, payloadNegocioId));
     });
   },
 
   async afterUpdate(event: any) {
     const { result } = event;
     const documentId = result?.documentId ? String(result.documentId) : null;
+    if (documentId && publishingSet.has(documentId)) return;
 
-    // Si este update fue disparado por nuestro propio publish(), lo ignoramos
-    if (documentId && publishingSet.has(documentId)) {
-      return;
-    }
-
-    let negocioId = extractNegocioId(event.params.data);
-
-    if (!negocioId && result?.documentId) {
-      try {
-        const fullOferta = await strapi.documents('api::oferta.oferta').findOne({
-          documentId: String(result.documentId),
-          populate: ['negocio'],
-        });
-        if (fullOferta?.negocio) {
-          negocioId = String(fullOferta.negocio.documentId || fullOferta.negocio.id);
-        }
-      } catch (err) {
-        strapi.log.error('[Oferta Lifecycle] Error fetching negocio in afterUpdate:', err);
-      }
-    }
-
-    if (negocioId) {
-      const nId = negocioId;
-      setImmediate(async () => {
-        try {
-          await syncNegocioToAlgolia(nId);
-        } catch (err) {
-          strapi.log.error('[Oferta Lifecycle] Error syncing Algolia after update:', err);
-        }
-      });
-    }
+    const payloadNegocioId = extractNegocioId(event.params.data);
+    setImmediate(async () => {
+      scheduleAlgoliaSync(await resolveNegocioId(documentId, payloadNegocioId));
+    });
   },
 
   async beforeDelete(event: any) {
     const documentId = event.params.where?.documentId || event.params.where?.id;
     if (documentId) {
-      try {
-        const fullOferta = await strapi.documents('api::oferta.oferta').findOne({
-          documentId: String(documentId),
-          populate: ['negocio'],
-        });
-        if (fullOferta?.negocio) {
-          event.state.negocioId = String(fullOferta.negocio.documentId || fullOferta.negocio.id);
-        }
-      } catch (err) {
-        strapi.log.error('[Oferta Lifecycle] Error fetching negocio in beforeDelete:', err);
-      }
+      event.state.negocioId = await resolveNegocioId(String(documentId), null);
     }
   },
 
   async afterDelete(event: any) {
-    const negocioId = event.state?.negocioId;
-    if (negocioId) {
-      const nId = String(negocioId);
-      setImmediate(async () => {
-        try {
-          await syncNegocioToAlgolia(nId);
-        } catch (err) {
-          strapi.log.error('[Oferta Lifecycle] Error syncing Algolia after delete:', err);
-        }
-      });
-    }
-  }
+    const negocioId = event.state?.negocioId ? String(event.state.negocioId) : null;
+    scheduleAlgoliaSync(negocioId);
+  },
 };

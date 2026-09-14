@@ -58,3 +58,14 @@ export function planVigenciaUpdates(ofertas: OfertaVigenciaRow[], now: Date = ne
   }
   return updates;
 }
+
+export function shouldAutoPublish(
+  result: { documentId?: string; publishedAt?: unknown } | null | undefined,
+  publishing: Set<string>
+): boolean {
+  const documentId = result?.documentId ? String(result.documentId) : '';
+  if (!documentId) return false;
+  if (result?.publishedAt) return false;
+  if (publishing.has(documentId)) return false;
+  return true;
+}
