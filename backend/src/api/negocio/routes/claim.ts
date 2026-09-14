@@ -5,8 +5,9 @@ export default {
       path: '/negocios/:id/claim',
       handler: 'negocio.claim',
       config: {
+        auth: false,
         policies: [],
-        middlewares: ['api::negocio.negocio-validator'],
+        middlewares: ['global::require-auth', 'api::negocio.negocio-validator'],
       },
     },
   ],

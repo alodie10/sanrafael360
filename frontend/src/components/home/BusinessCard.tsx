@@ -14,6 +14,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { buildBusinessEditHref } from "@/lib/return-to";
 import { adminDeleteNegocio } from "@/lib/admin-listing";
+import { isOfertaEnVentana } from "@/lib/oferta-vigencia";
 
 const FavoritesModal = dynamic(() => import('../auth/FavoritesModal'), { ssr: false });
 import { toast } from "sonner";
@@ -141,11 +142,11 @@ export default function BusinessCard({
 
           {/* Badges Overlay (Atributos Destacados & Oferta) */}
           <div className="absolute top-4 left-4 flex flex-col items-start gap-2 z-20 pointer-events-none">
-            {negocio.ofertas && negocio.ofertas.some(o => o.activa) && (
+            {negocio.ofertas && negocio.ofertas.some(isOfertaEnVentana) && (
               <div className="px-3 py-1 bg-[#FFBF00] rounded-full text-[10px] font-bold text-black shadow-lg flex items-center gap-1 uppercase tracking-widest">
                 <Tag className="w-3 h-3" />
                 {(() => {
-                  const activeOffer = negocio.ofertas.find(o => o.activa);
+                  const activeOffer = negocio.ofertas.find(isOfertaEnVentana);
                   if (activeOffer?.tipo_oferta === "Promocion2x1") return "2X1";
                   if (activeOffer?.tipo_oferta === "Regalo") return "REGALO";
                   if (activeOffer?.tipo_oferta === "Especial") return "ESPECIAL";

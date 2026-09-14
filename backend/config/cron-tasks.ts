@@ -22,4 +22,21 @@ export default {
       rule: '0 0 4 * * *',
     },
   },
+  syncOfertaVigencia: {
+    task: async ({ strapi }) => {
+      strapi.log.info('[Cron] syncOfertaVigencia — inicio');
+      try {
+        const result = await strapi.service('api::oferta.oferta').syncVigencia();
+        strapi.log.info(
+          `[Cron] syncOfertaVigencia — checked=${result.checked} on=${result.activated} off=${result.deactivated}`
+        );
+      } catch (err: any) {
+        strapi.log.error(`[Cron] syncOfertaVigencia error: ${err?.message || err}`);
+      }
+    },
+    options: {
+      // Cada 15 min: activa al entrar en el rango y apaga al vencer.
+      rule: '0 */15 * * * *',
+    },
+  },
 };

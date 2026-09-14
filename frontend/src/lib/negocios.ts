@@ -2,7 +2,9 @@ import { cache } from "@/lib/react-cache";
 import { fetchFromStrapi } from "@/lib/strapi";
 import { canUseAlgoliaSearch } from "@/lib/search-config";
 import { getNegocioFromAlgoliaBySlug } from "@/lib/search-negocios";
+import { toStrapiEqFilter } from "@/lib/strapi-query";
 import { Negocio } from "@/types/strapi";
+import { isOfertaEnVentana } from "@/lib/oferta-vigencia";
 
 const NEGOCIO_DETAIL_POPULATE =
   "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&" +
@@ -28,6 +30,9 @@ const NEGOCIO_DETAIL_POPULATE =
   "fields[36]=crop_gravity&fields[37]=galeria_config&fields[38]=google_reviews&fields[39]=google_reviews_synced_at";
 
 async function fetchNegocioFromStrapi(slug: string): Promise<Negocio | null> {
+  const encoded = toStrapiEqFilter(slug);
+  if (!encoded) return null;
+
   const strapiToken = process.env.STRAPI_API_TOKEN;
   const options: RequestInit = {
     headers: {
@@ -38,22 +43,38 @@ async function fetchNegocioFromStrapi(slug: string): Promise<Negocio | null> {
 
   try {
     let res = await fetchFromStrapi(
-      `negocios?filters[slug][$eq]=${slug}&${NEGOCIO_DETAIL_POPULATE}`,
+      `negocios?filters[slug][$eq]=${encoded}&${NEGOCIO_DETAIL_POPULATE}`,
       options
     );
     let negocio = res.data?.[0];
     if (!negocio) {
       res = await fetchFromStrapi(
-        `negocios?filters[documentId][$eq]=${slug}&${NEGOCIO_DETAIL_POPULATE}`,
+        `negocios?filters[documentId][$eq]=${encoded}&${NEGOCIO_DETAIL_POPULATE}`,
         options
       );
       negocio = res.data?.[0];
     }
-    return negocio || null;
+    return publicizeNegocio(negocio);
   } catch (error) {
     console.error(`[getNegocioBySlug Error] Error al obtener el negocio ${slug}:`, error);
     return null;
   }
+}
+
+function publicizeNegocio(negocio: Negocio | null | undefined): Negocio | null {
+  if (!negocio) return null;
+  const copy = { ...negocio } as Negocio & {
+    documentacion_reclamo?: unknown;
+    pagos?: unknown;
+    owner?: { id?: number };
+  };
+  delete copy.documentacion_reclamo;
+  delete copy.pagos;
+  if (copy.owner) copy.owner = { id: copy.owner.id };
+  if (Array.isArray(copy.ofertas)) {
+    copy.ofertas = copy.ofertas.filter(isOfertaEnVentana);
+  }
+  return copy;
 }
 
 /** Ficha por slug o documentId. Strapi primero; Algolia si no está o el backend no responde. */

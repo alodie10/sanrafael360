@@ -157,6 +157,20 @@ export function showsPublicFicha(negocio: {
   return isPremiumListingActive(negocio) || isTouristInterestCategory(negocio);
 }
 
+export function splitPublicAndDirectory<T extends {
+  is_premium?: boolean;
+  premium_valid_until?: string | null;
+  categoria?: unknown;
+}>(negocios: T[]): { premium: T[]; directory: T[] } {
+  const premium: T[] = [];
+  const directory: T[] = [];
+  for (const negocio of negocios) {
+    if (showsPublicFicha(negocio)) premium.push(negocio);
+    else directory.push(negocio);
+  }
+  return { premium, directory };
+}
+
 /** Sin flag premium, sin vigencia y fuera de Interés Turístico. */
 export function neverBeenPremium(negocio: {
   is_premium?: boolean;

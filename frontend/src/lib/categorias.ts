@@ -2,6 +2,7 @@ import { cache } from "@/lib/react-cache";
 import { fetchFromStrapi } from "@/lib/strapi";
 import { canUseAlgoliaSearch } from "@/lib/search-config";
 import { getCategoriaFromAlgoliaBySlug } from "@/lib/search-negocios";
+import { toStrapiEqFilter } from "@/lib/strapi-query";
 import { Categoria } from "@/types/strapi";
 
 export const CATEGORIAS_LIST_PATH =
@@ -26,13 +27,15 @@ export const getCategorias = cache(async function getCategorias(
 });
 
 async function fetchCategoriaFromStrapi(cmsSlug: string): Promise<Categoria | null> {
+  const encoded = toStrapiEqFilter(cmsSlug);
+  if (!encoded) return null;
   try {
     const strapiToken = process.env.STRAPI_API_TOKEN;
     const options: RequestInit = strapiToken
       ? { headers: { Authorization: `Bearer ${strapiToken}` } }
       : {};
     const res = await fetchFromStrapi(
-      `categorias?filters[slug][$eq]=${cmsSlug}&fields[0]=nombre&fields[1]=descripcion&fields[2]=documentId&fields[3]=slug`,
+      `categorias?filters[slug][$eq]=${encoded}&fields[0]=nombre&fields[1]=descripcion&fields[2]=documentId&fields[3]=slug`,
       { ...CATEGORIAS_FETCH_OPTIONS, ...options }
     );
     return res.data?.[0] || null;

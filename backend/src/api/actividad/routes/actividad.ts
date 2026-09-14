@@ -1,2 +1,5 @@
 import { factories } from '@strapi/strapi';
-export default factories.createCoreRouter('api::actividad.actividad' as any);
+
+export default factories.createCoreRouter('api::actividad.actividad' as any, {
+  except: ['create', 'update', 'delete', 'findOne'],
+});

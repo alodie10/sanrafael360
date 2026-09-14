@@ -2,6 +2,7 @@ import { fetchFromStrapi } from "@/lib/strapi";
 import { Oferta } from "@/types/strapi";
 import OfferListClient from "./OfferListClient";
 import { canonicalPage } from "@/lib/seo";
+import { strapiOfertaVigenteFilters } from "@/lib/oferta-vigencia";
 
 /** Dinámico: evita fallos/warnings de prerender cuando Strapi no responde en build. */
 export const dynamic = "force-dynamic";
@@ -12,14 +13,16 @@ export const metadata = canonicalPage(
   "Promos vigentes de negocios de San Rafael, Mendoza. Compará descuentos y contactá directo por WhatsApp."
 );
 
-const OFERTAS_POPULATE =
-  "filters[activa][$eq]=true&filters[publishedAt][$notNull]=true&populate[negocio][populate][0]=logo&populate[negocio][populate][1]=imagen_portada&populate[negocio][populate][2]=categoria&sort=publishedAt:desc";
+function ofertasPopulateQuery() {
+  return `${strapiOfertaVigenteFilters()}&filters[publishedAt][$notNull]=true&populate[negocio][populate][0]=logo&populate[negocio][populate][1]=imagen_portada&populate[negocio][populate][2]=categoria&sort=publishedAt:desc`;
+}
 
 async function fetchActiveOfertas() {
+  const populate = ofertasPopulateQuery();
   try {
-    return await fetchFromStrapi(`ofertas?populate[0]=banners&${OFERTAS_POPULATE}`);
+    return await fetchFromStrapi(`ofertas?populate[0]=banners&${populate}`);
   } catch {
-    return fetchFromStrapi(`ofertas?${OFERTAS_POPULATE}`);
+    return fetchFromStrapi(`ofertas?${populate}`);
   }
 }
 

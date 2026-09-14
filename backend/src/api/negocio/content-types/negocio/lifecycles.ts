@@ -1,11 +1,23 @@
 import { DiscoveryService } from '../../../../services/discovery-service';
 import { syncNegocioToAlgolia, deleteNegocioFromAlgolia } from '../../services/algolia';
+import {
+  assertResolvedPublicHost,
+  isTripadvisorHostname,
+  parsePublicHttpsUrl,
+} from '../../../../utils/safe-url';
 
 const discoveryService = new DiscoveryService();
 
 async function syncTripAdvisor(url: string): Promise<{ success: boolean; rating?: number; reviewCount?: number; error?: string }> {
   try {
-    const res = await fetch(url, {
+    const target = parsePublicHttpsUrl(url);
+    if (!isTripadvisorHostname(target.hostname)) {
+      throw new Error('Host not allowed');
+    }
+    await assertResolvedPublicHost(target);
+
+    const res = await fetch(target.href, {
+      redirect: 'manual',
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'

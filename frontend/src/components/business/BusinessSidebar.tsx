@@ -6,6 +6,7 @@ import GoogleMap from "@/components/common/GoogleMap";
 import { Negocio } from "@/types/strapi";
 import { cn } from "@/lib/utils";
 import { getOpenSchedulesForDay } from "@/lib/schedules";
+import { safeHttpHref } from "@/lib/safe-outbound-url";
 
 interface BusinessSidebarProps {
   negocio: Negocio;
@@ -55,7 +56,7 @@ export default function BusinessSidebar({
               <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">Cómo llegar</h4>
               {isValidPremium && (
                 <a 
-                  href={negocio.google_maps_url || `https://www.google.com/maps/search/?api=1&query=${negocio.latitud},${negocio.longitud}`} 
+                  href={safeHttpHref(negocio.google_maps_url) || `https://www.google.com/maps/search/?api=1&query=${negocio.latitud},${negocio.longitud}`} 
                   target="_blank"
                   className="text-primary text-[10px] font-black uppercase hover:underline flex items-center gap-1"
                 >

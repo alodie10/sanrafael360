@@ -18,7 +18,7 @@ export default function AdminSupportInbox({ jwt, onReplySuccess }: { jwt: string
   const fetchTickets = async () => {
     const strapiUrl = getStrapiUrl();
     try {
-      const res = await fetch(`${strapiUrl}/api/soportes?populate=*&sort=createdAt:desc`, {
+      const res = await fetch(`${strapiUrl}/api/soportes/admin?populate=*&sort=createdAt:desc`, {
         headers: { Authorization: `Bearer ${jwt}` }
       });
       const data = await res.json();
@@ -37,7 +37,7 @@ export default function AdminSupportInbox({ jwt, onReplySuccess }: { jwt: string
     const strapiUrl = getStrapiUrl();
     
     try {
-      const res = await fetch(`${strapiUrl}/api/soportes/${documentId}`, {
+      const res = await fetch(`${strapiUrl}/api/soportes/admin/${documentId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

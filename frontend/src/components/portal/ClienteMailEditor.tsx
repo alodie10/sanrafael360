@@ -48,6 +48,7 @@ async function uploadImageToCloudinary(file: File): Promise<string> {
   formData.append("timestamp", String(timestamp));
   formData.append("signature", signature);
   formData.append("folder", folder);
+  formData.append("overwrite", "false");
 
   const uploadRes = await fetch(
     `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,

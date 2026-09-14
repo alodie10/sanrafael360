@@ -1,4 +1,19 @@
 import { syncNegocioToAlgolia } from '../../../negocio/services/algolia';
+import { createOfertaRepository } from '../../repositories/oferta-repository';
+import { stampActivaOnPayload } from '../../services/oferta-vigencia';
+
+async function stampActivaFromDates(event: any, isUpdate: boolean) {
+  const data = event.params?.data;
+  if (!data || typeof data !== 'object') return;
+  let existing = null;
+  if (isUpdate && (data.valida_desde == null || data.valida_hasta == null)) {
+    const documentId = event.params?.where?.documentId || event.params?.where?.id;
+    if (documentId) {
+      existing = await createOfertaRepository(strapi).findDatesByDocumentId(String(documentId));
+    }
+  }
+  stampActivaOnPayload(data, existing);
+}
 
 function extractNegocioId(data: any): string | null {
   if (!data?.negocio) return null;
@@ -16,6 +31,14 @@ function extractNegocioId(data: any): string | null {
 const publishingSet = new Set<string>();
 
 export default {
+  async beforeCreate(event: any) {
+    await stampActivaFromDates(event, false);
+  },
+
+  async beforeUpdate(event: any) {
+    await stampActivaFromDates(event, true);
+  },
+
   async afterCreate(event: any) {
     const { result } = event;
     const documentId = result?.documentId ? String(result.documentId) : null;

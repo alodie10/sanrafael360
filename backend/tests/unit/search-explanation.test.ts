@@ -6,6 +6,7 @@ import {
   matchFieldFromAlgoliaHit,
   matchFieldFromText,
   queryVariants,
+  splitPublicAndDirectory,
 } from '../../../frontend/src/lib/search-match';
 
 describe('Algolia index settings', () => {
@@ -31,6 +32,22 @@ describe('Algolia index settings', () => {
 
   it('keeps premium as custom ranking after attribute order', () => {
     expect(ALGOLIA_INDEX_SETTINGS.customRanking).toEqual(['desc(is_premium)']);
+  });
+});
+
+describe('splitPublicAndDirectory', () => {
+  it('keeps directory listings even when premium fills the first visible page', () => {
+    const listings = [
+      { nombre: 'Premium 1', is_premium: true },
+      { nombre: 'Premium 2', is_premium: true },
+      { nombre: 'Ferretería libre', is_premium: false },
+    ];
+    const visiblePage = listings.slice(0, 2);
+    expect(visiblePage.some((n) => !n.is_premium)).toBe(false);
+
+    const { premium, directory } = splitPublicAndDirectory(listings);
+    expect(premium.map((n) => n.nombre)).toEqual(['Premium 1', 'Premium 2']);
+    expect(directory.map((n) => n.nombre)).toEqual(['Ferretería libre']);
   });
 });
 

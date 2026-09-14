@@ -333,6 +333,20 @@ export default {
         strapi.log.error('❌ Error en seed de expansiones del asistente:', err.message);
       }
 
+      setImmediate(() => {
+        strapi
+          .service('api::oferta.oferta')
+          .syncVigencia()
+          .then((result: { checked: number; activated: number; deactivated: number }) => {
+            strapi.log.info(
+              `[Oferta] vigencia sync bootstrap checked=${result.checked} on=${result.activated} off=${result.deactivated}`
+            );
+          })
+          .catch((err: any) => {
+            strapi.log.error(`[Oferta] vigencia sync bootstrap: ${err?.message || err}`);
+          });
+      });
+
     } catch (error) {
       strapi.log.error('❌ Error general en bootstrap:', error);
     }

@@ -7,6 +7,7 @@ import { formatCalendarDate } from "@/lib/calendar-date";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
 import { isBannerOffer, ofertaBannerSrcs } from "@/lib/oferta-banners";
 import OfferBannerLightbox from "./OfferBannerLightbox";
+import { isOfertaEnVentana } from "@/lib/oferta-vigencia";
 
 function OfferBlock({ oferta }: { oferta: Oferta }) {
   const [open, setOpen] = useState(false);
@@ -77,7 +78,7 @@ function OfferBlock({ oferta }: { oferta: Oferta }) {
 }
 
 export default function OfferModule({ ofertas }: { ofertas?: Oferta[] }) {
-  const activeOffers = ofertas?.filter((o) => o.activa) ?? [];
+  const activeOffers = ofertas?.filter((o) => isOfertaEnVentana(o)) ?? [];
 
   if (activeOffers.length === 0) return null;
 

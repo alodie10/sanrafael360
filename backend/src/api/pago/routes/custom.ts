@@ -7,7 +7,11 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: ['api::pago.pago-preference-validator', 'global::require-payments-enabled'],
+        middlewares: [
+          'global::require-auth',
+          'api::pago.pago-preference-validator',
+          'global::require-payments-enabled',
+        ],
       },
     },
     {

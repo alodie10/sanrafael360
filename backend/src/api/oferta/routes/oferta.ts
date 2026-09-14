@@ -1,3 +1,5 @@
 import { factories } from '@strapi/strapi';
 
-export default factories.createCoreRouter('api::oferta.oferta');
+export default factories.createCoreRouter('api::oferta.oferta', {
+  except: ['delete'],
+});

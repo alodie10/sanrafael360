@@ -132,7 +132,7 @@ export async function createCheckout(strapi: any, input: CheckoutInput) {
   const failureUrl = `${frontendUrl}/reservas/${comercio.slug}/fallo?codigo=${encodeURIComponent(codigo)}`;
   const pendingUrl = `${frontendUrl}/reservas/${comercio.slug}/pending?codigo=${encodeURIComponent(codigo)}`;
 
-  if (comercio.modo_simulacion) {
+  if (comercio.modo_simulacion && process.env.NODE_ENV !== 'production') {
     await confirmReservaFromPayment(strapi, hold.documentId, `SIMULATED_${Date.now()}`);
     strapi.log.info(`[ReservaCheckout] Simulación OK ${codigo}`);
     return {

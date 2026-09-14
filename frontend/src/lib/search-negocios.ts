@@ -4,6 +4,7 @@ import { canUseAlgoliaSearch, shouldUseStrapiSearchForHome } from "@/lib/search-
 import { Atributo, Categoria, Negocio } from "@/types/strapi";
 import { matchFieldFromAlgoliaHit, matchFieldFromText, queryVariants } from "@/lib/search-match";
 import { uniqueNegocios } from "@/lib/unique-negocios";
+import { isOfertaEnVentana } from "@/lib/oferta-vigencia";
 
 export type HomeSearchParams = {
   query?: string;
@@ -177,7 +178,7 @@ function mapAlgoliaHit(hit: Record<string, unknown>, query?: string): Negocio {
     owner: hit.owner as Negocio["owner"],
     latitud: hit.latitud as number,
     longitud: hit.longitud as number,
-    ofertas: (hit.ofertas as Negocio["ofertas"]) || [],
+    ofertas: ((hit.ofertas as Negocio["ofertas"]) || []).filter(isOfertaEnVentana),
     reserva_url: hit.reserva_url as string | undefined,
     reserva_habilitada: hit.reserva_habilitada as boolean | undefined,
     cta_link: hit.cta_link as string | undefined,

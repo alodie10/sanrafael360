@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Tag, X } from "lucide-react";
 import Link from "next/link";
 import { fetchFromStrapi } from "@/lib/strapi";
+import { strapiOfertaVigenteFilters } from "@/lib/oferta-vigencia";
 
 export default function OffersBanner() {
   const [isVisible, setIsVisible] = useState(false);
@@ -17,7 +18,7 @@ export default function OffersBanner() {
       try {
         // Traemos todas las ofertas activas con su negocio para deduplicar
         const res = await fetchFromStrapi(
-          "ofertas?filters[activa][$eq]=true&filters[publishedAt][$notNull]=true&populate[negocio][fields][0]=documentId&pagination[pageSize]=100"
+          `ofertas?${strapiOfertaVigenteFilters()}&filters[publishedAt][$notNull]=true&populate[negocio][fields][0]=documentId&pagination[pageSize]=100`
         );
         const ofertas = res.data || [];
         // Contamos negocios únicos (un negocio puede tener varias ofertas)

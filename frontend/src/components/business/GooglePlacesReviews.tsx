@@ -2,6 +2,7 @@
 
 import { Star, StarHalf, Quote } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { safeHttpHref } from "@/lib/safe-outbound-url";
 
 export interface CachedGoogleReview {
   author_name: string;
@@ -53,12 +54,18 @@ export default function GooglePlacesReviews({ reviews, className }: GooglePlaces
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {list.map((rev, idx) => (
-          <a
+        {list.map((rev, idx) => {
+          const authorHref = safeHttpHref(rev.author_url, { httpsOnly: true });
+          const photoSrc = safeHttpHref(rev.profile_photo_url, { httpsOnly: true });
+          const Tag = authorHref ? "a" : "div";
+          const extraProps = authorHref
+            ? { href: authorHref, target: "_blank" as const, rel: "noopener noreferrer" }
+            : {};
+
+          return (
+          <Tag
             key={`${rev.author_name}-${idx}`}
-            href={rev.author_url || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
+            {...extraProps}
             className="group block bg-slate-900/50 hover:bg-slate-900/80 border border-white/5 hover:border-white/15 rounded-3xl p-5 transition-all duration-300 relative overflow-hidden"
           >
             <div className="absolute right-4 top-4 text-white/[0.02] group-hover:text-white/[0.04] transition-colors pointer-events-none">
@@ -66,9 +73,9 @@ export default function GooglePlacesReviews({ reviews, className }: GooglePlaces
             </div>
 
             <div className="flex items-center gap-3 mb-3">
-              {rev.profile_photo_url ? (
+              {photoSrc ? (
                 <img
-                  src={rev.profile_photo_url}
+                  src={photoSrc}
                   alt={rev.author_name}
                   className="w-10 h-10 rounded-full object-cover border border-white/10"
                 />
@@ -94,8 +101,9 @@ export default function GooglePlacesReviews({ reviews, className }: GooglePlaces
             <p className="text-xs leading-relaxed text-slate-400 group-hover:text-slate-300 transition-colors line-clamp-3">
               {rev.text || "Sin comentario de texto."}
             </p>
-          </a>
-        ))}
+          </Tag>
+          );
+        })}
       </div>
     </div>
   );

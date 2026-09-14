@@ -2,14 +2,15 @@ import { factories } from '@strapi/strapi';
 import { createDailyStatRepository } from '../../daily-stat/repositories/daily-stat-repository';
 import { createNegocioRepository } from '../repositories/negocio-repository';
 import { createNotificationService } from '../../../services/notification-service';
-import { ADMIN_EMAILS } from '../../../utils/constants';
-import { NotFoundError, ValidationError, ForbiddenError } from '../../../utils/errors';
+import { NotFoundError, ValidationError } from '../../../utils/errors';
 import { assertNegocioClaimable } from '../../../utils/claim-validation';
 import { logActivity } from '../../../utils/strapi-utils';
 import { getAdminClaimEmail, getOwnerResolutionEmail } from './templates/email-templates';
 import { DiscoveryService } from '../../../services/discovery-service';
 import { applyInstagramFields } from '../../../utils/instagram';
 import { shouldDownloadPlacesPhotos } from '../../../utils/premium-vigencia';
+import { assertCanPublishListing, isAdminUser } from '../../../utils/negocio-acl';
+import { sanitizePortalUpdatePayload } from './portal-update-sanitize';
 import fs from 'fs';
 
 const discoveryService = new DiscoveryService();
@@ -28,10 +29,9 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       );
     }
 
-    const updated = await repo.update(id, { 
-      estado_reclamo: 'pendiente', 
+    const updated = await repo.update(id, {
+      estado_reclamo: 'pendiente',
       owner: user.id,
-      descripcion: bodyData.message || negocio.descripcion
     });
 
     const claimFile = Array.isArray(rawFile) ? rawFile[0] : rawFile;
@@ -48,7 +48,7 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       getAdminClaimEmail(negocio.nombre, user.email, bodyData.message)
     ).catch((e: any) => strapi.log.error('Email error (Admin Notify):', e.message));
 
-    await logActivity(strapi, 'info', 'Nuevo Reclamo', `El usuario ${user.email} reclamó el negocio ${negocio.nombre}`, id, user);
+    await logActivity(strapi, 'info', 'Nuevo Reclamo', `Un usuario reclamó el negocio ${negocio.nombre}`, id, user);
     
     return { id, status: 'pendiente' };
   },
@@ -58,29 +58,10 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
     const negocio = await repo.findById(id, ['owner', 'categoria']);
     if (!negocio) throw new NotFoundError('Negocio');
 
-    const roleName = user.role?.name?.toLowerCase();
-    const roleType = user.role?.type?.toLowerCase();
-    const userEmail = user.email?.toLowerCase();
-    
-    const isAdmin = roleName === 'admin' || 
-                    roleName === 'super admin' || 
-                    roleType === 'admin' || 
-                    roleType === 'superadmin' || 
-                    ADMIN_EMAILS.includes(userEmail);
+    const isAdmin = isAdminUser(user);
+    assertCanPublishListing(user, negocio);
 
-    const isOwner = negocio.owner?.id === user.id;
-
-    if (!isOwner && !isAdmin) {
-      strapi.log.warn(`[Forbidden] User ${userEmail} (Role: ${roleType}) denied access to ${negocio.nombre}`);
-      throw new ForbiddenError('No tienes permisos para editar este negocio');
-    }
-
-    const forbiddenFields = ['owner', 'slug', 'documentId', 'id', 'estado_reclamo', 'publishedAt'];
-    if (!isAdmin) {
-      forbiddenFields.push('is_premium', 'premium_valid_until');
-    }
-    const updateData = { ...data };
-    forbiddenFields.forEach(f => delete updateData[f]);
+    const updateData = sanitizePortalUpdatePayload({ ...data }, isAdmin);
     applyInstagramFields(updateData);
 
     // Limpieza de categoría para evitar Invalid relations
@@ -273,7 +254,9 @@ export default factories.createCoreService('api::negocio.negocio', ({ strapi }) 
       }
     }
 
-    await repo.publish(id);
+    if (isAdmin || negocio.estado_reclamo !== 'pendiente') {
+      await repo.publish(id);
+    }
     await logActivity(strapi, 'info', 'Actualización de Perfil', `Perfil actualizado: ${negocio.nombre}`, id, { id: user.id });
 
     return updated;

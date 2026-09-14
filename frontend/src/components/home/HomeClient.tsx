@@ -20,6 +20,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { buildSearchExplanation, showsPublicFicha, isPremiumListingActive, matchRank } from "@/lib/search-match";
 import { toCmsCategoriaSlug } from "@/lib/categoria-slug";
 
+const DEFAULT_LOCALIDAD = "San Rafael, Mendoza";
+
 const normalizeText = (str: string) => {
   return str
     .normalize("NFD")
@@ -27,6 +29,39 @@ const normalizeText = (str: string) => {
     .toLowerCase()
     .trim();
 };
+
+function hasActiveHomeFilters(
+  query: string,
+  localidad: string,
+  categoryDocId: string | null
+): boolean {
+  return (
+    query.trim().length > 0 ||
+    categoryDocId !== null ||
+    (localidad !== "" && localidad !== DEFAULT_LOCALIDAD)
+  );
+}
+
+async function fetchHomeSearchResults(params: {
+  query: string;
+  localidad: string;
+  categoryDocId: string | null;
+  categorias: Categoria[];
+}): Promise<Negocio[]> {
+  if (shouldUseStrapiSearchForHome()) {
+    try {
+      return await searchNegociosFromStrapi(params);
+    } catch (error) {
+      if (!isStrapiUnreachableError(error) || !canUseAlgoliaSearch()) {
+        return [];
+      }
+    }
+  }
+  if (canUseAlgoliaSearch()) {
+    return await searchNegociosFromAlgolia(params);
+  }
+  return [];
+}
 
 function resolveCategoryFromParam(
   catParam: string | null,
@@ -68,10 +103,40 @@ export default function HomeClient({ categorias, initialNegocios }: HomeClientPr
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [searchResults, setSearchResults] = useState<Negocio[]>(initialNegocios);
   const [isSearching, setIsSearching] = useState(false);
+  const unfilteredNegociosRef = useRef<Negocio[]>(
+    hasActiveHomeFilters(
+      searchParams.get("q") || "",
+      searchParams.get("l") || "",
+      resolveCategoryFromParam(
+        searchParams.get("cat") || searchParams.get("categoria"),
+        categorias
+      )
+    )
+      ? []
+      : initialNegocios
+  );
+  const searchGen = useRef(0);
 
   const filtersKey = `${searchQuery}|${localidadQuery}|${selectedCategoryDocId ?? ""}`;
+  const isFiltering = hasActiveHomeFilters(
+    searchQuery,
+    localidadQuery,
+    selectedCategoryDocId
+  );
 
   useEffect(() => {
+    const urlHasFilters = hasActiveHomeFilters(
+      searchParams.get("q") || "",
+      searchParams.get("l") || "",
+      resolveCategoryFromParam(
+        searchParams.get("cat") || searchParams.get("categoria"),
+        categorias
+      )
+    );
+    if (!urlHasFilters) {
+      unfilteredNegociosRef.current = initialNegocios;
+    }
+    searchGen.current += 1;
     setSearchResults(initialNegocios);
     setIsSearching(false);
     prevFiltersKey.current = filtersKey;
@@ -188,49 +253,41 @@ export default function HomeClient({ categorias, initialNegocios }: HomeClientPr
     }
     prevFiltersKey.current = filtersKey;
 
-    const performSearch = async () => {
+    if (!isFiltering && unfilteredNegociosRef.current.length > 0) {
+      searchGen.current += 1;
+      setSearchResults(unfilteredNegociosRef.current);
+      setIsSearching(false);
+      return;
+    }
+
+    const gen = ++searchGen.current;
+    const timer = setTimeout(async () => {
       setIsSearching(true);
-      const params = {
-        query: searchQuery,
-        localidad: localidadQuery,
-        categoryDocId: selectedCategoryDocId,
-        categorias,
-      };
-
       try {
-        if (shouldUseStrapiSearchForHome()) {
-          try {
-            const negocios = await searchNegociosFromStrapi(params);
-            setSearchResults(negocios);
-            return;
-          } catch (error) {
-            if (!isStrapiUnreachableError(error) || !canUseAlgoliaSearch()) {
-              setSearchResults([]);
-              return;
-            }
-          }
-        }
-
-        if (canUseAlgoliaSearch()) {
-          const negocios = await searchNegociosFromAlgolia(params);
-          setSearchResults(negocios);
-          return;
-        }
-
-        setSearchResults([]);
+        const negocios = await fetchHomeSearchResults({
+          query: searchQuery,
+          localidad: localidadQuery,
+          categoryDocId: selectedCategoryDocId,
+          categorias,
+        });
+        if (gen !== searchGen.current) return;
+        setSearchResults(negocios);
       } catch (e) {
         if (process.env.NODE_ENV === "development") {
           console.warn("Search unavailable:", e);
         }
+        if (gen !== searchGen.current) return;
         setSearchResults([]);
       } finally {
-        setIsSearching(false);
+        if (gen === searchGen.current) setIsSearching(false);
       }
-    };
+    }, 300);
 
-    const timer = setTimeout(performSearch, 300);
-    return () => clearTimeout(timer);
-  }, [filtersKey, searchQuery, localidadQuery, selectedCategoryDocId, categorias]);
+    return () => {
+      clearTimeout(timer);
+      if (searchGen.current === gen) searchGen.current += 1;
+    };
+  }, [filtersKey, searchQuery, localidadQuery, selectedCategoryDocId, categorias, isFiltering]);
 
   const scrollToResults = () => {
     const results = resultsRef.current;
@@ -290,11 +347,6 @@ export default function HomeClient({ categorias, initialNegocios }: HomeClientPr
       searchResults.map((n) => n.searchMatch)
     );
   }, [searchQuery, searchResults]);
-
-  const isFiltering =
-    searchQuery.trim().length > 0 ||
-    selectedCategoryDocId !== null ||
-    (localidadQuery !== "" && localidadQuery !== "San Rafael, Mendoza");
 
   return (
     <main ref={topRef} className="min-h-screen pb-4 md:pb-8">

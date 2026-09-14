@@ -3,6 +3,7 @@
 import { CalendarCheck, ArrowRight, Sparkles, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { buildWhatsappUrl, normalizeWhatsappDigits } from "@/lib/whatsapp";
+import { safeHttpHref } from "@/lib/safe-outbound-url";
 
 interface BookingWidgetProps {
   reservaUrl?: string;
@@ -22,16 +23,7 @@ interface BookingWidgetProps {
 }
 
 function resolveCtaHref(url?: string): string | undefined {
-  if (!url || url.trim() === "") return undefined;
-  const trimmed = url.trim();
-  if (trimmed.startsWith("/")) return trimmed;
-  try {
-    const parsed = new URL(trimmed);
-    if (parsed.protocol === "http:" || parsed.protocol === "https:") return trimmed;
-  } catch {
-    return undefined;
-  }
-  return undefined;
+  return safeHttpHref(url, { allowRelative: true });
 }
 
 export default function BookingWidget({ 

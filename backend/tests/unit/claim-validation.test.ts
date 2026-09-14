@@ -8,18 +8,34 @@ describe('claim-validation utils', () => {
   });
 
   it('allows claim when negocio has no owner', () => {
-    expect(() => assertNegocioClaimable({ estado_reclamo: 'ninguno' })).not.toThrow();
+    expect(() =>
+      assertNegocioClaimable({ estado_reclamo: 'ninguno', reclamar_habilitado: true })
+    ).not.toThrow();
   });
 
   it('allows claim when owner exists but estado is ninguno', () => {
     expect(() =>
-      assertNegocioClaimable({ owner: { id: 1 }, estado_reclamo: 'ninguno' })
+      assertNegocioClaimable({
+        owner: { id: 1 },
+        estado_reclamo: 'ninguno',
+        reclamar_habilitado: true,
+      })
     ).not.toThrow();
   });
 
   it('throws ValidationError when owner exists and claim is active', () => {
     expect(() =>
-      assertNegocioClaimable({ owner: { id: 1 }, estado_reclamo: 'pendiente' })
+      assertNegocioClaimable({
+        owner: { id: 1 },
+        estado_reclamo: 'pendiente',
+        reclamar_habilitado: true,
+      })
+    ).toThrow(ValidationError);
+  });
+
+  it('throws when reclamar_habilitado is false', () => {
+    expect(() =>
+      assertNegocioClaimable({ estado_reclamo: 'ninguno', reclamar_habilitado: false })
     ).toThrow(ValidationError);
   });
 });

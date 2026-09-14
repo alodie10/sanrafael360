@@ -46,7 +46,8 @@
     },
     "activa": {
       "type": "boolean",
-      "default": false
+      "default": false,
+      "description": "Se calcula solo: true si ahora está entre valida_desde y valida_hasta."
     },
     "formato_visual": {
       "type": "enumeration",

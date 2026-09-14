@@ -18,12 +18,14 @@ export default factories.createCoreService('api::actividad.actividad' as any, ({
       filters.usuario = { id: { $eq: user.id } };
     }
 
-    const limit = parseInt(query.pagination?.limit ?? '50', 10);
+    const limitRaw = parseInt(query.pagination?.limit ?? '50', 10);
+    const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 50) : 50;
     const repo = createActividadRepository(strapi);
     const results = await repo.findMany({
       filters,
       sort: query.sort,
       limit,
+      includeUser: isAdmin,
     });
 
     return {
