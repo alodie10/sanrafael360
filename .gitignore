@@ -22,6 +22,12 @@ dist/
 # Logs & Temp
 *.log
 npm-debug.log*
+tmp/
+transcripts/
+
+# Transcripción local (binarios y audios)
+scripts/transcribe/Transcribe.app/
+scripts/transcribe/transcribe-bin
 
 # OS files
 .DS_Store
