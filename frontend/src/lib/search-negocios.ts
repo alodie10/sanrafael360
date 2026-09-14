@@ -178,7 +178,7 @@ function mapAlgoliaHit(hit: Record<string, unknown>, query?: string): Negocio {
     owner: hit.owner as Negocio["owner"],
     latitud: hit.latitud as number,
     longitud: hit.longitud as number,
-    ofertas: ((hit.ofertas as Negocio["ofertas"]) || []).filter(isOfertaEnVentana),
+    ofertas: ((hit.ofertas as Negocio["ofertas"]) || []).filter((o) => isOfertaEnVentana(o)),
     reserva_url: hit.reserva_url as string | undefined,
     reserva_habilitada: hit.reserva_habilitada as boolean | undefined,
     cta_link: hit.cta_link as string | undefined,

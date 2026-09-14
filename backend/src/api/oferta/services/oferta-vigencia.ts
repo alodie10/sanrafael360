@@ -24,9 +24,9 @@ export function isOfertaEnVentana(oferta: OfertaFechas, now: Date = new Date()):
 }
 
 export function stampActivaOnPayload(
-  data: Record<string, unknown> | undefined,
+  data: Record<string, any> | undefined,
   existing?: OfertaFechas | null
-): Record<string, unknown> | undefined {
+): Record<string, any> | undefined {
   if (!data || typeof data !== 'object') return data;
   data.activa = isOfertaEnVentana({
     valida_desde: (data.valida_desde ?? existing?.valida_desde) as OfertaFechas['valida_desde'],

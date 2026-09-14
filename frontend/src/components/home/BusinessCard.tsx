@@ -142,11 +142,11 @@ export default function BusinessCard({
 
           {/* Badges Overlay (Atributos Destacados & Oferta) */}
           <div className="absolute top-4 left-4 flex flex-col items-start gap-2 z-20 pointer-events-none">
-            {negocio.ofertas && negocio.ofertas.some(isOfertaEnVentana) && (
+            {negocio.ofertas && negocio.ofertas.some((o) => isOfertaEnVentana(o)) && (
               <div className="px-3 py-1 bg-[#FFBF00] rounded-full text-[10px] font-bold text-black shadow-lg flex items-center gap-1 uppercase tracking-widest">
                 <Tag className="w-3 h-3" />
                 {(() => {
-                  const activeOffer = negocio.ofertas.find(isOfertaEnVentana);
+                  const activeOffer = negocio.ofertas.find((o) => isOfertaEnVentana(o));
                   if (activeOffer?.tipo_oferta === "Promocion2x1") return "2X1";
                   if (activeOffer?.tipo_oferta === "Regalo") return "REGALO";
                   if (activeOffer?.tipo_oferta === "Especial") return "ESPECIAL";

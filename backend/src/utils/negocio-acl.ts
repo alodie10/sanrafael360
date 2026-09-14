@@ -1,5 +1,5 @@
 import { ForbiddenError } from './errors';
-import { userHasAdminAccess } from './admin-access';
+import { isAdminEmail, userHasAdminAccess } from './admin-access';
 
 type AclUser = {
   id?: number;
@@ -17,7 +17,8 @@ export function isAdminUser(user: AclUser | null | undefined): boolean {
   const roleName = user.role?.name?.toLowerCase();
   const roleType = user.role?.type?.toLowerCase();
   if (roleType === 'admin' || roleType === 'superadmin') return true;
-  return userHasAdminAccess(user);
+  if (typeof user.id !== 'number') return isAdminEmail(user.email);
+  return userHasAdminAccess({ id: user.id, email: user.email, role: user.role });
 }
 
 export function isNegocioOwner(user: AclUser | null | undefined, negocio: AclNegocio): boolean {

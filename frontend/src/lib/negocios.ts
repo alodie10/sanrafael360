@@ -72,7 +72,7 @@ function publicizeNegocio(negocio: Negocio | null | undefined): Negocio | null {
   delete copy.pagos;
   if (copy.owner) copy.owner = { id: copy.owner.id };
   if (Array.isArray(copy.ofertas)) {
-    copy.ofertas = copy.ofertas.filter(isOfertaEnVentana);
+    copy.ofertas = copy.ofertas.filter((o) => isOfertaEnVentana(o));
   }
   return copy;
 }

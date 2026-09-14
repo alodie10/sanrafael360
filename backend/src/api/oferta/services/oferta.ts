@@ -34,10 +34,10 @@ export default factories.createCoreService('api::oferta.oferta', ({ strapi }) =>
     }
     await loadOwnedNegocio(strapi, negocioId, caller);
 
-    const payload = { ...data, negocio: negocioId };
+    const payload: Record<string, any> = { ...data, negocio: negocioId };
     stampActivaOnPayload(payload);
     return strapi.documents('api::oferta.oferta').create({
-      data: payload,
+      data: payload as any,
       status: 'published',
     });
   },
