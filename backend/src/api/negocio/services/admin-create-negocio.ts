@@ -1,18 +1,20 @@
-import { NotFoundError, ValidationError } from '../../../utils/errors';
+import { ConflictError, NotFoundError, ValidationError } from '../../../utils/errors';
 import { createNegocioRepository } from '../repositories/negocio-repository';
+import {
+  asTrimmed,
+  buildAdminCreateExtras,
+  type AdminCreateNegocioInput,
+} from './admin-create-negocio-fields';
 import { uniqueNegocioSlug } from './negocio-utils';
 
-export type AdminCreateNegocioInput = {
-  nombre?: unknown;
-  slug?: unknown;
-  categoriaId?: unknown;
-  direccion?: unknown;
-  telefono?: unknown;
-  descripcion?: unknown;
-};
+export type { AdminCreateNegocioInput };
 
-function asTrimmed(value: unknown, max: number): string {
-  return String(value ?? '').trim().slice(0, max);
+async function assertPlaceIdAvailable(repo: ReturnType<typeof createNegocioRepository>, placeId: unknown) {
+  if (typeof placeId !== 'string' || !placeId) return;
+  const existing = await repo.findByGooglePlaceId(placeId);
+  if (existing) {
+    throw new ConflictError(`Este negocio ya está en el directorio (“${existing.nombre}”).`);
+  }
 }
 
 export async function adminCreateNegocio(strapi: any, input: AdminCreateNegocioInput) {
@@ -26,11 +28,11 @@ export async function adminCreateNegocio(strapi: any, input: AdminCreateNegocioI
   const categoria = await repo.findCategoriaByDocumentId(categoriaId);
   if (!categoria) throw new NotFoundError('Categoría');
 
+  const extras = buildAdminCreateExtras(input);
+  await assertPlaceIdAvailable(repo, extras.google_place_id);
+
   const direccion = asTrimmed(input.direccion, 300) || null;
   const telefono = asTrimmed(input.telefono, 40) || null;
-  const descripcion =
-    asTrimmed(input.descripcion, 2000) ||
-    `${nombre} en ${direccion || 'San Rafael, Mendoza'}.`;
   const slug = await uniqueNegocioSlug(
     (candidate) => repo.slugTaken(candidate),
     String(input.slug || nombre)
@@ -40,12 +42,15 @@ export async function adminCreateNegocio(strapi: any, input: AdminCreateNegocioI
     {
       nombre,
       slug,
-      descripcion,
+      descripcion:
+        asTrimmed(input.descripcion, 2000) ||
+        `${nombre} en ${direccion || 'San Rafael, Mendoza'}.`,
       direccion,
       telefono,
       whatsapp: telefono,
       categoria: categoria.documentId,
       reclamar_habilitado: true,
+      ...extras,
     },
     'published'
   );

@@ -68,7 +68,7 @@ export default {
     const { result } = event;
     
     // Solo disparamos el descubrimiento si no se ingresaron datos manualmente
-    if (!result.website && !result.reserva_url) {
+    if (!result.google_place_id && !result.website && !result.reserva_url) {
       console.log(`Auto-discovery triggered for new business: ${result.nombre}`);
       
       try {

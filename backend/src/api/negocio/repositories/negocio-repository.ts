@@ -190,6 +190,19 @@ export class NegocioRepository {
     return Boolean(published[0] || drafts[0]);
   }
 
+  async findByGooglePlaceId(placeId: string) {
+    const query = {
+      filters: { google_place_id: { $eq: placeId } },
+      fields: ['documentId', 'nombre', 'slug'],
+      limit: 1,
+    };
+    const [published, drafts] = await Promise.all([
+      this.strapi.documents('api::negocio.negocio').findMany({ ...query, status: 'published' }),
+      this.strapi.documents('api::negocio.negocio').findMany({ ...query, status: 'draft' }),
+    ]);
+    return published[0] || drafts[0] || null;
+  }
+
   async findCategoriaByDocumentId(documentId: string) {
     return this.strapi.documents('api::categoria.categoria').findOne({
       documentId,
