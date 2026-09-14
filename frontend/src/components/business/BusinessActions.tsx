@@ -3,6 +3,7 @@
 import { MessageCircle, Globe, Instagram, Facebook, Share2 } from "lucide-react";
 import { Negocio } from "@/types/strapi";
 import { buildWhatsappUrl } from "@/lib/whatsapp";
+import { safeHttpHref } from "@/lib/safe-outbound-url";
 
 interface BusinessActionsProps {
   negocio: Negocio;
@@ -18,6 +19,24 @@ export default function BusinessActions({ negocio, isValidPremium, onTrackClick 
         `¡Hola! Vi tu negocio "${negocio.nombre}" en sanrafael360.com y quería hacerte una consulta.`
       )
     : null;
+
+  const websiteHref = negocio.website
+    ? safeHttpHref(negocio.website.startsWith("http") ? negocio.website : `https://${negocio.website}`)
+    : undefined;
+  const instagramHref = negocio.instagram
+    ? safeHttpHref(
+        negocio.instagram.startsWith("http")
+          ? negocio.instagram
+          : `https://instagram.com/${negocio.instagram.replace("@", "")}`
+      )
+    : undefined;
+  const facebookHref = negocio.facebook
+    ? safeHttpHref(
+        negocio.facebook.startsWith("http")
+          ? negocio.facebook
+          : `https://facebook.com/${negocio.facebook}`
+      )
+    : undefined;
 
   return (
     <section className="bg-slate-900/50 border-b border-white/5 py-6 px-4 md:px-8">
@@ -54,9 +73,9 @@ export default function BusinessActions({ negocio, isValidPremium, onTrackClick 
             WhatsApp
           </a>
         )}
-        {isValidPremium && negocio.website && (
+        {isValidPremium && websiteHref && (
           <a 
-            href={negocio.website.startsWith('http') ? negocio.website : `https://${negocio.website}`} 
+            href={websiteHref} 
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onTrackClick?.('website')}
@@ -66,9 +85,9 @@ export default function BusinessActions({ negocio, isValidPremium, onTrackClick 
             Visitar Web
           </a>
         )}
-        {isValidPremium && negocio.instagram && (
+        {isValidPremium && instagramHref && (
           <a 
-            href={negocio.instagram.startsWith('http') ? negocio.instagram : `https://instagram.com/${negocio.instagram.replace('@','')}`} 
+            href={instagramHref} 
             target="_blank" 
             rel="noopener noreferrer"
             className="flex-1 min-w-[200px] md:flex-none flex items-center justify-center gap-3 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-pink-500/20 active:scale-95"
@@ -77,9 +96,9 @@ export default function BusinessActions({ negocio, isValidPremium, onTrackClick 
             Instagram
           </a>
         )}
-        {isValidPremium && negocio.facebook && (
+        {isValidPremium && facebookHref && (
           <a 
-            href={negocio.facebook.startsWith('http') ? negocio.facebook : `https://facebook.com/${negocio.facebook}`} 
+            href={facebookHref} 
             target="_blank" 
             rel="noopener noreferrer"
             className="flex-1 min-w-[200px] md:flex-none flex items-center justify-center gap-3 bg-[#1877F2] text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-blue-600/20 active:scale-95"

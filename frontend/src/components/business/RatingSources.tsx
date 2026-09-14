@@ -3,6 +3,7 @@
 import { Star, StarHalf, ChevronRight, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Negocio } from "@/types/strapi";
+import { safeHttpHref } from "@/lib/safe-outbound-url";
 
 interface RatingSourcesProps {
   negocio: Negocio;
@@ -55,7 +56,7 @@ export default function RatingSources({ negocio, className }: RatingSourcesProps
       logo: <GoogleLogo />,
       rating: negocio.google_rating || 0,
       count: negocio.google_review_count || 0,
-      url: negocio.google_maps_url,
+      url: safeHttpHref(negocio.google_maps_url),
       starColor: "text-amber-500",
     },
     {
@@ -64,7 +65,7 @@ export default function RatingSources({ negocio, className }: RatingSourcesProps
       logo: <TripAdvisorLogo />,
       rating: negocio.tripadvisor_rating || 0,
       count: negocio.tripadvisor_review_count || 0,
-      url: negocio.tripadvisor_url,
+      url: safeHttpHref(negocio.tripadvisor_url),
       starColor: "text-[#00af87]",
     },
     {

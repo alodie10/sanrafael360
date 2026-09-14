@@ -13,7 +13,7 @@ export class FeedRepository {
   async findActiveOfertas(nowIso: string) {
     return this.strapi.documents('api::oferta.oferta').findMany({
       filters: {
-        activa: true,
+        valida_desde: { $lte: nowIso },
         valida_hasta: { $gte: nowIso },
       },
       status: 'published',

@@ -24,6 +24,27 @@ export function getCloudinaryServerConfig() {
   return { cloudName, apiKey, apiSecret, algorithm };
 }
 
+export const ALLOWED_CLOUDINARY_FOLDERS = [
+  "sanrafael360_galeria",
+  "sanrafael360_avisos",
+] as const;
+
+export type AllowedCloudinaryFolder = (typeof ALLOWED_CLOUDINARY_FOLDERS)[number];
+
+export function normalizeCloudinaryFolder(raw: unknown): AllowedCloudinaryFolder {
+  if (typeof raw !== "string") {
+    throw new Error("folder no permitido");
+  }
+  const folder = raw.trim();
+  if (!ALLOWED_CLOUDINARY_FOLDERS.includes(folder as AllowedCloudinaryFolder)) {
+    throw new Error("folder no permitido");
+  }
+  if (/[&=?]/.test(folder)) {
+    throw new Error("folder no permitido");
+  }
+  return folder as AllowedCloudinaryFolder;
+}
+
 /** Firma parámetros de upload (orden alfabético; excluye file, api_key, cloud_name, resource_type). */
 export function signCloudinaryUploadParams(
   params: Record<string, string | number>,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Tag, Plus, Edit2, Trash2, Check, X, Loader2 } from "lucide-react";
+import { Tag, Plus, Edit2, Trash2, Check, X, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Oferta, StrapiMedia } from "@/types/strapi";
 import { fetchFromStrapi, getStrapiUrl } from "@/lib/strapi";
@@ -18,6 +18,7 @@ import {
   dateInputToStartOfDayISO,
   toDateInputValue,
 } from "@/lib/calendar-date";
+import { ofertaVigenciaEstado, type OfertaVigenciaEstado } from "@/lib/oferta-vigencia";
 
 const TIPO_OFERTA_VALUES = [
   "Descuento",
@@ -33,6 +34,35 @@ function parseTipoOferta(value: string): TipoOferta {
   return (TIPO_OFERTA_VALUES as readonly string[]).includes(value)
     ? (value as TipoOferta)
     : "Descuento";
+}
+
+const VIGENCIA_BADGE: Record<OfertaVigenciaEstado, { label: string; className: string; Icon: typeof Check }> = {
+  vigente: {
+    label: "Vigente",
+    className: "bg-green-500/20 text-green-400 border border-green-500/30",
+    Icon: Check,
+  },
+  programada: {
+    label: "Programada",
+    className: "bg-amber-500/20 text-amber-400 border border-amber-500/30",
+    Icon: Clock,
+  },
+  vencida: {
+    label: "Vencida",
+    className: "bg-rose-500/20 text-rose-400 border border-rose-500/30",
+    Icon: X,
+  },
+};
+
+function VigenciaBadge({ oferta }: { oferta: Oferta }) {
+  const badge = VIGENCIA_BADGE[ofertaVigenciaEstado(oferta)];
+  const Icon = badge.Icon;
+  return (
+    <span className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 ${badge.className}`}>
+      <Icon className="w-3 h-3" />
+      {badge.label}
+    </span>
+  );
 }
 
 interface EditBusinessOffersProps {
@@ -58,7 +88,6 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
   const [porcentajeDescuento, setPorcentajeDescuento] = useState<number | "">("");
   const [validaDesde, setValidaDesde] = useState("");
   const [validaHasta, setValidaHasta] = useState("");
-  const [activa, setActiva] = useState(true);
   const [formatoVisual, setFormatoVisual] = useState<FormatoVisualOferta>("Ficha");
   const [bannerIds, setBannerIds] = useState<number[]>([]);
   const pickerImages = selectableFichaImages(gallery, cover);
@@ -105,7 +134,6 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
     setPorcentajeDescuento("");
     setValidaDesde("");
     setValidaHasta("");
-    setActiva(true);
     setFormatoVisual("Ficha");
     setBannerIds([]);
     setIsModalOpen(true);
@@ -121,7 +149,6 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
     setPorcentajeDescuento(oferta.porcentaje_descuento || "");
     setValidaDesde(toDateInputValue(oferta.valida_desde));
     setValidaHasta(toDateInputValue(oferta.valida_hasta));
-    setActiva(oferta.activa ?? true);
     setFormatoVisual(parseFormatoVisual(oferta.formato_visual));
     setBannerIds(galleryImageIds(oferta));
     setIsModalOpen(true);
@@ -179,7 +206,6 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
           porcentaje_descuento: porcentajeDescuento === "" ? null : Number(porcentajeDescuento),
           valida_desde: validaDesde ? dateInputToStartOfDayISO(validaDesde) : null,
           valida_hasta: validaHasta ? dateInputToEndOfDayISO(validaHasta) : null,
-          activa,
           formato_visual: formatoVisual,
           banners: formatoVisual === "Banners"
             ? pickerImages.filter((item) => bannerIds.includes(item.id)).map((item) => item.id)
@@ -249,7 +275,7 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
         </div>
       ) : ofertas.length === 0 ? (
         <div className="bg-black/40 border border-white/5 rounded-3xl p-10 text-center">
-          <p className="text-slate-400">No tienes ofertas activas. ¡Crea una para atraer más clientes!</p>
+          <p className="text-slate-400">Todavía no cargaste ofertas. Creá una con fechas y se publica sola en ese rango.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
@@ -290,10 +316,7 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
                     -{oferta.porcentaje_descuento}%
                   </span>
                 )}
-                <span className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 ${oferta.activa ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
-                  {oferta.activa ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                  {oferta.activa ? "Activa" : "Inactiva"}
-                </span>
+                <VigenciaBadge oferta={oferta} />
               </div>
             </div>
           ))}
@@ -420,18 +443,20 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
                   </div>
                 </div>
 
-                <label className="flex items-center gap-3 cursor-pointer p-4 bg-black/40 border border-white/10 rounded-xl hover:bg-black/60 transition-colors">
-                  <input 
-                    type="checkbox" 
-                    checked={activa}
-                    onChange={e => setActiva(e.target.checked)}
-                    className="w-5 h-5 accent-[#FFBF00] cursor-pointer"
-                  />
-                  <div>
-                    <span className="block text-sm font-bold text-white">Oferta Activa</span>
-                    <span className="block text-xs text-slate-400 mt-0.5">Si desactivas, la oferta no se mostrará públicamente.</span>
-                  </div>
-                </label>
+                <div className="p-4 bg-black/40 border border-white/10 rounded-xl">
+                  <span className="block text-sm font-bold text-white">Publicación automática</span>
+                  <span className="block text-xs text-slate-400 mt-0.5">
+                    Se activa y se apaga sola según el rango de fechas. No hace falta un tilde extra.
+                  </span>
+                  {validaDesde && validaHasta && (
+                    <span className="mt-3 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold border border-white/10 text-slate-200">
+                      {VIGENCIA_BADGE[ofertaVigenciaEstado({
+                        valida_desde: dateInputToStartOfDayISO(validaDesde),
+                        valida_hasta: dateInputToEndOfDayISO(validaHasta),
+                      })].label} con estas fechas
+                    </span>
+                  )}
+                </div>
 
               </div>
 

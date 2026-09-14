@@ -16,7 +16,7 @@ interface BusinessGridProps {
 
 import { useFavorites } from "@/context/FavoritesContext";
 import { uniqueNegocios } from "@/lib/unique-negocios";
-import { showsPublicFicha } from "@/lib/search-match";
+import { splitPublicAndDirectory } from "@/lib/search-match";
 import DirectoryListingCard from "./DirectoryListingCard";
 import styles from "./BusinessGrid.module.css";
 
@@ -39,10 +39,13 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
     setVisibleCount(16);
   }, [displayNegocios.length]);
 
+  const { premium: premiumNegocios, directory: directoryNegocios } =
+    splitPublicAndDirectory(displayNegocios);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && visibleCount < displayNegocios.length) {
+        if (entries[0].isIntersecting && visibleCount < premiumNegocios.length) {
           setVisibleCount((prev) => prev + 12);
         }
       },
@@ -54,7 +57,7 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
     }
 
     return () => observer.disconnect();
-  }, [visibleCount, displayNegocios.length]);
+  }, [visibleCount, premiumNegocios.length, loading]);
 
   if (loading) {
     return (
@@ -87,16 +90,14 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
     );
   }
 
-  const visibleNegocios = displayNegocios.slice(0, visibleCount);
-  const premiumNegocios = visibleNegocios.filter((n) => showsPublicFicha(n));
-  const directoryNegocios = visibleNegocios.filter((n) => !showsPublicFicha(n));
-  const promociones = premiumNegocios.filter((n) => n.promocion_activa);
-  const topNegocios = premiumNegocios.slice(0, 4);
-  const restNegocios = premiumNegocios.slice(4);
+  const visiblePremium = premiumNegocios.slice(0, visibleCount);
+  const promociones = visiblePremium.filter((n) => n.promocion_activa);
+  const topNegocios = visiblePremium.slice(0, 4);
+  const restNegocios = visiblePremium.slice(4);
 
   return (
     <>
-      {premiumNegocios.length > 0 ? (
+      {visiblePremium.length > 0 ? (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
       {topNegocios.map((negocio, index) => (
         <BusinessCard 
@@ -124,6 +125,10 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
     </div>
       ) : null}
 
+      {visibleCount < premiumNegocios.length ? (
+        <div ref={observerTarget} className="w-full h-10 mt-8" />
+      ) : null}
+
       {directoryNegocios.length > 0 ? (
         <section className={styles.directory} data-testid="directory-listings">
           <div className={styles.directoryHead}>
@@ -141,11 +146,6 @@ export default function BusinessGrid({ negocios, loading = false, onClearFilters
           </div>
         </section>
       ) : null}
-      
-      {/* Elemento invisible para disparar el IntersectionObserver */}
-      {visibleCount < displayNegocios.length && (
-        <div ref={observerTarget} className="w-full h-10 mt-8" />
-      )}
     </>
   );
 }

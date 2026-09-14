@@ -58,6 +58,7 @@ export default async function PortalPage() {
                 <BusinessPortalCard
                   key={negocio.id}
                   negocio={negocio}
+                  jwt={jwt}
                   subscriptionPrices={subscriptionPrices}
                 />
               ))

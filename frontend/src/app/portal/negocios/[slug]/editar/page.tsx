@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import EditBusinessForm from "@/components/portal/EditBusinessForm";
 import Link from "next/link";
 import { getStrapiUrl } from "@/lib/strapi";
+import { toStrapiEqFilter } from "@/lib/strapi-query";
 import { safeReturnTo } from "@/lib/return-to";
 
 interface EditPageProps {
@@ -32,12 +33,17 @@ export default async function EditBusinessPage(props: any) {
 
   try {
     // REGLA ORO: En Strapi 5, siempre usamos populate para que el formulario tenga los datos
+    const encodedSlug = toStrapiEqFilter(slug);
+    if (isAdmin && !encodedSlug) {
+      notFound();
+    }
+
     const populateParams = "populate[0]=logo&populate[1]=imagen_portada&populate[2]=galeria&populate[3]=schedules&populate[4]=categoria&populate[5]=owner&populate[6]=atributos&populate[7]=ofertas&populate[8]=reserva_comercio";
     
     // Si es admin, buscamos global. Si no, stats/summary?includeNegocios=1
     // (evitar /negocios/me: choca con findOne :documentId → 404).
     const endpoint = isAdmin 
-      ? `${strapiUrl}/api/negocios?filters[slug][$eq]=${slug}&${populateParams}`
+      ? `${strapiUrl}/api/negocios?filters[slug][$eq]=${encodedSlug}&${populateParams}`
       : `${strapiUrl}/api/negocios/stats/summary?includeNegocios=1`;
 
     const res = await fetch(endpoint, {

@@ -7,6 +7,7 @@ import NavigationFAB from "@/components/layout/NavigationFAB";
 import { Tag, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { isOfertaEnVentana } from "@/lib/oferta-vigencia";
 
 export default function OfferListClient({ initialOfertas }: { initialOfertas: Oferta[] }) {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function OfferListClient({ initialOfertas }: { initialOfertas: Of
       const key = o.documentId || String(o.id);
       if (seen.has(key)) return false;
       seen.add(key);
-      return true;
+      return isOfertaEnVentana(o);
     });
   }, [initialOfertas]);
 

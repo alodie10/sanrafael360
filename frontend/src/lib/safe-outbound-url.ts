@@ -52,3 +52,28 @@ export function parsePublicHttpsUrl(raw: string): URL {
   }
   return url;
 }
+
+/** href seguro: solo http(s), o path relativo interno. */
+export function safeHttpHref(
+  raw?: string | null,
+  opts?: { allowRelative?: boolean; httpsOnly?: boolean }
+): string | undefined {
+  if (!raw) return undefined;
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  if (opts?.allowRelative && trimmed.startsWith("/") && !trimmed.startsWith("//")) {
+    return trimmed;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    if (opts?.httpsOnly) {
+      if (parsed.protocol !== "https:") return undefined;
+    } else if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return undefined;
+    }
+    return trimmed;
+  } catch {
+    return undefined;
+  }
+}
+

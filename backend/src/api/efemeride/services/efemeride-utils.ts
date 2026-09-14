@@ -1,13 +1,11 @@
+import { isOfertaEnVentana, type OfertaFechas } from '../../oferta/services/oferta-vigencia';
+
 export type EfemerideVigencia = {
   vigente_desde?: string | Date | null;
   vigente_hasta?: string | Date | null;
 };
 
-export type OfertaVigencia = {
-  activa?: boolean;
-  valida_desde?: string | Date | null;
-  valida_hasta?: string | Date | null;
-};
+export type OfertaVigencia = OfertaFechas & { activa?: boolean };
 
 export type PremiumVigencia = {
   is_premium?: boolean;
@@ -48,12 +46,7 @@ function ahoraEsAntes(now: Date, desde: Date): boolean {
 }
 
 export function isOfertaVigente(oferta: OfertaVigencia, now: Date = new Date()): boolean {
-  if (oferta.activa !== true) return false;
-  const desde = toDate(oferta.valida_desde);
-  const hasta = toDate(oferta.valida_hasta);
-  if (desde && ahoraEsAntes(now, desde)) return false;
-  if (hasta && now.getTime() > hasta.getTime()) return false;
-  return true;
+  return isOfertaEnVentana(oferta, now);
 }
 
 export function isPremiumActivo(negocio: PremiumVigencia, now: Date = new Date()): boolean {

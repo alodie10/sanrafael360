@@ -12,11 +12,13 @@ import { buildBusinessEditHref } from "@/lib/return-to";
 
 interface BusinessPortalCardProps {
   negocio: any;
+  jwt?: string;
   subscriptionPrices?: SuscripcionPrices | null;
 }
 
 export default function BusinessPortalCard({
   negocio,
+  jwt,
   subscriptionPrices = null,
 }: BusinessPortalCardProps) {
   const [planType, setPlanType] = useState<"Mensual" | "Semestral">("Mensual");
@@ -52,15 +54,18 @@ export default function BusinessPortalCard({
   const premiumExpired = negocio.is_premium && negocio.premium_valid_until && new Date(negocio.premium_valid_until) < new Date();
   const isPremiumActive = negocio.is_premium && !premiumExpired;
   const needsSubscription = !negocio.is_premium || premiumExpired;
-
   const currentPrice = planType === 'Mensual' ? (prices?.mensual || 1200) : (prices?.semestral || 50000);
+  const claimApproved = negocio.estado_reclamo !== 'pendiente';
 
   const handleSubscribe = async () => {
     setIsProcessing(true);
     try {
       const res = await fetch(`${getStrapiUrl()}/api/pagos/create-preference`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+        },
         body: JSON.stringify({ 
           negocioId: negocio.documentId,
           planType: planType 
@@ -204,7 +209,7 @@ export default function BusinessPortalCard({
             </div>
           ) : null}
 
-          {needsSubscription && (
+          {needsSubscription && claimApproved && (
             <div className="space-y-4">
               {/* Selector de Plan */}
               <div className="grid grid-cols-2 gap-2 p-1.5 bg-black/40 rounded-2xl border border-white/5 backdrop-blur-sm">
@@ -245,12 +250,18 @@ export default function BusinessPortalCard({
           )}
 
           <div className="grid grid-cols-2 gap-3">
+            {claimApproved ? (
             <Link 
               href={editHref}
               className="flex items-center justify-center gap-2 px-4 py-4 bg-primary hover:bg-primary/90 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/20"
             >
               <Settings className="w-4 h-4" /> Gestionar
             </Link>
+            ) : (
+              <div className="flex items-center justify-center gap-2 px-4 py-4 bg-white/5 text-zinc-500 border border-white/10 text-[10px] font-black uppercase tracking-widest rounded-2xl">
+                En revisión
+              </div>
+            )}
             
             <Link 
               href={`/negocios/${negocio.slug}`}

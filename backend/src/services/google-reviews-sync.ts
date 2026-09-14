@@ -4,6 +4,8 @@
  * El frontend NUNCA debe llamar Places por pageview.
  */
 
+import { httpsUrlOrUndefined } from '../utils/safe-url';
+
 export type CachedGoogleReview = {
   author_name: string;
   author_url?: string;
@@ -36,8 +38,8 @@ export function mapLegacyReviews(raw: LegacyPlaceReview[] | undefined): CachedGo
     .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
     .map((r) => ({
       author_name: r.author_name ?? 'Usuario',
-      author_url: r.author_url,
-      profile_photo_url: r.profile_photo_url,
+      author_url: httpsUrlOrUndefined(r.author_url),
+      profile_photo_url: httpsUrlOrUndefined(r.profile_photo_url),
       rating: r.rating ?? 0,
       relative_time_description: r.relative_time_description ?? '',
       text: r.text ?? '',

@@ -14,7 +14,18 @@ describe('mapLegacyReviews', () => {
     expect(mapped[1].author_name).toBe('C');
   });
 
-  it('devuelve [] si input inválido', () => {
-    expect(mapLegacyReviews(undefined)).toEqual([]);
+  it('descarta author_url que no sea https', () => {
+    const mapped = mapLegacyReviews([
+      {
+        author_name: 'B',
+        rating: 5,
+        text: 'ok',
+        relative_time_description: '1d',
+        author_url: 'javascript:alert(1)',
+        profile_photo_url: 'http://evil.test/x.png',
+      },
+    ]);
+    expect(mapped[0].author_url).toBeUndefined();
+    expect(mapped[0].profile_photo_url).toBeUndefined();
   });
 });

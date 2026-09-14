@@ -1,5 +1,6 @@
 import { createFeedRepository } from '../repositories/feed-repository';
 import { buildCsv } from '../utils/csv';
+import { isOfertaEnVentana } from '../../oferta/services/oferta-vigencia';
 
 function getSiteUrl(): string {
   return (
@@ -66,7 +67,7 @@ export class FeedService {
       const description = n.descripcion?.trim()
         ? n.descripcion.trim().substring(0, 5000)
         : `${n.nombre} — ${categoriaNombre}`;
-      const ofertaActiva = (n.ofertas || []).find((o: any) => o.activa && o.publishedAt);
+      const ofertaActiva = (n.ofertas || []).find((o: any) => isOfertaEnVentana(o) && o.publishedAt);
 
       return [
         n.documentId,

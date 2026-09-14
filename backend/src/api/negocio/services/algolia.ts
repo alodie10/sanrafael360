@@ -3,6 +3,7 @@ import { ALGOLIA_INDEX_SETTINGS } from './algolia-index-settings';
 import { guideSynonymHits } from './algolia-synonyms';
 import { buildSearchKeywords } from './search-keywords';
 import { isPremiumListingActive, showsPublicFicha } from '../../../utils/premium-vigencia';
+import { isOfertaEnVentana } from '../../oferta/services/oferta-vigencia';
 
 const APP_ID = process.env.ALGOLIA_APP_ID || '';
 const ADMIN_KEY = process.env.ALGOLIA_ADMIN_KEY || '';
@@ -78,7 +79,7 @@ function buildAlgoliaObject(negocioData: any) {
     logo: ficha ? mediaUrl(negocioData.logo) : null,
     owner: negocioData.owner ? { documentId: negocioData.owner.documentId || negocioData.owner.id } : null,
     ofertas: negocioData.ofertas
-      ?.filter((o: any) => o.activa)
+      ?.filter((o: any) => isOfertaEnVentana(o))
       .map((o: any) => ({
         documentId: o.documentId,
         titulo: o.titulo,
@@ -86,7 +87,7 @@ function buildAlgoliaObject(negocioData: any) {
         porcentaje_descuento: o.porcentaje_descuento,
         valida_hasta: o.valida_hasta,
         valida_desde: o.valida_desde,
-        activa: o.activa,
+        activa: true,
       })) || [],
     reserva_url: negocioData.reserva_url || null,
     reserva_habilitada: negocioData.reserva_habilitada !== false,

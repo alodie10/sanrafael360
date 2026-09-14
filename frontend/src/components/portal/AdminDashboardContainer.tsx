@@ -61,7 +61,7 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
       const strapiUrl = getStrapiUrl();
       
       // Conteo de Soporte
-      const resSupport = await fetch(`${strapiUrl}/api/soportes?filters[estado][$eq]=pendiente&pagination[limit]=1`, {
+      const resSupport = await fetch(`${strapiUrl}/api/soportes/admin?filters[estado][$eq]=pendiente&pagination[limit]=1`, {
         headers: { Authorization: `Bearer ${session.jwt}` }
       });
       if (resSupport.ok) {

@@ -5,8 +5,9 @@ export default {
       path: '/negocios/:negocioId/ofertas/:ofertaId',
       handler: 'negocio.deleteOferta',
       config: {
+        auth: false,
         policies: [],
-        middlewares: [],
+        middlewares: ['global::require-auth'],
       },
     },
     {
@@ -41,8 +42,9 @@ export default {
       path: '/negocios/:id/portal-update',
       handler: 'negocio.portalUpdate',
       config: {
+        auth: false,
         policies: [],
-        middlewares: ['api::negocio.negocio-validator'],
+        middlewares: ['global::require-auth', 'api::negocio.negocio-validator'],
       },
     },
     {

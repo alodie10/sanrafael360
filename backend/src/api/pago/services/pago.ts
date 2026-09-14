@@ -4,6 +4,8 @@ import { createNegocioRepository } from '../../negocio/repositories/negocio-repo
 import { createPagoRepository } from '../repositories/pago-repository';
 import { NotFoundError } from '../../../utils/errors';
 import { processPaymentSuccess } from '../../../services/payment-success-handler';
+import { assertCanPublishListing } from '../../../utils/negocio-acl';
+import { resolveAdminUser } from '../../../utils/admin-access';
 
 // Anti-race en memoria para evitar dobles activaciones/creaciones si llegan webhooks simultáneos.
 // Nota: esto no reemplaza un unique index en BD, pero reduce el riesgo en la práctica.
@@ -13,7 +15,7 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
   /**
    * Genera una preferencia de pago en Mercado Pago
    */
-  async createPreference(negocioId: string, planType: string = 'Mensual') {
+  async createPreference(negocioId: string, planType: string = 'Mensual', user?: { id: number }) {
     const pagoRepo = createPagoRepository(strapi);
     const negocioRepo = createNegocioRepository(strapi);
 
@@ -36,24 +38,17 @@ export default factories.createCoreService('api::pago.pago', ({ strapi }) => ({
     const client = new MercadoPagoConfig({ accessToken });
     const preference = new Preference(client);
 
-    const negocio = await negocioRepo.findById(negocioId);
+    const negocio = await negocioRepo.findById(negocioId, ['owner']);
     if (!negocio) throw new NotFoundError('Negocio');
 
+    const caller = await resolveAdminUser(strapi, user);
+    assertCanPublishListing(caller, negocio);
+
     const config = await pagoRepo.findSubscriptionConfig();
-    const isTestMode = config?.modo_prueba || false;
     const amount =
       planType === 'Semestral'
         ? config?.precio_semestral || 50000
         : config?.precio_mensual || 1200;
-
-    if (isTestMode) {
-      strapi.log.info(`[MP SIMULATION] Modo prueba activo. Simulando éxito para ${negocio.nombre}`);
-      await this.handlePaymentSuccess(negocio.documentId, 'SIMULATED_PAYMENT_' + Date.now());
-      return {
-        id: 'simulated_id',
-        init_point: `${appUrl}/portal?payment=success&simulated=true`,
-      };
-    }
 
     try {
       const result = await preference.create({

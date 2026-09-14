@@ -39,20 +39,7 @@ describe('efemeride vigencia', () => {
 });
 
 describe('oferta vigencia', () => {
-  it('requires activa=true and current window', () => {
-    expect(
-      isOfertaVigente(
-        {
-          activa: true,
-          valida_desde: '2026-09-01T00:00:00.000Z',
-          valida_hasta: '2026-09-10T00:00:00.000Z',
-        },
-        NOW
-      )
-    ).toBe(true);
-  });
-
-  it('rejects inactive or expired offers', () => {
+  it('follows the date window even if activa is stale', () => {
     expect(
       isOfertaVigente(
         {
@@ -62,7 +49,10 @@ describe('oferta vigencia', () => {
         },
         NOW
       )
-    ).toBe(false);
+    ).toBe(true);
+  });
+
+  it('rejects expired offers even if activa is still true', () => {
     expect(
       isOfertaVigente(
         {

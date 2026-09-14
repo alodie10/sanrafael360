@@ -5,7 +5,9 @@ import { ValidationError } from '../../../utils/errors';
 export default factories.createCoreController('api::pago.pago', ({ strapi }) => ({
   createPreference: asyncHandler(async (ctx) => {
     const { negocioId, planType } = ctx.request.body;
-    const result = await strapi.service('api::pago.pago').createPreference(negocioId, planType);
+    const result = await strapi
+      .service('api::pago.pago')
+      .createPreference(negocioId, planType, ctx.state.user);
     ctx.send({ success: true, data: result });
   }),
 

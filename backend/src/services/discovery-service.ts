@@ -6,6 +6,12 @@ import {
   resolvePlaceTypeLabel,
 } from '../utils/google-place-description';
 import { normalizeLocalPhoneDigits } from '../utils/whatsapp';
+import {
+  assertResolvedPublicHost,
+  isGoogleMapsHostname,
+  parsePublicHttpsUrl,
+  tryParseGoogleMapsUrl,
+} from '../utils/safe-url';
 
 const PLACE_DETAIL_FIELDS =
   'name,opening_hours,website,url,formatted_phone_number,formatted_address,rating,user_ratings_total,photos,geometry,place_id,type,editorial_summary';
@@ -72,16 +78,26 @@ const DAY_INDEX_MAP: Record<number, string> = {
 };
 
 /**
- * Utility to expand shortened URLs (goo.gl/maps or maps.app.goo.gl)
+ * Utility to expand shortened Google Maps URLs (goo.gl/maps or maps.app.goo.gl)
  */
 async function expandUrl(shortUrl: string): Promise<string> {
-  try {
-    const response = await fetch(shortUrl, { method: 'HEAD', redirect: 'follow' });
-    return response.url;
-  } catch (err) {
-    console.error('[DiscoveryService] Error expanding URL:', err);
-    return shortUrl;
+  const target = parsePublicHttpsUrl(shortUrl);
+  if (!isGoogleMapsHostname(target.hostname)) {
+    throw new Error('Host not allowed');
   }
+  await assertResolvedPublicHost(target);
+
+  const response = await fetch(target.href, { method: 'HEAD', redirect: 'manual' });
+  const location = response.headers.get('location');
+  if (!location) return target.href;
+
+  const absolute = location.startsWith('http') ? location : new URL(location, target.href).href;
+  const next = parsePublicHttpsUrl(absolute.replace(/^http:\/\//i, 'https://'));
+  if (!isGoogleMapsHostname(next.hostname)) {
+    throw new Error('Host not allowed');
+  }
+  await assertResolvedPublicHost(next);
+  return next.href;
 }
 
 /**
@@ -256,9 +272,11 @@ export class DiscoveryService {
       let biasLocation: { lat: number; lng: number } | undefined;
       let extractedCid: string | undefined;
 
-      // 1. Detect if input is a Google Maps URL
-      if (input.includes('google.com/maps') || input.includes('maps.app.goo.gl')) {
-        const fullUrl = input.includes('goo.gl') ? await expandUrl(input) : input;
+      const mapsUrl = tryParseGoogleMapsUrl(input);
+      if (mapsUrl) {
+        const fullUrl = mapsUrl.hostname.includes('goo.gl')
+          ? await expandUrl(mapsUrl.href)
+          : mapsUrl.href;
         const extracted = extractFromUrl(fullUrl);
         if (extracted.searchTerm) businessName = extracted.searchTerm;
         if (extracted.location) biasLocation = extracted.location;

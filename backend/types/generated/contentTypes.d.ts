@@ -918,7 +918,8 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
       Schema.Attribute.DefaultTo<true>;
     discovery_verified: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
-    documentacion_reclamo: Schema.Attribute.Media<'files'>;
+    documentacion_reclamo: Schema.Attribute.Media<'files'> &
+      Schema.Attribute.Private;
     efemerides: Schema.Attribute.Relation<
       'manyToMany',
       'api::efemeride.efemeride'
