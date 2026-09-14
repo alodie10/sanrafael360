@@ -81,6 +81,21 @@ export class PagoRepository {
     return row ?? null;
   }
 
+  async findAllForAdmin(): Promise<PagoRecord[]> {
+    return this.strapi.documents('api::pago.pago').findMany({
+      fields: [
+        'documentId',
+        'monto',
+        'estado',
+        'fecha_pago',
+        'createdAt',
+        'mp_payment_id',
+        'external_reference',
+      ],
+      limit: -1,
+    });
+  }
+
   async delete(documentId: string) {
     return this.strapi.documents('api::pago.pago').delete({ documentId });
   }

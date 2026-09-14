@@ -8,14 +8,17 @@ import {
 
 const mockNegocioFindById = vi.fn();
 const mockNegocioUpdateDraftAndPublished = vi.fn();
+const mockNegocioFindPublishedWithPagos = vi.fn();
 const mockUserFindById = vi.fn();
 const mockUserUpdateFavoritos = vi.fn();
 const mockUserFindWithFavoritos = vi.fn();
+const mockPagoFindAllForAdmin = vi.fn();
 
 vi.mock('../../src/api/negocio/repositories/negocio-repository', () => ({
   createNegocioRepository: () => ({
     findById: mockNegocioFindById,
     updateDraftAndPublished: mockNegocioUpdateDraftAndPublished,
+    findPublishedWithPagos: mockNegocioFindPublishedWithPagos,
   }),
 }));
 
@@ -28,7 +31,9 @@ vi.mock('../../src/repositories/user-repository', () => ({
 }));
 
 vi.mock('../../src/api/pago/repositories/pago-repository', () => ({
-  createPagoRepository: () => ({}),
+  createPagoRepository: () => ({
+    findAllForAdmin: mockPagoFindAllForAdmin,
+  }),
 }));
 
 describe('favoritos-utils', () => {
@@ -128,6 +133,29 @@ describe('portal-admin service', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].documentId).toBe('doc-42');
+    });
+  });
+
+  describe('listAdminPagos', () => {
+    it('returns stats from all pagos even if the table is filtered', async () => {
+      mockNegocioFindPublishedWithPagos.mockResolvedValue([
+        {
+          nombre: 'Activo',
+          is_premium: true,
+          premium_valid_until: '2099-01-01T00:00:00.000Z',
+          pagos: [{ monto: 1000, estado: 'aprobado', fecha_pago: '2026-03-01T12:00:00.000Z' }],
+        },
+      ]);
+      mockPagoFindAllForAdmin.mockResolvedValue([
+        { monto: 1000, estado: 'aprobado', fecha_pago: '2026-03-01T12:00:00.000Z' },
+        { monto: 4000, estado: 'aprobado', fecha_pago: '2025-12-01T12:00:00.000Z' },
+      ]);
+
+      const service = createPortalAdminService(strapi);
+      const result = await service.listAdminPagos({ filterType: 'premium' });
+
+      expect(result.data).toHaveLength(1);
+      expect(result.meta.stats.total).toBe(5000);
     });
   });
 

@@ -4,9 +4,20 @@ import { createUserRepository } from '../../../repositories/user-repository';
 import { NotFoundError } from '../../../utils/errors';
 import { resolveVigenciaUpdate } from '../../../utils/premium-vigencia';
 import { dedupeFavoritos, nextFavoritoIds } from './favoritos-utils';
+import { buildAdminPagosPayload, type AdminPagosQuery } from './admin-pagos-utils';
 
 export function createPortalAdminService(strapi: any) {
   return {
+    async listAdminPagos(query: AdminPagosQuery) {
+      const negocioRepo = createNegocioRepository(strapi);
+      const pagoRepo = createPagoRepository(strapi);
+      const [negocios, pagos] = await Promise.all([
+        negocioRepo.findPublishedWithPagos(),
+        pagoRepo.findAllForAdmin(),
+      ]);
+      return buildAdminPagosPayload(negocios || [], pagos || [], query, new Date());
+    },
+
     async getFavoritesForUser(userId: number) {
       const userRepo = createUserRepository(strapi);
       const dbUser = await userRepo.findWithFavoritos(userId);

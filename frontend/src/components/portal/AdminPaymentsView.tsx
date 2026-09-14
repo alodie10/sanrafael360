@@ -33,6 +33,7 @@ interface AdminPaymentsViewProps {
 
 export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
   const [data, setData] = useState<any[]>([]);
+  const [stats, setStats] = useState({ total: 0, active: 0, pending: 0 });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<'all' | 'premium' | 'expired' | 'expiring'>('premium');
@@ -91,40 +92,25 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
       try {
         const strapiUrl = getStrapiUrl();
         
-        // Construimos la URL con filtros de servidor para que busque en TODA la base
-        // Construimos la URL con filtros de servidor para que busque en TODA la base
-        let query = `/api/negocios?populate[owner]=true&populate[pagos]=true&pagination[pageSize]=1000`;
-        
-        // Búsqueda simplificada para evitar Error 500 en Strapi 5
-        if (searchTerm) {
-          query += `&filters[nombre][$containsi]=${encodeURIComponent(searchTerm)}`;
-        }
+        const params = new URLSearchParams();
+        params.set('filterType', filterType);
+        if (searchTerm.trim()) params.set('search', searchTerm.trim());
+        if (revenueMonth) params.set('month', revenueMonth);
 
-        // Filtros de estado en servidor
-        const now = new Date();
-        const nowISO = now.toISOString();
-        const nextWeekISO = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-        if (filterType === 'premium') {
-          query += `&filters[is_premium][$eq]=true&filters[premium_valid_until][$gt]=${nowISO}`;
-        } else if (filterType === 'expired') {
-          query += `&filters[premium_valid_until][$lt]=${nowISO}`;
-        } else if (filterType === 'expiring') {
-          // Vencen entre hoy y dentro de 7 días
-          query += `&filters[premium_valid_until][$gt]=${nowISO}&filters[premium_valid_until][$lt]=${nextWeekISO}`;
-        }
-
-        const res = await fetch(`${strapiUrl}${query}`, {
+        const res = await fetch(`${strapiUrl}/api/negocios/admin/pagos?${params.toString()}`, {
           headers: { Authorization: `Bearer ${jwt}` },
           cache: 'no-store'
         });
         const json = await res.json();
-        console.log(`DEBUG: Strapi devolvió ${json.data?.length || 0} negocios`);
-        if (selectedBusiness) {
-          const check = json.data.find((b: any) => b.id === selectedBusiness.id);
-          console.log("DEBUG: Refresh fetched selected business pagos:", check?.pagos?.length || (check?.pagos?.data?.length || 0));
+        if (!res.ok) {
+          throw new Error(json?.error?.message || 'No se pudieron cargar los pagos');
         }
         setData(json.data || []);
+        setStats({
+          total: Number(json.meta?.stats?.total) || 0,
+          active: Number(json.meta?.stats?.active) || 0,
+          pending: Number(json.meta?.stats?.pending) || 0,
+        });
       } catch (err) {
         if (!isBrowserNetworkError(err)) {
           console.warn("[admin] No se pudieron cargar los pagos");
@@ -137,7 +123,7 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
     // Debounce simple para no saturar el servidor mientras escribís
     const timer = setTimeout(() => fetchData(), 300);
     return () => clearTimeout(timer);
-  }, [jwt, searchTerm, filterType, refreshTrigger]);
+  }, [jwt, searchTerm, filterType, revenueMonth, refreshTrigger]);
 
   // Ya no filtramos localmente, usamos la data que viene del server
 
@@ -291,27 +277,6 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
 
     return sorted;
   }, [data]);
-
-  const stats = {
-    total: data.reduce((acc, curr) => {
-      const pagosAprobados = curr.pagos?.filter((p: any) => {
-        if (p.estado !== 'aprobado') return false;
-        // Si hay filtro de mes, comparar la fecha del pago
-        if (revenueMonth) {
-          const pagoDate = new Date(p.createdAt || p.fecha_pago || p.updatedAt);
-          const pagoYYYYMM = `${pagoDate.getFullYear()}-${String(pagoDate.getMonth() + 1).padStart(2, '0')}`;
-          return pagoYYYYMM === revenueMonth;
-        }
-        return true;
-      }) || [];
-      return acc + pagosAprobados.reduce((sum: number, p: any) => sum + p.monto, 0);
-    }, 0),
-    active: data.filter(n => {
-      const validUntil = n.premium_valid_until ? new Date(n.premium_valid_until) : null;
-      return n.is_premium && (!validUntil || validUntil > new Date());
-    }).length,
-    pending: data.reduce((acc, curr) => acc + (curr.pagos?.filter((p: any) => p.estado === 'pendiente').length || 0), 0)
-  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">

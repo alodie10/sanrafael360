@@ -201,6 +201,27 @@ export class NegocioRepository {
     return this.strapi.documents('api::negocio.negocio').delete({ documentId });
   }
 
+  async findPublishedWithPagos() {
+    return this.strapi.documents('api::negocio.negocio').findMany({
+      populate: {
+        owner: { fields: ['id', 'email', 'updatedAt'] },
+        pagos: {
+          fields: [
+            'documentId',
+            'monto',
+            'estado',
+            'fecha_pago',
+            'createdAt',
+            'mp_payment_id',
+            'external_reference',
+          ],
+        },
+      },
+      limit: 1000,
+      status: 'published',
+    });
+  }
+
   async findNeverPremiumWithMedia(limit = 40) {
     return this.strapi.documents('api::negocio.negocio').findMany({
       filters: {
