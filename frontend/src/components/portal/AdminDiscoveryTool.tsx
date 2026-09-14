@@ -144,42 +144,38 @@ export default function AdminDiscoveryTool({
       const localPhone =
         normalizeLocalPhoneDigits(result.telefono) || result.telefono || undefined;
 
-      const res = await fetch(`${STRAPI_URL}/api/negocios`, {
+      const res = await fetch(`${STRAPI_URL}/api/negocios/admin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${jwt}`,
         },
         body: JSON.stringify({
-          data: {
-            nombre: result.nombre,
-            slug,
-            descripcion,
-            direccion: result.direccion,
-            telefono: localPhone,
-            whatsapp: result.whatsapp || localPhone,
-            website: result.website,
-            google_maps_url: result.google_maps_url,
-            google_place_id: result.place_id,
-            google_rating: result.rating,
-            google_review_count: result.user_ratings_total,
-            categoria: selectedCategory,
-            reclamar_habilitado: true,
-            publishedAt: new Date().toISOString(),
-            schedules: result.schedules,
-            latitud: result.location?.lat,
-            longitud: result.location?.lng,
-            horarios_texto: `Rating Google: ${result.rating} con ${result.user_ratings_total} reseñas.`,
-          },
+          nombre: result.nombre,
+          slug,
+          descripcion,
+          direccion: result.direccion,
+          telefono: localPhone,
+          whatsapp: result.whatsapp || localPhone,
+          website: result.website,
+          google_maps_url: result.google_maps_url,
+          google_place_id: result.place_id,
+          google_rating: result.rating,
+          google_review_count: result.user_ratings_total,
+          categoriaId: selectedCategory,
+          schedules: result.schedules,
+          latitud: result.location?.lat,
+          longitud: result.location?.lng,
         }),
       });
 
       const createdData = await res.json().catch(() => ({}));
       if (!res.ok) {
         const strapiMsg = createdData?.error?.message || "";
-        if (/unique/i.test(strapiMsg)) {
+        if (res.status === 409 || /unique|ya está en el directorio/i.test(strapiMsg)) {
           throw new Error(
-            "Ya existe un negocio con ese nombre/slug. Buscalo en el directorio antes de importar de nuevo."
+            strapiMsg ||
+              "Ya existe un negocio con ese nombre/slug. Buscalo en el directorio antes de importar de nuevo."
           );
         }
         throw new Error(strapiMsg || "Error al crear el negocio en la base de datos.");
