@@ -28,3 +28,32 @@ export function consumeRateLimit(
 }
 
 export const RATE_LIMIT_COOKIE = "sr360_guide_rl";
+
+type MemoryBucket = RateLimitState;
+const ipBuckets = new Map<string, MemoryBucket>();
+const MAX_IP_KEYS = 10_000;
+
+function pruneIpBuckets(now: number) {
+  if (ipBuckets.size < MAX_IP_KEYS) return;
+  for (const [key, bucket] of ipBuckets) {
+    if (bucket.resetAt <= now) ipBuckets.delete(key);
+  }
+}
+
+/** Rate limit por IP (in-memory). Complementa la cookie, que se puede tirar. */
+export function consumeIpRateLimit(
+  key: string,
+  now: number,
+  max: number,
+  windowMs: number
+): { allowed: boolean } {
+  pruneIpBuckets(now);
+  const current = ipBuckets.get(key) ?? null;
+  const result = consumeRateLimit(current, now, max, windowMs);
+  ipBuckets.set(key, result.next);
+  return { allowed: result.allowed };
+}
+
+export function __resetIpRateLimitForTests() {
+  ipBuckets.clear();
+}

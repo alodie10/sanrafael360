@@ -64,11 +64,11 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Middlewar
   {
     name: 'strapi::body',
     config: {
-      formLimit: '256mb',
-      jsonLimit: '256mb',
-      textLimit: '256mb',
+      formLimit: '20mb',
+      jsonLimit: '2mb',
+      textLimit: '2mb',
       formidable: {
-        maxFileSize: 500 * 1024 * 1024, // 500MB
+        maxFileSize: 20 * 1024 * 1024,
       },
     },
   },

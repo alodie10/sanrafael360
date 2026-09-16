@@ -31,9 +31,11 @@ describe('rest-permissions (AppSec)', () => {
     expect(PUBLIC_READ_ACTIONS).not.toContain('api::soporte.soporte.find');
   });
 
-  it('oferta create/update solo para autenticados', () => {
+  it('oferta create/update y atributo.create solo para autenticados', () => {
     expect(AUTHENTICATED_ONLY_ACTIONS).toContain('api::oferta.oferta.create');
     expect(AUTHENTICATED_ONLY_ACTIONS).toContain('api::oferta.oferta.update');
+    expect(AUTHENTICATED_ONLY_ACTIONS).toContain('api::atributo.atributo.create');
     expect(PUBLIC_READ_ACTIONS).not.toContain('api::oferta.oferta.create');
+    expect(PUBLIC_READ_ACTIONS).not.toContain('api::atributo.atributo.create');
   });
 });

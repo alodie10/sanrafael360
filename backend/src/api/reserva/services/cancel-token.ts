@@ -1,12 +1,15 @@
 import crypto from 'crypto';
 
 function cancelSecret(): string {
-  return (
+  const secret =
     process.env.RESERVA_CANCEL_SECRET ||
     process.env.JWT_SECRET ||
-    process.env.ADMIN_JWT_SECRET ||
-    'dev-reserva-cancel-secret'
-  );
+    process.env.ADMIN_JWT_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Falta JWT_SECRET para firmar cancelación de reserva');
+  }
+  return 'dev-reserva-cancel-secret';
 }
 
 /** Token firmado: documentId.sig — para link de cancelación en el mail. */

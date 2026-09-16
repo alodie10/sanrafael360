@@ -7,7 +7,7 @@ export default {
       config: {
         auth: false,
         policies: [],
-        middlewares: ['api::reserva.checkout-validator'],
+        middlewares: ['global::checkout-rate-limit', 'api::reserva.checkout-validator'],
       },
     },
     {

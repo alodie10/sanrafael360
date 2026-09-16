@@ -1,12 +1,15 @@
 import crypto from 'crypto';
 
 function unsubscribeSecret(): string {
-  return (
+  const secret =
     process.env.UNSUBSCRIBE_SECRET ||
     process.env.JWT_SECRET ||
-    process.env.ADMIN_JWT_SECRET ||
-    'dev-unsubscribe-secret'
-  );
+    process.env.ADMIN_JWT_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Falta JWT_SECRET para firmar baja de clientes');
+  }
+  return 'dev-unsubscribe-secret';
 }
 
 export function createUnsubscribeToken(documentId: string): string {

@@ -4,6 +4,7 @@ import { createReservaRepository } from '../repositories/reserva-repository';
 import { createReservaBloqueoRepository } from '../../reserva-bloqueo/repositories/reserva-bloqueo-repository';
 import { getDisponibilidad, expireStaleHolds } from '../../reserva-comercio/services/disponibilidad';
 import { addDaysToDateStr, wallClockToUtc } from '../../reserva-comercio/services/slot-time';
+import { generateReservaCodigo } from '../../../utils/reserva-codigo';
 
 async function loadComercioOrThrow(strapi: any, slug: string) {
   const repo = createReservaComercioRepository(strapi);
@@ -140,9 +141,7 @@ export async function adminWalkIn(
   });
   if (conflict) throw new ValidationError('Ese hueco ya no está disponible');
 
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let codigo = 'JD-';
-  for (let i = 0; i < 6; i++) codigo += alphabet[Math.floor(Math.random() * alphabet.length)];
+  const codigo = generateReservaCodigo();
 
   const created = await reservaRepo.create({
     codigo,
