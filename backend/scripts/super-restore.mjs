@@ -10,12 +10,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- CONFIGURACIÓN CLOUDINARY (REST API) ---
-const CLOUD_NAME = 'dg0msu8ru';
-const API_KEY = '517598867933172';
-const API_SECRET = '6frfOJz7L7V_x-GEjttlfkibYRQ';
+const CLOUD_NAME = process.env.CLOUDINARY_NAME || process.env.CLOUDINARY_CLOUD_NAME;
+const API_KEY = process.env.CLOUDINARY_KEY || process.env.CLOUDINARY_API_KEY;
+const API_SECRET = process.env.CLOUDINARY_SECRET || process.env.CLOUDINARY_API_SECRET;
+if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
+  throw new Error('Faltan CLOUDINARY_NAME, CLOUDINARY_KEY o CLOUDINARY_SECRET');
+}
 
 const STRAPI_API_URL = 'https://sanrafael360-production.up.railway.app/api';
-const API_TOKEN = '15a9b510789a322b3984bde54ee75c94dd3feb717e916779aedf8de9cc8e07a61f779167efccf3657e0d1831074e31870029e6eded789dedf987b4ead9f189e5c1d6b9e1c1439f6927edbee3d19c3a013423df3b8f2b620826fb572caaac559f84e46faa1c22c656449348922cf933f515c92cf2d698c233fa52bd88efe73635';
+const API_TOKEN = process.env.STRAPI_API_TOKEN;
+if (!API_TOKEN) {
+  throw new Error('Falta STRAPI_API_TOKEN en el entorno');
+}
 const MAPPING_PATH = 'c:/sanrafael360/backend/scripts/image_mapping.json';
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
