@@ -45,6 +45,18 @@ export function normalizeCloudinaryFolder(raw: unknown): AllowedCloudinaryFolder
   return folder as AllowedCloudinaryFolder;
 }
 
+export type CloudinarySignDecision = "allow" | "forbid" | "need_owner";
+
+/** avisos = solo admin. galeria = admin o dueño con al menos un negocio. */
+export function decideCloudinarySignAccess(input: {
+  folder: AllowedCloudinaryFolder;
+  isAdmin: boolean;
+}): CloudinarySignDecision {
+  if (input.isAdmin) return "allow";
+  if (input.folder === "sanrafael360_avisos") return "forbid";
+  return "need_owner";
+}
+
 /** Firma parámetros de upload (orden alfabético; excluye file, api_key, cloud_name, resource_type). */
 export function signCloudinaryUploadParams(
   params: Record<string, string | number>,

@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { loadGuideRuntime, resolveLiveAsistenteConfig } from "@/lib/asistente/live-store";
 import { handleGuideTurn } from "@/lib/asistente/dialog";
 import { parseGuideRequest } from "@/lib/asistente/parse-request";
+import { clientIpFromHeaders } from "@/lib/client-ip";
 import {
+  consumeIpRateLimit,
   consumeRateLimit,
   parseRateLimitCookie,
   RATE_LIMIT_COOKIE,
@@ -34,6 +36,21 @@ function publicConfig(config: Awaited<ReturnType<typeof currentConfig>>) {
   };
 }
 
+function limitedResponse(next: { count: number; resetAt: number }, windowMs: number) {
+  const limited = NextResponse.json({
+    type: "error",
+    text: "Llegaste al límite de mensajes por ahora. Probá la búsqueda de arriba o volvé en un rato.",
+    hits: [],
+  });
+  limited.cookies.set(RATE_LIMIT_COOKIE, JSON.stringify(next), {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: Math.ceil(windowMs / 1000),
+  });
+  return limited;
+}
+
 export async function GET() {
   const config = await currentConfig();
   if (!config.enabled) return pausedResponse();
@@ -45,21 +62,19 @@ export async function POST(request: NextRequest) {
   if (!config.enabled) return pausedResponse();
 
   const now = Date.now();
-  const current = parseRateLimitCookie(request.cookies.get(RATE_LIMIT_COOKIE)?.value, now);
-  const rate = consumeRateLimit(current, now, config.rateLimitMax, config.rateLimitWindowMs);
-  if (!rate.allowed) {
-    const limited = NextResponse.json({
+  const ip = clientIpFromHeaders(request.headers);
+  if (!consumeIpRateLimit(`guide:${ip}`, now, config.rateLimitMax, config.rateLimitWindowMs).allowed) {
+    return NextResponse.json({
       type: "error",
       text: "Llegaste al límite de mensajes por ahora. Probá la búsqueda de arriba o volvé en un rato.",
       hits: [],
     });
-    limited.cookies.set(RATE_LIMIT_COOKIE, JSON.stringify(rate.next), {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: Math.ceil(config.rateLimitWindowMs / 1000),
-    });
-    return limited;
+  }
+
+  const current = parseRateLimitCookie(request.cookies.get(RATE_LIMIT_COOKIE)?.value, now);
+  const rate = consumeRateLimit(current, now, config.rateLimitMax, config.rateLimitWindowMs);
+  if (!rate.allowed) {
+    return limitedResponse(rate.next, config.rateLimitWindowMs);
   }
 
   let body: unknown;

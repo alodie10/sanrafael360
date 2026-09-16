@@ -38,4 +38,12 @@ describe('unsubscribe-token', () => {
     process.env.FRONTEND_URL = '=http://localhost:3000';
     expect(buildUnsubscribeUrl('doc-1').startsWith('http://localhost:3000/baja?')).toBe(true);
   });
+
+  it('en production exige un secreto', () => {
+    delete process.env.JWT_SECRET;
+    delete process.env.UNSUBSCRIBE_SECRET;
+    delete process.env.ADMIN_JWT_SECRET;
+    process.env.NODE_ENV = 'production';
+    expect(() => createUnsubscribeToken('doc-1')).toThrow(/JWT_SECRET/);
+  });
 });

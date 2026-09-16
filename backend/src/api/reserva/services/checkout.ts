@@ -7,6 +7,7 @@ import { expireStaleHolds } from '../../reserva-comercio/services/disponibilidad
 import { confirmReservaFromPayment, confirmReservaPagoEnLocal } from '../../../services/reservation-payment-success-handler';
 import { resolveComercioMpAccessToken } from './mp-token';
 import { normalizeModoCobro, resolveCheckoutMetodoPago } from './modo-cobro';
+import { generateReservaCodigo } from '../../../utils/reserva-codigo';
 
 const inFlightMpPaymentIds = new Set<string>();
 
@@ -20,15 +21,6 @@ export type CheckoutInput = {
   /** mp | local — requerido solo si modo_cobro = mp_o_local */
   metodo_pago?: string;
 };
-
-function generateCodigo(): string {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let out = 'JD-';
-  for (let i = 0; i < 6; i++) {
-    out += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-  return out;
-}
 
 function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number) {
   return aStart < bEnd && aEnd > bStart;
@@ -107,7 +99,7 @@ export async function createCheckout(strapi: any, input: CheckoutInput) {
     throw new ValidationError('Ese hueco ya no está disponible');
   }
 
-  const codigo = generateCodigo();
+  const codigo = generateReservaCodigo();
   const holdExpires = new Date(Date.now() + holdTtl * 60_000);
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   const backendUrl = process.env.BACKEND_URL || 'http://localhost:1337';

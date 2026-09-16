@@ -65,7 +65,6 @@ export const PUBLIC_READ_ACTIONS = [
   'api::review.review.create',
   'api::atributo.atributo.find',
   'api::atributo.atributo.findOne',
-  'api::atributo.atributo.create',
   'api::reserva-comercio.reserva-comercio.find',
   'api::reserva-comercio.reserva-comercio.findOne',
   'api::reserva-recurso.reserva-recurso.find',
@@ -78,6 +77,7 @@ export const AUTHENTICATED_ONLY_ACTIONS = [
   'api::oferta.oferta.create',
   'api::oferta.oferta.update',
   'api::actividad.actividad.find',
+  'api::atributo.atributo.create',
 ] as const;
 
 const UNTRUSTED_ROLE_TYPES = ['authenticated', 'residente', 'propietario', 'public'] as const;

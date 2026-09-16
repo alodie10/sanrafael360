@@ -16,7 +16,10 @@ import { sanitizePortalUpdatePayload } from '../../src/api/negocio/services/port
 import { reservaConfirmacionEmail } from '../../src/api/reserva/services/templates/reserva-email-templates';
 import { getAdminClaimEmail } from '../../src/api/negocio/services/templates/email-templates';
 import { serializeJsonLd } from '../../../frontend/src/lib/json-ld';
-import { normalizeCloudinaryFolder } from '../../../frontend/src/lib/cloudinary-sign.server';
+import {
+  decideCloudinarySignAccess,
+  normalizeCloudinaryFolder,
+} from '../../../frontend/src/lib/cloudinary-sign.server';
 import { toStrapiEqFilter } from '../../../frontend/src/lib/strapi-query';
 import { safeHttpHref } from '../../../frontend/src/lib/safe-outbound-url';
 
@@ -109,6 +112,21 @@ describe('cloudinary folder', () => {
     expect(() =>
       normalizeCloudinaryFolder('sanrafael360_galeria&overwrite=1&public_id=victim')
     ).toThrow();
+  });
+
+  it('avisos solo admin; galeria pide dueño si no es admin', () => {
+    expect(
+      decideCloudinarySignAccess({ folder: 'sanrafael360_avisos', isAdmin: true })
+    ).toBe('allow');
+    expect(
+      decideCloudinarySignAccess({ folder: 'sanrafael360_avisos', isAdmin: false })
+    ).toBe('forbid');
+    expect(
+      decideCloudinarySignAccess({ folder: 'sanrafael360_galeria', isAdmin: false })
+    ).toBe('need_owner');
+    expect(
+      decideCloudinarySignAccess({ folder: 'sanrafael360_galeria', isAdmin: true })
+    ).toBe('allow');
   });
 });
 
