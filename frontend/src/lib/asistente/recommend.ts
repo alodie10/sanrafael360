@@ -1,3 +1,4 @@
+import { searchAlgoliaWithRestrictFallback } from "@/lib/algolia-restrict-fallback";
 import { canUseAlgoliaSearch } from "@/lib/search-config";
 import { getAsistenteConfig } from "./config";
 import {
@@ -75,7 +76,7 @@ function mergeHits(batches: GuideFicha[][]): GuideFicha[] {
 async function searchAlgolia(client: SearchClient, requests: ReturnType<typeof assistantSearchRequest>[]): Promise<GuideFicha[]> {
   if (!requests.length) return [];
   try {
-    const { results } = await client.search({ requests });
+    const results = await searchAlgoliaWithRestrictFallback(client, requests);
     return mergeHits(
       results.map((result) => mapHits((result as { hits?: Record<string, unknown>[] }).hits))
     );

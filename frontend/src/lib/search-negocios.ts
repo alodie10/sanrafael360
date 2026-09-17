@@ -1,6 +1,7 @@
 import { cache } from "@/lib/react-cache";
 import { fetchFromStrapi, isStrapiUnreachableError } from "@/lib/strapi";
 import { canUseAlgoliaSearch, shouldUseStrapiSearchForHome } from "@/lib/search-config";
+import { searchAlgoliaWithRestrictFallback } from "@/lib/algolia-restrict-fallback";
 import { Atributo, Categoria, Negocio } from "@/types/strapi";
 import { matchFieldFromAlgoliaHit, matchFieldFromText, queryVariants } from "@/lib/search-match";
 import { uniqueNegocios } from "@/lib/unique-negocios";
@@ -206,20 +207,18 @@ export async function searchNegociosFromAlgolia(
     if (selectedCat) query = selectedCat.nombre;
   }
 
-  const { results } = await client.search({
-    requests: [
-      {
-        indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME || "negocios",
-        query,
-        hitsPerPage: 100,
-        restrictSearchableAttributes: [...ALGOLIA_SEARCHABLE],
-        attributesToHighlight: [...ALGOLIA_SEARCHABLE],
-        removeStopWords: true,
-        ignorePlurals: true,
-        removeWordsIfNoResults: "firstWords",
-      },
-    ],
-  });
+  const results = await searchAlgoliaWithRestrictFallback(client, [
+    {
+      indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME || "negocios",
+      query,
+      hitsPerPage: 100,
+      restrictSearchableAttributes: [...ALGOLIA_SEARCHABLE],
+      attributesToHighlight: [...ALGOLIA_SEARCHABLE],
+      removeStopWords: true,
+      ignorePlurals: true,
+      removeWordsIfNoResults: "firstWords",
+    },
+  ]);
 
   const hits = (results[0] as { hits?: Record<string, unknown>[] })?.hits || [];
   return uniqueNegocios(hits.map((hit) => mapAlgoliaHit(hit, textQuery)));
@@ -303,15 +302,13 @@ async function searchAlgoliaHits(query: string, hitsPerPage = 50): Promise<Recor
     process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || "",
     process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY || ""
   );
-  const { results } = await client.search({
-    requests: [{
-      indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME || "negocios",
-      query,
-      hitsPerPage,
-      restrictSearchableAttributes: ["categoria", "nombre"],
-      ignorePlurals: true,
-    }],
-  });
+  const results = await searchAlgoliaWithRestrictFallback(client, [{
+    indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME || "negocios",
+    query,
+    hitsPerPage,
+    restrictSearchableAttributes: ["categoria", "nombre"],
+    ignorePlurals: true,
+  }]);
   return hitsFromAlgoliaResult(results[0]);
 }
 
