@@ -22,6 +22,14 @@
     },
     "firma": {
       "type": "text"
+    },
+    "cupo_wsp_fecha": {
+      "type": "date"
+    },
+    "cupo_wsp_count": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
     }
   }
 }

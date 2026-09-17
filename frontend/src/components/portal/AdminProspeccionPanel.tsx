@@ -14,7 +14,8 @@ import {
   Send,
   X,
 } from "lucide-react";
-import { STRAPI_URL } from "@/lib/strapi";
+import { STRAPI_URL, isBrowserNetworkError } from "@/lib/strapi";
+import { cn } from "@/lib/utils";
 import type { PeriodPreset } from "@/lib/performance-period";
 import { rangeFromPreset } from "@/lib/performance-period";
 import PerformancePeriodFilter from "./PerformancePeriodFilter";
@@ -25,6 +26,7 @@ import {
   guideHomeUrl,
   phoneForWhatsapp,
   type ProspeccionAlcanzado,
+  type ProspeccionCupoWhatsapp,
   type ProspeccionNegocio,
   type ProspeccionPlantilla,
 } from "@/lib/prospeccion";
@@ -40,6 +42,13 @@ function apiError(json: any, fallback: string) {
   return json?.error?.message || json?.error || fallback;
 }
 
+function fetchErrorMessage(error: unknown, fallback: string) {
+  if (isBrowserNetworkError(error)) {
+    return "No se pudo conectar con Strapi. Revisá que el backend esté en marcha.";
+  }
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 function formatFecha(iso: string) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -47,6 +56,33 @@ function formatFecha(iso: string) {
     dateStyle: "short",
     timeStyle: "short",
   });
+}
+
+function CupoWhatsappBadge({ cupo }: { cupo: ProspeccionCupoWhatsapp | null }) {
+  const enviados = cupo?.enviados ?? 0;
+  const limite = cupo?.limite ?? 25;
+  const full = enviados >= limite;
+  const warn = !full && enviados >= limite - 5;
+
+  return (
+    <div
+      className={cn(
+        "shrink-0 inline-flex items-center gap-2 rounded-full border px-3 py-1.5",
+        full
+          ? "border-red-500/40 bg-red-500/10 text-red-200"
+          : warn
+            ? "border-amber-400/40 bg-amber-500/10 text-amber-200"
+            : "border-white/10 bg-white/5 text-zinc-300"
+      )}
+      data-testid="prospeccion-cupo-whatsapp"
+      title={full ? "Cupo de WhatsApp del día completo" : `WhatsApp enviados hoy: ${enviados} de ${limite}`}
+    >
+      <span className="text-[9px] font-black uppercase tracking-widest">WSP</span>
+      <span className="font-serif text-sm font-bold italic text-white leading-none">
+        {cupo ? enviados : "—"}/{limite}
+      </span>
+    </div>
+  );
 }
 
 export default function AdminProspeccionPanel({
@@ -76,6 +112,7 @@ export default function AdminProspeccionPanel({
   const [sending, setSending] = useState<"saludo" | "ficha_mensaje" | "instagram" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [cupo, setCupo] = useState<ProspeccionCupoWhatsapp | null>(null);
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -93,6 +130,7 @@ export default function AdminProspeccionPanel({
 
   useEffect(() => {
     loadPlantilla();
+    loadCupo();
   }, [jwt]);
 
   useEffect(() => {
@@ -112,21 +150,37 @@ export default function AdminProspeccionPanel({
       if (!res.ok) throw new Error(apiError(json, "No se pudo cargar la plantilla"));
       setPlantilla(json.data);
       setDraft(json.data);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(fetchErrorMessage(e, "No se pudo cargar la plantilla"));
     } finally {
       setLoading(false);
     }
   };
 
+  const loadCupo = async () => {
+    try {
+      const res = await fetch(`${STRAPI_URL}/api/prospeccion/cupo-whatsapp`, {
+        headers: authHeaders,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.data) setCupo(json.data);
+    } catch {
+      // El panel sigue usable si el cupo no responde.
+    }
+  };
+
   const loadAlcanzados = async () => {
-    const qs = new URLSearchParams({ startDate, endDate });
-    if (nameFilter.trim()) qs.set("q", nameFilter.trim());
-    const res = await fetch(`${STRAPI_URL}/api/prospeccion/alcanzados?${qs}`, {
-      headers: authHeaders,
-    });
-    const json = await res.json().catch(() => ({}));
-    if (res.ok) setAlcanzados(json.data || []);
+    try {
+      const qs = new URLSearchParams({ startDate, endDate });
+      if (nameFilter.trim()) qs.set("q", nameFilter.trim());
+      const res = await fetch(`${STRAPI_URL}/api/prospeccion/alcanzados?${qs}`, {
+        headers: authHeaders,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok) setAlcanzados(json.data || []);
+    } catch (e: unknown) {
+      setError(fetchErrorMessage(e, "No se pudieron cargar los contactos alcanzados"));
+    }
   };
 
   const searchNegocios = async (query: string) => {
@@ -135,12 +189,17 @@ export default function AdminProspeccionPanel({
       setPickerResults([]);
       return;
     }
-    const res = await fetch(
-      `${STRAPI_URL}/api/prospeccion/negocios-picker?search=${encodeURIComponent(query)}`,
-      { headers: authHeaders }
-    );
-    const json = await res.json().catch(() => ({}));
-    setPickerResults(json.data || []);
+    try {
+      const res = await fetch(
+        `${STRAPI_URL}/api/prospeccion/negocios-picker?search=${encodeURIComponent(query)}`,
+        { headers: authHeaders }
+      );
+      const json = await res.json().catch(() => ({}));
+      setPickerResults(json.data || []);
+    } catch (e: unknown) {
+      setPickerResults([]);
+      setError(fetchErrorMessage(e, "No se pudo buscar el negocio"));
+    }
   };
 
   const selectNegocio = (negocio: ProspeccionNegocio) => {
@@ -165,8 +224,8 @@ export default function AdminProspeccionPanel({
       setPlantilla(json.data);
       setDraft(json.data);
       setNotice("Guardado. El mensaje es compartido; la firma quedó en tu usuario.");
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(fetchErrorMessage(e, "No se pudo guardar la plantilla"));
     } finally {
       setSavingPlantilla(false);
     }
@@ -186,14 +245,16 @@ export default function AdminProspeccionPanel({
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo armar el WhatsApp"));
       window.open(json.data.whatsappUrl, "_blank", "noopener,noreferrer");
+      if (json.data.cupoWhatsapp) setCupo(json.data.cupoWhatsapp);
+      else await loadCupo();
       if (tipo === "saludo") {
         setNotice("WhatsApp abierto con el saludo. Si el número funciona, enviá el mensaje para registrarlo.");
       } else {
         setNotice("WhatsApp abierto con el link de la guía y el mensaje. Quedó registrado en contactos alcanzados.");
         await loadAlcanzados();
       }
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(fetchErrorMessage(e, "No se pudo armar el WhatsApp"));
     } finally {
       setSending(null);
     }
@@ -226,8 +287,8 @@ export default function AdminProspeccionPanel({
           : "Instagram abierto. Copiá el comunicado de la vista previa y pegalo en el chat."
       );
       await loadAlcanzados();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(fetchErrorMessage(e, "No se pudo armar el Instagram"));
     } finally {
       setSending(null);
     }
@@ -236,6 +297,7 @@ export default function AdminProspeccionPanel({
   const guiaUrl = guideHomeUrl();
   const saludo = greetingNow();
   const phone = phoneForWhatsapp(selected);
+  const cupoLleno = Boolean(cupo && cupo.enviados >= cupo.limite);
   const igHandle = resolveInstagramUsername({
     instagram_username: selected?.instagram_username,
     instagram: selected?.instagram,
@@ -247,14 +309,24 @@ export default function AdminProspeccionPanel({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-zinc-500">
-        <Loader2 className="w-6 h-6 animate-spin" />
+      <div className="space-y-8 pb-20" data-testid="prospeccion-panel">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-2xl font-serif font-bold text-white italic">Prospección WhatsApp</h2>
+          <CupoWhatsappBadge cupo={cupo} />
+        </div>
+        <div className="flex items-center justify-center py-20 text-zinc-500">
+          <Loader2 className="w-6 h-6 animate-spin" />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-8 pb-20" data-testid="prospeccion-panel">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-2xl font-serif font-bold text-white italic">Prospección WhatsApp</h2>
+        <CupoWhatsappBadge cupo={cupo} />
+      </div>
       {error && (
         <div className="p-5 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400">
           <AlertCircle className="w-5 h-5 shrink-0" />
@@ -375,7 +447,7 @@ export default function AdminProspeccionPanel({
           <button
             type="button"
             onClick={() => enviar("saludo")}
-            disabled={!selected || !phone || sending !== null}
+            disabled={!selected || !phone || sending !== null || cupoLleno}
             className="flex-1 min-w-[180px] py-4 rounded-2xl bg-white/10 text-white font-black uppercase tracking-widest text-[11px] disabled:opacity-40 hover:bg-white/15 flex items-center justify-center gap-2"
             data-testid="prospeccion-enviar-saludo"
           >
@@ -385,7 +457,7 @@ export default function AdminProspeccionPanel({
           <button
             type="button"
             onClick={() => enviar("ficha_mensaje")}
-            disabled={!selected || !phone || sending !== null}
+            disabled={!selected || !phone || sending !== null || cupoLleno}
             className="flex-1 min-w-[180px] py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-widest text-[11px] disabled:opacity-40 hover:bg-primary/90 flex items-center justify-center gap-2"
             data-testid="prospeccion-enviar-ficha"
           >
@@ -403,6 +475,11 @@ export default function AdminProspeccionPanel({
             Enviar por Instagram
           </button>
         </div>
+        {cupoLleno && (
+          <p className="text-xs text-red-300" data-testid="prospeccion-cupo-lleno">
+            Llegaste a los 25 WhatsApp de hoy. Mañana se reinicia el cupo; Instagram sigue disponible.
+          </p>
+        )}
         {selected && !phone && (
           <p className="text-xs text-amber-400">Este negocio no tiene teléfono de WhatsApp. Completalo en la ficha antes de enviar.</p>
         )}

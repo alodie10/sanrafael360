@@ -1,6 +1,13 @@
 import { NotFoundError, ValidationError } from '../../../utils/errors';
-import { greetingNow } from '../../../utils/prospeccion-saludo';
+import { calendarDateInTimeZone, greetingNow } from '../../../utils/prospeccion-saludo';
 import { buildWhatsappUrl } from '../../../utils/whatsapp';
+import {
+  WHATSAPP_DAILY_LIMIT,
+  asDateOnly,
+  nextCupoCount,
+  resolveCupoWhatsapp,
+  type CupoWhatsapp,
+} from '../prospeccion-cupo';
 import { buildInstagramDmUrl, resolveInstagramUsername } from '../../../utils/instagram';
 import { createUserRepository, type UserRepository } from '../../../repositories/user-repository';
 import {
@@ -120,6 +127,48 @@ async function upsertContacto(
   await repo.createContacto({ ...patch, negocio: negocioDocumentId });
 }
 
+function cupoFromDoc(doc: any, today: string, contactosHoy: number): CupoWhatsapp {
+  return resolveCupoWhatsapp({
+    storedFecha: asDateOnly(doc?.cupo_wsp_fecha),
+    storedCount: Number(doc?.cupo_wsp_count || 0),
+    today,
+    contactosHoy,
+  });
+}
+
+async function readCupoWhatsapp(repo: ProspeccionRepository): Promise<CupoWhatsapp> {
+  const today = calendarDateInTimeZone();
+  const [doc, contactosHoy] = await Promise.all([
+    repo.findPlantilla(),
+    repo.countContactosEnFecha(today),
+  ]);
+  return cupoFromDoc(doc, today, contactosHoy);
+}
+
+async function bumpCupoWhatsapp(repo: ProspeccionRepository): Promise<CupoWhatsapp> {
+  const today = calendarDateInTimeZone();
+  let doc = await repo.findPlantilla();
+  if (!doc) {
+    await ensurePlantilla(repo);
+    doc = await repo.findPlantilla();
+  }
+  if (!doc) {
+    throw new ValidationError('No se pudo inicializar el cupo de WhatsApp');
+  }
+  const contactosHoy = await repo.countContactosEnFecha(today);
+  const next = nextCupoCount({
+    storedFecha: asDateOnly(doc?.cupo_wsp_fecha),
+    storedCount: Number(doc?.cupo_wsp_count || 0),
+    today,
+    contactosHoy,
+  });
+  await repo.updateCupoWhatsapp(doc.documentId, {
+    cupo_wsp_fecha: today,
+    cupo_wsp_count: next,
+  });
+  return { enviados: next, limite: WHATSAPP_DAILY_LIMIT, fecha: today };
+}
+
 function destinosForCanal(negocio: any, canal: EnviarCanal, texto: string) {
   if (canal === 'instagram') {
     const instagramUrl = buildInstagramDmUrl(
@@ -157,10 +206,18 @@ async function enviarMensaje(
   const texto = composeEnvioTexto(tipo, plantilla);
   const destinos = destinosForCanal(negocio, canal, texto);
 
+  let cupoWhatsapp = await readCupoWhatsapp(repo);
+  if (canal === 'whatsapp') {
+    if (cupoWhatsapp.enviados >= cupoWhatsapp.limite) {
+      throw new ValidationError(`Llegaste al cupo de ${cupoWhatsapp.limite} WhatsApp de hoy`);
+    }
+    cupoWhatsapp = await bumpCupoWhatsapp(repo);
+  }
+
   if (tipo === 'ficha_mensaje') {
     await upsertContacto(repo, negocioDocumentId, tipo);
   }
-  return { ...destinos, texto, negocio: mapNegocioForPanel(negocio) };
+  return { ...destinos, texto, negocio: mapNegocioForPanel(negocio), cupoWhatsapp };
 }
 
 export function createProspeccionService(strapi: any) {
@@ -190,6 +247,7 @@ export function createProspeccionService(strapi: any) {
       if (!negocio) throw new NotFoundError('Negocio');
       return mapNegocioForPanel(negocio);
     },
+    getCupoWhatsapp: () => readCupoWhatsapp(repo),
     enviar: (
       userId: number,
       negocioDocumentId: string,

@@ -48,6 +48,12 @@ export default {
       config: { ...adminAuth, middlewares: ['global::require-admin'] },
     },
     {
+      method: 'GET',
+      path: '/prospeccion/cupo-whatsapp',
+      handler: 'prospeccion.getCupoWhatsapp',
+      config: { ...adminAuth, middlewares: ['global::require-admin'] },
+    },
+    {
       method: 'POST',
       path: '/prospeccion/enviar',
       handler: 'prospeccion.enviar',
