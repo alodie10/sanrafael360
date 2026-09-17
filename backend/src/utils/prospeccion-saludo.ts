@@ -24,3 +24,26 @@ export function hourInTimeZone(
 export function greetingNow(now: Date = new Date()): string {
   return greetingForHour(hourInTimeZone(now));
 }
+
+export function calendarDateInTimeZone(
+  now: Date = new Date(),
+  timeZone: string = PROSPECCION_TZ
+): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now);
+  const year = parts.find((part) => part.type === 'year')?.value;
+  const month = parts.find((part) => part.type === 'month')?.value;
+  const day = parts.find((part) => part.type === 'day')?.value;
+  return `${year}-${month}-${day}`;
+}
+
+export function mendozaDayRange(date: string) {
+  return {
+    $gte: `${date}T00:00:00.000-03:00`,
+    $lte: `${date}T23:59:59.999-03:00`,
+  };
+}

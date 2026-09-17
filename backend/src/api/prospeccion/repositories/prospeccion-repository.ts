@@ -1,3 +1,4 @@
+import { mendozaDayRange } from '../../../utils/prospeccion-saludo';
 import {
   DEFAULT_PROSPECCION_PLANTILLA,
   type ProspeccionPlantillaFields,
@@ -33,6 +34,22 @@ export class ProspeccionRepository {
     data: { texto_ficha: string; mensaje: string }
   ) {
     return this.strapi.documents(PLANTILLA_UID).update({ documentId, data });
+  }
+
+  async updateCupoWhatsapp(
+    documentId: string,
+    data: { cupo_wsp_fecha: string; cupo_wsp_count: number }
+  ) {
+    return this.strapi.documents(PLANTILLA_UID).update({ documentId, data });
+  }
+
+  async countContactosEnFecha(fecha: string) {
+    const rows = await this.strapi.documents(CONTACTO_UID).findMany({
+      filters: { ultimo_envio_at: mendozaDayRange(fecha) },
+      fields: ['documentId'],
+      limit: 100,
+    });
+    return rows?.length || 0;
   }
 
   async findNegocioByDocumentId(documentId: string) {
@@ -74,8 +91,8 @@ export class ProspeccionRepository {
     const filters: Record<string, unknown> = {};
     if (query.startDate && query.endDate) {
       filters.ultimo_envio_at = {
-        $gte: `${query.startDate}T00:00:00.000-03:00`,
-        $lte: `${query.endDate}T23:59:59.999-03:00`,
+        $gte: mendozaDayRange(query.startDate).$gte,
+        $lte: mendozaDayRange(query.endDate).$lte,
       };
     }
     if (query.q?.trim()) {

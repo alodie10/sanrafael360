@@ -24,6 +24,12 @@ export type ProspeccionAlcanzado = {
   negocio: ProspeccionNegocio | null;
 };
 
+export type ProspeccionCupoWhatsapp = {
+  enviados: number;
+  limite: number;
+  fecha: string;
+};
+
 const TZ = "America/Argentina/Mendoza";
 
 export function greetingForHour(hour: number): string {

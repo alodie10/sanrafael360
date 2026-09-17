@@ -59,6 +59,12 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     ctx.send({ data });
   }),
 
+  getCupoWhatsapp: asyncHandler(async (ctx: any) => {
+    assertAdmin(ctx);
+    const data = await createProspeccionService(strapi).getCupoWhatsapp();
+    ctx.send({ data });
+  }),
+
   enviar: asyncHandler(async (ctx: any) => {
     const { negocioDocumentId, tipo, canal } = ctx.request.body || {};
     const data = await createProspeccionService(strapi).enviar(

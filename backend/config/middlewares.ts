@@ -49,6 +49,7 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Middlewar
     config: {
       origin: [
         'http://localhost:3000',
+        'http://127.0.0.1:3000',
         'http://localhost:8081',
         'https://sanrafael360.com',
         'https://www.sanrafael360.com',
