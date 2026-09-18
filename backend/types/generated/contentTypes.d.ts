@@ -722,7 +722,14 @@ export interface ApiCrmContactoCrmContacto extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     en_cola: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     estado: Schema.Attribute.Enumeration<
-      ['nuevo', 'contactado', 'en_conversacion', 'ganado', 'descartado']
+      [
+        'nuevo',
+        'contactado',
+        'en_conversacion',
+        'error',
+        'ganado',
+        'descartado',
+      ]
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'nuevo'>;

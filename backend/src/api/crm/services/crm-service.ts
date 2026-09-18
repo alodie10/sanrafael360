@@ -27,23 +27,11 @@ import {
   patchContactoTrasFicha,
 } from '../crm-ficha';
 import { foldAlcanzados } from '../crm-alcanzados';
+import { estadoYNotaPatch, type CrmListQuery } from '../crm-estado';
 import { adminCreateNegocio } from '../../negocio/services/admin-create-negocio';
 import { createCrmRepository, type CrmRepository } from '../repositories/crm-repository';
 
-export type CrmEstado =
-  | 'nuevo'
-  | 'contactado'
-  | 'en_conversacion'
-  | 'ganado'
-  | 'descartado';
-
-const ESTADOS: CrmEstado[] = [
-  'nuevo',
-  'contactado',
-  'en_conversacion',
-  'ganado',
-  'descartado',
-];
+export type { CrmEstado } from '../crm-estado';
 
 export function mapCrmContacto(row: any) {
   if (!row) return null;
@@ -125,8 +113,8 @@ export function createCrmService(strapi: any) {
   const repo = createCrmRepository(strapi);
   return {
     bootstrap: (actor: CrmActor, slug?: string) => bootstrap(repo, actor, slug),
-    listContactos: (actor: CrmActor, estado?: string, slug?: string) =>
-      listContactos(repo, actor, estado, slug),
+    listContactos: (actor: CrmActor, query?: CrmListQuery, slug?: string) =>
+      listContactos(repo, actor, query, slug),
     createManual: (actor: CrmActor, input: CrmIngestItem, slug?: string) =>
       createManual(repo, actor, input, slug),
     ingest: (actor: CrmActor, payload: string, slug?: string) =>
@@ -160,7 +148,7 @@ async function listTenantsForAdmin(repo: CrmRepository, actor: CrmActor) {
 
 async function bootstrap(repo: CrmRepository, actor: CrmActor, slug?: string) {
   const { comercio, plantilla } = await loadTenant(repo, actor, slug);
-  const contactos = await repo.listContactos(comercio.documentId);
+  const contactos = await repo.listContactos(comercio.documentId, { soloCola: true });
   return {
     comercio: mapTenant(comercio),
     plantilla: {
@@ -178,11 +166,11 @@ async function bootstrap(repo: CrmRepository, actor: CrmActor, slug?: string) {
 async function listContactos(
   repo: CrmRepository,
   actor: CrmActor,
-  estado?: string,
+  query: CrmListQuery | undefined,
   slug?: string
 ) {
   const { comercio } = await loadTenant(repo, actor, slug);
-  const rows = await repo.listContactos(comercio.documentId, estado);
+  const rows = await repo.listContactos(comercio.documentId, query);
   return (rows || []).map(mapCrmContacto);
 }
 
@@ -240,13 +228,6 @@ async function updatePlantilla(
   };
 }
 
-function assertEstado(value: unknown): CrmEstado {
-  if (typeof value !== 'string' || !ESTADOS.includes(value as CrmEstado)) {
-    throw new ValidationError('estado inválido');
-  }
-  return value as CrmEstado;
-}
-
 async function updateContacto(
   repo: CrmRepository,
   actor: CrmActor,
@@ -257,9 +238,7 @@ async function updateContacto(
   const { comercio } = await loadTenant(repo, actor, slug);
   const row = await repo.findContacto(documentId);
   assertContactoInTenant(row, comercio.documentId);
-  const data: Record<string, unknown> = {};
-  if (patch.estado != null) data.estado = assertEstado(patch.estado);
-  if (patch.nota != null) data.nota = String(patch.nota);
+  const data: Record<string, unknown> = estadoYNotaPatch(patch);
   if (patch.no_contactar != null) data.no_contactar = Boolean(patch.no_contactar);
   if (patch.telefono != null) {
     data.telefono = String(patch.telefono).trim();

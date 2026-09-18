@@ -4,13 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Megaphone } from "lucide-react";
 import { STRAPI_URL, isBrowserNetworkError } from "@/lib/strapi";
-import type { CrmBootstrap, CrmContacto, CrmCupo, CrmEstado } from "@/lib/crm";
-import { crmSlugQuery } from "@/lib/crm";
+import type { CrmBootstrap, CrmContacto, CrmCupo, CrmEstado, CrmLeadFiltro } from "@/lib/crm";
+import { crmListQuery, crmSlugQuery } from "@/lib/crm";
 import CrmManualForm from "./CrmManualForm";
 import CrmIngestPanel from "./CrmIngestPanel";
 import CrmContactList, { type CrmCategoria } from "./CrmContactList";
 import CrmPlantillaForm from "./CrmPlantillaForm";
-import CrmAlcanzadosList, { type CrmAlcanzado } from "./CrmAlcanzadosList";
+import CrmLeadFilters from "./CrmLeadFilters";
+import CrmContactadosList from "./CrmContactadosList";
 
 type Props = { jwt: string; isAdmin: boolean };
 
@@ -28,7 +29,11 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
   const [busy, setBusy] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [categorias, setCategorias] = useState<CrmCategoria[]>([]);
-  const [alcanzados, setAlcanzados] = useState<CrmAlcanzado[]>([]);
+  const [leads, setLeads] = useState<CrmContacto[]>([]);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [filtro, setFiltro] = useState<CrmLeadFiltro>({ estado: "", desde: "", hasta: "" });
+  const filtroRef = useRef(filtro);
+  filtroRef.current = filtro;
 
   const load = useCallback(
     async (nextSlug?: string) => {
@@ -49,12 +54,12 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
         slugRef.current = json.data.comercio.slug;
         setSlug(json.data.comercio.slug);
       }
-      const hist = await fetch(
-        `${STRAPI_URL}/api/crm/alcanzados${crmSlugQuery(json.data?.comercio?.slug)}`,
+      const list = await fetch(
+        `${STRAPI_URL}/api/crm/contactos${crmListQuery(json.data?.comercio?.slug, filtroRef.current)}`,
         { headers: { Authorization: `Bearer ${jwt}` }, cache: "no-store" }
       );
-      const histJson = await hist.json().catch(() => ({}));
-      if (hist.ok) setAlcanzados(histJson.data || []);
+      const listJson = await list.json().catch(() => ({}));
+      if (list.ok) setLeads(listJson.data || []);
     },
     [jwt]
   );
@@ -201,16 +206,30 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
       setError(apiError(json, "No se pudo actualizar"));
       return;
     }
-    setBoot((prev) =>
-      prev
-        ? {
-            ...prev,
-            contactos: prev.contactos.map((c: CrmContacto) =>
-              c.documentId === documentId ? json.data : c
-            ),
-          }
-        : prev
-    );
+    await load();
+  }
+
+  async function guardarNota(documentId: string, nota: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`${STRAPI_URL}/api/crm/contactos/${documentId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(withSlug({ nota })),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(apiError(json, "No se pudo guardar el comentario"));
+      setNotice("Comentario guardado");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function cambiarCategoria(documentId: string, categoriaId: string) {
@@ -394,9 +413,27 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
               />
             </section>
 
-            <section>
-              <h2 className="text-2xl font-serif text-white italic mb-6">Contactos alcanzados</h2>
-              <CrmAlcanzadosList rows={alcanzados} />
+            <section className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-5">
+              <h2 className="text-2xl font-serif text-white italic">Contactos</h2>
+              <CrmLeadFilters
+                filtro={filtro}
+                onChange={(next) => {
+                  setFiltro(next);
+                  filtroRef.current = next;
+                  setSelectedLeadId(null);
+                  load().catch((err) =>
+                    setError(err instanceof Error ? err.message : "No se pudo filtrar")
+                  );
+                }}
+              />
+              <CrmContactadosList
+                contactos={leads}
+                selectedId={selectedLeadId}
+                onSelect={setSelectedLeadId}
+                onNota={guardarNota}
+                onEstado={cambiarEstado}
+                busy={busy}
+              />
             </section>
           </>
         )}
