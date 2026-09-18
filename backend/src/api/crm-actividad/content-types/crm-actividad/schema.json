@@ -1,0 +1,34 @@
+{
+  "kind": "collectionType",
+  "collectionName": "crm_actividades",
+  "info": {
+    "singularName": "crm-actividad",
+    "pluralName": "crm-actividades",
+    "displayName": "CRM Actividad",
+    "description": "Log append-only de envíos y notas del CRM."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "tipo": {
+      "type": "enumeration",
+      "enum": ["envio_whatsapp", "nota", "estado"],
+      "required": true
+    },
+    "canal": {
+      "type": "enumeration",
+      "enum": ["whatsapp", "instagram", "sistema"],
+      "required": true
+    },
+    "texto": {
+      "type": "text"
+    },
+    "contacto": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::crm-contacto.crm-contacto",
+      "inversedBy": "actividades"
+    }
+  }
+}

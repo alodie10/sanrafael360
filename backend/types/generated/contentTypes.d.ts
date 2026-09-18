@@ -595,6 +595,196 @@ export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiCrmActividadCrmActividad
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'crm_actividades';
+  info: {
+    description: 'Log append-only de env\u00EDos y notas del CRM.';
+    displayName: 'CRM Actividad';
+    pluralName: 'crm-actividades';
+    singularName: 'crm-actividad';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    canal: Schema.Attribute.Enumeration<['whatsapp', 'instagram', 'sistema']> &
+      Schema.Attribute.Required;
+    contacto: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::crm-contacto.crm-contacto'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::crm-actividad.crm-actividad'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    texto: Schema.Attribute.Text;
+    tipo: Schema.Attribute.Enumeration<['envio_whatsapp', 'nota', 'estado']> &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiCrmComercioCrmComercio extends Struct.CollectionTypeSchema {
+  collectionName: 'crm_comercios';
+  info: {
+    description: 'Tenant del CRM de captaci\u00F3n. Cupo aislado de prospecci\u00F3n.';
+    displayName: 'CRM Comercio';
+    pluralName: 'crm-comercios';
+    singularName: 'crm-comercio';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    contactos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::crm-contacto.crm-contacto'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    cupo_wsp_count: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    cupo_wsp_fecha: Schema.Attribute.Date;
+    cupo_wsp_limite: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<25>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::crm-comercio.crm-comercio'
+    > &
+      Schema.Attribute.Private;
+    modo: Schema.Attribute.Enumeration<['guia', 'agenda']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'guia'>;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    owner_email: Schema.Attribute.Email;
+    plantilla: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::crm-plantilla.crm-plantilla'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'nombre'> & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiCrmContactoCrmContacto extends Struct.CollectionTypeSchema {
+  collectionName: 'crm_contactos';
+  info: {
+    description: 'Lead/contacto del CRM. No es un negocio de la gu\u00EDa.';
+    displayName: 'CRM Contacto';
+    pluralName: 'crm-contactos';
+    singularName: 'crm-contacto';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    actividades: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::crm-actividad.crm-actividad'
+    >;
+    categoria: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::categoria.categoria'
+    >;
+    comercio: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::crm-comercio.crm-comercio'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    en_cola: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    estado: Schema.Attribute.Enumeration<
+      ['nuevo', 'contactado', 'en_conversacion', 'ganado', 'descartado']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'nuevo'>;
+    instagram: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::crm-contacto.crm-contacto'
+    > &
+      Schema.Attribute.Private;
+    negocio: Schema.Attribute.Relation<'oneToOne', 'api::negocio.negocio'>;
+    no_contactar: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    nota: Schema.Attribute.Text;
+    origen: Schema.Attribute.Enumeration<['manual', 'lista_ia']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'manual'>;
+    publishedAt: Schema.Attribute.DateTime;
+    telefono: Schema.Attribute.String;
+    telefono_normalizado: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiCrmPlantillaCrmPlantilla
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'crm_plantillas';
+  info: {
+    description: 'Copy y prompt IA del tenant CRM. Aislado de prospecci\u00F3n.';
+    displayName: 'CRM Plantilla';
+    pluralName: 'crm-plantillas';
+    singularName: 'crm-plantilla';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    comercio: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::crm-comercio.crm-comercio'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    firma: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::crm-plantilla.crm-plantilla'
+    > &
+      Schema.Attribute.Private;
+    mensaje: Schema.Attribute.Text & Schema.Attribute.Required;
+    prompt_ia: Schema.Attribute.Text & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiDailyStatDailyStat extends Struct.CollectionTypeSchema {
   collectionName: 'daily_stats';
   info: {
@@ -2021,6 +2211,10 @@ declare module '@strapi/strapi' {
       'api::atributo.atributo': ApiAtributoAtributo;
       'api::categoria.categoria': ApiCategoriaCategoria;
       'api::cliente.cliente': ApiClienteCliente;
+      'api::crm-actividad.crm-actividad': ApiCrmActividadCrmActividad;
+      'api::crm-comercio.crm-comercio': ApiCrmComercioCrmComercio;
+      'api::crm-contacto.crm-contacto': ApiCrmContactoCrmContacto;
+      'api::crm-plantilla.crm-plantilla': ApiCrmPlantillaCrmPlantilla;
       'api::daily-stat.daily-stat': ApiDailyStatDailyStat;
       'api::efemeride.efemeride': ApiEfemerideEfemeride;
       'api::guide-expansion.guide-expansion': ApiGuideExpansionGuideExpansion;

@@ -38,6 +38,7 @@ import AdminProspeccionPanel from "./AdminProspeccionPanel";
 import AdminEfemeridesPanel from "./AdminEfemeridesPanel";
 import AdminChatbotPanel from "./AdminChatbotPanel";
 import type { ProspeccionNegocio } from "@/lib/prospeccion";
+import { CRM_CORTE_NAV } from "@/lib/crm-corte";
 
 export default function AdminDashboardContainer({ session, initialClaims }: { session: any, initialClaims: any[] }) {
   const [activeTab, setActiveTab] = useState<'claims' | 'support' | 'activity' | 'leads' | 'alta-negocio' | 'discovery' | 'stats' | 'payments' | 'clientes' | 'prospeccion' | 'efemerides' | 'chatbot'>('payments');
@@ -183,48 +184,63 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
               </div>
             </button>
 
-            <button 
-              onClick={() => setActiveTab('leads')}
-              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'leads' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
-            >
-              <div className="flex items-center gap-3">
-                <Users className="w-4 h-4" /> 
-                <span>Nuevos Interesados</span>
-              </div>
-              {leadsCount > 0 && (
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${activeTab === 'leads' ? 'bg-black text-primary' : 'bg-primary text-black'}`}>
-                  {leadsCount}
-                </span>
-              )}
-            </button>
-
-            <button 
-              type="button"
-              onClick={() => setActiveTab('alta-negocio')}
-              className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'alta-negocio' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
-              data-testid="admin-alta-negocio-nav"
-            >
-              <Building2 className="w-4 h-4" /> 
-              <span>Crear negocio</span>
-            </button>
-
-            <button 
-              onClick={() => setActiveTab('discovery')}
-              className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'discovery' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
-            >
-              <Search className="w-4 h-4" /> 
-              <span>Importar desde Places</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('prospeccion')}
-              className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'prospeccion' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
-              data-testid="admin-prospeccion-nav"
+            <Link
+              href="/portal/crm"
+              className="w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              data-testid="admin-crm-nav"
             >
               <Megaphone className="w-4 h-4" />
-              <span>Prospección</span>
-            </button>
+              <span>CRM de captación</span>
+            </Link>
+
+            {!CRM_CORTE_NAV && (
+              <>
+                <button 
+                  onClick={() => setActiveTab('leads')}
+                  className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'leads' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+                  data-testid="admin-leads-nav"
+                >
+                  <div className="flex items-center gap-3">
+                    <Users className="w-4 h-4" /> 
+                    <span>Nuevos Interesados</span>
+                  </div>
+                  {leadsCount > 0 && (
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${activeTab === 'leads' ? 'bg-black text-primary' : 'bg-primary text-black'}`}>
+                      {leadsCount}
+                    </span>
+                  )}
+                </button>
+
+                <button 
+                  type="button"
+                  onClick={() => setActiveTab('alta-negocio')}
+                  className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'alta-negocio' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+                  data-testid="admin-alta-negocio-nav"
+                >
+                  <Building2 className="w-4 h-4" /> 
+                  <span>Crear negocio</span>
+                </button>
+
+                <button 
+                  onClick={() => setActiveTab('discovery')}
+                  className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'discovery' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+                  data-testid="admin-discovery-nav"
+                >
+                  <Search className="w-4 h-4" /> 
+                  <span>Importar desde Places</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('prospeccion')}
+                  className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg border ${activeTab === 'prospeccion' ? 'bg-primary text-black border-primary shadow-primary/20' : 'bg-white/5 text-zinc-500 hover:text-white border-transparent hover:border-white/10'}`}
+                  data-testid="admin-prospeccion-nav"
+                >
+                  <Megaphone className="w-4 h-4" />
+                  <span>Prospección</span>
+                </button>
+              </>
+            )}
 
             <button
               type="button"
@@ -352,13 +368,13 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
               </div>
             )}
 
-            {activeTab === 'alta-negocio' && (
+            {!CRM_CORTE_NAV && activeTab === 'alta-negocio' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <AdminCreateNegocioPanel jwt={session.jwt as string} />
               </div>
             )}
 
-            {activeTab === 'discovery' && (
+            {!CRM_CORTE_NAV && activeTab === 'discovery' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Importar Places (Curación Proactiva)</h2>
                 <AdminDiscoveryTool
@@ -371,7 +387,7 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
               </div>
             )}
 
-            {activeTab === 'prospeccion' && (
+            {!CRM_CORTE_NAV && activeTab === 'prospeccion' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <AdminProspeccionPanel
                   jwt={session.jwt as string}
@@ -406,7 +422,7 @@ export default function AdminDashboardContainer({ session, initialClaims }: { se
               />
             )}
 
-            {activeTab === 'leads' && (
+            {!CRM_CORTE_NAV && activeTab === 'leads' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h2 className="text-2xl font-serif font-bold text-white mb-6 italic">Bandeja de Interesados (Leads)</h2>
                 <AdminLeadsInbox 
