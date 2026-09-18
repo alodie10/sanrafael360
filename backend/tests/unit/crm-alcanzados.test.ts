@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { foldAlcanzados } from '../../src/api/crm/crm-alcanzados';
+import { foldAlcanzados, filterAlcanzados } from '../../src/api/crm/crm-alcanzados';
 
 describe('foldAlcanzados', () => {
   it('keeps the latest WhatsApp per contact', () => {
@@ -25,5 +25,18 @@ describe('foldAlcanzados', () => {
     expect(folded[0].nombre).toBe('Taller');
     expect(folded[0].enviadoAt).toBe('2026-09-18T12:00:00.000Z');
     expect(folded[1].nombre).toBe('Salon');
+  });
+
+  it('keeps the contact comment and filters after WhatsApp', () => {
+    const folded = foldAlcanzados([
+      {
+        documentId: 'a1',
+        createdAt: '2026-09-18T12:00:00.000Z',
+        contacto: { documentId: 'c1', nombre: 'Taller', nota: 'Es peluquería', estado: 'contactado' },
+      },
+    ]);
+    expect(folded[0].nota).toBe('Es peluquería');
+    expect(filterAlcanzados(folded, { estado: 'error' })).toHaveLength(0);
+    expect(filterAlcanzados(folded, { estado: 'contactado', desde: '2026-09-18' })).toHaveLength(1);
   });
 });

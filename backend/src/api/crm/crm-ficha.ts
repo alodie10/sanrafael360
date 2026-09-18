@@ -11,10 +11,12 @@ export function categoriaIdOf(row: any): string {
 
 export function negocioResumen(row: any): { documentId: string; slug: string; nombre: string } | null {
   const rel = row?.negocio;
-  if (!rel || typeof rel === 'string') return null;
-  if (!rel.documentId) return null;
+  if (!rel) return null;
+  if (typeof rel === 'string') return { documentId: rel, slug: '', nombre: '' };
+  const documentId = rel.documentId || rel.id;
+  if (!documentId) return null;
   return {
-    documentId: rel.documentId,
+    documentId: String(documentId),
     slug: rel.slug || '',
     nombre: rel.nombre || '',
   };

@@ -50,5 +50,6 @@ describe('crm-ficha', () => {
     expect(
       negocioResumen({ negocio: { documentId: 'n1', slug: 'taller-x', nombre: 'Taller X' } })
     ).toEqual({ documentId: 'n1', slug: 'taller-x', nombre: 'Taller X' });
+    expect(negocioResumen({ negocio: 'n1' })?.documentId).toBe('n1');
   });
 });

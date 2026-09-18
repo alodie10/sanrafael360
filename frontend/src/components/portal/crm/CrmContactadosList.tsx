@@ -24,7 +24,7 @@ export default function CrmContactadosList({
   if (!contactos.length) {
     return (
       <p className="text-zinc-500 text-sm italic" data-testid="crm-alcanzados-empty">
-        No hay contactos con este filtro.
+        No hay contactos alcanzados con este filtro. Aparecen acá cuando abrís WhatsApp.
       </p>
     );
   }

@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Megaphone } from "lucide-react";
 import { STRAPI_URL, isBrowserNetworkError } from "@/lib/strapi";
-import type { CrmBootstrap, CrmContacto, CrmCupo, CrmEstado, CrmLeadFiltro } from "@/lib/crm";
-import { crmListQuery, crmSlugQuery } from "@/lib/crm";
+import type { CrmAlcanzado, CrmBootstrap, CrmContacto, CrmCupo, CrmEstado, CrmLeadFiltro } from "@/lib/crm";
+import { alcanzadoAsContacto, crmSlugQuery, filterAlcanzadosUi } from "@/lib/crm";
 import CrmManualForm from "./CrmManualForm";
 import CrmIngestPanel from "./CrmIngestPanel";
 import CrmContactList, { type CrmCategoria } from "./CrmContactList";
@@ -29,11 +29,10 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
   const [busy, setBusy] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [categorias, setCategorias] = useState<CrmCategoria[]>([]);
-  const [leads, setLeads] = useState<CrmContacto[]>([]);
+  const [alcanzados, setAlcanzados] = useState<CrmAlcanzado[]>([]);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<CrmLeadFiltro>({ estado: "", desde: "", hasta: "" });
-  const filtroRef = useRef(filtro);
-  filtroRef.current = filtro;
+  const [tab, setTab] = useState<"mesa" | "alcanzados">("mesa");
 
   const load = useCallback(
     async (nextSlug?: string) => {
@@ -54,12 +53,12 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
         slugRef.current = json.data.comercio.slug;
         setSlug(json.data.comercio.slug);
       }
-      const list = await fetch(
-        `${STRAPI_URL}/api/crm/contactos${crmListQuery(json.data?.comercio?.slug, filtroRef.current)}`,
+      const hist = await fetch(
+        `${STRAPI_URL}/api/crm/alcanzados${crmSlugQuery(json.data?.comercio?.slug)}`,
         { headers: { Authorization: `Bearer ${jwt}` }, cache: "no-store" }
       );
-      const listJson = await list.json().catch(() => ({}));
-      if (list.ok) setLeads(listJson.data || []);
+      const histJson = await hist.json().catch(() => ({}));
+      if (hist.ok) setAlcanzados(histJson.data || []);
     },
     [jwt]
   );
@@ -153,15 +152,21 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo armar WhatsApp"));
+      setBoot((prev) =>
+        prev
+          ? { ...prev, contactos: prev.contactos.filter((c) => c.documentId !== documentId) }
+          : prev
+      );
       if (json.data?.whatsappUrl) {
         window.open(json.data.whatsappUrl, "_blank", "noopener,noreferrer");
       }
+      if (json.data?.aviso) setNotice(json.data.aviso);
       if (json.data?.cupo) patchCupo(json.data.cupo);
-      await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
     } finally {
       setBusyId(null);
+      await load().catch(() => undefined);
     }
   }
 
@@ -338,6 +343,32 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
               <h1 className="text-4xl font-serif font-bold text-white italic">CRM de captación</h1>
             </div>
           </div>
+          <div className="flex flex-wrap gap-2 mt-8">
+            <button
+              type="button"
+              data-testid="crm-tab-mesa"
+              onClick={() => setTab("mesa")}
+              className={`px-5 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] border transition-all ${
+                tab === "mesa"
+                  ? "bg-primary text-black border-primary"
+                  : "bg-white/5 text-zinc-400 border-transparent hover:text-white"
+              }`}
+            >
+              Mesa y cola
+            </button>
+            <button
+              type="button"
+              data-testid="crm-tab-alcanzados"
+              onClick={() => setTab("alcanzados")}
+              className={`px-5 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] border transition-all ${
+                tab === "alcanzados"
+                  ? "bg-primary text-black border-primary"
+                  : "bg-white/5 text-zinc-400 border-transparent hover:text-white"
+              }`}
+            >
+              Contactos alcanzados
+            </button>
+          </div>
         </div>
       </div>
 
@@ -363,78 +394,80 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
               Cupo CRM hoy: {boot?.cupo.enviados ?? "—"} / {boot?.cupo.limite ?? 25}
             </p>
 
-            <section className="grid md:grid-cols-2 gap-10">
-              <div className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-4">
-                <h2 className="text-2xl font-serif text-white italic">Alta manual</h2>
-                <CrmManualForm onCreate={createManual} busy={busy} />
-              </div>
-              <div className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-4">
-                <h2 className="text-2xl font-serif text-white italic">Pegar lista de la IA</h2>
-                <CrmIngestPanel
-                  prompt={boot?.plantilla.prompt_ia || ""}
-                  onIngest={ingest}
+            {tab === "mesa" && (
+              <>
+                <section className="grid md:grid-cols-2 gap-10">
+                  <div className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-4">
+                    <h2 className="text-2xl font-serif text-white italic">Alta manual</h2>
+                    <CrmManualForm onCreate={createManual} busy={busy} />
+                  </div>
+                  <div className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-4">
+                    <h2 className="text-2xl font-serif text-white italic">Pegar lista de la IA</h2>
+                    <CrmIngestPanel
+                      prompt={boot?.plantilla.prompt_ia || ""}
+                      onIngest={ingest}
+                      busy={busy}
+                    />
+                  </div>
+                </section>
+
+                <section className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-4">
+                  <h2 className="text-2xl font-serif text-white italic">Mensaje WhatsApp</h2>
+                  <CrmPlantillaForm
+                    mensaje={boot?.plantilla.mensaje || ""}
+                    firma={boot?.plantilla.firma || ""}
+                    onSave={guardarPlantilla}
+                    busy={busy}
+                  />
+                </section>
+
+                <section>
+                  <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <h2 className="text-2xl font-serif text-white italic">Cola</h2>
+                    <button
+                      type="button"
+                      data-testid="crm-limpiar-cola"
+                      disabled={busy || !(boot?.contactos || []).length}
+                      onClick={limpiarCola}
+                      className="px-4 py-2 border border-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
+                    >
+                      Limpiar cola
+                    </button>
+                  </div>
+                  <CrmContactList
+                    contactos={boot?.contactos || []}
+                    categorias={categorias}
+                    onEnviar={enviar}
+                    onNota={guardarNota}
+                    onCategoria={cambiarCategoria}
+                    onCrearFicha={crearFicha}
+                    canCrearFicha={isAdmin && boot?.comercio.modo !== "agenda"}
+                    busyId={busyId}
+                  />
+                </section>
+              </>
+            )}
+
+            {tab === "alcanzados" && (
+              <section className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-5">
+                <h2 className="text-2xl font-serif text-white italic">Contactos alcanzados</h2>
+                <CrmLeadFilters
+                  filtro={filtro}
+                  onChange={(next) => {
+                    setFiltro(next);
+                    setSelectedLeadId(null);
+                  }}
+                />
+                <CrmContactadosList
+                  contactos={filterAlcanzadosUi(alcanzados, filtro).map(alcanzadoAsContacto)}
+                  selectedId={selectedLeadId}
+                  onSelect={setSelectedLeadId}
+                  onNota={guardarNota}
+                  onEstado={cambiarEstado}
                   busy={busy}
                 />
-              </div>
-            </section>
-
-            <section className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-4">
-              <h2 className="text-2xl font-serif text-white italic">Mensaje WhatsApp</h2>
-              <CrmPlantillaForm
-                mensaje={boot?.plantilla.mensaje || ""}
-                firma={boot?.plantilla.firma || ""}
-                onSave={guardarPlantilla}
-                busy={busy}
-              />
-            </section>
-
-            <section>
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                <h2 className="text-2xl font-serif text-white italic">Cola</h2>
-                <button
-                  type="button"
-                  data-testid="crm-limpiar-cola"
-                  disabled={busy || !(boot?.contactos || []).length}
-                  onClick={limpiarCola}
-                  className="px-4 py-2 border border-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
-                >
-                  Limpiar cola
-                </button>
-              </div>
-              <CrmContactList
-                contactos={boot?.contactos || []}
-                categorias={categorias}
-                onEnviar={enviar}
-                onEstado={cambiarEstado}
-                onCategoria={cambiarCategoria}
-                onCrearFicha={crearFicha}
-                canCrearFicha={isAdmin && boot?.comercio.modo !== "agenda"}
-                busyId={busyId}
-              />
-            </section>
-
-            <section className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-5">
-              <h2 className="text-2xl font-serif text-white italic">Contactos</h2>
-              <CrmLeadFilters
-                filtro={filtro}
-                onChange={(next) => {
-                  setFiltro(next);
-                  filtroRef.current = next;
-                  setSelectedLeadId(null);
-                  load().catch((err) =>
-                    setError(err instanceof Error ? err.message : "No se pudo filtrar")
-                  );
-                }}
-              />
-              <CrmContactadosList
-                contactos={leads}
-                selectedId={selectedLeadId}
-                onSelect={setSelectedLeadId}
-                onNota={guardarNota}
-                onEstado={cambiarEstado}
-                busy={busy}
-              />
-            </section>
+              </section>
+            )}
           </>
         )}
       </main>

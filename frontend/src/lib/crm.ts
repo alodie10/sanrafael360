@@ -90,3 +90,41 @@ export function formatCrmFecha(iso?: string) {
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString("es-AR", { dateStyle: "short" });
 }
+
+export type CrmAlcanzado = {
+  documentId: string;
+  enviadoAt: string;
+  nombre: string;
+  telefono: string;
+  nota: string;
+  estado: CrmEstado;
+  origen: CrmContacto["origen"];
+  categoriaNombre: string;
+  negocioSlug: string;
+  contactoDocumentId: string;
+};
+
+export function alcanzadoAsContacto(row: CrmAlcanzado): CrmContacto {
+  return {
+    documentId: row.contactoDocumentId || row.documentId,
+    nombre: row.nombre,
+    telefono: row.telefono,
+    instagram: "",
+    nota: row.nota || "",
+    origen: row.origen || "manual",
+    estado: row.estado || "contactado",
+    no_contactar: false,
+    categoriaNombre: row.categoriaNombre,
+    createdAt: row.enviadoAt,
+  };
+}
+
+export function filterAlcanzadosUi(rows: CrmAlcanzado[], filtro: CrmLeadFiltro) {
+  return rows.filter((row) => {
+    if (filtro.estado && row.estado !== filtro.estado) return false;
+    const day = String(row.enviadoAt || "").slice(0, 10);
+    if (filtro.desde && day < filtro.desde) return false;
+    if (filtro.hasta && day > filtro.hasta) return false;
+    return true;
+  });
+}
