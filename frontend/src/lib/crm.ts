@@ -2,6 +2,7 @@ export type CrmEstado =
   | "nuevo"
   | "contactado"
   | "en_conversacion"
+  | "error"
   | "ganado"
   | "descartado";
 
@@ -49,10 +50,43 @@ export const CRM_ESTADOS: { id: CrmEstado; label: string }[] = [
   { id: "nuevo", label: "Nuevo" },
   { id: "contactado", label: "Contactado" },
   { id: "en_conversacion", label: "En conversación" },
+  { id: "error", label: "Error WSP" },
   { id: "ganado", label: "Ganado" },
   { id: "descartado", label: "Descartado" },
 ];
 
+export type CrmLeadFiltro = {
+  estado: "" | CrmEstado;
+  desde: string;
+  hasta: string;
+};
+
+export function crmQuery(params: Record<string, string | undefined>) {
+  const q = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) q.set(key, value);
+  });
+  const text = q.toString();
+  return text ? `?${text}` : "";
+}
+
 export function crmSlugQuery(slug?: string) {
-  return slug ? `?slug=${encodeURIComponent(slug)}` : "";
+  return crmQuery({ slug });
+}
+
+export function crmListQuery(slug: string | undefined, filtro: CrmLeadFiltro) {
+  return crmQuery({
+    slug,
+    cola: "0",
+    estado: filtro.estado || undefined,
+    desde: filtro.desde || undefined,
+    hasta: filtro.hasta || undefined,
+  });
+}
+
+export function formatCrmFecha(iso?: string) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("es-AR", { dateStyle: "short" });
 }

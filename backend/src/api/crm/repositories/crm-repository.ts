@@ -1,4 +1,5 @@
 import { normalizeNombreKey } from '../crm-ingest';
+import { createdAtRange } from '../crm-estado';
 
 const COMERCIO = 'api::crm-comercio.crm-comercio';
 const CONTACTO = 'api::crm-contacto.crm-contacto';
@@ -59,12 +60,19 @@ export class CrmRepository {
     return this.strapi.documents(PLANTILLA).update({ documentId, data });
   }
 
-  listContactos(comercioDocumentId: string, estado?: string) {
+  listContactos(
+    comercioDocumentId: string,
+    query?: { estado?: string; desde?: string; hasta?: string; soloCola?: boolean }
+  ) {
     const filters: Record<string, unknown> = {
       comercio: { documentId: { $eq: comercioDocumentId } },
-      $or: [{ en_cola: { $eq: true } }, { en_cola: { $null: true } }],
     };
-    if (estado) filters.estado = { $eq: estado };
+    if (query?.soloCola !== false) {
+      filters.$or = [{ en_cola: { $eq: true } }, { en_cola: { $null: true } }];
+    }
+    if (query?.estado) filters.estado = { $eq: query.estado };
+    const createdAt = createdAtRange(query?.desde, query?.hasta);
+    if (createdAt) filters.createdAt = createdAt;
     return this.strapi.documents(CONTACTO).findMany({
       filters,
       sort: ['createdAt:desc'],

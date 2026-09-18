@@ -35,7 +35,7 @@
     },
     "estado": {
       "type": "enumeration",
-      "enum": ["nuevo", "contactado", "en_conversacion", "ganado", "descartado"],
+      "enum": ["nuevo", "contactado", "en_conversacion", "error", "ganado", "descartado"],
       "default": "nuevo",
       "required": true
     },

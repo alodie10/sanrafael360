@@ -7,7 +7,7 @@ Fecha: **17 de septiembre de 2026**.
 1. Tenant `sr360` (crm-comercio) con cupo propio.
 2. Contactos (`crm-contacto`): alta **manual** y **pegar JSON** de IA.
 3. Prompt copiable para cualquier IA (formato JSON fijo).
-4. Pipeline: `nuevo` / `contactado` / `en_conversacion` / `ganado` / `descartado`.
+4. Pipeline: `nuevo` / `contactado` / `en_conversacion` / `error` / `ganado` / `descartado`. Se puede volver a `nuevo`. Filtro por estado y fecha. Comentario en el lead.
 5. WhatsApp click-to-chat (`wa.me`). Enter lo da el humano. El sistema registra texto y fecha.
 6. Cola entre contactos `nuevo` con teléfono.
 7. Opt-out `no_contactar`.

@@ -24,6 +24,7 @@ test.describe('CRM piloto — flujo admin aislado', () => {
 
     await expect(page.getByTestId('crm-cupo')).toBeVisible();
     await expect(page.getByTestId('crm-limpiar-cola')).toBeVisible();
+    await expect(page.getByTestId('crm-filtro-estado')).toBeVisible();
     await expect(
       page.getByTestId('crm-alcanzados').or(page.getByTestId('crm-alcanzados-empty'))
     ).toBeVisible();

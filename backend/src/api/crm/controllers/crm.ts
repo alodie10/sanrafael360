@@ -25,9 +25,12 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
   }),
 
   listContactos: asyncHandler(async (ctx: any) => {
-    const estado = typeof ctx.query?.estado === 'string' ? ctx.query.estado : undefined;
     ctx.send({
-      data: await createCrmService(strapi).listContactos(actorFrom(ctx), estado, slugFrom(ctx)),
+      data: await createCrmService(strapi).listContactos(
+        actorFrom(ctx),
+        ctx.state.crmListQuery,
+        slugFrom(ctx)
+      ),
     });
   }),
 

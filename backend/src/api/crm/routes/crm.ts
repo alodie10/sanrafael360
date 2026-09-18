@@ -20,7 +20,10 @@ export default {
       method: 'GET',
       path: '/crm/contactos',
       handler: 'crm.listContactos',
-      config: { ...portalAuth, middlewares: ['api::crm.require-crm-portal'] },
+      config: {
+        ...portalAuth,
+        middlewares: ['api::crm.require-crm-portal', 'api::crm.crm-list-validator'],
+      },
     },
     {
       method: 'POST',

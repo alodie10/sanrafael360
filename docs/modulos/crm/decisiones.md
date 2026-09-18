@@ -51,3 +51,8 @@ Numeración **CRM-DEC-…**.
 - **Contexto:** Crear ficha marcaba el contacto como `ganado`. No había forma de vaciar la cola sin perder el rastro de WhatsApp.
 - **Decisión:** Crear ficha solo enlaza categoría + negocio; el estado lo cambia Diego. **Limpiar cola** oculta con `en_cola: false` y no borra. **Contactos alcanzados** se arma con `crm-actividad` `envio_whatsapp`, igual que Prospección.
 - **Qué se descartó:** Borrar contactos; usar `ganado` como señal de ficha publicada.
+
+### 2026-09-18 — CRM-DEC-011 — Error WSP y pipeline a mano
+- **Contexto:** Un `wa.me` puede fallar (número inválido). Diego necesita marcar eso, filtrar leads y dejar un comentario, y a veces devolverlos a Nuevo.
+- **Decisión:** Estado `error` (manual). Filtro por estado y/o fecha. Comentario = `nota`. Volver a `nuevo` reencola (`en_cola: true`).
+- **Qué se descartó:** Detectar el error de WhatsApp en automático; bloquear el paso a Nuevo.
