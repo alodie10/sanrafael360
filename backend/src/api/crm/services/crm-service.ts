@@ -28,6 +28,11 @@ import {
 } from '../crm-ficha';
 import { foldAlcanzados } from '../crm-alcanzados';
 import { estadoYNotaPatch, type CrmListQuery } from '../crm-estado';
+import {
+  assertPuedeEnviarWhatsapp,
+  avisoWhatsappSinUrl,
+  patchTrasWhatsapp,
+} from '../crm-enviar';
 import { adminCreateNegocio } from '../../negocio/services/admin-create-negocio';
 import { createCrmRepository, type CrmRepository } from '../repositories/crm-repository';
 
@@ -262,9 +267,7 @@ async function enviarWhatsapp(
   const { comercio, plantilla } = await loadTenant(repo, actor, slug);
   const contacto = await repo.findContacto(contactoDocumentId);
   assertContactoInTenant(contacto, comercio.documentId);
-  if (contacto.no_contactar) {
-    throw new ValidationError('Este contacto está marcado como no contactar');
-  }
+  assertPuedeEnviarWhatsapp(contacto);
   const firma =
     plantilla.firma ||
     (modoOf(comercio) === 'agenda' ? comercio.nombre : DEFAULT_CRM_FIRMA);
@@ -275,27 +278,23 @@ async function enviarWhatsapp(
     firma,
   });
   const whatsappUrl = buildWhatsappUrl(contacto.telefono, texto);
-  if (!whatsappUrl) {
-    throw new ValidationError('El contacto no tiene un teléfono de WhatsApp válido');
-  }
-  const cupo = await bumpCupo(repo, comercio);
+  const hasUrl = Boolean(whatsappUrl);
+  await repo.updateContacto(contacto.documentId, patchTrasWhatsapp(contacto.estado, hasUrl));
   await repo.createActividad({
     tipo: 'envio_whatsapp',
     canal: 'whatsapp',
-    texto,
+    texto: hasUrl ? texto : `WhatsApp no enviado: teléfono inválido. ${texto}`,
     contacto: contacto.documentId,
   });
-  if (contacto.estado === 'nuevo') {
-    await repo.updateContacto(contacto.documentId, { estado: 'contactado' });
-  }
+  let cupo = readCupo(comercio);
+  if (hasUrl) cupo = await bumpCupo(repo, comercio);
+  const updated = mapCrmContacto(await repo.findContacto(contacto.documentId));
   return {
-    whatsappUrl,
+    whatsappUrl: whatsappUrl || null,
     texto,
     cupo,
-    contacto: mapCrmContacto({
-      ...contacto,
-      estado: contacto.estado === 'nuevo' ? 'contactado' : contacto.estado,
-    }),
+    aviso: avisoWhatsappSinUrl(hasUrl),
+    contacto: updated,
   };
 }
 

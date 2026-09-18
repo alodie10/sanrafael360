@@ -56,3 +56,8 @@ Numeración **CRM-DEC-…**.
 - **Contexto:** Un `wa.me` puede fallar (número inválido). Diego necesita marcar eso, filtrar leads y dejar un comentario, y a veces devolverlos a Nuevo.
 - **Decisión:** Estado `error` (manual). Filtro por estado y/o fecha. Comentario = `nota`. Volver a `nuevo` reencola (`en_cola: true`).
 - **Qué se descartó:** Detectar el error de WhatsApp en automático; bloquear el paso a Nuevo.
+
+### 2026-09-18 — CRM-DEC-012 — Ficha → WhatsApp → sale de la cola
+- **Contexto:** Diego arma la ficha con el comentario, después manda WhatsApp. Si el número falla, igual tiene que salir de la cola para marcarlo Error en Contactados.
+- **Decisión:** WhatsApp se habilita recién con ficha. Al tocarlo, `en_cola: false` aunque no haya `wa.me`. El estado Error lo pone Diego en el listado.
+- **Qué se descartó:** WhatsApp antes de la ficha; marcar Error en automático.

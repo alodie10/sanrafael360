@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { CrmContacto, CrmEstado } from "@/lib/crm";
-import { CRM_ESTADOS, formatCrmFecha } from "@/lib/crm";
+import type { CrmContacto } from "@/lib/crm";
+import { formatCrmFecha } from "@/lib/crm";
 
 export type CrmCategoria = { documentId: string; nombre: string };
 
@@ -10,7 +11,7 @@ type Props = {
   contactos: CrmContacto[];
   categorias: CrmCategoria[];
   onEnviar: (documentId: string) => Promise<void>;
-  onEstado: (documentId: string, estado: CrmEstado) => Promise<void>;
+  onNota: (documentId: string, nota: string) => Promise<void>;
   onCategoria: (documentId: string, categoriaId: string) => Promise<void>;
   onCrearFicha: (documentId: string) => Promise<void>;
   canCrearFicha: boolean;
@@ -21,7 +22,7 @@ export default function CrmContactList({
   contactos,
   categorias,
   onEnviar,
-  onEstado,
+  onNota,
   onCategoria,
   onCrearFicha,
   canCrearFicha,
@@ -43,7 +44,7 @@ export default function CrmContactList({
           contacto={c}
           categorias={categorias}
           onEnviar={onEnviar}
-          onEstado={onEstado}
+          onNota={onNota}
           onCategoria={onCategoria}
           onCrearFicha={onCrearFicha}
           canCrearFicha={canCrearFicha}
@@ -58,7 +59,7 @@ function CrmContactoRow({
   contacto: c,
   categorias,
   onEnviar,
-  onEstado,
+  onNota,
   onCategoria,
   onCrearFicha,
   canCrearFicha,
@@ -67,13 +68,20 @@ function CrmContactoRow({
   contacto: CrmContacto;
   categorias: CrmCategoria[];
   onEnviar: (documentId: string) => Promise<void>;
-  onEstado: (documentId: string, estado: CrmEstado) => Promise<void>;
+  onNota: (documentId: string, nota: string) => Promise<void>;
   onCategoria: (documentId: string, categoriaId: string) => Promise<void>;
   onCrearFicha: (documentId: string) => Promise<void>;
   canCrearFicha: boolean;
   busy: boolean;
 }) {
+  const [nota, setNota] = useState(c.nota || "");
   const ready = Boolean(c.nombre && c.telefono && c.categoriaId);
+  const dirty = nota !== (c.nota || "");
+
+  useEffect(() => {
+    setNota(c.nota || "");
+  }, [c.nota]);
+
   return (
     <li
       data-testid="crm-contacto-row"
@@ -86,29 +94,25 @@ function CrmContactoRow({
             {c.telefono || "sin teléfono"} · {c.origen} · {formatCrmFecha(c.createdAt)}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            data-testid="crm-estado-cola"
-            value={c.estado}
-            onChange={(e) => onEstado(c.documentId, e.target.value as CrmEstado)}
-            className="bg-black/40 border border-white/10 text-white text-xs rounded-xl px-3 py-2"
-          >
-            {CRM_ESTADOS.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            data-testid="crm-enviar-wsp"
-            disabled={busy || c.no_contactar || !c.telefono}
-            onClick={() => onEnviar(c.documentId)}
-            className="px-4 py-2 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
-          >
-            WhatsApp
-          </button>
-        </div>
+      </div>
+      <div className="space-y-2">
+        <textarea
+          data-testid="crm-cola-nota"
+          value={nota}
+          onChange={(e) => setNota(e.target.value)}
+          placeholder="Comentario para elegir la categoría"
+          rows={2}
+          className="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl px-3 py-2 placeholder:text-zinc-600"
+        />
+        <button
+          type="button"
+          data-testid="crm-cola-nota-guardar"
+          disabled={busy || !dirty}
+          onClick={() => onNota(c.documentId, nota)}
+          className="px-4 py-2 border border-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
+        >
+          Guardar comentario
+        </button>
       </div>
       {canCrearFicha && (
         <div className="flex flex-wrap items-center gap-2">
@@ -125,14 +129,25 @@ function CrmContactoRow({
               </option>
             ))}
           </select>
-          {c.negocio?.slug ? (
-            <Link
-              href={`/negocios/${c.negocio.slug}`}
-              data-testid="crm-ficha-link"
-              className="px-4 py-2 border border-primary/40 text-primary font-black uppercase tracking-widest text-[10px] rounded-xl"
-            >
-              Ver ficha
-            </Link>
+          {c.negocio?.documentId || c.negocio?.slug ? (
+            <>
+              <Link
+                href={`/negocios/${c.negocio.slug}`}
+                data-testid="crm-ficha-link"
+                className="px-4 py-2 border border-primary/40 text-primary font-black uppercase tracking-widest text-[10px] rounded-xl"
+              >
+                Ver ficha
+              </Link>
+              <button
+                type="button"
+                data-testid="crm-enviar-wsp"
+                disabled={busy || c.no_contactar}
+                onClick={() => onEnviar(c.documentId)}
+                className="px-4 py-2 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
+              >
+                WhatsApp
+              </button>
+            </>
           ) : (
             <button
               type="button"
