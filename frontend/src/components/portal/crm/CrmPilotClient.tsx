@@ -12,6 +12,7 @@ import CrmContactList, { type CrmCategoria } from "./CrmContactList";
 import CrmPlantillaForm from "./CrmPlantillaForm";
 import CrmLeadFilters from "./CrmLeadFilters";
 import CrmContactadosList from "./CrmContactadosList";
+import CrmFold from "./CrmFold";
 
 type Props = { jwt: string; isAdmin: boolean };
 
@@ -322,45 +323,52 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
     : "Tu mesa · San Rafael 360";
 
   return (
-    <div className="min-h-screen bg-black font-sans pt-24 pb-20" data-testid="crm-page">
-      <div className="bg-zinc-950/50 border-b border-white/5 backdrop-blur-xl sticky top-[72px] z-40">
-        <div className="max-w-5xl mx-auto px-6 py-8">
+    <div className="min-h-screen bg-black font-sans pt-[72px] pb-8" data-testid="crm-page">
+      <div className="bg-zinc-950/80 border-b border-white/5 backdrop-blur-xl sticky top-[72px] z-40">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex flex-wrap items-center gap-x-5 gap-y-2">
           <Link
             href={isAdmin ? "/portal/admin" : "/portal"}
-            className="group flex items-center gap-2 text-zinc-500 hover:text-primary transition-colors mb-6 text-xs font-black uppercase tracking-widest"
+            className="group flex items-center gap-2 text-zinc-500 hover:text-primary transition-colors text-[10px] font-black uppercase tracking-widest"
           >
             <ArrowLeft className="w-4 h-4" />
-            {isAdmin ? "Volver al admin" : "Volver al portal"}
+            {isAdmin ? "Admin" : "Portal"}
           </Link>
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-primary rounded-3xl flex items-center justify-center">
-              <Megaphone className="w-8 h-8 text-black" />
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center shrink-0">
+              <Megaphone className="w-5 h-5 text-black" />
             </div>
-            <div>
-              <p className="text-primary/60 text-[10px] font-black uppercase tracking-[0.2em]">
+            <div className="min-w-0">
+              <p className="text-primary/60 text-[10px] font-black uppercase tracking-[0.2em] truncate">
                 {kicker}
               </p>
-              <h1 className="text-4xl font-serif font-bold text-white italic">CRM de captación</h1>
+              <h1 className="text-xl font-serif font-bold text-white italic leading-tight">
+                CRM de captación
+              </h1>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 mt-8">
+          {!forbidden && (
+            <p className="text-zinc-400 text-xs" data-testid="crm-cupo">
+              Cupo {boot?.cupo.enviados ?? "—"}/{boot?.cupo.limite ?? 25}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2 ml-auto">
             <button
               type="button"
               data-testid="crm-tab-mesa"
               onClick={() => setTab("mesa")}
-              className={`px-5 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] border transition-all ${
+              className={`px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] border transition-all ${
                 tab === "mesa"
                   ? "bg-primary text-black border-primary"
                   : "bg-white/5 text-zinc-400 border-transparent hover:text-white"
               }`}
             >
-              Mesa y cola
+              Escritorio
             </button>
             <button
               type="button"
               data-testid="crm-tab-alcanzados"
               onClick={() => setTab("alcanzados")}
-              className={`px-5 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] border transition-all ${
+              className={`px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] border transition-all ${
                 tab === "alcanzados"
                   ? "bg-primary text-black border-primary"
                   : "bg-white/5 text-zinc-400 border-transparent hover:text-white"
@@ -372,7 +380,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
         </div>
       </div>
 
-      <main className="max-w-5xl mx-auto px-6 py-12 space-y-12">
+      <main className="max-w-7xl mx-auto px-6 py-5 space-y-4">
         {error && (
           <p className="text-red-400 text-sm" data-testid="crm-error">
             {error}
@@ -388,87 +396,75 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
             {notice}
           </p>
         )}
-        {!forbidden && (
-          <>
-            <p className="text-zinc-400 text-sm" data-testid="crm-cupo">
-              Cupo CRM hoy: {boot?.cupo.enviados ?? "—"} / {boot?.cupo.limite ?? 25}
-            </p>
-
-            {tab === "mesa" && (
-              <>
-                <section className="grid md:grid-cols-2 gap-10">
-                  <div className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-4">
-                    <h2 className="text-2xl font-serif text-white italic">Alta manual</h2>
-                    <CrmManualForm onCreate={createManual} busy={busy} />
-                  </div>
-                  <div className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-4">
-                    <h2 className="text-2xl font-serif text-white italic">Pegar lista de la IA</h2>
-                    <CrmIngestPanel
-                      prompt={boot?.plantilla.prompt_ia || ""}
-                      onIngest={ingest}
-                      busy={busy}
-                    />
-                  </div>
-                </section>
-
-                <section className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-4">
-                  <h2 className="text-2xl font-serif text-white italic">Mensaje WhatsApp</h2>
-                  <CrmPlantillaForm
-                    mensaje={boot?.plantilla.mensaje || ""}
-                    firma={boot?.plantilla.firma || ""}
-                    onSave={guardarPlantilla}
-                    busy={busy}
-                  />
-                </section>
-
-                <section>
-                  <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                    <h2 className="text-2xl font-serif text-white italic">Cola</h2>
-                    <button
-                      type="button"
-                      data-testid="crm-limpiar-cola"
-                      disabled={busy || !(boot?.contactos || []).length}
-                      onClick={limpiarCola}
-                      className="px-4 py-2 border border-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
-                    >
-                      Limpiar cola
-                    </button>
-                  </div>
-                  <CrmContactList
-                    contactos={boot?.contactos || []}
-                    categorias={categorias}
-                    onEnviar={enviar}
-                    onNota={guardarNota}
-                    onCategoria={cambiarCategoria}
-                    onCrearFicha={crearFicha}
-                    canCrearFicha={isAdmin && boot?.comercio.modo !== "agenda"}
-                    busyId={busyId}
-                  />
-                </section>
-              </>
-            )}
-
-            {tab === "alcanzados" && (
-              <section className="p-8 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] space-y-5">
-                <h2 className="text-2xl font-serif text-white italic">Contactos alcanzados</h2>
-                <CrmLeadFilters
-                  filtro={filtro}
-                  onChange={(next) => {
-                    setFiltro(next);
-                    setSelectedLeadId(null);
-                  }}
-                />
-                <CrmContactadosList
-                  contactos={filterAlcanzadosUi(alcanzados, filtro).map(alcanzadoAsContacto)}
-                  selectedId={selectedLeadId}
-                  onSelect={setSelectedLeadId}
-                  onNota={guardarNota}
-                  onEstado={cambiarEstado}
+        {!forbidden && tab === "mesa" && (
+          <div className="grid lg:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)] gap-4 items-start">
+            <aside className="space-y-3 lg:sticky lg:top-32">
+              <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-2xl space-y-3">
+                <h2 className="text-lg font-serif text-white italic">Pegar lista de la IA</h2>
+                <CrmIngestPanel
+                  prompt={boot?.plantilla.prompt_ia || ""}
+                  onIngest={ingest}
                   busy={busy}
                 />
-              </section>
-            )}
-          </>
+              </div>
+              <CrmFold title="Alta manual" testId="crm-fold-alta">
+                <CrmManualForm onCreate={createManual} busy={busy} />
+              </CrmFold>
+              <CrmFold title="Mensaje prospectivo" testId="crm-fold-plantilla">
+                <CrmPlantillaForm
+                  mensaje={boot?.plantilla.mensaje || ""}
+                  firma={boot?.plantilla.firma || ""}
+                  onSave={guardarPlantilla}
+                  busy={busy}
+                />
+              </CrmFold>
+            </aside>
+            <section>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 className="text-xl font-serif text-white italic">Cola</h2>
+                <button
+                  type="button"
+                  data-testid="crm-limpiar-cola"
+                  disabled={busy || !(boot?.contactos || []).length}
+                  onClick={limpiarCola}
+                  className="px-3 py-1.5 border border-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
+                >
+                  Limpiar cola
+                </button>
+              </div>
+              <CrmContactList
+                contactos={boot?.contactos || []}
+                categorias={categorias}
+                onEnviar={enviar}
+                onNota={guardarNota}
+                onCategoria={cambiarCategoria}
+                onCrearFicha={crearFicha}
+                canCrearFicha={isAdmin && boot?.comercio.modo !== "agenda"}
+                busyId={busyId}
+              />
+            </section>
+          </div>
+        )}
+
+        {!forbidden && tab === "alcanzados" && (
+          <section className="p-5 bg-zinc-900/40 border border-white/5 rounded-2xl space-y-4">
+            <h2 className="text-xl font-serif text-white italic">Contactos alcanzados</h2>
+            <CrmLeadFilters
+              filtro={filtro}
+              onChange={(next) => {
+                setFiltro(next);
+                setSelectedLeadId(null);
+              }}
+            />
+            <CrmContactadosList
+              contactos={filterAlcanzadosUi(alcanzados, filtro).map(alcanzadoAsContacto)}
+              selectedId={selectedLeadId}
+              onSelect={setSelectedLeadId}
+              onNota={guardarNota}
+              onEstado={cambiarEstado}
+              busy={busy}
+            />
+          </section>
         )}
       </main>
     </div>

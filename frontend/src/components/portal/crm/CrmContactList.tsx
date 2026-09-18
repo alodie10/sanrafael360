@@ -37,7 +37,7 @@ export default function CrmContactList({
   }
 
   return (
-    <ul className="space-y-3" data-testid="crm-contact-list">
+    <ul className="space-y-2" data-testid="crm-contact-list">
       {contactos.map((c) => (
         <CrmContactoRow
           key={c.documentId}
@@ -85,17 +85,15 @@ function CrmContactoRow({
   return (
     <li
       data-testid="crm-contacto-row"
-      className="p-5 rounded-3xl border border-white/10 bg-white/5 flex flex-col gap-4"
+      className="p-3 rounded-2xl border border-white/10 bg-white/5 flex flex-col xl:flex-row xl:items-start gap-3"
     >
-      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
-        <div>
-          <p className="text-white font-serif text-xl italic">{c.nombre}</p>
-          <p className="text-zinc-500 text-xs mt-1">
-            {c.telefono || "sin teléfono"} · {c.origen} · {formatCrmFecha(c.createdAt)}
-          </p>
-        </div>
+      <div className="xl:w-52 shrink-0">
+        <p className="text-white font-serif text-lg italic leading-tight">{c.nombre}</p>
+        <p className="text-zinc-500 text-xs mt-1">
+          {c.telefono || "sin teléfono"} · {c.origen} · {formatCrmFecha(c.createdAt)}
+        </p>
       </div>
-      <div className="space-y-2">
+      <div className="flex-1 space-y-2 min-w-0">
         <textarea
           data-testid="crm-cola-nota"
           value={nota}
@@ -109,13 +107,13 @@ function CrmContactoRow({
           data-testid="crm-cola-nota-guardar"
           disabled={busy || !dirty}
           onClick={() => onNota(c.documentId, nota)}
-          className="px-4 py-2 border border-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
+          className="px-3 py-1.5 border border-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
         >
           Guardar comentario
         </button>
       </div>
       {canCrearFicha && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 xl:w-64 xl:justify-end shrink-0">
           <select
             data-testid="crm-categoria"
             value={c.categoriaId || ""}

@@ -23,9 +23,11 @@ test.describe('CRM piloto — flujo admin aislado', () => {
     }
 
     await expect(page.getByTestId('crm-cupo')).toBeVisible();
-    await expect(page.getByTestId('crm-tab-mesa')).toBeVisible();
+    await expect(page.getByTestId('crm-tab-mesa')).toHaveText(/Escritorio/i);
     await expect(page.getByTestId('crm-limpiar-cola')).toBeVisible();
     await expect(page.getByTestId('crm-filtro-estado')).toHaveCount(0);
+    await expect(page.getByTestId('crm-manual-form')).toBeHidden();
+    await expect(page.getByTestId('crm-plantilla-form')).toBeHidden();
     await page.getByTestId('crm-tab-alcanzados').click();
     await expect(page.getByTestId('crm-filtro-estado')).toBeVisible();
     await expect(page.getByTestId('crm-limpiar-cola')).toHaveCount(0);
@@ -37,6 +39,7 @@ test.describe('CRM piloto — flujo admin aislado', () => {
     await page.getByTestId('crm-prompt-copy').click();
 
     const stamp = `E2E CRM ${Date.now()}`;
+    await page.getByTestId('crm-fold-alta').locator('summary').click();
     await page.getByTestId('crm-manual-nombre').fill(stamp);
     await page.getByTestId('crm-manual-telefono').fill('2615550000');
     await page.getByTestId('crm-manual-submit').click();
