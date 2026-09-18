@@ -24,11 +24,11 @@ export default function CrmPlantillaForm({ mensaje, firma, onSave, busy }: Props
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" data-testid="crm-plantilla-form">
+    <form onSubmit={handleSubmit} className="space-y-2" data-testid="crm-plantilla-form">
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        rows={5}
+        rows={4}
         className="w-full px-4 py-3 rounded-2xl bg-black/40 border border-white/10 text-white text-sm"
       />
       <input

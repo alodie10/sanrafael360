@@ -25,32 +25,34 @@ export default function CrmIngestPanel({ prompt, onIngest, busy }: Props) {
   }
 
   return (
-    <div className="space-y-4" data-testid="crm-ingest-panel">
-      <button
-        type="button"
-        data-testid="crm-prompt-copy"
-        onClick={copyPrompt}
-        className="px-6 py-3 bg-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl border border-white/10"
-      >
-        {copied ? "Prompt copiado" : "Copiar prompt para la IA"}
-      </button>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-3" data-testid="crm-ingest-panel">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            data-testid="crm-prompt-copy"
+            onClick={copyPrompt}
+            className="px-4 py-2 bg-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-xl border border-white/10"
+          >
+            {copied ? "Prompt copiado" : "Copiar prompt para la IA"}
+          </button>
+          <button
+            type="submit"
+            disabled={busy}
+            data-testid="crm-ingest-submit"
+            className="px-4 py-2 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
+          >
+            Encolar lista
+          </button>
+        </div>
         <textarea
           data-testid="crm-ingest-textarea"
           value={payload}
           onChange={(e) => setPayload(e.target.value)}
           placeholder='Pegá el JSON: [{ "nombre": "...", "telefono": "" }]'
-          rows={8}
-          className="w-full px-4 py-3 rounded-2xl bg-black/40 border border-white/10 text-white text-sm font-mono"
+          rows={5}
+          className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white text-sm font-mono min-h-[7.5rem]"
         />
-        <button
-          type="submit"
-          disabled={busy}
-          data-testid="crm-ingest-submit"
-          className="px-6 py-3 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-2xl disabled:opacity-40"
-        >
-          Encolar lista
-        </button>
       </form>
     </div>
   );

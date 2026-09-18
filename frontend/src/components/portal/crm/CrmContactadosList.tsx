@@ -74,7 +74,7 @@ function CrmContactadoRow({
         type="button"
         data-testid="crm-contactado-nombre"
         onClick={() => onSelect(open ? null : c.documentId)}
-        className="w-full grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-2 md:gap-6 items-center text-left px-5 py-4 hover:border-primary/40"
+        className="w-full grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-2 md:gap-6 items-center text-left px-4 py-2.5 hover:border-primary/40"
       >
         <span className="text-white font-medium underline-offset-4 decoration-white/20 hover:underline">
           {c.nombre || "Contacto"}

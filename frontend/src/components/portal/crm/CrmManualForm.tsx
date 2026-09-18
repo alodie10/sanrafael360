@@ -30,7 +30,7 @@ export default function CrmManualForm({ onCreate, busy }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4"
+      className="space-y-2"
       data-testid="crm-manual-form"
     >
       <input
