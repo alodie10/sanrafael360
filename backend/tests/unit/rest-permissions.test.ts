@@ -21,6 +21,8 @@ describe('rest-permissions (AppSec)', () => {
     expect(REVOKE_UNTRUSTED_REST_ACTIONS).toContain('plugin::users-permissions.auth.register');
     expect(REVOKE_UNTRUSTED_REST_ACTIONS).toContain('api::negocio.negocio.admindelete');
     expect(REVOKE_UNTRUSTED_REST_ACTIONS).toContain('api::negocio.negocio.adminlistpagos');
+    expect(REVOKE_UNTRUSTED_REST_ACTIONS).toContain('api::crm-contacto.crm-contacto.find');
+    expect(REVOKE_UNTRUSTED_REST_ACTIONS).toContain('api::crm-comercio.crm-comercio.find');
   });
 
   it('no vuelve a otorgar dumps sensibles en el set público', () => {

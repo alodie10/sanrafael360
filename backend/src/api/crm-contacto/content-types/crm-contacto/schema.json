@@ -1,0 +1,73 @@
+{
+  "kind": "collectionType",
+  "collectionName": "crm_contactos",
+  "info": {
+    "singularName": "crm-contacto",
+    "pluralName": "crm-contactos",
+    "displayName": "CRM Contacto",
+    "description": "Lead/contacto del CRM. No es un negocio de la guía."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "telefono": {
+      "type": "string"
+    },
+    "telefono_normalizado": {
+      "type": "string"
+    },
+    "instagram": {
+      "type": "string"
+    },
+    "nota": {
+      "type": "text"
+    },
+    "origen": {
+      "type": "enumeration",
+      "enum": ["manual", "lista_ia"],
+      "default": "manual",
+      "required": true
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["nuevo", "contactado", "en_conversacion", "ganado", "descartado"],
+      "default": "nuevo",
+      "required": true
+    },
+    "no_contactar": {
+      "type": "boolean",
+      "default": false
+    },
+    "en_cola": {
+      "type": "boolean",
+      "default": true
+    },
+    "categoria": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::categoria.categoria"
+    },
+    "negocio": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::negocio.negocio"
+    },
+    "comercio": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::crm-comercio.crm-comercio",
+      "inversedBy": "contactos"
+    },
+    "actividades": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::crm-actividad.crm-actividad",
+      "mappedBy": "contacto"
+    }
+  }
+}

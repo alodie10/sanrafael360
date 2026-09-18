@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "crm_plantillas",
+  "info": {
+    "singularName": "crm-plantilla",
+    "pluralName": "crm-plantillas",
+    "displayName": "CRM Plantilla",
+    "description": "Copy y prompt IA del tenant CRM. Aislado de prospección."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "mensaje": {
+      "type": "text",
+      "required": true
+    },
+    "firma": {
+      "type": "text"
+    },
+    "prompt_ia": {
+      "type": "text",
+      "required": true
+    },
+    "comercio": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::crm-comercio.crm-comercio",
+      "inversedBy": "plantilla"
+    }
+  }
+}

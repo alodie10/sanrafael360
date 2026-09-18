@@ -1,0 +1,62 @@
+{
+  "kind": "collectionType",
+  "collectionName": "crm_comercios",
+  "info": {
+    "singularName": "crm-comercio",
+    "pluralName": "crm-comercios",
+    "displayName": "CRM Comercio",
+    "description": "Tenant del CRM de captación. Cupo aislado de prospección."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "nombre",
+      "required": true
+    },
+    "activo": {
+      "type": "boolean",
+      "default": true
+    },
+    "cupo_wsp_fecha": {
+      "type": "date"
+    },
+    "cupo_wsp_count": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "cupo_wsp_limite": {
+      "type": "integer",
+      "default": 25,
+      "min": 1
+    },
+    "modo": {
+      "type": "enumeration",
+      "enum": ["guia", "agenda"],
+      "default": "guia",
+      "required": true
+    },
+    "owner_email": {
+      "type": "email"
+    },
+    "contactos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::crm-contacto.crm-contacto",
+      "mappedBy": "comercio"
+    },
+    "plantilla": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::crm-plantilla.crm-plantilla",
+      "mappedBy": "comercio"
+    }
+  }
+}
