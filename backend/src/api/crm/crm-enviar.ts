@@ -16,7 +16,13 @@ export function patchTrasWhatsapp(estado: string, hasUrl: boolean) {
   return data;
 }
 
+export const CRM_WSP_NO_ENVIADO = 'WhatsApp no enviado:';
+
 export function avisoWhatsappSinUrl(hasUrl: boolean) {
   if (hasUrl) return undefined;
   return 'El teléfono no sirvió. Salió de la cola: en Contactos alcanzados marcá Error WSP.';
+}
+
+export function actividadConsumioCupo(texto?: string | null) {
+  return !String(texto || '').startsWith(CRM_WSP_NO_ENVIADO);
 }

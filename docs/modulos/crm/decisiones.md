@@ -61,3 +61,8 @@ Numeración **CRM-DEC-…**.
 - **Contexto:** Diego arma la ficha con el comentario, después manda WhatsApp. Si el número falla, igual tiene que salir de la cola para marcarlo Error en Contactados.
 - **Decisión:** WhatsApp se habilita recién con ficha. Al tocarlo, `en_cola: false` aunque no haya `wa.me`. El estado Error lo pone Diego en el listado.
 - **Qué se descartó:** WhatsApp antes de la ficha; marcar Error en automático.
+
+### 2026-09-22 — CRM-DEC-013 — Error WSP del día devuelve cupo
+- **Contexto:** Abrir wa.me suma 1 al cupo de 25 aunque el número falle. Diego marca Error WSP a mano.
+- **Decisión:** Si el estado pasa a `error` y hubo un WhatsApp que consumió cupo **hoy** (calendario Mendoza), se resta 1. Un teléfono inválido (sin `wa.me`) no resta porque no había sumado. Un error de otro día no toca el cupo de hoy.
+- **Qué se descartó:** Cron de reset; devolver cupo al marcar Error sobre envíos viejos.

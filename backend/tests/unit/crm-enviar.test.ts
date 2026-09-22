@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ValidationError } from '../../src/utils/errors';
 import {
+  actividadConsumioCupo,
   assertPuedeEnviarWhatsapp,
   avisoWhatsappSinUrl,
   patchTrasWhatsapp,
@@ -24,5 +25,10 @@ describe('crm-enviar', () => {
     expect(patchTrasWhatsapp('nuevo', true)).toEqual({ en_cola: false, estado: 'contactado' });
     expect(avisoWhatsappSinUrl(false)).toMatch(/Error WSP/);
     expect(avisoWhatsappSinUrl(true)).toBeUndefined();
+  });
+
+  it('does not consume quota when the phone never opened WhatsApp', () => {
+    expect(actividadConsumioCupo('Hola Diego')).toBe(true);
+    expect(actividadConsumioCupo('WhatsApp no enviado: teléfono inválido. Hola')).toBe(false);
   });
 });

@@ -4,8 +4,11 @@ import { buildWhatsappUrl, normalizeWhatsappDigits } from '../../../utils/whatsa
 import { composeCrmMensaje } from '../crm-compose';
 import {
   asDateOnly,
+  CUPO_DEVUELTO_TEXTO,
   cupoFromComercio,
+  cupoTrasErrorWsp,
   nextCupoCount,
+  resumenCupoActividades,
   type CupoWhatsapp,
 } from '../crm-cupo';
 import { DEFAULT_CRM_FIRMA, DEFAULT_CRM_MENSAJE, DEFAULT_CRM_PROMPT_IA } from '../crm-defaults';
@@ -31,6 +34,7 @@ import { estadoYNotaPatch, type CrmListQuery } from '../crm-estado';
 import {
   assertPuedeEnviarWhatsapp,
   avisoWhatsappSinUrl,
+  CRM_WSP_NO_ENVIADO,
   patchTrasWhatsapp,
 } from '../crm-enviar';
 import { adminCreateNegocio } from '../../negocio/services/admin-create-negocio';
@@ -255,7 +259,39 @@ async function updateContacto(
     data.categoria = categoriaId || null;
   }
   await repo.updateContacto(documentId, data);
+  if (typeof data.estado === 'string') {
+    await refundCupoSiErrorHoy(repo, comercio, row, data.estado);
+  }
   return mapCrmContacto(await repo.findContacto(documentId));
+}
+
+async function refundCupoSiErrorHoy(
+  repo: CrmRepository,
+  comercio: any,
+  contacto: any,
+  toEstado: string
+) {
+  const today = calendarDateInTimeZone();
+  const acts = await repo.listActividades(contacto.documentId);
+  const next = cupoTrasErrorWsp({
+    fromEstado: String(contacto.estado || ''),
+    toEstado,
+    today,
+    storedFecha: asDateOnly(comercio.cupo_wsp_fecha),
+    storedCount: Number(comercio.cupo_wsp_count || 0),
+    ...resumenCupoActividades(acts || [], today),
+  });
+  if (next == null) return;
+  await repo.updateComercio(comercio.documentId, {
+    cupo_wsp_fecha: today,
+    cupo_wsp_count: next,
+  });
+  await repo.createActividad({
+    tipo: 'estado',
+    canal: 'sistema',
+    texto: CUPO_DEVUELTO_TEXTO,
+    contacto: contacto.documentId,
+  });
 }
 
 async function enviarWhatsapp(
@@ -283,7 +319,7 @@ async function enviarWhatsapp(
   await repo.createActividad({
     tipo: 'envio_whatsapp',
     canal: 'whatsapp',
-    texto: hasUrl ? texto : `WhatsApp no enviado: teléfono inválido. ${texto}`,
+    texto: hasUrl ? texto : `${CRM_WSP_NO_ENVIADO} teléfono inválido. ${texto}`,
     contacto: contacto.documentId,
   });
   let cupo = readCupo(comercio);

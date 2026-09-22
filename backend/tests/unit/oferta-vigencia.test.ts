@@ -53,7 +53,7 @@ describe('stampActivaOnPayload', () => {
   it('derives activa from payload dates', () => {
     const data: Record<string, unknown> = {
       valida_desde: '2026-09-14T00:00:00.000Z',
-      valida_hasta: '2026-09-20T23:59:59.999Z',
+      valida_hasta: '2026-12-31T23:59:59.999Z',
       activa: false,
     };
     stampActivaOnPayload(data);

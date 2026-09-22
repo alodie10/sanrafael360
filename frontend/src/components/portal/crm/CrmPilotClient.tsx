@@ -318,10 +318,6 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
     }
   }
 
-  const kicker = boot?.comercio.nombre
-    ? `Tu mesa · ${boot.comercio.nombre}`
-    : "Tu mesa · San Rafael 360";
-
   return (
     <div className="min-h-screen bg-black font-sans pt-[72px] pb-8" data-testid="crm-page">
       <div className="bg-zinc-950/80 border-b border-white/5 backdrop-blur-xl sticky top-[72px] z-40">
@@ -337,14 +333,9 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
             <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center shrink-0">
               <Megaphone className="w-5 h-5 text-black" />
             </div>
-            <div className="min-w-0">
-              <p className="text-primary/60 text-[10px] font-black uppercase tracking-[0.2em] truncate">
-                {kicker}
-              </p>
-              <h1 className="text-xl font-serif font-bold text-white italic leading-tight">
-                CRM de captación
-              </h1>
-            </div>
+            <h1 className="text-xl font-serif font-bold text-white italic leading-tight truncate">
+              CRM de captación
+            </h1>
           </div>
           {!forbidden && (
             <p className="text-zinc-400 text-xs" data-testid="crm-cupo">
