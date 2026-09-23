@@ -1,10 +1,11 @@
 import { ValidationError } from '../../utils/errors';
 import { negocioResumen } from './crm-ficha';
 
-export function assertPuedeEnviarWhatsapp(contacto: any) {
+export function assertPuedeEnviarWhatsapp(contacto: any, modo?: string) {
   if (contacto?.no_contactar) {
     throw new ValidationError('Este contacto está marcado como no contactar');
   }
+  if (modo === 'agenda') return;
   if (!negocioResumen(contacto)?.documentId) {
     throw new ValidationError('Creá la ficha antes de abrir WhatsApp');
   }

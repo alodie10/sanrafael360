@@ -46,6 +46,11 @@
     "owner_email": {
       "type": "email"
     },
+    "negocio": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::negocio.negocio"
+    },
     "contactos": {
       "type": "relation",
       "relation": "oneToMany",

@@ -31,12 +31,19 @@ import {
   type ProspeccionPlantilla,
 } from "@/lib/prospeccion";
 import { openInstagramDm, resolveInstagramUsername } from "@/lib/instagram";
+import PlantillaSlotEditor from "@/components/portal/PlantillaSlotEditor";
+import { normalizePlantillaSlots } from "@/lib/plantilla-slots";
 
 type Props = {
   jwt: string;
   precarga: ProspeccionNegocio | null;
   onPrecargaConsumed?: () => void;
 };
+
+function withSlots(data: ProspeccionPlantilla): ProspeccionPlantilla {
+  const slots = normalizePlantillaSlots(data.mensajes || data.slots, data.mensaje);
+  return { ...data, mensaje: slots[0].texto, slots };
+}
 
 function apiError(json: any, fallback: string) {
   return json?.error?.message || json?.error || fallback;
@@ -113,6 +120,7 @@ export default function AdminProspeccionPanel({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [cupo, setCupo] = useState<ProspeccionCupoWhatsapp | null>(null);
+  const [slotIndex, setSlotIndex] = useState(0);
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -148,8 +156,8 @@ export default function AdminProspeccionPanel({
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo cargar la plantilla"));
-      setPlantilla(json.data);
-      setDraft(json.data);
+      setPlantilla(withSlots(json.data));
+      setDraft(withSlots(json.data));
     } catch (e: unknown) {
       setError(fetchErrorMessage(e, "No se pudo cargar la plantilla"));
     } finally {
@@ -217,12 +225,17 @@ export default function AdminProspeccionPanel({
       const res = await fetch(`${STRAPI_URL}/api/prospeccion/plantilla`, {
         method: "PUT",
         headers: authHeaders,
-        body: JSON.stringify(draft),
+        body: JSON.stringify({
+          texto_ficha: draft.texto_ficha,
+          mensaje: (draft.slots || [])[0]?.texto || draft.mensaje,
+          slots: draft.slots,
+          firma: draft.firma,
+        }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo guardar la plantilla"));
-      setPlantilla(json.data);
-      setDraft(json.data);
+      setPlantilla(withSlots(json.data));
+      setDraft(withSlots(json.data));
       setNotice("Guardado. El mensaje es compartido; la firma quedó en tu usuario.");
     } catch (e: unknown) {
       setError(fetchErrorMessage(e, "No se pudo guardar la plantilla"));
@@ -240,7 +253,7 @@ export default function AdminProspeccionPanel({
       const res = await fetch(`${STRAPI_URL}/api/prospeccion/enviar`, {
         method: "POST",
         headers: authHeaders,
-        body: JSON.stringify({ negocioDocumentId: selected.documentId, tipo }),
+        body: JSON.stringify({ negocioDocumentId: selected.documentId, tipo, plantillaIndex: slotIndex }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo armar el WhatsApp"));
@@ -273,6 +286,7 @@ export default function AdminProspeccionPanel({
           negocioDocumentId: selected.documentId,
           tipo: "ficha_mensaje",
           canal: "instagram",
+          plantillaIndex: slotIndex,
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -302,8 +316,17 @@ export default function AdminProspeccionPanel({
     instagram_username: selected?.instagram_username,
     instagram: selected?.instagram,
   });
+  const previewSlots = normalizePlantillaSlots(
+    draft?.slots || plantilla?.slots || plantilla?.mensajes,
+    draft?.mensaje || plantilla?.mensaje
+  );
   const preview = plantilla
-    ? composeFichaMensaje({ url: guiaUrl, ...plantilla })
+    ? composeFichaMensaje({
+        url: guiaUrl,
+        texto_ficha: (draft || plantilla).texto_ficha,
+        mensaje: previewSlots[slotIndex]?.texto || previewSlots[0]?.texto || plantilla.mensaje,
+        firma: (draft || plantilla).firma,
+      })
     : "";
   const editUrl = selected?.slug ? `/portal/negocios/${selected.slug}/editar` : "";
 
@@ -443,6 +466,23 @@ export default function AdminProspeccionPanel({
           </pre>
         )}
 
+        <label className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+          Plantilla a enviar
+          <select
+            data-testid="prospeccion-plantilla-enviar"
+            value={slotIndex}
+            onChange={(e) => setSlotIndex(Number(e.target.value))}
+            className="bg-black/40 border border-white/10 text-white text-xs rounded-xl px-3 py-2 normal-case tracking-normal font-sans font-medium"
+          >
+            {previewSlots.map((slot, i) => (
+              <option key={i} value={i} disabled={!slot.texto}>
+                {i + 1}. {slot.titulo}
+                {slot.texto ? "" : " (vacía)"}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <div className="flex flex-col sm:flex-row flex-wrap gap-3">
           <button
             type="button"
@@ -510,7 +550,7 @@ export default function AdminProspeccionPanel({
           <div>
             <h3 className="text-lg font-serif font-bold text-white italic">Plantilla del mensaje</h3>
             <p className="text-sm text-zinc-500">
-              El mensaje y el precio son compartidos. La firma es de cada usuario: tu esposa puede poner la suya sin cambiar la tuya.
+              El mensaje son 5 plantillas compartidas. La firma es de cada usuario: tu esposa puede poner la suya sin cambiar la tuya.
             </p>
           </div>
           <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform ${editingPlantilla ? "rotate-180" : ""}`} />
@@ -529,14 +569,19 @@ export default function AdminProspeccionPanel({
             </label>
             <label className="block space-y-2">
               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                Mensaje (precio, beneficios y oferta)
+                Mensajes (elegí cuál se manda)
               </span>
-              <textarea
-                value={draft.mensaje}
-                onChange={(e) => setDraft({ ...draft, mensaje: e.target.value })}
-                rows={8}
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white"
-                data-testid="prospeccion-plantilla-mensaje"
+              <PlantillaSlotEditor
+                slots={normalizePlantillaSlots(draft.slots || draft.mensajes, draft.mensaje)}
+                activeIndex={slotIndex}
+                onActiveIndex={setSlotIndex}
+                onChangeSlot={(i, patch) => {
+                  const slots = normalizePlantillaSlots(draft.slots || draft.mensajes, draft.mensaje).map(
+                    (slot, idx) => (idx === i ? { ...slot, ...patch } : slot)
+                  );
+                  setDraft({ ...draft, slots, mensaje: slots[0].texto });
+                }}
+                testId="prospeccion-plantilla-slots"
               />
             </label>
             <label className="block space-y-2">

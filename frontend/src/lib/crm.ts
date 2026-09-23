@@ -39,7 +39,7 @@ export type CrmTenant = {
 
 export type CrmBootstrap = {
   comercio: CrmTenant;
-  plantilla: { mensaje: string; firma: string; prompt_ia: string };
+  plantilla: { mensaje: string; firma: string; prompt_ia: string; slots: { titulo: string; texto: string }[] };
   cupo: CrmCupo;
   contactos: CrmContacto[];
   canPrestar?: boolean;
@@ -82,6 +82,17 @@ export function crmListQuery(slug: string | undefined, filtro: CrmLeadFiltro) {
     desde: filtro.desde || undefined,
     hasta: filtro.hasta || undefined,
   });
+}
+
+export function isProspectorVigente(negocio: {
+  is_prospector?: boolean;
+  prospector_valid_until?: string | null;
+}) {
+  if (!negocio.is_prospector) return false;
+  if (!negocio.prospector_valid_until) return true;
+  const until = new Date(negocio.prospector_valid_until);
+  if (Number.isNaN(until.getTime())) return false;
+  return until.getTime() >= Date.now();
 }
 
 export function formatCrmFecha(iso?: string) {

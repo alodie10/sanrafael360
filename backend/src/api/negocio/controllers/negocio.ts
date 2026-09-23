@@ -260,8 +260,20 @@ export default factories.createCoreController('api::negocio.negocio', ({ strapi 
 
   modificarVigenciaPortal: asyncHandler(async (ctx) => {
     const { documentId } = ctx.params;
-    const { premium_valid_until } = ctx.request.body;
-    await createPortalAdminService(strapi).updateVigencia(documentId, premium_valid_until ?? null);
+    const { premium_valid_until, prospector_valid_until } = ctx.request.body || {};
+    const admin = createPortalAdminService(strapi);
+    if (Object.prototype.hasOwnProperty.call(ctx.request.body || {}, 'premium_valid_until')) {
+      await admin.updateVigencia(documentId, premium_valid_until ?? null);
+    }
+    if (Object.prototype.hasOwnProperty.call(ctx.request.body || {}, 'prospector_valid_until')) {
+      await admin.updateProspectorVigencia(documentId, prospector_valid_until ?? null);
+    }
+    if (
+      !Object.prototype.hasOwnProperty.call(ctx.request.body || {}, 'premium_valid_until') &&
+      !Object.prototype.hasOwnProperty.call(ctx.request.body || {}, 'prospector_valid_until')
+    ) {
+      await admin.updateVigencia(documentId, null);
+    }
     return ctx.send({ success: true });
   }),
 

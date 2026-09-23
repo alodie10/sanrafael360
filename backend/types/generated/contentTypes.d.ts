@@ -679,6 +679,7 @@ export interface ApiCrmComercioCrmComercio extends Struct.CollectionTypeSchema {
     modo: Schema.Attribute.Enumeration<['guia', 'agenda']> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'guia'>;
+    negocio: Schema.Attribute.Relation<'oneToOne', 'api::negocio.negocio'>;
     nombre: Schema.Attribute.String & Schema.Attribute.Required;
     owner_email: Schema.Attribute.Email;
     plantilla: Schema.Attribute.Relation<
@@ -784,6 +785,7 @@ export interface ApiCrmPlantillaCrmPlantilla
     > &
       Schema.Attribute.Private;
     mensaje: Schema.Attribute.Text & Schema.Attribute.Required;
+    mensajes: Schema.Attribute.JSON;
     prompt_ia: Schema.Attribute.Text & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
@@ -1144,6 +1146,7 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     instagram: Schema.Attribute.String;
     instagram_username: Schema.Attribute.String;
     is_premium: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    is_prospector: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     latitud: Schema.Attribute.Float;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -1169,6 +1172,7 @@ export interface ApiNegocioNegocio extends Struct.CollectionTypeSchema {
     promocion_activa: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     promocion_flyer: Schema.Attribute.Media<'images'>;
+    prospector_valid_until: Schema.Attribute.DateTime;
     publishedAt: Schema.Attribute.DateTime;
     rating: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
     reclamar_habilitado: Schema.Attribute.Boolean &
@@ -1354,6 +1358,7 @@ export interface ApiProspeccionPlantillaProspeccionPlantilla
     > &
       Schema.Attribute.Private;
     mensaje: Schema.Attribute.Text & Schema.Attribute.Required;
+    mensajes: Schema.Attribute.JSON;
     publishedAt: Schema.Attribute.DateTime;
     texto_ficha: Schema.Attribute.Text & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;

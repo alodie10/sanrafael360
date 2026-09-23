@@ -12,7 +12,6 @@ import PortalSupportSection from "@/components/portal/layout/PortalSupportSectio
 import {
   getPortalNegocios,
   getPortalStats,
-  getSuscripcionPrices,
 } from "@/lib/portal";
 
 export default async function PortalPage() {
@@ -21,10 +20,9 @@ export default async function PortalPage() {
 
   const jwt = session.jwt as string;
 
-  const [negocios, initialStats, subscriptionPrices] = await Promise.all([
+  const [negocios, initialStats] = await Promise.all([
     getPortalNegocios(jwt),
     getPortalStats(jwt),
-    getSuscripcionPrices(),
   ]);
 
   const userEmail = session.user?.email?.toLowerCase() || "";
@@ -58,8 +56,6 @@ export default async function PortalPage() {
                 <BusinessPortalCard
                   key={negocio.id}
                   negocio={negocio}
-                  jwt={jwt}
-                  subscriptionPrices={subscriptionPrices}
                 />
               ))
             ) : (

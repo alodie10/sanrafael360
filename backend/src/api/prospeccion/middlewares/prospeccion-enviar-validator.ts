@@ -16,6 +16,10 @@ export default (_config: unknown) => {
     if (canal != null && canal !== '' && canal !== 'whatsapp' && canal !== 'instagram') {
       throw new ValidationError('canal debe ser whatsapp o instagram');
     }
+    const index = body.plantillaIndex;
+    if (index != null && index !== '' && Number.isNaN(Number(index))) {
+      throw new ValidationError('plantillaIndex inválido');
+    }
 
     await next();
   };

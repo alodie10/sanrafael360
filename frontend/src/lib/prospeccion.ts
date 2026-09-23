@@ -15,6 +15,8 @@ export type ProspeccionPlantilla = {
   texto_ficha: string;
   mensaje: string;
   firma: string;
+  mensajes?: { titulo: string; texto: string }[];
+  slots?: { titulo: string; texto: string }[];
 };
 
 export type ProspeccionAlcanzado = {

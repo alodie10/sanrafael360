@@ -1,90 +1,22 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
-import { Building2, MapPin, ExternalLink, Crown, CreditCard, Loader2, Settings, CalendarDays } from "lucide-react";
+import { Building2, MapPin, ExternalLink, Crown, Settings, CalendarDays, Megaphone } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { getStrapiMedia, getStrapiUrl } from "@/lib/strapi";
-import { toast } from "sonner";
-import type { SuscripcionPrices } from "@/lib/portal";
+import { getStrapiMedia } from "@/lib/strapi";
 import { buildBusinessEditHref } from "@/lib/return-to";
+import { isProspectorVigente } from "@/lib/crm";
 
 interface BusinessPortalCardProps {
   negocio: any;
-  jwt?: string;
-  subscriptionPrices?: SuscripcionPrices | null;
 }
 
-export default function BusinessPortalCard({
-  negocio,
-  jwt,
-  subscriptionPrices = null,
-}: BusinessPortalCardProps) {
-  const [planType, setPlanType] = useState<"Mensual" | "Semestral">("Mensual");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [prices, setPrices] = useState<SuscripcionPrices | null>(subscriptionPrices);
-  const [isMounted, setIsMounted] = useState(false);
+export default function BusinessPortalCard({ negocio }: BusinessPortalCardProps) {
   const editHref = buildBusinessEditHref(negocio.slug, "/portal");
-
-  useEffect(() => {
-    setIsMounted(true);
-    if (subscriptionPrices) return;
-
-    const fetchPrices = async () => {
-      try {
-        const res = await fetch(`${getStrapiUrl()}/api/suscripcion-config`, {
-          cache: "no-store",
-        });
-        const json = await res.json();
-        if (json.data) {
-          setPrices({
-            mensual: json.data.precio_mensual,
-            semestral: json.data.precio_semestral,
-          });
-        }
-      } catch (err) {
-        console.error("Error cargando precios:", err);
-      }
-    };
-    fetchPrices();
-  }, [subscriptionPrices]);
-
-  // Verificamos si el premium está activo o expirado
   const premiumExpired = negocio.is_premium && negocio.premium_valid_until && new Date(negocio.premium_valid_until) < new Date();
   const isPremiumActive = negocio.is_premium && !premiumExpired;
-  const needsSubscription = !negocio.is_premium || premiumExpired;
-  const currentPrice = planType === 'Mensual' ? (prices?.mensual || 1200) : (prices?.semestral || 50000);
   const claimApproved = negocio.estado_reclamo !== 'pendiente';
-
-  const handleSubscribe = async () => {
-    setIsProcessing(true);
-    try {
-      const res = await fetch(`${getStrapiUrl()}/api/pagos/create-preference`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
-        },
-        body: JSON.stringify({ 
-          negocioId: negocio.documentId,
-          planType: planType 
-        })
-      });
-
-      const result = await res.json();
-      if (result.success && result.data?.init_point) {
-        window.location.href = result.data.init_point;
-      } else {
-        throw new Error(result.error || "No se pudo generar el link de pago");
-      }
-    } catch (err: any) {
-      console.error("DEBUG: Error completo al suscribir:", err);
-      toast.error("Error al conectar con Mercado Pago");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   return (
     <motion.div 
@@ -173,7 +105,6 @@ export default function BusinessPortalCard({
           <span className="truncate">{negocio.categoria?.nombre || "General"}</span>
         </div>
 
-        {/* Tags / Atributos */}
         {negocio.atributos && negocio.atributos.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-6">
             {negocio.atributos.slice(0, 3).map((attr: any) => (
@@ -190,6 +121,15 @@ export default function BusinessPortalCard({
         )}
         
         <div className="mt-auto space-y-4">
+          {isProspectorVigente(negocio) ? (
+            <Link
+              href="/portal/crm"
+              className="flex items-center justify-center gap-2 px-4 py-4 bg-primary hover:bg-primary/90 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/20"
+              data-testid="portal-crm-cta"
+            >
+              <Megaphone className="w-4 h-4" /> Captación WhatsApp
+            </Link>
+          ) : null}
           {negocio.reserva_comercio?.slug ? (
             <div className="grid grid-cols-1 gap-3">
               <Link
@@ -208,46 +148,6 @@ export default function BusinessPortalCard({
               </Link>
             </div>
           ) : null}
-
-          {needsSubscription && claimApproved && (
-            <div className="space-y-4">
-              {/* Selector de Plan */}
-              <div className="grid grid-cols-2 gap-2 p-1.5 bg-black/40 rounded-2xl border border-white/5 backdrop-blur-sm">
-                <button 
-                  onClick={() => setPlanType('Mensual')}
-                  className={cn(
-                    "py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
-                    planType === 'Mensual' ? "bg-white text-black shadow-lg" : "text-zinc-500 hover:text-white"
-                  )}
-                >
-                  Mensual
-                </button>
-                <button 
-                  onClick={() => setPlanType('Semestral')}
-                  className={cn(
-                    "py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
-                    planType === 'Semestral' ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20" : "text-zinc-500 hover:text-white"
-                  )}
-                >
-                  Semestral
-                </button>
-              </div>
-
-              <button 
-                onClick={handleSubscribe}
-                disabled={isProcessing}
-                className="w-full flex flex-col items-center justify-center gap-1 px-4 py-4 bg-primary hover:bg-primary/90 text-black rounded-2xl transition-all shadow-xl shadow-primary/20 disabled:opacity-50"
-              >
-                <div className="flex items-center gap-2">
-                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                  <span className="text-[10px] font-black uppercase tracking-widest">
-                    {isMounted ? (premiumExpired ? `Renovar Plan ${planType}` : `Suscribirme Plan ${planType}`) : 'Cargando plan...'}
-                  </span>
-                </div>
-                {isMounted && <span className="text-xs font-black">$ {currentPrice.toLocaleString()} ARS</span>}
-              </button>
-            </div>
-          )}
 
           <div className="grid grid-cols-2 gap-3">
             {claimApproved ? (

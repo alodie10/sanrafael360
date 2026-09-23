@@ -1,8 +1,10 @@
 import { mendozaDayRange } from '../../../utils/prospeccion-saludo';
 import {
   DEFAULT_PROSPECCION_PLANTILLA,
+  withPlantillaSlots,
   type ProspeccionPlantillaFields,
 } from '../plantilla-defaults';
+import { slotsFromMensaje } from '../../../utils/plantilla-slots';
 
 const CONTACTO_UID = 'api::prospeccion-contacto.prospeccion-contacto';
 const PLANTILLA_UID = 'api::prospeccion-plantilla.prospeccion-plantilla';
@@ -26,12 +28,19 @@ export class ProspeccionRepository {
   }
 
   async createPlantilla(data: ProspeccionPlantillaFields) {
-    return this.strapi.documents(PLANTILLA_UID).create({ data });
+    return this.strapi.documents(PLANTILLA_UID).create({
+      data: {
+        texto_ficha: data.texto_ficha,
+        mensaje: data.mensaje,
+        firma: data.firma,
+        mensajes: data.mensajes || slotsFromMensaje(data.mensaje),
+      },
+    });
   }
 
   async updatePlantilla(
     documentId: string,
-    data: { texto_ficha: string; mensaje: string }
+    data: { texto_ficha: string; mensaje: string; mensajes?: ProspeccionPlantillaFields['mensajes'] }
   ) {
     return this.strapi.documents(PLANTILLA_UID).update({ documentId, data });
   }
@@ -117,10 +126,11 @@ export const createProspeccionRepository = (strapi: any) =>
   new ProspeccionRepository(strapi);
 
 export function plantillaFromDoc(doc: any): ProspeccionPlantillaFields {
-  if (!doc) return { ...DEFAULT_PROSPECCION_PLANTILLA };
-  return {
+  if (!doc) return withPlantillaSlots({ ...DEFAULT_PROSPECCION_PLANTILLA });
+  return withPlantillaSlots({
     texto_ficha: doc.texto_ficha || DEFAULT_PROSPECCION_PLANTILLA.texto_ficha,
     mensaje: doc.mensaje || DEFAULT_PROSPECCION_PLANTILLA.mensaje,
     firma: doc.firma || DEFAULT_PROSPECCION_PLANTILLA.firma,
-  };
+    mensajes: doc.mensajes,
+  });
 }

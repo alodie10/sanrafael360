@@ -18,6 +18,7 @@ import {
   resolveFirma,
   type ProspeccionPlantillaFields,
 } from '../plantilla-defaults';
+import { normalizePlantillaSlots, pickSlotTexto } from '../../../utils/plantilla-slots';
 import {
   createProspeccionRepository,
   plantillaFromDoc,
@@ -60,6 +61,7 @@ async function ensurePlantilla(repo: ProspeccionRepository) {
     await repo.updatePlantilla(existing.documentId, {
       texto_ficha: migrated.texto_ficha,
       mensaje: migrated.mensaje,
+      mensajes: normalizePlantillaSlots(migrated.mensajes, migrated.mensaje),
     });
     return migrated;
   }
@@ -88,22 +90,36 @@ async function updatePlantilla(
       ...DEFAULT_PROSPECCION_PLANTILLA,
       texto_ficha: input.texto_ficha,
       mensaje: input.mensaje,
+      mensajes: normalizePlantillaSlots(input.mensajes, input.mensaje),
     });
   } else {
     await repo.updatePlantilla(existing.documentId, {
       texto_ficha: input.texto_ficha,
       mensaje: input.mensaje,
+      mensajes: normalizePlantillaSlots(input.mensajes, input.mensaje),
     });
   }
   await userRepo.setFirmaProspeccion(userId, input.firma);
   return plantillaForUser(repo, userRepo, userId);
 }
 
-function composeEnvioTexto(tipo: EnviarTipo, plantilla: ProspeccionPlantillaFields) {
+function composeEnvioTexto(
+  tipo: EnviarTipo,
+  plantilla: ProspeccionPlantillaFields,
+  plantillaIndex?: unknown
+) {
   if (tipo === 'saludo') return greetingNow();
+  const slots = normalizePlantillaSlots(plantilla.mensajes, plantilla.mensaje);
+  const { slot } = pickSlotTexto(slots, plantillaIndex);
+  const mensaje = slot.texto.trim();
+  if (!mensaje) {
+    throw new ValidationError(`La plantilla "${slot.titulo}" está vacía`);
+  }
   return composeFichaMensaje({
     url: guideHomeUrl(),
-    ...plantilla,
+    texto_ficha: plantilla.texto_ficha,
+    mensaje,
+    firma: plantilla.firma,
   });
 }
 
@@ -197,13 +213,14 @@ async function enviarMensaje(
   userId: number,
   negocioDocumentId: string,
   tipo: EnviarTipo,
-  canal: EnviarCanal
+  canal: EnviarCanal,
+  plantillaIndex?: unknown
 ) {
   const negocio = await repo.findNegocioByDocumentId(negocioDocumentId);
   if (!negocio) throw new NotFoundError('Negocio');
 
   const plantilla = await plantillaForUser(repo, userRepo, userId);
-  const texto = composeEnvioTexto(tipo, plantilla);
+  const texto = composeEnvioTexto(tipo, plantilla, plantillaIndex);
   const destinos = destinosForCanal(negocio, canal, texto);
 
   let cupoWhatsapp = await readCupoWhatsapp(repo);
@@ -252,7 +269,8 @@ export function createProspeccionService(strapi: any) {
       userId: number,
       negocioDocumentId: string,
       tipo: EnviarTipo,
-      canal: EnviarCanal = 'whatsapp'
-    ) => enviarMensaje(repo, userRepo, userId, negocioDocumentId, tipo, canal),
+      canal: EnviarCanal = 'whatsapp',
+      plantillaIndex?: unknown
+    ) => enviarMensaje(repo, userRepo, userId, negocioDocumentId, tipo, canal, plantillaIndex),
   };
 }

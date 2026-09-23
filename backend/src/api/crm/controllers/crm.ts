@@ -71,7 +71,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
   }),
 
   updatePlantilla: asyncHandler(async (ctx: any) => {
-    const { mensaje, firma, prompt_ia } = ctx.request.body || {};
+    const { mensaje, firma, prompt_ia, slots, mensajes } = ctx.request.body || {};
     ctx.send({
       data: await createCrmService(strapi).updatePlantilla(
         actorFrom(ctx),
@@ -79,6 +79,8 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
           mensaje,
           firma: firma || '',
           prompt_ia,
+          slots,
+          mensajes,
         },
         slugFrom(ctx)
       ),
@@ -90,7 +92,8 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       data: await createCrmService(strapi).enviarWhatsapp(
         actorFrom(ctx),
         ctx.request.body.contactoDocumentId,
-        slugFrom(ctx)
+        slugFrom(ctx),
+        ctx.request.body.plantillaIndex
       ),
     });
   }),
@@ -109,6 +112,16 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
   listAlcanzados: asyncHandler(async (ctx: any) => {
     ctx.send({
       data: await createCrmService(strapi).listAlcanzados(actorFrom(ctx), slugFrom(ctx)),
+    });
+  }),
+
+  listNotas: asyncHandler(async (ctx: any) => {
+    ctx.send({
+      data: await createCrmService(strapi).listNotas(
+        actorFrom(ctx),
+        ctx.params.documentId,
+        slugFrom(ctx)
+      ),
     });
   }),
 

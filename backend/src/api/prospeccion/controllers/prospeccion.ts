@@ -66,12 +66,13 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
   }),
 
   enviar: asyncHandler(async (ctx: any) => {
-    const { negocioDocumentId, tipo, canal } = ctx.request.body || {};
+    const { negocioDocumentId, tipo, canal, plantillaIndex } = ctx.request.body || {};
     const data = await createProspeccionService(strapi).enviar(
       adminUserId(ctx),
       negocioDocumentId,
       tipo,
-      canal || 'whatsapp'
+      canal || 'whatsapp',
+      plantillaIndex
     );
     ctx.send({ data });
   }),

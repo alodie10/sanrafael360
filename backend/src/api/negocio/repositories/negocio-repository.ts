@@ -35,6 +35,8 @@ export class NegocioRepository {
         'instagram_username',
         'is_premium',
         'premium_valid_until',
+        'is_prospector',
+        'prospector_valid_until',
         'estado_reclamo',
         'documentId',
       ],
