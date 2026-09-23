@@ -61,13 +61,20 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [extendMonths, setExtendMonths] = useState(1);
   const [manualDate, setManualDate] = useState("");
+  const [prospectorDate, setProspectorDate] = useState("");
   const [isUpdatingDate, setIsUpdatingDate] = useState(false);
+  const [isUpdatingProspector, setIsUpdatingProspector] = useState(false);
 
   useEffect(() => {
     if (selectedBusiness && selectedBusiness.premium_valid_until) {
       setManualDate(selectedBusiness.premium_valid_until.split('T')[0]);
     } else {
       setManualDate("");
+    }
+    if (selectedBusiness && selectedBusiness.prospector_valid_until) {
+      setProspectorDate(selectedBusiness.prospector_valid_until.split('T')[0]);
+    } else {
+      setProspectorDate("");
     }
   }, [selectedBusiness?.id]);
   
@@ -81,6 +88,11 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
           setManualDate(updated.premium_valid_until.split('T')[0]);
         } else {
           setManualDate("");
+        }
+        if (updated.prospector_valid_until) {
+          setProspectorDate(updated.prospector_valid_until.split('T')[0]);
+        } else {
+          setProspectorDate("");
         }
       }
     }
@@ -205,6 +217,30 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
       alert("Error crítico al actualizar: " + (err as Error).message);
     } finally {
       setIsUpdatingDate(false);
+    }
+  };
+
+  const handleUpdateProspector = async () => {
+    if (!selectedBusiness) return;
+    setIsUpdatingProspector(true);
+    try {
+      const strapiUrl = getStrapiUrl();
+      const res = await fetch(`${strapiUrl}/api/negocios/admin/vigencia/${selectedBusiness.documentId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwt}`
+        },
+        body: JSON.stringify({ prospector_valid_until: prospectorDate || null })
+      });
+      if (!res.ok) throw new Error("Error al guardar Prospector: " + await res.text());
+      setRefreshTrigger(prev => prev + 1);
+      alert("Prospector guardado. El dueño ve Captación en /portal si la fecha está vigente.");
+    } catch (err) {
+      console.error(err);
+      alert("Error al actualizar Prospector: " + (err as Error).message);
+    } finally {
+      setIsUpdatingProspector(false);
     }
   };
 
@@ -486,6 +522,11 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
                       `}>
                         {isExpired ? 'Vencido' : isExpiringSoon ? 'Elite (Alerta)' : negocio.is_premium ? 'Elite' : 'Básico'}
                       </div>
+                      {negocio.is_prospector ? (
+                        <div className="mt-2 text-[9px] font-black uppercase tracking-widest text-primary" data-testid="admin-prospector-badge">
+                          Captación
+                        </div>
+                      ) : null}
                     </td>
                   </tr>
                 );
@@ -545,6 +586,34 @@ export default function AdminPaymentsView({ jwt }: AdminPaymentsViewProps) {
                     disabled={isUpdatingDate}
                     className="p-2 bg-primary/10 text-primary hover:bg-primary hover:text-black rounded-xl transition-colors shrink-0 disabled:opacity-50"
                     title="Guardar Fecha Exacta"
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-black/30 p-5 rounded-2xl border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-primary" /> Prospector / Captación
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-1">Misma operatoria que Elite: fecha de vencimiento. Crea el CRM del dueño.</p>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="date"
+                    data-testid="admin-prospector-date"
+                    value={prospectorDate}
+                    onChange={(e) => setProspectorDate(e.target.value)}
+                    className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-primary/50 text-xs w-full md:w-auto [color-scheme:dark]"
+                  />
+                  <button
+                    type="button"
+                    data-testid="admin-prospector-save"
+                    onClick={handleUpdateProspector}
+                    disabled={isUpdatingProspector}
+                    className="p-2 bg-primary/10 text-primary hover:bg-primary hover:text-black rounded-xl transition-colors shrink-0 disabled:opacity-50"
+                    title="Guardar vigencia Prospector"
                   >
                     <CheckCircle2 className="w-5 h-5" />
                   </button>

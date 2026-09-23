@@ -31,6 +31,12 @@ export class CrmRepository {
     });
   }
 
+  findComercioByNegocio(negocioDocumentId: string) {
+    return this.strapi.documents(COMERCIO).findFirst({
+      filters: { negocio: { documentId: { $eq: negocioDocumentId } } },
+    });
+  }
+
   listComercios() {
     return this.strapi.documents(COMERCIO).findMany({
       sort: ['createdAt:asc'],

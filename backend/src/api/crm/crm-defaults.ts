@@ -1,3 +1,5 @@
+import { slotsFromMensaje } from '../../utils/plantilla-slots';
+
 export const CRM_TENANT_SLUG = 'sr360';
 
 export type CrmModo = 'guia' | 'agenda';
@@ -33,16 +35,19 @@ export const DEFAULT_CRM_FIRMA = 'Diego Alonso — sanrafael360.com';
 
 export function plantillaDefaults(modo: CrmModo, nombre: string) {
   if (modo === 'agenda') {
-    const label = nombre.trim() || 'nuestro comercio';
+    const label = String(nombre || '').trim() || 'nuestro comercio';
+    const mensaje = `Hola, te escribo de ${label}.`;
     return {
-      mensaje: `Hola, te escribo de ${label}.`,
+      mensaje,
       firma: label,
       prompt_ia: DEFAULT_AGENDA_PROMPT_IA,
+      mensajes: slotsFromMensaje(mensaje),
     };
   }
   return {
     mensaje: DEFAULT_CRM_MENSAJE,
     firma: DEFAULT_CRM_FIRMA,
     prompt_ia: DEFAULT_CRM_PROMPT_IA,
+    mensajes: slotsFromMensaje(DEFAULT_CRM_MENSAJE),
   };
 }

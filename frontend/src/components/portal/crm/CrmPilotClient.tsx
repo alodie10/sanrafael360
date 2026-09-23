@@ -6,6 +6,7 @@ import { ArrowLeft, Megaphone } from "lucide-react";
 import { STRAPI_URL, isBrowserNetworkError } from "@/lib/strapi";
 import type { CrmAlcanzado, CrmBootstrap, CrmContacto, CrmCupo, CrmEstado, CrmLeadFiltro } from "@/lib/crm";
 import { alcanzadoAsContacto, crmSlugQuery, filterAlcanzadosUi } from "@/lib/crm";
+import { normalizePlantillaSlots, type PlantillaSlot } from "@/lib/plantilla-slots";
 import CrmManualForm from "./CrmManualForm";
 import CrmIngestPanel from "./CrmIngestPanel";
 import CrmContactList, { type CrmCategoria } from "./CrmContactList";
@@ -34,6 +35,9 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<CrmLeadFiltro>({ estado: "", desde: "", hasta: "" });
   const [tab, setTab] = useState<"mesa" | "alcanzados">("mesa");
+  const [plantillaIndex, setPlantillaIndex] = useState(0);
+
+  const plantillaSlots = normalizePlantillaSlots(boot?.plantilla.slots, boot?.plantilla.mensaje);
 
   const load = useCallback(
     async (nextSlug?: string) => {
@@ -107,7 +111,8 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo crear"));
       const status = json.data?.status;
-      setNotice(status === "duplicado" ? "Ya estaba en la cola" : "Contacto cargado");
+      const saved = json.data?.contacto?.nombre || input.nombre;
+      setNotice(status === "duplicado" ? `Ya estaba en la cola: ${saved}` : `Contacto cargado: ${saved}`);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
@@ -149,7 +154,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
           Authorization: `Bearer ${jwt}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(withSlug({ contactoDocumentId: documentId })),
+        body: JSON.stringify(withSlug({ contactoDocumentId: documentId, plantillaIndex })),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo armar WhatsApp"));
@@ -175,7 +180,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
     setBoot((prev) => (prev ? { ...prev, cupo } : prev));
   }
 
-  async function guardarPlantilla(input: { mensaje: string; firma: string }) {
+  async function guardarPlantilla(input: { firma: string; slots: PlantillaSlot[] }) {
     setBusy(true);
     setError(null);
     try {
@@ -237,6 +242,20 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
       setBusy(false);
     }
   }
+
+  const loadNotas = useCallback(
+    async (documentId: string) => {
+      const q = crmSlugQuery(slug);
+      const res = await fetch(`${STRAPI_URL}/api/crm/contactos/${documentId}/notas${q}`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+        cache: "no-store",
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(apiError(json, "No se pudo cargar el historial"));
+      return (json.data || []) as { texto: string; createdAt: string }[];
+    },
+    [jwt, slug]
+  );
 
   async function cambiarCategoria(documentId: string, categoriaId: string) {
     const res = await fetch(`${STRAPI_URL}/api/crm/contactos/${documentId}`, {
@@ -342,6 +361,27 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
               Cupo {boot?.cupo.enviados ?? "—"}/{boot?.cupo.limite ?? 25}
             </p>
           )}
+          {isAdmin && (boot?.tenants || []).length > 1 && (
+            <select
+              data-testid="crm-tenant-select"
+              value={slug || boot?.comercio.slug || ""}
+              onChange={(e) => {
+                const next = e.target.value;
+                slugRef.current = next;
+                setSlug(next);
+                load(next).catch((err) =>
+                  setError(err instanceof Error ? err.message : "No se pudo cambiar de cola")
+                );
+              }}
+              className="bg-black/40 border border-white/10 text-white text-xs rounded-xl px-3 py-2 max-w-[14rem]"
+            >
+              {(boot?.tenants || []).map((t) => (
+                <option key={t.slug} value={t.slug}>
+                  {t.nombre}
+                </option>
+              ))}
+            </select>
+          )}
           <div className="flex flex-wrap gap-2 ml-auto">
             <button
               type="button"
@@ -379,7 +419,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
         )}
         {forbidden && (
           <p className="text-zinc-400 text-sm" data-testid="crm-forbidden">
-            Este CRM es para el comercio que lo tiene contratado. Si es tu caso, entra con el mismo email.
+            Este CRM es para quien tiene Captación Prospector vigente. Entrá con el email del dueño.
           </p>
         )}
         {notice && (
@@ -405,6 +445,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
                 <CrmPlantillaForm
                   mensaje={boot?.plantilla.mensaje || ""}
                   firma={boot?.plantilla.firma || ""}
+                  slots={boot?.plantilla.slots}
                   onSave={guardarPlantilla}
                   busy={busy}
                 />
@@ -413,7 +454,24 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
             <section>
               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <h2 className="text-xl font-serif text-white italic">Cola</h2>
-                <button
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                    Mensaje
+                    <select
+                      data-testid="crm-plantilla-enviar"
+                      value={plantillaIndex}
+                      onChange={(e) => setPlantillaIndex(Number(e.target.value))}
+                      className="bg-black/40 border border-white/10 text-white text-xs rounded-xl px-3 py-2 normal-case tracking-normal font-sans font-medium"
+                    >
+                      {plantillaSlots.map((slot, i) => (
+                        <option key={i} value={i} disabled={!slot.texto}>
+                          {i + 1}. {slot.titulo}
+                          {slot.texto ? "" : " (vacía)"}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
                   type="button"
                   data-testid="crm-limpiar-cola"
                   disabled={busy || !(boot?.contactos || []).length}
@@ -422,6 +480,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
                 >
                   Limpiar cola
                 </button>
+                </div>
               </div>
               <CrmContactList
                 contactos={boot?.contactos || []}
@@ -447,14 +506,15 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
                 setSelectedLeadId(null);
               }}
             />
-            <CrmContactadosList
-              contactos={filterAlcanzadosUi(alcanzados, filtro).map(alcanzadoAsContacto)}
-              selectedId={selectedLeadId}
-              onSelect={setSelectedLeadId}
-              onNota={guardarNota}
-              onEstado={cambiarEstado}
-              busy={busy}
-            />
+              <CrmContactadosList
+                contactos={filterAlcanzadosUi(alcanzados, filtro).map(alcanzadoAsContacto)}
+                selectedId={selectedLeadId}
+                onSelect={setSelectedLeadId}
+                onNota={guardarNota}
+                onEstado={cambiarEstado}
+                onLoadNotas={loadNotas}
+                busy={busy}
+              />
           </section>
         )}
       </main>

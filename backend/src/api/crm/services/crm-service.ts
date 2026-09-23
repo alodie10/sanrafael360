@@ -11,7 +11,7 @@ import {
   resumenCupoActividades,
   type CupoWhatsapp,
 } from '../crm-cupo';
-import { DEFAULT_CRM_FIRMA, DEFAULT_CRM_MENSAJE, DEFAULT_CRM_PROMPT_IA } from '../crm-defaults';
+import { DEFAULT_CRM_FIRMA } from '../crm-defaults';
 import { normalizeNombreKey, parseCrmIngestPayload, type CrmIngestItem } from '../crm-ingest';
 import {
   assertContactoInTenant,
@@ -30,6 +30,7 @@ import {
   patchContactoTrasFicha,
 } from '../crm-ficha';
 import { foldAlcanzados } from '../crm-alcanzados';
+import { mapNotaActividades } from '../crm-prospector';
 import { estadoYNotaPatch, type CrmListQuery } from '../crm-estado';
 import {
   assertPuedeEnviarWhatsapp,
@@ -37,6 +38,7 @@ import {
   CRM_WSP_NO_ENVIADO,
   patchTrasWhatsapp,
 } from '../crm-enviar';
+import { mapCrmPlantilla, mensajeDeSlot, plantillaSavePayload, type CrmPlantillaInput } from '../crm-plantilla-map';
 import { adminCreateNegocio } from '../../negocio/services/admin-create-negocio';
 import { createCrmRepository, type CrmRepository } from '../repositories/crm-repository';
 
@@ -115,6 +117,15 @@ async function insertContacto(
     origen,
     comercioDocumentId,
   });
+  const texto = String(item.nota || '').trim();
+  if (texto) {
+    await repo.createActividad({
+      tipo: 'nota',
+      canal: 'sistema',
+      texto,
+      contacto: created.documentId,
+    });
+  }
   return { status: 'creado' as const, contacto: mapCrmContacto(created) };
 }
 
@@ -134,16 +145,19 @@ export function createCrmService(strapi: any) {
       patch: Record<string, unknown>,
       slug?: string
     ) => updateContacto(repo, actor, documentId, patch, slug),
-    updatePlantilla: (
+    updatePlantilla: (actor: CrmActor, input: CrmPlantillaInput, slug?: string) =>
+      updatePlantilla(repo, actor, input, slug),
+    enviarWhatsapp: (
       actor: CrmActor,
-      input: { mensaje: string; firma: string; prompt_ia?: string },
-      slug?: string
-    ) => updatePlantilla(repo, actor, input, slug),
-    enviarWhatsapp: (actor: CrmActor, contactoDocumentId: string, slug?: string) =>
-      enviarWhatsapp(repo, actor, contactoDocumentId, slug),
+      contactoDocumentId: string,
+      slug?: string,
+      plantillaIndex?: unknown
+    ) => enviarWhatsapp(repo, actor, contactoDocumentId, slug, plantillaIndex),
     crearFicha: (actor: CrmActor, contactoDocumentId: string, categoriaId?: string, slug?: string) =>
       crearFicha(strapi, repo, actor, contactoDocumentId, categoriaId, slug),
     listAlcanzados: (actor: CrmActor, slug?: string) => listAlcanzados(repo, actor, slug),
+    listNotas: (actor: CrmActor, documentId: string, slug?: string) =>
+      listNotas(repo, actor, documentId, slug),
     limpiarCola: (actor: CrmActor, slug?: string) => limpiarCola(repo, actor, slug),
     prestar: (actor: CrmActor, input: CrmPrestamoInput) => prestar(repo, actor, input),
   };
@@ -160,11 +174,7 @@ async function bootstrap(repo: CrmRepository, actor: CrmActor, slug?: string) {
   const contactos = await repo.listContactos(comercio.documentId, { soloCola: true });
   return {
     comercio: mapTenant(comercio),
-    plantilla: {
-      mensaje: plantilla.mensaje,
-      firma: plantilla.firma || '',
-      prompt_ia: plantilla.prompt_ia || DEFAULT_CRM_PROMPT_IA,
-    },
+    plantilla: mapCrmPlantilla(plantilla),
     cupo: readCupo(comercio),
     contactos: (contactos || []).map(mapCrmContacto),
     canPrestar: actor.isAdmin,
@@ -190,10 +200,11 @@ async function createManual(
   slug?: string
 ) {
   const { comercio } = await loadTenant(repo, actor, slug);
-  if (!String(input.nombre || '').trim()) {
+  const nombre = String(input.nombre || '').trim();
+  if (!nombre) {
     throw new ValidationError('nombre es requerido');
   }
-  return insertContacto(repo, comercio.documentId, input, 'manual');
+  return insertContacto(repo, comercio.documentId, { ...input, nombre }, 'manual');
 }
 
 async function ingest(repo: CrmRepository, actor: CrmActor, payload: string, slug?: string) {
@@ -218,23 +229,12 @@ async function ingest(repo: CrmRepository, actor: CrmActor, payload: string, slu
 async function updatePlantilla(
   repo: CrmRepository,
   actor: CrmActor,
-  input: { mensaje: string; firma: string; prompt_ia?: string },
+  input: CrmPlantillaInput,
   slug?: string
 ) {
   const { plantilla } = await loadTenant(repo, actor, slug);
-  const data: Record<string, unknown> = {
-    mensaje: String(input.mensaje || '').trim() || DEFAULT_CRM_MENSAJE,
-    firma: String(input.firma || '').trim(),
-  };
-  if (input.prompt_ia != null) {
-    data.prompt_ia = String(input.prompt_ia).trim() || DEFAULT_CRM_PROMPT_IA;
-  }
-  const updated = await repo.updatePlantilla(plantilla.documentId, data);
-  return {
-    mensaje: updated.mensaje,
-    firma: updated.firma || '',
-    prompt_ia: updated.prompt_ia,
-  };
+  const updated = await repo.updatePlantilla(plantilla.documentId, plantillaSavePayload(input));
+  return mapCrmPlantilla(updated);
 }
 
 async function updateContacto(
@@ -259,6 +259,14 @@ async function updateContacto(
     data.categoria = categoriaId || null;
   }
   await repo.updateContacto(documentId, data);
+  if (typeof data.nota === 'string' && data.nota.trim() && data.nota !== (row.nota || '')) {
+    await repo.createActividad({
+      tipo: 'nota',
+      canal: 'sistema',
+      texto: data.nota.trim(),
+      contacto: documentId,
+    });
+  }
   if (typeof data.estado === 'string') {
     await refundCupoSiErrorHoy(repo, comercio, row, data.estado);
   }
@@ -298,19 +306,20 @@ async function enviarWhatsapp(
   repo: CrmRepository,
   actor: CrmActor,
   contactoDocumentId: string,
-  slug?: string
+  slug?: string,
+  plantillaIndex?: unknown
 ) {
   const { comercio, plantilla } = await loadTenant(repo, actor, slug);
   const contacto = await repo.findContacto(contactoDocumentId);
   assertContactoInTenant(contacto, comercio.documentId);
-  assertPuedeEnviarWhatsapp(contacto);
+  assertPuedeEnviarWhatsapp(contacto, modoOf(comercio));
   const firma =
     plantilla.firma ||
     (modoOf(comercio) === 'agenda' ? comercio.nombre : DEFAULT_CRM_FIRMA);
   const texto = composeCrmMensaje({
     saludo: greetingNow(),
     nombre: contacto.nombre,
-    mensaje: plantilla.mensaje,
+    mensaje: mensajeDeSlot(plantilla, plantillaIndex),
     firma,
   });
   const whatsappUrl = buildWhatsappUrl(contacto.telefono, texto);
@@ -382,6 +391,19 @@ async function listAlcanzados(repo: CrmRepository, actor: CrmActor, slug?: strin
   const { comercio } = await loadTenant(repo, actor, slug);
   const rows = await repo.listEnviosWhatsapp(comercio.documentId);
   return foldAlcanzados(rows);
+}
+
+async function listNotas(
+  repo: CrmRepository,
+  actor: CrmActor,
+  documentId: string,
+  slug?: string
+) {
+  const { comercio } = await loadTenant(repo, actor, slug);
+  const row = await repo.findContacto(documentId);
+  assertContactoInTenant(row, comercio.documentId);
+  const acts = await repo.listActividades(documentId);
+  return mapNotaActividades(acts || []);
 }
 
 async function limpiarCola(repo: CrmRepository, actor: CrmActor, slug?: string) {

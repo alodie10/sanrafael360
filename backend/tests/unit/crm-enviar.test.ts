@@ -20,6 +20,15 @@ describe('crm-enviar', () => {
     ).not.toThrow();
   });
 
+  it('lets agenda tenants open WhatsApp without a listing', () => {
+    expect(() =>
+      assertPuedeEnviarWhatsapp({ nombre: 'Ana', telefono: '2615550000' }, 'agenda')
+    ).not.toThrow();
+    expect(() =>
+      assertPuedeEnviarWhatsapp({ nombre: 'Ana', no_contactar: true }, 'agenda')
+    ).toThrow(ValidationError);
+  });
+
   it('leaves the queue even when WhatsApp has no URL', () => {
     expect(patchTrasWhatsapp('nuevo', false)).toEqual({ en_cola: false });
     expect(patchTrasWhatsapp('nuevo', true)).toEqual({ en_cola: false, estado: 'contactado' });

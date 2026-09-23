@@ -81,6 +81,15 @@ export default {
     },
     {
       method: 'GET',
+      path: '/crm/contactos/:documentId/notas',
+      handler: 'crm.listNotas',
+      config: {
+        ...portalAuth,
+        middlewares: ['api::crm.require-crm-portal', 'api::crm.crm-contacto-id-validator'],
+      },
+    },
+    {
+      method: 'GET',
       path: '/crm/alcanzados',
       handler: 'crm.listAlcanzados',
       config: { ...portalAuth, middlewares: ['api::crm.require-crm-portal'] },

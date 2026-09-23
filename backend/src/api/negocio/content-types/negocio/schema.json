@@ -233,6 +233,15 @@
       "type": "text",
       "description": "Notas administrativas sobre los pagos (ej: Pago efectivo 15/05)"
     },
+    "is_prospector": {
+      "type": "boolean",
+      "default": false,
+      "description": "Módulo Captación / Prospector vigente"
+    },
+    "prospector_valid_until": {
+      "type": "datetime",
+      "description": "Vencimiento del módulo Prospector (misma operatoria que premium_valid_until)"
+    },
     "pagos": {
       "type": "relation",
       "relation": "oneToMany",

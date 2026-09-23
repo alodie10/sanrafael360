@@ -1,3 +1,5 @@
+import { normalizePlantillaSlots } from '../../utils/plantilla-slots';
+
 export const DEFAULT_PROSPECCION_PLANTILLA = {
   texto_ficha: 'Si querés publicar con nosotros, esta es nuestra guía.',
   mensaje: [
@@ -21,7 +23,13 @@ export type ProspeccionPlantillaFields = {
   texto_ficha: string;
   mensaje: string;
   firma: string;
+  mensajes?: { titulo: string; texto: string }[];
 };
+
+export function withPlantillaSlots(fields: ProspeccionPlantillaFields): ProspeccionPlantillaFields {
+  const slots = normalizePlantillaSlots(fields.mensajes, fields.mensaje);
+  return { ...fields, mensaje: slots[0].texto, mensajes: slots };
+}
 
 export function composeFichaMensaje(input: {
   url: string;

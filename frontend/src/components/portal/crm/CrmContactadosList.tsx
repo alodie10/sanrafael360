@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import type { CrmContacto, CrmEstado } from "@/lib/crm";
 import { CRM_ESTADOS, formatCrmFecha } from "@/lib/crm";
 
+export type CrmNotaItem = { texto: string; createdAt: string };
+
 type Props = {
   contactos: CrmContacto[];
   selectedId: string | null;
   onSelect: (documentId: string | null) => void;
   onNota: (documentId: string, nota: string) => Promise<void>;
   onEstado: (documentId: string, estado: CrmEstado) => Promise<void>;
+  onLoadNotas: (documentId: string) => Promise<CrmNotaItem[]>;
   busy: boolean;
 };
 
@@ -19,6 +22,7 @@ export default function CrmContactadosList({
   onSelect,
   onNota,
   onEstado,
+  onLoadNotas,
   busy,
 }: Props) {
   if (!contactos.length) {
@@ -39,6 +43,7 @@ export default function CrmContactadosList({
           onSelect={onSelect}
           onNota={onNota}
           onEstado={onEstado}
+          onLoadNotas={onLoadNotas}
           busy={busy}
         />
       ))}
@@ -52,6 +57,7 @@ function CrmContactadoRow({
   onSelect,
   onNota,
   onEstado,
+  onLoadNotas,
   busy,
 }: {
   contacto: CrmContacto;
@@ -59,14 +65,31 @@ function CrmContactadoRow({
   onSelect: (documentId: string | null) => void;
   onNota: (documentId: string, nota: string) => Promise<void>;
   onEstado: (documentId: string, estado: CrmEstado) => Promise<void>;
+  onLoadNotas: (documentId: string) => Promise<CrmNotaItem[]>;
   busy: boolean;
 }) {
   const [nota, setNota] = useState(c.nota || "");
+  const [historial, setHistorial] = useState<CrmNotaItem[]>([]);
   const dirty = nota !== (c.nota || "");
 
   useEffect(() => {
     setNota(c.nota || "");
   }, [c.nota]);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    onLoadNotas(c.documentId)
+      .then((rows) => {
+        if (!cancelled) setHistorial(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setHistorial([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, c.documentId, onLoadNotas]);
 
   return (
     <li className="rounded-2xl border border-white/5 bg-zinc-950/40">
@@ -98,6 +121,18 @@ function CrmContactadoRow({
               </option>
             ))}
           </select>
+          {historial.length > 0 && (
+            <ol className="space-y-2" data-testid="crm-nota-historial">
+              {historial.map((item, i) => (
+                <li key={`${item.createdAt}-${i}`} className="text-sm text-zinc-300">
+                  <span className="text-[10px] uppercase tracking-widest text-zinc-500 mr-2">
+                    {formatCrmFecha(item.createdAt)}
+                  </span>
+                  {item.texto}
+                </li>
+              ))}
+            </ol>
+          )}
           <textarea
             data-testid="crm-nota"
             value={nota}
@@ -110,7 +145,11 @@ function CrmContactadoRow({
             type="button"
             data-testid="crm-nota-guardar"
             disabled={busy || !dirty}
-            onClick={() => onNota(c.documentId, nota)}
+            onClick={async () => {
+              await onNota(c.documentId, nota);
+              const rows = await onLoadNotas(c.documentId);
+              setHistorial(rows);
+            }}
             className="px-4 py-2 border border-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
           >
             Guardar comentario

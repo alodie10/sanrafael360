@@ -66,3 +66,8 @@ Numeración **CRM-DEC-…**.
 - **Contexto:** Abrir wa.me suma 1 al cupo de 25 aunque el número falle. Diego marca Error WSP a mano.
 - **Decisión:** Si el estado pasa a `error` y hubo un WhatsApp que consumió cupo **hoy** (calendario Mendoza), se resta 1. Un teléfono inválido (sin `wa.me`) no resta porque no había sumado. Un error de otro día no toca el cupo de hoy.
 - **Qué se descartó:** Cron de reset; devolver cupo al marcar Error sobre envíos viejos.
+
+### 2026-09-23 — CRM-DEC-014 — Prospector = vigencia admin, no un build por cliente
+- **Contexto:** El primer cliente (dueño `argendeli01@gmail.com`) paga Captación. No es un producto llamado Argendeli: es el mismo CRM con tenant `agenda`. Diego carga ~25 leads/día y el cliente también puede ingerir; el WhatsApp sale por `wa.me` en la línea del cliente.
+- **Decisión:** Alta de cliente = fecha de vencimiento en Pagos (como Elite), campos `is_prospector` + `prospector_valid_until`. Un botón guarda Premium y otro Prospector para no pisarse. Al guardar se crea/reactiva `crm-comercio` modo `agenda` (cupo 25) ligado al email del dueño. En agenda no hay **Crear ficha**; `wa.me` no exige listing. Los comentarios se apilan como `crm-actividad` tipo `nota`. Cobro MP más adelante, mismo sistema de pagos.
+- **Qué se descartó:** Código a medida por cliente; mezclar Prospector con `is_premium`; WhatsApp de agenda atado a ficha de la guía (CRM-DEC-012 sigue en tenant `guia`).

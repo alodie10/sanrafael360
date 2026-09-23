@@ -23,7 +23,7 @@ const ALWAYS_FORBIDDEN = [
   'premium_since',
 ] as const;
 
-const ADMIN_ONLY = ['is_premium', 'premium_valid_until'] as const;
+const ADMIN_ONLY = ['is_premium', 'premium_valid_until', 'is_prospector', 'prospector_valid_until'] as const;
 
 const HTTP_URL_FIELDS = [
   'website',

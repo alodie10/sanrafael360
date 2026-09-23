@@ -13,6 +13,13 @@ const mockUserFindById = vi.fn();
 const mockUserUpdateFavoritos = vi.fn();
 const mockUserFindWithFavoritos = vi.fn();
 const mockPagoFindAllForAdmin = vi.fn();
+const mockFindComercioByNegocio = vi.fn();
+const mockFindComercioByOwnerEmail = vi.fn();
+const mockFindComercioBySlug = vi.fn();
+const mockCreateComercio = vi.fn();
+const mockUpdateComercio = vi.fn();
+const mockFindPlantillaByComercio = vi.fn();
+const mockCreatePlantilla = vi.fn();
 
 vi.mock('../../src/api/negocio/repositories/negocio-repository', () => ({
   createNegocioRepository: () => ({
@@ -33,6 +40,18 @@ vi.mock('../../src/repositories/user-repository', () => ({
 vi.mock('../../src/api/pago/repositories/pago-repository', () => ({
   createPagoRepository: () => ({
     findAllForAdmin: mockPagoFindAllForAdmin,
+  }),
+}));
+
+vi.mock('../../src/api/crm/repositories/crm-repository', () => ({
+  createCrmRepository: () => ({
+    findComercioByNegocio: mockFindComercioByNegocio,
+    findComercioByOwnerEmail: mockFindComercioByOwnerEmail,
+    findComercioBySlug: mockFindComercioBySlug,
+    createComercio: mockCreateComercio,
+    updateComercio: mockUpdateComercio,
+    findPlantillaByComercio: mockFindPlantillaByComercio,
+    createPlantilla: mockCreatePlantilla,
   }),
 }));
 
@@ -171,6 +190,47 @@ describe('portal-admin service', () => {
       expect(mockNegocioUpdateDraftAndPublished).toHaveBeenCalledWith(
         'doc-1',
         expect.objectContaining({ is_premium: true })
+      );
+    });
+  });
+
+  describe('updateProspectorVigencia', () => {
+    it('writes prospector vigencia and provisions the agenda CRM', async () => {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 30);
+      const dateStr = tomorrow.toISOString().split('T')[0];
+      mockNegocioFindById.mockResolvedValue({
+        documentId: 'doc-1',
+        nombre: 'Argendeli',
+        slug: 'argendeli',
+        owner: { email: 'argendeli01@gmail.com' },
+      });
+      mockFindComercioByNegocio.mockResolvedValue(null);
+      mockFindComercioByOwnerEmail.mockResolvedValue(null);
+      mockFindComercioBySlug.mockResolvedValue(null);
+      mockFindPlantillaByComercio.mockResolvedValue(null);
+      mockCreateComercio.mockResolvedValue({
+        documentId: 'c1',
+        nombre: 'Argendeli',
+        slug: 'argendeli',
+        modo: 'agenda',
+        owner_email: 'argendeli01@gmail.com',
+        activo: true,
+      });
+
+      const service = createPortalAdminService(strapi);
+      await service.updateProspectorVigencia('doc-1', dateStr);
+
+      expect(mockNegocioUpdateDraftAndPublished).toHaveBeenCalledWith(
+        'doc-1',
+        expect.objectContaining({ is_prospector: true })
+      );
+      expect(mockCreateComercio).toHaveBeenCalledWith(
+        expect.objectContaining({
+          modo: 'agenda',
+          owner_email: 'argendeli01@gmail.com',
+          cupo_wsp_limite: 25,
+        })
       );
     });
   });

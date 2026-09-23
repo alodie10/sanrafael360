@@ -98,7 +98,7 @@ function CrmContactoRow({
           data-testid="crm-cola-nota"
           value={nota}
           onChange={(e) => setNota(e.target.value)}
-          placeholder="Comentario para elegir la categoría"
+          placeholder={canCrearFicha ? "Comentario para elegir la categoría" : "Ingresá tu comentario"}
           rows={2}
           className="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl px-3 py-2 placeholder:text-zinc-600"
         />
@@ -158,6 +158,17 @@ function CrmContactoRow({
             </button>
           )}
         </div>
+      )}
+      {!canCrearFicha && (
+        <button
+          type="button"
+          data-testid="crm-enviar-wsp"
+          disabled={busy || c.no_contactar}
+          onClick={() => onEnviar(c.documentId)}
+          className="px-4 py-2 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40 xl:self-center"
+        >
+          WhatsApp
+        </button>
       )}
     </li>
   );

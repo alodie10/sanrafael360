@@ -1,15 +1,16 @@
 import { ValidationError } from '../../../utils/errors';
+import { normalizePlantillaSlots } from '../../../utils/plantilla-slots';
 
 export default (_config: unknown) => {
   return async (ctx: any, next: () => Promise<void>) => {
     const body = ctx.request.body || {};
     const texto = body.texto_ficha;
-    const mensaje = body.mensaje;
+    const slots = normalizePlantillaSlots(body.slots ?? body.mensajes, body.mensaje);
 
     if (!texto || typeof texto !== 'string' || !texto.trim()) {
       throw new ValidationError('texto_ficha es requerido');
     }
-    if (!mensaje || typeof mensaje !== 'string' || !mensaje.trim()) {
+    if (!slots[0].texto) {
       throw new ValidationError('mensaje es requerido');
     }
     if (body.firma != null && typeof body.firma !== 'string') {
@@ -18,7 +19,9 @@ export default (_config: unknown) => {
 
     ctx.request.body = {
       texto_ficha: texto.trim(),
-      mensaje: mensaje.trim(),
+      mensaje: slots[0].texto,
+      mensajes: slots,
+      slots,
       firma: typeof body.firma === 'string' ? body.firma.trim() : '',
     };
 

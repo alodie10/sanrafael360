@@ -111,17 +111,17 @@ export async function loadTenant(
       return ensureGuiaTenant(repo);
     }
     const comercio = await repo.findComercioBySlug(slug);
-    if (!comercio || comercio.activo === false) {
+    if (!comercio) {
       throw new NotFoundError('CRM');
     }
     return { comercio, plantilla: await ensurePlantilla(repo, comercio) };
   }
 
   const email = normalizeOwnerEmail(actor.email);
-  if (!email) throw new ForbiddenError('No tenés un CRM prestado');
+  if (!email) throw new ForbiddenError('No tenés Captación Prospector');
   const comercio = await repo.findComercioByOwnerEmail(email);
   if (!comercio || comercio.activo === false) {
-    throw new ForbiddenError('No tenés un CRM prestado');
+    throw new ForbiddenError('No tenés Captación Prospector vigente');
   }
   if (slug && slug !== comercio.slug) {
     throw new ForbiddenError('No podés ver ese CRM');
@@ -148,6 +148,56 @@ export async function createPrestamo(repo: CrmRepository, input: CrmPrestamoInpu
     owner_email,
     cupo_wsp_count: 0,
     cupo_wsp_limite: 25,
+  });
+  await ensurePlantilla(repo, comercio);
+  return mapTenant(comercio);
+}
+
+export async function pickAgendaSlug(repo: CrmRepository, preferred: string) {
+  const base = assertPrestamoSlug(preferred || slugFromNombre('comercio'));
+  if (!(await repo.findComercioBySlug(base))) return base;
+  for (let i = 2; i < 30; i += 1) {
+    const candidate = `${base}-${i}`.slice(0, 40);
+    if (!(await repo.findComercioBySlug(candidate))) return candidate;
+  }
+  throw new ConflictError('No se pudo crear un slug de CRM');
+}
+
+export async function syncProspectorTenant(
+  repo: CrmRepository,
+  negocio: { documentId: string; nombre?: string; slug?: string; owner?: { email?: string } },
+  active: boolean
+) {
+  const rawEmail = normalizeOwnerEmail(negocio.owner?.email);
+  if (active && !rawEmail) {
+    throw new ValidationError('Asigná un dueño con email al negocio antes de activar Prospector');
+  }
+  const owner_email = rawEmail;
+  let comercio =
+    (await repo.findComercioByNegocio(negocio.documentId)) ||
+    (owner_email ? await repo.findComercioByOwnerEmail(owner_email) : null);
+  if (!comercio) {
+    if (!active) return null;
+    const email = assertValidOwnerEmail(owner_email);
+    const preferred = String(negocio.slug || '').trim() || slugFromNombre(negocio.nombre || 'comercio');
+    const slug = await pickAgendaSlug(repo, preferred);
+    comercio = await repo.createComercio({
+      nombre: String(negocio.nombre || '').trim() || slug,
+      slug,
+      activo: true,
+      modo: 'agenda',
+      owner_email: email,
+      cupo_wsp_count: 0,
+      cupo_wsp_limite: 25,
+      negocio: negocio.documentId,
+    });
+    await ensurePlantilla(repo, comercio);
+    return mapTenant(comercio);
+  }
+  await repo.updateComercio(comercio.documentId, {
+    activo: active,
+    ...(owner_email ? { owner_email } : {}),
+    negocio: negocio.documentId,
   });
   await ensurePlantilla(repo, comercio);
   return mapTenant(comercio);

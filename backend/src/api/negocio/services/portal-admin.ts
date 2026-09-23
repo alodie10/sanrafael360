@@ -3,6 +3,9 @@ import { createPagoRepository } from '../../pago/repositories/pago-repository';
 import { createUserRepository } from '../../../repositories/user-repository';
 import { NotFoundError } from '../../../utils/errors';
 import { resolveVigenciaUpdate } from '../../../utils/premium-vigencia';
+import { createCrmRepository } from '../../crm/repositories/crm-repository';
+import { resolveProspectorVigencia } from '../../crm/crm-prospector';
+import { syncProspectorTenant } from '../../crm/crm-tenant';
 import { dedupeFavoritos, nextFavoritoIds } from './favoritos-utils';
 import { buildAdminPagosPayload, type AdminPagosQuery } from './admin-pagos-utils';
 
@@ -56,6 +59,21 @@ export function createPortalAdminService(strapi: any) {
         is_premium,
         premium_valid_until: validUntilISO,
       });
+    },
+
+    async updateProspectorVigencia(
+      negocioDocumentId: string,
+      prospector_valid_until: string | null
+    ) {
+      const negocioRepo = createNegocioRepository(strapi);
+      const negocio = await negocioRepo.findById(negocioDocumentId, ['owner']);
+      if (!negocio) throw new NotFoundError('Negocio');
+      const { is_prospector, validUntilISO } = resolveProspectorVigencia(prospector_valid_until);
+      await negocioRepo.updateDraftAndPublished(negocioDocumentId, {
+        is_prospector,
+        prospector_valid_until: validUntilISO,
+      });
+      await syncProspectorTenant(createCrmRepository(strapi), negocio, is_prospector);
     },
 
     async createManualPago(data: {
