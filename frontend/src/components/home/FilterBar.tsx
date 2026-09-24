@@ -4,7 +4,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getCategoryIcon } from "@/lib/icons";
+import { getCategoryIcons } from "@/lib/icons";
 import { Categoria } from "@/types/strapi";
 import Link from "next/link";
 import {
@@ -124,7 +124,7 @@ export default function FilterBar({ categorias, selectedCategoryDocId }: FilterB
       selectedCategoryDocId === cat.documentId ||
       resolveParentDocumentId(selectedCategory?.parent) === cat.documentId
     );
-    const Icon = isAll ? LayoutGrid : getCategoryIcon(cat.nombre);
+    const icons = isAll ? [LayoutGrid] : getCategoryIcons(cat.nombre);
     const label = isAll ? "Todos" : cat.nombre;
     const href = isAll ? "/" : categoriaHref(cat.slug || cat.documentId);
 
@@ -138,11 +138,14 @@ export default function FilterBar({ categorias, selectedCategoryDocId }: FilterB
       >
         <div className={cn(
           "w-14 h-14 md:w-12 md:h-12 rounded-2xl flex items-center justify-center border transition-all duration-300",
+          icons.length > 1 && "gap-0.5",
           isActive
             ? "bg-primary text-black border-primary shadow-[0_0_15px_rgba(214,175,55,0.4)]"
             : "bg-white/5 text-slate-400 border-white/10 group-hover:bg-white/10 group-hover:text-white group-hover:border-white/20"
         )}>
-          <Icon className="w-5 h-5" />
+          {icons.map((Icon, iconIndex) => (
+            <Icon key={iconIndex} className={icons.length > 1 ? "w-4 h-4" : "w-5 h-5"} />
+          ))}
         </div>
         <span className={cn(
           "text-[9px] font-bold text-center uppercase tracking-wide whitespace-normal line-clamp-2 leading-tight block w-full px-0.5 transition-colors",
