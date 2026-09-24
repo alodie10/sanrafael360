@@ -78,6 +78,15 @@ export const CATEGORY_INTENT_GROUPS: { keys: string[]; terms: string[] }[] = [
     terms: ['abogado', 'contador', 'escribania', 'arquitecto', 'estudio'],
   },
   {
+    keys: ['servicios_industriales_b2b'],
+    terms: [
+      'metalurgica', 'soldadura', 'torno', 'mecanizado', 'caldereria',
+      'mantenimiento industrial', 'compresor', 'montacargas', 'grua',
+      'hidraulica', 'automatizacion', 'electricidad industrial',
+      'insumos industriales', 'seguridad industrial', 'transporte de carga',
+    ],
+  },
+  {
     keys: ['servicios_para_el_hogar', 'servicios_para_el_hogar_y_tecno'],
     terms: [
       'gasista', 'plomero', 'electricista', 'aire acondicionado', 'tecnico',
