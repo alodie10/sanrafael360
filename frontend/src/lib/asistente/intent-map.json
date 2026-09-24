@@ -116,6 +116,19 @@
     "queries": ["veterinaria", "mascotas"],
     "categories": ["Mascotas y Veterinarias", "Mascotas y veterinarias"]
   },
+  "industrial": {
+    "aliases": [
+      "industrial",
+      "industriales",
+      "metalurgica",
+      "soldadura",
+      "mantenimiento industrial",
+      "b2b"
+    ],
+    "queries": ["metalurgica", "soldadura", "mantenimiento industrial", "industrial"],
+    "categories": ["Servicios Industriales - B2B"],
+    "match": "category"
+  },
   "peluqueria": {
     "aliases": [
       "peluqueria",

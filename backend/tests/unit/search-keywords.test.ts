@@ -20,6 +20,14 @@ describe('search keyword builder', () => {
     expect(terms).toEqual(expect.arrayContaining(['neumatico', 'llanta', 'cubierta']));
   });
 
+  it('maps industrial services to the B2B rubro', () => {
+    const terms = buildSearchKeywords({
+      slug: 'servicios-industriales-b2b',
+      nombre: 'Servicios Industriales - B2B',
+    });
+    expect(terms).toEqual(expect.arrayContaining(['metalurgica', 'soldadura', 'montacargas']));
+  });
+
   it('maps brake pads to auto parts', () => {
     const terms = buildSearchKeywords({
       slug: 'repuestos_automotor',
