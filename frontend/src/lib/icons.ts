@@ -219,6 +219,13 @@ export function getCategoryIcon(name: string): LucideIcon {
   return matchByLongestRoot(name, iconMap) ?? Info;
 }
 
+/** Ferretería & Electricidad muestra martillo y rayo; el resto, un solo ícono. */
+export function getCategoryIcons(name: string): LucideIcon[] {
+  const n = normalizeCategoryKey(name);
+  if (n.includes("ferreteria") && n.includes("electric")) return [Hammer, Zap];
+  return [getCategoryIcon(name)];
+}
+
 export function getCategoryGradient(name: string): string {
   if (!name) return gradientMap.default;
   return matchByLongestRoot(name, gradientMap) ?? gradientMap.default;

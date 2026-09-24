@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Categoria } from "@/types/strapi";
-import { getCategoryIcon, getCategoryGradient } from "@/lib/icons";
+import { getCategoryIcons, getCategoryGradient } from "@/lib/icons";
 
 interface CategoryCardProps {
   categoria: Categoria;
@@ -13,7 +13,7 @@ interface CategoryCardProps {
 }
 
 export default function CategoryCard({ categoria, index, onSelect }: CategoryCardProps) {
-  const Icon = getCategoryIcon(categoria.nombre);
+  const icons = getCategoryIcons(categoria.nombre);
   const gradient = getCategoryGradient(categoria.nombre);
 
   return (
@@ -35,7 +35,11 @@ export default function CategoryCard({ categoria, index, onSelect }: CategoryCar
         
         {/* Animated Icon Container */}
         <div className="absolute top-6 right-6 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 group-hover:bg-white/20 transition-all duration-500">
-          <Icon className="w-6 h-6 text-white group-hover:scale-110 group-hover:rotate-6 transition-transform" />
+          <span className="flex items-center gap-1 text-white group-hover:scale-110 transition-transform">
+            {icons.map((Icon, iconIndex) => (
+              <Icon key={iconIndex} className="w-6 h-6" />
+            ))}
+          </span>
         </div>
 
         {/* Content */}
