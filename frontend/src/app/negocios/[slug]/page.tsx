@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import BusinessDetailClient from "./BusinessDetailClient";
 import DirectoryListingClient from "./DirectoryListingClient";
+import FichaAnswers from "@/components/business/FichaAnswers";
 import { getNegocioBySlug } from "@/lib/negocios";
 import { showsPublicFicha } from "@/lib/search-match";
 
@@ -17,5 +18,11 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
     return <DirectoryListingClient initialNegocio={negocio} slug={slug} />;
   }
 
-  return <BusinessDetailClient initialNegocio={negocio} slug={slug} />;
+  return (
+    <BusinessDetailClient
+      initialNegocio={negocio}
+      slug={slug}
+      lead={<FichaAnswers negocio={negocio} />}
+    />
+  );
 }
