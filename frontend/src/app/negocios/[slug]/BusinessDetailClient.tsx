@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { fetchFromStrapi, getStrapiUrl } from "@/lib/strapi";
 import { toStrapiEqFilter } from "@/lib/strapi-query";
 import { safeHttpHref } from "@/lib/safe-outbound-url";
@@ -29,7 +29,15 @@ import {
 import { descriptionToSafeText } from "@/lib/safe-text";
 import { showsPublicFicha } from "@/lib/search-match";
 
-export default function BusinessDetailClient({ initialNegocio, slug }: { initialNegocio: Negocio; slug: string }) {
+export default function BusinessDetailClient({
+  initialNegocio,
+  slug,
+  lead,
+}: {
+  initialNegocio: Negocio;
+  slug: string;
+  lead?: ReactNode;
+}) {
   const [negocio, setNegocio] = useState<Negocio | null>(initialNegocio);
   const [error, setError] = useState(false);
 
@@ -347,6 +355,8 @@ export default function BusinessDetailClient({ initialNegocio, slug }: { initial
           </div>
         </div>
       </section>
+
+      {lead}
 
       {showClaimModal && (
         <div

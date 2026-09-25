@@ -89,15 +89,40 @@ import { Suspense } from "react";
 import { getCategorias } from "@/lib/categorias";
 import { serializeJsonLd } from "@/lib/json-ld";
 
+const organizationId = `${siteUrl}/#organization`;
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": organizationId,
+  name: "San Rafael 360",
+  url: siteUrl,
+  logo: `${siteUrl}/icons/icon-192.png`,
+  email: "soporte@sanrafael360.com",
+  description:
+    "Directorio local de negocios, restaurantes, hoteles, bodegas y atracciones de San Rafael, Mendoza.",
+  areaServed: {
+    "@type": "City",
+    name: "San Rafael",
+    address: {
+      "@type": "PostalAddress",
+      addressRegion: "Mendoza",
+      addressCountry: "AR",
+    },
+  },
+};
+
 // Schema.org WebSite — habilita el Sitelinks Searchbox de Google
 const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": `${siteUrl}/#website`,
   name: "San Rafael 360",
   url: siteUrl,
   logo: `${siteUrl}/icons/icon-192.png`,
   description:
     "El directorio definitivo de negocios, restaurantes, hoteles y atracciones de San Rafael, Mendoza.",
+  publisher: { "@id": organizationId },
   potentialAction: {
     "@type": "SearchAction",
     target: {
@@ -124,6 +149,10 @@ export default async function RootLayout({
       className={`${inter.variable} ${outfit.variable} ${playfair.variable}${isDev ? " is-dev-env" : ""}`}
     >
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }}
