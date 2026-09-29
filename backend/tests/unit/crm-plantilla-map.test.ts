@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ValidationError } from '../../src/utils/errors';
-import { mapCrmPlantilla, mensajeDeSlot, plantillaSavePayload } from '../../src/api/crm/crm-plantilla-map';
+import { mapCrmPlantilla, mensajeDeSlot, plantillaSavePayload, slotDePlantilla } from '../../src/api/crm/crm-plantilla-map';
 
 describe('crm-plantilla-map', () => {
   it('maps five slots and keeps the first as mensaje', () => {
@@ -29,5 +29,13 @@ describe('crm-plantilla-map', () => {
   it('rejects sending an empty slot', () => {
     expect(() => mensajeDeSlot({ mensaje: 'Hola' }, 2)).toThrow(ValidationError);
     expect(mensajeDeSlot({ mensaje: 'Hola' }, 0)).toBe('Hola');
+  });
+
+  it('snapshots the slot title as the campaign', () => {
+    const slot = slotDePlantilla(
+      { mensajes: [{ titulo: 'SR360', texto: 'Te invito a la guía' }] },
+      0
+    );
+    expect(slot).toEqual({ texto: 'Te invito a la guía', campana: 'SR360', plantillaIndex: 0 });
   });
 });

@@ -24,6 +24,14 @@
     "texto": {
       "type": "text"
     },
+    "campana": {
+      "type": "string"
+    },
+    "plantilla_index": {
+      "type": "integer",
+      "min": 0,
+      "max": 4
+    },
     "contacto": {
       "type": "relation",
       "relation": "manyToOne",

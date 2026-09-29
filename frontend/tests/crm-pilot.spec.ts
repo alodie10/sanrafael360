@@ -30,6 +30,8 @@ test.describe('CRM piloto — flujo admin aislado', () => {
     await expect(page.getByTestId('crm-plantilla-form')).toBeHidden();
     await page.getByTestId('crm-tab-alcanzados').click();
     await expect(page.getByTestId('crm-filtro-estado')).toBeVisible();
+    await expect(page.getByTestId('crm-filtro-campana')).toBeVisible();
+    await expect(page.getByTestId('crm-llevar-escritorio')).toBeVisible();
     await expect(page.getByTestId('crm-limpiar-cola')).toHaveCount(0);
     await expect(
       page.getByTestId('crm-alcanzados').or(page.getByTestId('crm-alcanzados-empty'))
