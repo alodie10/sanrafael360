@@ -608,6 +608,7 @@ export interface ApiCrmActividadCrmActividad
     draftAndPublish: false;
   };
   attributes: {
+    campana: Schema.Attribute.String;
     canal: Schema.Attribute.Enumeration<['whatsapp', 'instagram', 'sistema']> &
       Schema.Attribute.Required;
     contacto: Schema.Attribute.Relation<
@@ -623,6 +624,14 @@ export interface ApiCrmActividadCrmActividad
       'api::crm-actividad.crm-actividad'
     > &
       Schema.Attribute.Private;
+    plantilla_index: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 4;
+          min: 0;
+        },
+        number
+      >;
     publishedAt: Schema.Attribute.DateTime;
     texto: Schema.Attribute.Text;
     tipo: Schema.Attribute.Enumeration<['envio_whatsapp', 'nota', 'estado']> &

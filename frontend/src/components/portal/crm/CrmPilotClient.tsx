@@ -5,14 +5,21 @@ import Link from "next/link";
 import { ArrowLeft, Megaphone } from "lucide-react";
 import { STRAPI_URL, isBrowserNetworkError } from "@/lib/strapi";
 import type { CrmAlcanzado, CrmBootstrap, CrmContacto, CrmCupo, CrmEstado, CrmLeadFiltro } from "@/lib/crm";
-import { alcanzadoAsContacto, crmSlugQuery, filterAlcanzadosUi } from "@/lib/crm";
+import {
+  alcanzadoAsContacto,
+  crmSlugQuery,
+  idAlcanzado,
+  opcionesCampana,
+  ultimoEnvioReciente,
+} from "@/lib/crm";
 import { normalizePlantillaSlots, type PlantillaSlot } from "@/lib/plantilla-slots";
 import CrmManualForm from "./CrmManualForm";
 import CrmIngestPanel from "./CrmIngestPanel";
 import CrmContactList, { type CrmCategoria } from "./CrmContactList";
 import CrmPlantillaForm from "./CrmPlantillaForm";
-import CrmLeadFilters from "./CrmLeadFilters";
-import CrmContactadosList from "./CrmContactadosList";
+import CrmAlcanzadosPanel from "./CrmAlcanzadosPanel";
+import CrmLotePanel from "./CrmLotePanel";
+import CrmAvisoReciente from "./CrmAvisoReciente";
 import CrmFold from "./CrmFold";
 
 type Props = { jwt: string; isAdmin: boolean };
@@ -33,9 +40,16 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
   const [categorias, setCategorias] = useState<CrmCategoria[]>([]);
   const [alcanzados, setAlcanzados] = useState<CrmAlcanzado[]>([]);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
-  const [filtro, setFiltro] = useState<CrmLeadFiltro>({ estado: "", desde: "", hasta: "" });
+  const [filtro, setFiltro] = useState<CrmLeadFiltro>({ estado: "", desde: "", hasta: "", campana: "" });
   const [tab, setTab] = useState<"mesa" | "alcanzados">("mesa");
   const [plantillaIndex, setPlantillaIndex] = useState(0);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [lote, setLote] = useState<CrmContacto[]>([]);
+  const [pendingEnvio, setPendingEnvio] = useState<{
+    documentId: string;
+    campana: string;
+    enviadoAt: string;
+  } | null>(null);
 
   const plantillaSlots = normalizePlantillaSlots(boot?.plantilla.slots, boot?.plantilla.mensaje);
 
@@ -158,6 +172,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo armar WhatsApp"));
+      setLote((prev) => prev.filter((c) => c.documentId !== documentId));
       setBoot((prev) =>
         prev
           ? { ...prev, contactos: prev.contactos.filter((c) => c.documentId !== documentId) }
@@ -174,6 +189,39 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
       setBusyId(null);
       await load().catch(() => undefined);
     }
+  }
+
+  function avisoPara(documentId: string) {
+    const row = alcanzados.find(
+      (item) => item.contactoDocumentId === documentId || item.documentId === documentId
+    );
+    if (!row) return null;
+    return ultimoEnvioReciente(row);
+  }
+
+  async function pedirEnviar(documentId: string) {
+    const aviso = avisoPara(documentId);
+    if (aviso) {
+      setPendingEnvio({ documentId, campana: aviso.campana, enviadoAt: aviso.enviadoAt });
+      return;
+    }
+    await enviar(documentId);
+  }
+
+  async function confirmarEnvio() {
+    if (!pendingEnvio) return;
+    const documentId = pendingEnvio.documentId;
+    setPendingEnvio(null);
+    await enviar(documentId);
+  }
+
+  function llevarAlEscritorio(visibles: CrmAlcanzado[]) {
+    const chosen = visibles.filter((row) => selectedIds.includes(idAlcanzado(row)));
+    if (!chosen.length) return;
+    setLote(chosen.map(alcanzadoAsContacto));
+    setSelectedIds([]);
+    setSelectedLeadId(null);
+    setTab("mesa");
   }
 
   function patchCupo(cupo: CrmCupo) {
@@ -482,10 +530,11 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
                 </button>
                 </div>
               </div>
+              <CrmLotePanel contactos={lote} onEnviar={pedirEnviar} busyId={busyId} />
               <CrmContactList
                 contactos={boot?.contactos || []}
                 categorias={categorias}
-                onEnviar={enviar}
+                onEnviar={pedirEnviar}
                 onNota={guardarNota}
                 onCategoria={cambiarCategoria}
                 onCrearFicha={crearFicha}
@@ -497,27 +546,38 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
         )}
 
         {!forbidden && tab === "alcanzados" && (
-          <section className="p-5 bg-zinc-900/40 border border-white/5 rounded-2xl space-y-4">
-            <h2 className="text-xl font-serif text-white italic">Contactos alcanzados</h2>
-            <CrmLeadFilters
-              filtro={filtro}
-              onChange={(next) => {
-                setFiltro(next);
-                setSelectedLeadId(null);
-              }}
-            />
-              <CrmContactadosList
-                contactos={filterAlcanzadosUi(alcanzados, filtro).map(alcanzadoAsContacto)}
-                selectedId={selectedLeadId}
-                onSelect={setSelectedLeadId}
-                onNota={guardarNota}
-                onEstado={cambiarEstado}
-                onLoadNotas={loadNotas}
-                busy={busy}
-              />
-          </section>
+          <CrmAlcanzadosPanel
+            alcanzados={alcanzados}
+            filtro={filtro}
+            campanas={opcionesCampana(plantillaSlots, alcanzados)}
+            selectedIds={selectedIds}
+            selectedLeadId={selectedLeadId}
+            busy={busy}
+            onFiltro={(next) => {
+              setFiltro(next);
+              setSelectedLeadId(null);
+              setSelectedIds([]);
+            }}
+            onToggle={(id) =>
+              setSelectedIds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]))
+            }
+            onToggleVisibles={(ids, on) => setSelectedIds(on ? ids : [])}
+            onLlevar={llevarAlEscritorio}
+            onSelect={setSelectedLeadId}
+            onNota={guardarNota}
+            onEstado={cambiarEstado}
+            onLoadNotas={loadNotas}
+          />
         )}
       </main>
+      {pendingEnvio && (
+        <CrmAvisoReciente
+          campana={pendingEnvio.campana}
+          enviadoAt={pendingEnvio.enviadoAt}
+          onConfirm={confirmarEnvio}
+          onCancel={() => setPendingEnvio(null)}
+        />
+      )}
     </div>
   );
 }

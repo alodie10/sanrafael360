@@ -166,7 +166,7 @@ export class CrmRepository {
       },
       populate: { contacto: { populate: ['categoria', 'negocio'] } },
       sort: ['createdAt:desc'],
-      limit: 100,
+      limit: 500,
     });
   }
 

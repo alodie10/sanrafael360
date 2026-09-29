@@ -59,6 +59,16 @@ export type CrmLeadFiltro = {
   estado: "" | CrmEstado;
   desde: string;
   hasta: string;
+  campana: string;
+};
+
+export const SIN_CAMPANA = "Sin campaña";
+export const AVISO_RECIENTE_DIAS = 30;
+
+export type CrmEnvio = {
+  campana: string;
+  enviadoAt: string;
+  plantillaIndex: number | null;
 };
 
 export function crmQuery(params: Record<string, string | undefined>) {
@@ -113,7 +123,43 @@ export type CrmAlcanzado = {
   categoriaNombre: string;
   negocioSlug: string;
   contactoDocumentId: string;
+  envios: CrmEnvio[];
 };
+
+export function idAlcanzado(row: { contactoDocumentId?: string; documentId: string }) {
+  return row.contactoDocumentId || row.documentId;
+}
+
+export function opcionesCampana(slots: { titulo: string }[], rows: CrmAlcanzado[]) {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const push = (titulo: string) => {
+    const label = titulo.trim();
+    if (!label || seen.has(label)) return;
+    seen.add(label);
+    out.push(label);
+  };
+  slots.forEach((slot) => push(slot.titulo));
+  rows.forEach((row) => (row.envios || []).forEach((envio) => push(envio.campana)));
+  return out;
+}
+
+export function ultimoEnvioReciente(
+  row: { envios?: CrmEnvio[]; enviadoAt?: string },
+  now = Date.now(),
+  dias = AVISO_RECIENTE_DIAS
+) {
+  const envios = enviosDe(row);
+  const latest = envios.reduce<(typeof envios)[number] | null>((best, envio) => {
+    if (!best || String(envio.enviadoAt) > String(best.enviadoAt)) return envio;
+    return best;
+  }, null);
+  if (!latest?.enviadoAt) return null;
+  const at = new Date(latest.enviadoAt).getTime();
+  if (Number.isNaN(at)) return null;
+  if (now - at >= dias * 24 * 60 * 60 * 1000) return null;
+  return { campana: latest.campana || SIN_CAMPANA, enviadoAt: latest.enviadoAt };
+}
 
 export function alcanzadoAsContacto(row: CrmAlcanzado): CrmContacto {
   return {
@@ -131,11 +177,26 @@ export function alcanzadoAsContacto(row: CrmAlcanzado): CrmContacto {
 }
 
 export function filterAlcanzadosUi(rows: CrmAlcanzado[], filtro: CrmLeadFiltro) {
+  const campana = filtro.campana.trim();
   return rows.filter((row) => {
     if (filtro.estado && row.estado !== filtro.estado) return false;
-    const day = String(row.enviadoAt || "").slice(0, 10);
-    if (filtro.desde && day < filtro.desde) return false;
-    if (filtro.hasta && day > filtro.hasta) return false;
-    return true;
+    const envios = enviosDe(row);
+    if (!campana) return enRango(dia(row.enviadoAt || envios[0]?.enviadoAt), filtro);
+    return envios.some((envio) => envio.campana === campana && enRango(dia(envio.enviadoAt), filtro));
   });
+}
+
+function enviosDe(row: { envios?: CrmEnvio[]; enviadoAt?: string }): CrmEnvio[] {
+  if (row.envios?.length) return row.envios;
+  return [{ campana: SIN_CAMPANA, enviadoAt: row.enviadoAt || "", plantillaIndex: null }];
+}
+
+function dia(iso?: string) {
+  return String(iso || "").slice(0, 10);
+}
+
+function enRango(day: string, filtro: { desde?: string; hasta?: string }) {
+  if (filtro.desde && day < filtro.desde) return false;
+  if (filtro.hasta && day > filtro.hasta) return false;
+  return true;
 }

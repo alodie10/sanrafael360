@@ -38,12 +38,16 @@ export function plantillaSavePayload(input: CrmPlantillaInput) {
   return data;
 }
 
-export function mensajeDeSlot(plantilla: any, index: unknown) {
+export function slotDePlantilla(plantilla: any, index: unknown) {
   const slots = normalizePlantillaSlots(plantilla?.mensajes, plantilla?.mensaje);
-  const { slot } = pickSlotTexto(slots, index);
-  const texto = slot.texto.trim();
+  const picked = pickSlotTexto(slots, index);
+  const texto = picked.slot.texto.trim();
   if (!texto) {
-    throw new ValidationError(`La plantilla "${slot.titulo}" está vacía`);
+    throw new ValidationError(`La plantilla "${picked.slot.titulo}" está vacía`);
   }
-  return texto;
+  return { texto, campana: picked.slot.titulo, plantillaIndex: picked.index };
+}
+
+export function mensajeDeSlot(plantilla: any, index: unknown) {
+  return slotDePlantilla(plantilla, index).texto;
 }

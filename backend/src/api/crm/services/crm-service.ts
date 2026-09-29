@@ -38,7 +38,7 @@ import {
   CRM_WSP_NO_ENVIADO,
   patchTrasWhatsapp,
 } from '../crm-enviar';
-import { mapCrmPlantilla, mensajeDeSlot, plantillaSavePayload, type CrmPlantillaInput } from '../crm-plantilla-map';
+import { mapCrmPlantilla, plantillaSavePayload, slotDePlantilla, type CrmPlantillaInput } from '../crm-plantilla-map';
 import { adminCreateNegocio } from '../../negocio/services/admin-create-negocio';
 import { createCrmRepository, type CrmRepository } from '../repositories/crm-repository';
 
@@ -316,10 +316,11 @@ async function enviarWhatsapp(
   const firma =
     plantilla.firma ||
     (modoOf(comercio) === 'agenda' ? comercio.nombre : DEFAULT_CRM_FIRMA);
+  const slot = slotDePlantilla(plantilla, plantillaIndex);
   const texto = composeCrmMensaje({
     saludo: greetingNow(),
     nombre: contacto.nombre,
-    mensaje: mensajeDeSlot(plantilla, plantillaIndex),
+    mensaje: slot.texto,
     firma,
   });
   const whatsappUrl = buildWhatsappUrl(contacto.telefono, texto);
@@ -329,6 +330,8 @@ async function enviarWhatsapp(
     tipo: 'envio_whatsapp',
     canal: 'whatsapp',
     texto: hasUrl ? texto : `${CRM_WSP_NO_ENVIADO} teléfono inválido. ${texto}`,
+    campana: slot.campana,
+    plantilla_index: slot.plantillaIndex,
     contacto: contacto.documentId,
   });
   let cupo = readCupo(comercio);
