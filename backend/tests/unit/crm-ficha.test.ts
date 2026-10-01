@@ -70,6 +70,18 @@ describe('crm-ficha', () => {
       nombre: 'Taller Sur',
       categoriaId: 'cat-taller',
     });
+    expect(
+      fichaPorTelefono(
+        [{ documentId: 'ale', slug: 'ale-pesca', nombre: 'Ale Pesca', telefono: '260154203641', categoriaId: 'cat-1', published: true }],
+        '5492604203641'
+      )?.documentId
+    ).toBe('ale');
+    expect(
+      fichaPorTelefono(
+        [{ documentId: 'pasq', slug: 'bodega-finca-pasquinelli', nombre: 'Bodega Pasquinelli', whatsapp: '111530100166', published: true }],
+        '1130100166'
+      )?.documentId
+    ).toBe('pasq');
     expect(fichaPorTelefono(candidatos, '2615550000')).toBeNull();
     expect(fichaPorTelefono(candidatos, '')).toBeNull();
   });

@@ -333,7 +333,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
     );
   }
 
-  async function crearFicha(documentId: string) {
+  async function crearFicha(documentId: string, categoriaId?: string) {
     setBusyId(documentId);
     setError(null);
     try {
@@ -343,7 +343,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
           Authorization: `Bearer ${jwt}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(withSlug({ contactoDocumentId: documentId })),
+        body: JSON.stringify(withSlug({ contactoDocumentId: documentId, categoriaId })),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo crear la ficha"));

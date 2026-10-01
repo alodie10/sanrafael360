@@ -314,7 +314,10 @@ async function updateContacto(
   if (typeof data.estado === 'string') {
     await refundCupoSiErrorHoy(repo, comercio, row, data.estado);
   }
-  return mapCrmContacto(await repo.findContacto(documentId));
+  const saved = mapCrmContacto(await repo.findContacto(documentId));
+  const chosen = patch.categoriaId != null ? String(patch.categoriaId).trim() : '';
+  if (saved && chosen && !saved.categoriaId) saved.categoriaId = chosen;
+  return saved;
 }
 
 async function refundCupoSiErrorHoy(
