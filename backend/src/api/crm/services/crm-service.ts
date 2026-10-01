@@ -140,7 +140,7 @@ export function createCrmService(strapi: any) {
     createManual: (actor: CrmActor, input: CrmIngestItem, slug?: string) =>
       createManual(repo, actor, input, slug),
     ingest: (actor: CrmActor, payload: string, slug?: string) =>
-      ingest(repo, actor, payload, slug),
+      ingest(strapi, repo, actor, payload, slug),
     updateContacto: (
       actor: CrmActor,
       documentId: string,
@@ -209,7 +209,13 @@ async function createManual(
   return insertContacto(repo, comercio.documentId, { ...input, nombre }, 'manual');
 }
 
-async function ingest(repo: CrmRepository, actor: CrmActor, payload: string, slug?: string) {
+async function ingest(
+  strapi: any,
+  repo: CrmRepository,
+  actor: CrmActor,
+  payload: string,
+  slug?: string
+) {
   let items;
   try {
     items = parseCrmIngestPayload(payload);
@@ -217,14 +223,50 @@ async function ingest(repo: CrmRepository, actor: CrmActor, payload: string, slu
     throw new ValidationError(err instanceof Error ? err.message : 'JSON inválido');
   }
   const { comercio } = await loadTenant(repo, actor, slug);
+  const fichas = await createNegocioRepository(strapi).listTelefonos();
   const resultados = [];
   for (const item of items) {
-    resultados.push(await insertContacto(repo, comercio.documentId, item, 'lista_ia'));
+    const creado = await insertContacto(repo, comercio.documentId, item, 'lista_ia');
+    resultados.push(await aplicarFichaPreexistente(repo, creado, fichas));
   }
   return {
     creados: resultados.filter((r) => r.status === 'creado').length,
     duplicados: resultados.filter((r) => r.status === 'duplicado').length,
+    enlazadas: resultados.filter((r) => r.vinculada).length,
     resultados,
+  };
+}
+
+async function aplicarFichaPreexistente(
+  repo: CrmRepository,
+  result: { status: 'creado' | 'duplicado'; contacto: any },
+  fichas: Parameters<typeof fichaPorTelefono>[0]
+) {
+  const documentId = result.contacto?.documentId;
+  if (!documentId) return { ...result, vinculada: false };
+  const row = await repo.findContacto(documentId);
+  if (negocioResumen(row)?.documentId) {
+    return { ...result, vinculada: false, contacto: mapCrmContacto(row) };
+  }
+  const ficha = fichaPorTelefono(fichas, row?.telefono);
+  if (!ficha?.documentId) {
+    return { ...result, vinculada: false, contacto: mapCrmContacto(row) };
+  }
+  const categoria = ficha.categoriaId || categoriaIdOf(row);
+  await repo.updateContacto(
+    documentId,
+    categoria ? patchContactoTrasFicha(categoria, ficha.documentId) : { negocio: ficha.documentId }
+  );
+  await repo.createActividad({
+    tipo: 'nota',
+    canal: 'sistema',
+    texto: `Ficha existente enlazada: ${ficha.slug || ficha.nombre}`,
+    contacto: documentId,
+  });
+  return {
+    ...result,
+    vinculada: true,
+    contacto: mapCrmContacto(await repo.findContacto(documentId)),
   };
 }
 

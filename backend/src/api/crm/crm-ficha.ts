@@ -38,14 +38,22 @@ export type FichaTelefonoCandidata = {
   nombre?: string;
   telefono?: string | null;
   whatsapp?: string | null;
+  categoriaId?: string;
   published?: boolean;
+};
+
+export type FichaPorTelefono = {
+  documentId: string;
+  slug: string;
+  nombre: string;
+  categoriaId: string;
 };
 
 /** Ficha del directorio cuyo teléfono o WhatsApp coincide con el del contacto. */
 export function fichaPorTelefono(
   candidatos: FichaTelefonoCandidata[],
   telefono?: string | null
-): { documentId: string; slug: string; nombre: string } | null {
+): FichaPorTelefono | null {
   const digits = normalizeWhatsappDigits(telefono);
   if (!digits) return null;
   const hits = candidatos.filter((row) => {
@@ -61,6 +69,7 @@ export function fichaPorTelefono(
     documentId: String(chosen.documentId),
     slug: chosen.slug || '',
     nombre: chosen.nombre || '',
+    categoriaId: chosen.categoriaId || categoriaIdOf(chosen),
   };
 }
 

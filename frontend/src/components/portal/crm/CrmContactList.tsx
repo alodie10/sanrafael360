@@ -75,6 +75,7 @@ function CrmContactoRow({
   busy: boolean;
 }) {
   const [nota, setNota] = useState(c.nota || "");
+  const tieneFicha = Boolean(c.negocio?.documentId || c.negocio?.slug);
   const ready = Boolean(c.nombre && c.telefono && c.categoriaId);
   const dirty = nota !== (c.nota || "");
 
@@ -113,7 +114,7 @@ function CrmContactoRow({
         </button>
       </div>
       {canCrearFicha && (
-        <div className="flex flex-wrap items-center gap-2 xl:w-64 xl:justify-end shrink-0">
+        <div className="flex flex-wrap items-center gap-2 xl:w-auto xl:max-w-sm xl:justify-end shrink-0">
           <select
             data-testid="crm-categoria"
             value={c.categoriaId || ""}
@@ -127,10 +128,19 @@ function CrmContactoRow({
               </option>
             ))}
           </select>
-          {c.negocio?.documentId || c.negocio?.slug ? (
+          <button
+            type="button"
+            data-testid="crm-crear-ficha"
+            disabled={busy || tieneFicha || !ready}
+            onClick={() => onCrearFicha(c.documentId)}
+            className="px-4 py-2 bg-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-xl border border-white/10 disabled:opacity-40"
+          >
+            Crear ficha
+          </button>
+          {tieneFicha && (
             <>
               <Link
-                href={`/negocios/${c.negocio.slug}`}
+                href={`/negocios/${c.negocio?.slug}`}
                 data-testid="crm-ficha-link"
                 className="px-4 py-2 border border-primary/40 text-primary font-black uppercase tracking-widest text-[10px] rounded-xl"
               >
@@ -146,16 +156,6 @@ function CrmContactoRow({
                 WhatsApp
               </button>
             </>
-          ) : (
-            <button
-              type="button"
-              data-testid="crm-crear-ficha"
-              disabled={busy || !ready}
-              onClick={() => onCrearFicha(c.documentId)}
-              className="px-4 py-2 bg-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-xl border border-white/10 disabled:opacity-40"
-            >
-              Crear ficha
-            </button>
           )}
         </div>
       )}

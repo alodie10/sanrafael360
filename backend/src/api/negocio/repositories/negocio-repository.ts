@@ -244,6 +244,7 @@ export class NegocioRepository {
       for (let start = 0; start < 5000; start += pageSize) {
         const page = await this.strapi.documents('api::negocio.negocio').findMany({
           fields: ['documentId', 'nombre', 'slug', 'telefono', 'whatsapp'],
+          populate: { categoria: { fields: ['documentId', 'nombre'] } },
           status,
           start,
           limit: pageSize,
@@ -262,6 +263,7 @@ export class NegocioRepository {
       slug: row.slug || '',
       telefono: row.telefono || null,
       whatsapp: row.whatsapp || null,
+      categoriaId: String(row.categoria?.documentId || ''),
       published: isPublished,
     });
     return [
