@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cupoFromComercio, cupoTrasErrorWsp, resumenCupoActividades } from '../../src/api/crm/crm-cupo';
+import { cupoFromComercio, cupoLleno, cupoTrasErrorWsp, resumenCupoActividades } from '../../src/api/crm/crm-cupo';
 
 describe('cupoFromComercio', () => {
   it('uses the CRM stored count for today', () => {
@@ -27,6 +27,22 @@ describe('cupoFromComercio', () => {
         '2026-09-17'
       ).limite
     ).toBe(10);
+  });
+
+  it('is full when today count reaches the limit', () => {
+    const lleno = cupoFromComercio(
+      { cupo_wsp_fecha: '2026-09-17', cupo_wsp_count: 25, cupo_wsp_limite: 25 },
+      '2026-09-17'
+    );
+    expect(cupoLleno(lleno)).toBe(true);
+    expect(
+      cupoLleno(
+        cupoFromComercio(
+          { cupo_wsp_fecha: '2026-09-17', cupo_wsp_count: 24, cupo_wsp_limite: 25 },
+          '2026-09-17'
+        )
+      )
+    ).toBe(false);
   });
 });
 

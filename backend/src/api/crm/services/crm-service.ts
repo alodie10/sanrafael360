@@ -6,6 +6,7 @@ import {
   asDateOnly,
   CUPO_DEVUELTO_TEXTO,
   cupoFromComercio,
+  cupoLleno,
   cupoTrasErrorWsp,
   nextCupoCount,
   resumenCupoActividades,
@@ -372,6 +373,10 @@ async function enviarWhatsapp(
   });
   const whatsappUrl = buildWhatsappUrl(contacto.telefono, texto);
   const hasUrl = Boolean(whatsappUrl);
+  const cupoActual = readCupo(comercio);
+  if (hasUrl && cupoLleno(cupoActual)) {
+    throw new ValidationError(`Llegaste al cupo CRM de ${cupoActual.limite} WhatsApp de hoy`);
+  }
   await repo.updateContacto(contacto.documentId, patchTrasWhatsapp(contacto.estado, hasUrl));
   await repo.createActividad({
     tipo: 'envio_whatsapp',

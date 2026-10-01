@@ -411,6 +411,9 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
           {!forbidden && (
             <p className="text-zinc-400 text-xs" data-testid="crm-cupo">
               Cupo {boot?.cupo.enviados ?? "—"}/{boot?.cupo.limite ?? 25}
+              {(boot?.cupo.enviados ?? 0) >= (boot?.cupo.limite ?? 25)
+                ? ". El resto sigue en la cola hasta mañana."
+                : ""}
             </p>
           )}
           {isAdmin && (boot?.tenants || []).length > 1 && (
@@ -534,7 +537,12 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
                 </button>
                 </div>
               </div>
-              <CrmLotePanel contactos={lote} onEnviar={pedirEnviar} busyId={busyId} />
+              <CrmLotePanel
+                contactos={lote}
+                onEnviar={pedirEnviar}
+                busyId={busyId}
+                cupoLleno={(boot?.cupo.enviados ?? 0) >= (boot?.cupo.limite ?? 25)}
+              />
               <CrmContactList
                 contactos={boot?.contactos || []}
                 categorias={categorias}
@@ -544,6 +552,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
                 onCrearFicha={crearFicha}
                 canCrearFicha={isAdmin && boot?.comercio.modo !== "agenda"}
                 busyId={busyId}
+                cupoLleno={(boot?.cupo.enviados ?? 0) >= (boot?.cupo.limite ?? 25)}
               />
             </section>
           </div>
