@@ -149,7 +149,9 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo encolar"));
-      setNotice(`Creados ${json.data.creados} · duplicados ${json.data.duplicados}`);
+      setNotice(
+        `Creados ${json.data.creados} · duplicados ${json.data.duplicados} · con ficha ${json.data.enlazadas || 0}`
+      );
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");

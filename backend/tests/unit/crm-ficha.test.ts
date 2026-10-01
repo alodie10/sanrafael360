@@ -60,6 +60,7 @@ describe('crm-ficha', () => {
         slug: 'taller-sur',
         nombre: 'Taller Sur',
         whatsapp: '2604498128',
+        categoriaId: 'cat-taller',
         published: true,
       },
     ];
@@ -67,6 +68,7 @@ describe('crm-ficha', () => {
       documentId: 'pub-1',
       slug: 'taller-sur',
       nombre: 'Taller Sur',
+      categoriaId: 'cat-taller',
     });
     expect(fichaPorTelefono(candidatos, '2615550000')).toBeNull();
     expect(fichaPorTelefono(candidatos, '')).toBeNull();
