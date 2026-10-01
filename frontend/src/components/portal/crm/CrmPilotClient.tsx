@@ -349,7 +349,9 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
       setNotice(
         json.data?.created
           ? `Ficha publicada${slugFicha ? ` · /negocios/${slugFicha}` : ""}`
-          : "Ya tenía ficha"
+          : json.data?.vinculada
+            ? `Ficha existente enlazada${slugFicha ? ` · /negocios/${slugFicha}` : ""}`
+            : "Ya tenía ficha"
       );
       await load();
     } catch (err) {

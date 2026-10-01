@@ -26,6 +26,7 @@ import {
   assertFichaMinima,
   assertGuiaPuedePublicar,
   categoriaIdOf,
+  fichaPorTelefono,
   negocioResumen,
   patchContactoTrasFicha,
 } from '../crm-ficha';
@@ -40,6 +41,7 @@ import {
 } from '../crm-enviar';
 import { mapCrmPlantilla, plantillaSavePayload, slotDePlantilla, type CrmPlantillaInput } from '../crm-plantilla-map';
 import { adminCreateNegocio } from '../../negocio/services/admin-create-negocio';
+import { createNegocioRepository } from '../../negocio/repositories/negocio-repository';
 import { createCrmRepository, type CrmRepository } from '../repositories/crm-repository';
 
 export type { CrmEstado } from '../crm-estado';
@@ -360,9 +362,16 @@ async function crearFicha(
   assertContactoInTenant(contacto, comercio.documentId);
   const ya = negocioResumen(contacto);
   if (ya?.documentId) {
-    return { created: false, contacto: mapCrmContacto(contacto), negocio: ya };
+    return { created: false, vinculada: false, contacto: mapCrmContacto(contacto), negocio: ya };
   }
   const categoria = String(categoriaId || categoriaIdOf(contacto) || '').trim();
+  const existente = fichaPorTelefono(
+    await createNegocioRepository(strapi).listTelefonos(),
+    contacto.telefono
+  );
+  if (existente?.documentId) {
+    return cerrarConFicha(repo, contacto.documentId, existente, categoria, false);
+  }
   assertFichaMinima({
     nombre: contacto.nombre,
     telefono: contacto.telefono,
@@ -373,19 +382,32 @@ async function crearFicha(
     categoriaId: categoria,
     telefono: contacto.telefono,
   });
-  await repo.updateContacto(
-    contacto.documentId,
-    patchContactoTrasFicha(categoria, negocio.documentId)
-  );
+  return cerrarConFicha(repo, contacto.documentId, negocio, categoria, true);
+}
+
+async function cerrarConFicha(
+  repo: CrmRepository,
+  contactoDocumentId: string,
+  negocio: { documentId: string; slug: string; nombre: string },
+  categoria: string,
+  created: boolean
+) {
+  const patch = categoria
+    ? patchContactoTrasFicha(categoria, negocio.documentId)
+    : { negocio: negocio.documentId };
+  await repo.updateContacto(contactoDocumentId, patch);
   await repo.createActividad({
     tipo: 'nota',
     canal: 'sistema',
-    texto: `Ficha publicada: ${negocio.slug}`,
-    contacto: contacto.documentId,
+    texto: created
+      ? `Ficha publicada: ${negocio.slug}`
+      : `Ficha existente enlazada: ${negocio.slug || negocio.nombre}`,
+    contacto: contactoDocumentId,
   });
   return {
-    created: true,
-    contacto: mapCrmContacto(await repo.findContacto(contacto.documentId)),
+    created,
+    vinculada: !created,
+    contacto: mapCrmContacto(await repo.findContacto(contactoDocumentId)),
     negocio,
   };
 }
