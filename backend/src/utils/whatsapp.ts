@@ -17,6 +17,20 @@ export function normalizeLocalPhoneDigits(raw?: string | null): string | null {
   return digits.length >= 8 ? digits : null;
 }
 
+/** Saca el 15 de móvil que va después del código de área (260 15 420-3641). */
+function stripArMobileFifteen(national: string): string | null {
+  if (national.startsWith('1115') && national.length === 12) {
+    return `11${national.slice(4)}`;
+  }
+  if (national.length === 12 && national.slice(3, 5) === '15') {
+    return `${national.slice(0, 3)}${national.slice(5)}`;
+  }
+  if (national.length === 12 && national.slice(4, 6) === '15') {
+    return `${national.slice(0, 4)}${national.slice(6)}`;
+  }
+  return null;
+}
+
 /** Normaliza un teléfono AR al formato wa.me (549…). */
 export function normalizeWhatsappDigits(raw?: string | null): string | null {
   let digits = String(raw || '').replace(/\D/g, '');
@@ -24,6 +38,14 @@ export function normalizeWhatsappDigits(raw?: string | null): string | null {
 
   if (digits.startsWith('00')) digits = digits.slice(2);
   while (digits.startsWith('0')) digits = digits.slice(1);
+
+  if (digits.startsWith('549') && digits.length > 13) {
+    const national = stripArMobileFifteen(digits.slice(3));
+    if (national) digits = `549${national}`;
+  }
+
+  const withoutFifteen = stripArMobileFifteen(digits);
+  if (withoutFifteen) digits = withoutFifteen;
 
   if (digits.startsWith('549') && digits.length >= 12) return digits;
 

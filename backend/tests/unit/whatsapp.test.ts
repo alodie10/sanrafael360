@@ -31,4 +31,11 @@ describe('normalizeWhatsappDigits', () => {
   it('inserts the mobile 9 when the number is 54 + area + local', () => {
     expect(normalizeWhatsappDigits('542604225561')).toBe('5492604225561');
   });
+
+  it('treats area + 15 + local as the same WhatsApp number', () => {
+    expect(normalizeWhatsappDigits('260154203641')).toBe('5492604203641');
+    expect(normalizeWhatsappDigits('2604203641')).toBe('5492604203641');
+    expect(normalizeWhatsappDigits('111530100166')).toBe('5491130100166');
+    expect(normalizeWhatsappDigits('1130100166')).toBe('5491130100166');
+  });
 });

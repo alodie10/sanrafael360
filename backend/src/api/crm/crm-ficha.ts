@@ -5,8 +5,8 @@ import { modoOf, type CrmActor } from './crm-tenant';
 export function categoriaIdOf(row: any): string {
   const rel = row?.categoria;
   if (!rel) return '';
-  if (typeof rel === 'string') return rel;
-  return String(rel.documentId || '');
+  if (typeof rel === 'string' || typeof rel === 'number') return String(rel);
+  return String(rel.documentId || rel.id || '');
 }
 
 export function negocioResumen(row: any): { documentId: string; slug: string; nombre: string } | null {

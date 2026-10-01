@@ -13,7 +13,7 @@ type Props = {
   onEnviar: (documentId: string) => Promise<void>;
   onNota: (documentId: string, nota: string) => Promise<void>;
   onCategoria: (documentId: string, categoriaId: string) => Promise<void>;
-  onCrearFicha: (documentId: string) => Promise<void>;
+  onCrearFicha: (documentId: string, categoriaId?: string) => Promise<void>;
   canCrearFicha: boolean;
   busyId: string | null;
 };
@@ -70,18 +70,23 @@ function CrmContactoRow({
   onEnviar: (documentId: string) => Promise<void>;
   onNota: (documentId: string, nota: string) => Promise<void>;
   onCategoria: (documentId: string, categoriaId: string) => Promise<void>;
-  onCrearFicha: (documentId: string) => Promise<void>;
+  onCrearFicha: (documentId: string, categoriaId?: string) => Promise<void>;
   canCrearFicha: boolean;
   busy: boolean;
 }) {
   const [nota, setNota] = useState(c.nota || "");
+  const [categoriaId, setCategoriaId] = useState(c.categoriaId || "");
   const tieneFicha = Boolean(c.negocio?.documentId || c.negocio?.slug);
-  const ready = Boolean(c.nombre && c.telefono && c.categoriaId);
+  const ready = Boolean(c.nombre && c.telefono && categoriaId);
   const dirty = nota !== (c.nota || "");
 
   useEffect(() => {
     setNota(c.nota || "");
   }, [c.nota]);
+
+  useEffect(() => {
+    if (c.categoriaId) setCategoriaId(c.categoriaId);
+  }, [c.categoriaId]);
 
   return (
     <li
@@ -117,8 +122,12 @@ function CrmContactoRow({
         <div className="flex flex-wrap items-center gap-2 xl:w-auto xl:max-w-sm xl:justify-end shrink-0">
           <select
             data-testid="crm-categoria"
-            value={c.categoriaId || ""}
-            onChange={(e) => onCategoria(c.documentId, e.target.value)}
+            value={categoriaId}
+            onChange={(e) => {
+              const next = e.target.value;
+              setCategoriaId(next);
+              onCategoria(c.documentId, next);
+            }}
             className="bg-black/40 border border-white/10 text-white text-xs rounded-xl px-3 py-2 min-w-[12rem]"
           >
             <option value="">Categoría</option>
@@ -132,7 +141,7 @@ function CrmContactoRow({
             type="button"
             data-testid="crm-crear-ficha"
             disabled={busy || tieneFicha || !ready}
-            onClick={() => onCrearFicha(c.documentId)}
+            onClick={() => onCrearFicha(c.documentId, categoriaId)}
             className="px-4 py-2 bg-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-xl border border-white/10 disabled:opacity-40"
           >
             Crear ficha
