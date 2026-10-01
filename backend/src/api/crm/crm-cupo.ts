@@ -13,6 +13,10 @@ export type { CupoWhatsapp };
 
 export const CUPO_DEVUELTO_TEXTO = 'Cupo CRM: se descontó 1 envío (Error WSP del día).';
 
+export function cupoLleno(cupo: { enviados: number; limite: number }) {
+  return cupo.enviados >= cupo.limite;
+}
+
 export function cupoFromComercio(
   doc: { cupo_wsp_fecha?: unknown; cupo_wsp_count?: unknown; cupo_wsp_limite?: unknown } | null,
   today: string

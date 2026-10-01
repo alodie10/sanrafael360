@@ -16,6 +16,7 @@ type Props = {
   onCrearFicha: (documentId: string, categoriaId?: string) => Promise<void>;
   canCrearFicha: boolean;
   busyId: string | null;
+  cupoLleno?: boolean;
 };
 
 export default function CrmContactList({
@@ -27,6 +28,7 @@ export default function CrmContactList({
   onCrearFicha,
   canCrearFicha,
   busyId,
+  cupoLleno = false,
 }: Props) {
   if (!contactos.length) {
     return (
@@ -49,6 +51,7 @@ export default function CrmContactList({
           onCrearFicha={onCrearFicha}
           canCrearFicha={canCrearFicha}
           busy={busyId === c.documentId}
+          cupoLleno={cupoLleno}
         />
       ))}
     </ul>
@@ -64,6 +67,7 @@ function CrmContactoRow({
   onCrearFicha,
   canCrearFicha,
   busy,
+  cupoLleno,
 }: {
   contacto: CrmContacto;
   categorias: CrmCategoria[];
@@ -73,6 +77,7 @@ function CrmContactoRow({
   onCrearFicha: (documentId: string, categoriaId?: string) => Promise<void>;
   canCrearFicha: boolean;
   busy: boolean;
+  cupoLleno: boolean;
 }) {
   const [nota, setNota] = useState(c.nota || "");
   const [categoriaId, setCategoriaId] = useState(c.categoriaId || "");
@@ -158,7 +163,7 @@ function CrmContactoRow({
               <button
                 type="button"
                 data-testid="crm-enviar-wsp"
-                disabled={busy || c.no_contactar}
+                disabled={busy || c.no_contactar || cupoLleno}
                 onClick={() => onEnviar(c.documentId)}
                 className="px-4 py-2 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
               >
@@ -172,7 +177,7 @@ function CrmContactoRow({
         <button
           type="button"
           data-testid="crm-enviar-wsp"
-          disabled={busy || c.no_contactar}
+          disabled={busy || c.no_contactar || cupoLleno}
           onClick={() => onEnviar(c.documentId)}
           className="px-4 py-2 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40 xl:self-center"
         >
