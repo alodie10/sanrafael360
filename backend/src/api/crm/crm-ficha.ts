@@ -32,6 +32,38 @@ export function patchContactoTrasFicha(categoria: string, negocioDocumentId: str
   return { categoria, negocio: negocioDocumentId };
 }
 
+export type FichaTelefonoCandidata = {
+  documentId: string;
+  slug?: string;
+  nombre?: string;
+  telefono?: string | null;
+  whatsapp?: string | null;
+  published?: boolean;
+};
+
+/** Ficha del directorio cuyo teléfono o WhatsApp coincide con el del contacto. */
+export function fichaPorTelefono(
+  candidatos: FichaTelefonoCandidata[],
+  telefono?: string | null
+): { documentId: string; slug: string; nombre: string } | null {
+  const digits = normalizeWhatsappDigits(telefono);
+  if (!digits) return null;
+  const hits = candidatos.filter((row) => {
+    if (!row.documentId) return false;
+    return (
+      normalizeWhatsappDigits(row.whatsapp) === digits ||
+      normalizeWhatsappDigits(row.telefono) === digits
+    );
+  });
+  const chosen = hits.find((row) => row.published) || hits[0];
+  if (!chosen?.documentId) return null;
+  return {
+    documentId: String(chosen.documentId),
+    slug: chosen.slug || '',
+    nombre: chosen.nombre || '',
+  };
+}
+
 export function assertFichaMinima(input: {
   nombre?: string;
   telefono?: string;

@@ -4,6 +4,7 @@ import {
   assertFichaMinima,
   assertGuiaPuedePublicar,
   categoriaIdOf,
+  fichaPorTelefono,
   negocioResumen,
   patchContactoTrasFicha,
 } from '../../src/api/crm/crm-ficha';
@@ -43,6 +44,32 @@ describe('crm-ficha', () => {
       negocio: 'neg-1',
     });
     expect(patchContactoTrasFicha('cat-1', 'neg-1')).not.toHaveProperty('estado');
+  });
+
+  it('matches an existing listing by normalized WhatsApp', () => {
+    const candidatos = [
+      {
+        documentId: 'draft-1',
+        slug: 'taller-borrador',
+        nombre: 'Borrador',
+        telefono: '0260 449-8128',
+        published: false,
+      },
+      {
+        documentId: 'pub-1',
+        slug: 'taller-sur',
+        nombre: 'Taller Sur',
+        whatsapp: '2604498128',
+        published: true,
+      },
+    ];
+    expect(fichaPorTelefono(candidatos, '5492604498128')).toEqual({
+      documentId: 'pub-1',
+      slug: 'taller-sur',
+      nombre: 'Taller Sur',
+    });
+    expect(fichaPorTelefono(candidatos, '2615550000')).toBeNull();
+    expect(fichaPorTelefono(candidatos, '')).toBeNull();
   });
 
   it('reads categoria and negocio from populated rows', () => {

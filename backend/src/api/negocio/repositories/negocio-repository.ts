@@ -237,6 +237,39 @@ export class NegocioRepository {
     });
   }
 
+  async listTelefonos() {
+    const pageSize = 200;
+    const load = async (status: 'published' | 'draft') => {
+      const rows: any[] = [];
+      for (let start = 0; start < 5000; start += pageSize) {
+        const page = await this.strapi.documents('api::negocio.negocio').findMany({
+          fields: ['documentId', 'nombre', 'slug', 'telefono', 'whatsapp'],
+          status,
+          start,
+          limit: pageSize,
+        });
+        const batch = page || [];
+        rows.push(...batch);
+        if (batch.length < pageSize) break;
+      }
+      return rows;
+    };
+    const [published, drafts] = await Promise.all([load('published'), load('draft')]);
+    const seen = new Set(published.map((row) => row.documentId));
+    const mapRow = (row: any, isPublished: boolean) => ({
+      documentId: String(row.documentId),
+      nombre: row.nombre || '',
+      slug: row.slug || '',
+      telefono: row.telefono || null,
+      whatsapp: row.whatsapp || null,
+      published: isPublished,
+    });
+    return [
+      ...published.map((row) => mapRow(row, true)),
+      ...drafts.filter((row) => !seen.has(row.documentId)).map((row) => mapRow(row, false)),
+    ];
+  }
+
   async findNeverPremiumWithMedia(limit = 40) {
     return this.strapi.documents('api::negocio.negocio').findMany({
       filters: {
