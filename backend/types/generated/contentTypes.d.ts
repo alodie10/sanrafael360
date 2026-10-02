@@ -795,8 +795,55 @@ export interface ApiCrmPlantillaCrmPlantilla
       Schema.Attribute.Private;
     mensaje: Schema.Attribute.Text & Schema.Attribute.Required;
     mensajes: Schema.Attribute.JSON;
+    piezas: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::crm-pieza.crm-pieza'
+    >;
     prompt_ia: Schema.Attribute.Text & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiCrmPiezaCrmPieza extends Struct.CollectionTypeSchema {
+  collectionName: 'crm_piezas';
+  info: {
+    description: 'Banner p\u00FAblico de un mensaje prospectivo. El link se ve en WhatsApp.';
+    displayName: 'CRM Pieza';
+    pluralName: 'crm-piezas';
+    singularName: 'crm-pieza';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    imagen: Schema.Attribute.Media<'images'> & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::crm-pieza.crm-pieza'
+    > &
+      Schema.Attribute.Private;
+    plantilla: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::crm-plantilla.crm-plantilla'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    slot_index: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<{
+        max: 4;
+        min: 0;
+      }>;
+    titulo: Schema.Attribute.String & Schema.Attribute.Required;
+    token: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2235,6 +2282,7 @@ declare module '@strapi/strapi' {
       'api::crm-actividad.crm-actividad': ApiCrmActividadCrmActividad;
       'api::crm-comercio.crm-comercio': ApiCrmComercioCrmComercio;
       'api::crm-contacto.crm-contacto': ApiCrmContactoCrmContacto;
+      'api::crm-pieza.crm-pieza': ApiCrmPiezaCrmPieza;
       'api::crm-plantilla.crm-plantilla': ApiCrmPlantillaCrmPlantilla;
       'api::daily-stat.daily-stat': ApiDailyStatDailyStat;
       'api::efemeride.efemeride': ApiEfemerideEfemeride;

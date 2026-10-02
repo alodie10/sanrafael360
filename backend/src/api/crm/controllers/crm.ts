@@ -70,6 +70,31 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     ctx.send({ data });
   }),
 
+  subirPieza: asyncHandler(async (ctx: any) => {
+    const { slotIndex, file } = ctx.state.crmPiezaUpload;
+    ctx.send({
+      data: await createCrmService(strapi).subirPieza(actorFrom(ctx), {
+        slotIndex,
+        file,
+        slug: slugFrom(ctx),
+      }),
+    });
+  }),
+
+  quitarPieza: asyncHandler(async (ctx: any) => {
+    ctx.send({
+      data: await createCrmService(strapi).quitarPieza(
+        actorFrom(ctx),
+        ctx.state.crmPiezaSlot,
+        slugFrom(ctx)
+      ),
+    });
+  }),
+
+  verPieza: asyncHandler(async (ctx: any) => {
+    ctx.send({ data: await createCrmService(strapi).verPiezaPublica(ctx.params.token) });
+  }),
+
   updatePlantilla: asyncHandler(async (ctx: any) => {
     const { mensaje, firma, prompt_ia, slots, mensajes } = ctx.request.body || {};
     ctx.send({

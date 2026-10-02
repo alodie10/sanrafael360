@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Megaphone } from "lucide-react";
 import { STRAPI_URL, isBrowserNetworkError } from "@/lib/strapi";
-import type { CrmAlcanzado, CrmBootstrap, CrmContacto, CrmCupo, CrmEstado, CrmLeadFiltro } from "@/lib/crm";
+import type { CrmAlcanzado, CrmBootstrap, CrmContacto, CrmCupo, CrmEstado, CrmLeadFiltro, CrmPieza } from "@/lib/crm";
 import {
   alcanzadoAsContacto,
   crmSlugQuery,
@@ -228,6 +228,52 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
 
   function patchCupo(cupo: CrmCupo) {
     setBoot((prev) => (prev ? { ...prev, cupo } : prev));
+  }
+
+  async function subirPieza(slotIndex: number, file: File) {
+    setBusy(true);
+    setError(null);
+    try {
+      const form = new FormData();
+      form.append("imagen", file);
+      form.append("plantillaIndex", String(slotIndex));
+      if (slugRef.current) form.append("slug", slugRef.current);
+      const res = await fetch(`${STRAPI_URL}/api/crm/plantilla/pieza`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${jwt}` },
+        body: form,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(apiError(json, "No se pudo publicar la imagen"));
+      const pageUrl = (json.data as CrmPieza | undefined)?.pageUrl;
+      setNotice(pageUrl ? `Banner publicado en ${pageUrl}` : "Banner publicado");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function quitarPieza(slotIndex: number) {
+    setBusy(true);
+    setError(null);
+    try {
+      const q = new URLSearchParams({ plantillaIndex: String(slotIndex) });
+      if (slugRef.current) q.set("slug", slugRef.current);
+      const res = await fetch(`${STRAPI_URL}/api/crm/plantilla/pieza?${q}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(apiError(json, "No se pudo quitar la imagen"));
+      setNotice("Banner quitado del mensaje");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function guardarPlantilla(input: { firma: string; slots: PlantillaSlot[] }) {
@@ -501,7 +547,10 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
                   mensaje={boot?.plantilla.mensaje || ""}
                   firma={boot?.plantilla.firma || ""}
                   slots={boot?.plantilla.slots}
+                  piezas={boot?.piezas}
                   onSave={guardarPlantilla}
+                  onUploadPieza={subirPieza}
+                  onQuitarPieza={quitarPieza}
                   busy={busy}
                 />
               </CrmFold>

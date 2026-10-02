@@ -15,6 +15,18 @@ describe('composeCrmMensaje', () => {
     expect(text).toContain('Diego');
   });
 
+  it('appends the public banner link on its own line', () => {
+    const text = composeCrmMensaje({
+      saludo: 'Buen día',
+      nombre: 'Negocio',
+      mensaje: 'Te dejo la propuesta.',
+      firma: 'Diego',
+      piezaUrl: 'https://www.sanrafael360.com/pieza/abc123',
+    });
+    expect(text.endsWith('https://www.sanrafael360.com/pieza/abc123')).toBe(true);
+    expect(text.split('\n\n').at(-1)).toBe('https://www.sanrafael360.com/pieza/abc123');
+  });
+
   it('skips empty firma', () => {
     const text = composeCrmMensaje({
       saludo: 'Hola',

@@ -30,6 +30,12 @@
       "relation": "oneToOne",
       "target": "api::crm-comercio.crm-comercio",
       "inversedBy": "plantilla"
+    },
+    "piezas": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::crm-pieza.crm-pieza",
+      "mappedBy": "plantilla"
     }
   }
 }

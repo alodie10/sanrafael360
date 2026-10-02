@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "crm_piezas",
+  "info": {
+    "singularName": "crm-pieza",
+    "pluralName": "crm-piezas",
+    "displayName": "CRM Pieza",
+    "description": "Banner público de un mensaje prospectivo. El link se ve en WhatsApp."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "token": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "titulo": {
+      "type": "string",
+      "required": true
+    },
+    "slot_index": {
+      "type": "integer",
+      "required": true,
+      "min": 0,
+      "max": 4
+    },
+    "imagen": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "plantilla": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::crm-plantilla.crm-plantilla",
+      "inversedBy": "piezas"
+    }
+  }
+}
