@@ -37,9 +37,18 @@ export type CrmTenant = {
   activo?: boolean;
 };
 
+export type CrmPieza = {
+  slotIndex: number;
+  token: string;
+  titulo: string;
+  imageUrl: string;
+  pageUrl: string;
+};
+
 export type CrmBootstrap = {
   comercio: CrmTenant;
   plantilla: { mensaje: string; firma: string; prompt_ia: string; slots: { titulo: string; texto: string }[] };
+  piezas?: CrmPieza[];
   cupo: CrmCupo;
   contactos: CrmContacto[];
   canPrestar?: boolean;

@@ -5,6 +5,7 @@ const COMERCIO = 'api::crm-comercio.crm-comercio';
 const CONTACTO = 'api::crm-contacto.crm-contacto';
 const PLANTILLA = 'api::crm-plantilla.crm-plantilla';
 const ACTIVIDAD = 'api::crm-actividad.crm-actividad';
+const PIEZA = 'api::crm-pieza.crm-pieza';
 
 export type CrmContactoInput = {
   nombre: string;
@@ -188,6 +189,59 @@ export class CrmRepository {
       sort: ['createdAt:desc'],
       limit: 50,
     });
+  }
+
+  listPiezas(plantillaDocumentId: string) {
+    return this.strapi.documents(PIEZA).findMany({
+      filters: { plantilla: { documentId: { $eq: plantillaDocumentId } } },
+      populate: { imagen: true },
+      sort: ['slot_index:asc'],
+      limit: 5,
+    });
+  }
+
+  findPieza(documentId: string) {
+    return this.strapi.documents(PIEZA).findOne({
+      documentId,
+      populate: { imagen: true },
+    });
+  }
+
+  findPiezaByToken(token: string) {
+    return this.strapi.documents(PIEZA).findFirst({
+      filters: { token: { $eq: token } },
+      populate: { imagen: true },
+    });
+  }
+
+  findPiezaBySlot(plantillaDocumentId: string, slotIndex: number) {
+    return this.strapi.documents(PIEZA).findFirst({
+      filters: {
+        plantilla: { documentId: { $eq: plantillaDocumentId } },
+        slot_index: { $eq: slotIndex },
+      },
+      populate: { imagen: true },
+    });
+  }
+
+  createPieza(data: Record<string, unknown>) {
+    return this.strapi.documents(PIEZA).create({ data });
+  }
+
+  updatePieza(documentId: string, data: Record<string, unknown>) {
+    return this.strapi.documents(PIEZA).update({ documentId, data });
+  }
+
+  deletePieza(documentId: string) {
+    return this.strapi.documents(PIEZA).delete({ documentId });
+  }
+
+  uploadImage(file: unknown) {
+    return this.strapi.plugin('upload').service('upload').upload({ data: {}, files: file });
+  }
+
+  removeUpload(file: unknown) {
+    return this.strapi.plugin('upload').service('upload').remove(file);
   }
 }
 

@@ -70,6 +70,11 @@ export const REVOKE_UNTRUSTED_REST_ACTIONS = [
   'api::crm-actividad.crm-actividad.create',
   'api::crm-actividad.crm-actividad.update',
   'api::crm-actividad.crm-actividad.delete',
+  'api::crm-pieza.crm-pieza.find',
+  'api::crm-pieza.crm-pieza.findOne',
+  'api::crm-pieza.crm-pieza.create',
+  'api::crm-pieza.crm-pieza.update',
+  'api::crm-pieza.crm-pieza.delete',
 ] as const;
 
 export const PUBLIC_READ_ACTIONS = [

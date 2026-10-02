@@ -63,6 +63,34 @@ export default {
     },
     {
       method: 'POST',
+      path: '/crm/plantilla/pieza',
+      handler: 'crm.subirPieza',
+      config: {
+        ...portalAuth,
+        middlewares: ['api::crm.require-crm-portal', 'api::crm.crm-pieza-upload-validator'],
+      },
+    },
+    {
+      method: 'DELETE',
+      path: '/crm/plantilla/pieza',
+      handler: 'crm.quitarPieza',
+      config: {
+        ...portalAuth,
+        middlewares: ['api::crm.require-crm-portal', 'api::crm.crm-pieza-slot-validator'],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/crm/pieza/:token',
+      handler: 'crm.verPieza',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: ['api::crm.crm-pieza-token-validator'],
+      },
+    },
+    {
+      method: 'POST',
       path: '/crm/enviar',
       handler: 'crm.enviarWhatsapp',
       config: {

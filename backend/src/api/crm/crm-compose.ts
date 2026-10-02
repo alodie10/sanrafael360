@@ -3,10 +3,13 @@ export function composeCrmMensaje(input: {
   nombre: string;
   mensaje: string;
   firma: string;
+  piezaUrl?: string;
 }): string {
   const hola = input.nombre.trim() ? `Hola ${input.nombre.trim()},` : 'Hola,';
-  return [input.saludo, hola, input.mensaje, input.firma]
+  const parts = [input.saludo, hola, input.mensaje, input.firma]
     .map((part) => String(part || '').trim())
-    .filter(Boolean)
-    .join('\n\n');
+    .filter(Boolean);
+  const link = String(input.piezaUrl || '').trim();
+  if (link) parts.push(link);
+  return parts.join('\n\n');
 }

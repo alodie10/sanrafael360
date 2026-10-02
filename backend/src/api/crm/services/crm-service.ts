@@ -41,6 +41,14 @@ import {
   patchTrasWhatsapp,
 } from '../crm-enviar';
 import { mapCrmPlantilla, plantillaSavePayload, slotDePlantilla, type CrmPlantillaInput } from '../crm-plantilla-map';
+import { mapCrmPieza } from '../crm-pieza';
+import {
+  listPiezasDePlantilla,
+  quitarPieza,
+  subirPieza,
+  syncPiezaTitulos,
+  verPiezaPublica,
+} from '../crm-pieza-actions';
 import { adminCreateNegocio } from '../../negocio/services/admin-create-negocio';
 import { createNegocioRepository } from '../../negocio/repositories/negocio-repository';
 import { createCrmRepository, type CrmRepository } from '../repositories/crm-repository';
@@ -150,6 +158,11 @@ export function createCrmService(strapi: any) {
     ) => updateContacto(repo, actor, documentId, patch, slug),
     updatePlantilla: (actor: CrmActor, input: CrmPlantillaInput, slug?: string) =>
       updatePlantilla(repo, actor, input, slug),
+    subirPieza: (actor: CrmActor, input: { slotIndex: number; file: any; slug?: string }) =>
+      subirPieza(strapi, repo, actor, input),
+    quitarPieza: (actor: CrmActor, slotIndex: number, slug?: string) =>
+      quitarPieza(strapi, repo, actor, slotIndex, slug),
+    verPiezaPublica: (token: string) => verPiezaPublica(repo, token),
     enviarWhatsapp: (
       actor: CrmActor,
       contactoDocumentId: string,
@@ -178,6 +191,7 @@ async function bootstrap(repo: CrmRepository, actor: CrmActor, slug?: string) {
   return {
     comercio: mapTenant(comercio),
     plantilla: mapCrmPlantilla(plantilla),
+    piezas: await listPiezasDePlantilla(repo, plantilla.documentId),
     cupo: readCupo(comercio),
     contactos: (contactos || []).map(mapCrmContacto),
     canPrestar: actor.isAdmin,
@@ -279,6 +293,7 @@ async function updatePlantilla(
 ) {
   const { plantilla } = await loadTenant(repo, actor, slug);
   const updated = await repo.updatePlantilla(plantilla.documentId, plantillaSavePayload(input));
+  await syncPiezaTitulos(repo, updated);
   return mapCrmPlantilla(updated);
 }
 
@@ -365,11 +380,13 @@ async function enviarWhatsapp(
     plantilla.firma ||
     (modoOf(comercio) === 'agenda' ? comercio.nombre : DEFAULT_CRM_FIRMA);
   const slot = slotDePlantilla(plantilla, plantillaIndex);
+  const pieza = await repo.findPiezaBySlot(plantilla.documentId, slot.plantillaIndex);
   const texto = composeCrmMensaje({
     saludo: greetingNow(),
     nombre: contacto.nombre,
     mensaje: slot.texto,
     firma,
+    piezaUrl: mapCrmPieza(pieza)?.pageUrl || '',
   });
   const whatsappUrl = buildWhatsappUrl(contacto.telefono, texto);
   const hasUrl = Boolean(whatsappUrl);
