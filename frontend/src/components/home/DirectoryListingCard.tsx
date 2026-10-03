@@ -43,10 +43,9 @@ export default function DirectoryListingCard({
         showPurge={Boolean(isAdmin && session?.jwt && neverBeenPremium(negocio))}
         onDeleted={() => onDeleted?.(negocio.documentId)}
       />
-      <p className={styles.rubro}>{rubro}</p>
-      <h3 className={styles.nombre}>{negocio.nombre}</h3>
-      <Link href="/contacto" className={styles.subscribe} data-testid="directory-subscribe-cta">
-        ¿Querés suscribirte?
+      <Link href={`/negocios/${businessSlug}`} className={styles.entry} aria-label={`Ver ${negocio.nombre}`}>
+        <p className={styles.rubro}>{rubro}</p>
+        <h3 className={styles.nombre}>{negocio.nombre}</h3>
       </Link>
     </article>
   );

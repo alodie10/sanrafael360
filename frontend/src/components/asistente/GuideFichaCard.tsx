@@ -23,13 +23,12 @@ export function GuideFichaCard({ hit }: { hit: GuideFicha }) {
   if (!hit.url) {
     return (
       <article className={`${styles.card} ${styles.cardDirectory}`} data-testid="guide-ficha-card">
-        <div className={styles.cardBody}>
-          {hit.categoria ? <span className={styles.dirRubro}>{hit.categoria}</span> : null}
-          <span className={styles.cardName}>{hit.nombre}</span>
-          <a className={styles.dirSubscribe} href="/contacto">
-            ¿Querés suscribirte?
-          </a>
-        </div>
+        <a href={`/negocios/${hit.slug}`} className={styles.cardLink} aria-label={`Ver ficha de ${hit.nombre}`}>
+          <span className={styles.cardBody}>
+            {hit.categoria ? <span className={styles.dirRubro}>{hit.categoria}</span> : null}
+            <span className={styles.cardName}>{hit.nombre}</span>
+          </span>
+        </a>
       </article>
     );
   }

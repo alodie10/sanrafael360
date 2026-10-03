@@ -420,19 +420,6 @@
   color: hsl(var(--primary) / 0.9);
 }
 
-.dirSubscribe {
-  justify-self: start;
-  margin-top: 0.25rem;
-  padding: 0.28rem 0.65rem;
-  border-radius: 999px;
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-decoration: none;
-}
-
 .ctas {
   display: flex;
   flex-wrap: wrap;

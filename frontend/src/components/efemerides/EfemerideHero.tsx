@@ -6,6 +6,7 @@ import { getStrapiMedia } from "@/lib/strapi";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
 import { formatCalendarDate } from "@/lib/calendar-date";
 import type { EfemeridePublic, ParticipanteExterno, StrapiMedia } from "@/types/strapi";
+import EfemerideBackButton from "@/components/efemerides/EfemerideBackButton";
 import FeriaParticipantesList from "@/components/efemerides/FeriaParticipantesList";
 import FeriaRosterScroll from "@/components/efemerides/FeriaRosterScroll";
 import EfemeridePoster, { EfemeridePosterLightbox } from "@/components/efemerides/EfemeridePoster";
@@ -114,9 +115,13 @@ export default function EfemerideHero({ efemeride }: { efemeride: EfemeridePubli
         {!coverUrl && <div className={styles.veil} />}
 
         <div className={styles.inner}>
-          <Link href="/" className={styles.back}>
-            <ArrowLeft className="w-4 h-4" /> Volver al Inicio
-          </Link>
+          {isFeria ? (
+            <EfemerideBackButton />
+          ) : (
+            <Link href="/" className={styles.back}>
+              <ArrowLeft className="w-4 h-4" /> Volver al Inicio
+            </Link>
+          )}
           <div className={styles.stage}>
             {coverUrl && (
               <EfemeridePoster
