@@ -8,9 +8,10 @@ interface GoogleMapProps {
   lng: number;
   zoom?: number;
   title?: string;
+  compact?: boolean;
 }
 
-export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps) {
+export default function GoogleMap({ lat, lng, zoom = 15, title, compact = false }: GoogleMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [googleMaps, setGoogleMaps] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -68,16 +69,20 @@ export default function GoogleMap({ lat, lng, zoom = 15, title }: GoogleMapProps
     }
   }, [googleMaps, lat, lng, zoom, title]);
 
+  const frame = compact
+    ? "relative w-full h-full min-h-[220px] rounded-2xl overflow-hidden border border-white/10 bg-slate-900"
+    : "relative w-full h-full min-h-[300px] rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-slate-900";
+
   if (error) {
     return (
-      <div className="w-full h-full min-h-[300px] rounded-3xl bg-slate-900 flex items-center justify-center border border-white/5 p-8 text-center text-slate-400 text-sm">
+      <div className={`${frame} flex items-center justify-center p-8 text-center text-slate-400 text-sm`}>
         {error}
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-full min-h-[300px] rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-slate-900">
+    <div className={frame}>
       {/* Regla 1: El div contenedor es ESTÁTICO y no se desmonta condicionalmente */}
       <div ref={mapRef} className="w-full h-full" />
       

@@ -766,47 +766,6 @@ export interface ApiCrmContactoCrmContacto extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiCrmPlantillaCrmPlantilla
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'crm_plantillas';
-  info: {
-    description: 'Copy y prompt IA del tenant CRM. Aislado de prospecci\u00F3n.';
-    displayName: 'CRM Plantilla';
-    pluralName: 'crm-plantillas';
-    singularName: 'crm-plantilla';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    comercio: Schema.Attribute.Relation<
-      'oneToOne',
-      'api::crm-comercio.crm-comercio'
-    >;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    firma: Schema.Attribute.Text;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::crm-plantilla.crm-plantilla'
-    > &
-      Schema.Attribute.Private;
-    mensaje: Schema.Attribute.Text & Schema.Attribute.Required;
-    mensajes: Schema.Attribute.JSON;
-    piezas: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::crm-pieza.crm-pieza'
-    >;
-    prompt_ia: Schema.Attribute.Text & Schema.Attribute.Required;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiCrmPiezaCrmPieza extends Struct.CollectionTypeSchema {
   collectionName: 'crm_piezas';
   info: {
@@ -836,14 +795,55 @@ export interface ApiCrmPiezaCrmPieza extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     slot_index: Schema.Attribute.Integer &
       Schema.Attribute.Required &
-      Schema.Attribute.SetMinMax<{
-        max: 4;
-        min: 0;
-      }>;
+      Schema.Attribute.SetMinMax<
+        {
+          max: 4;
+          min: 0;
+        },
+        number
+      >;
     titulo: Schema.Attribute.String & Schema.Attribute.Required;
     token: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiCrmPlantillaCrmPlantilla
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'crm_plantillas';
+  info: {
+    description: 'Copy y prompt IA del tenant CRM. Aislado de prospecci\u00F3n.';
+    displayName: 'CRM Plantilla';
+    pluralName: 'crm-plantillas';
+    singularName: 'crm-plantilla';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    comercio: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::crm-comercio.crm-comercio'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    firma: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::crm-plantilla.crm-plantilla'
+    > &
+      Schema.Attribute.Private;
+    mensaje: Schema.Attribute.Text & Schema.Attribute.Required;
+    mensajes: Schema.Attribute.JSON;
+    piezas: Schema.Attribute.Relation<'oneToMany', 'api::crm-pieza.crm-pieza'>;
+    prompt_ia: Schema.Attribute.Text & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

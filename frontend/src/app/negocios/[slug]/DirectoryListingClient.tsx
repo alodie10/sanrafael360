@@ -4,12 +4,27 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { MessageCircle } from "lucide-react";
 import { Negocio } from "@/types/strapi";
 import { getStrapiUrl } from "@/lib/strapi";
 import { isPremiumListingActive, neverBeenPremium } from "@/lib/search-match";
 import { buildBusinessEditHref } from "@/lib/return-to";
+import { buildWhatsappUrl } from "@/lib/whatsapp";
 import AdminListingActions from "@/components/home/AdminListingActions";
+import NavigationFAB from "@/components/layout/NavigationFAB";
+import GoogleMap from "@/components/common/GoogleMap";
 import styles from "./DirectoryListing.module.css";
+
+function mappedCoordinates(negocio: Negocio): { lat: number; lng: number } | null {
+  const address = negocio.direccion?.trim();
+  if (!address) return null;
+  const lat = Number(negocio.latitud);
+  const lng = Number(negocio.longitud);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+  if (Math.abs(lat) < 0.0001 && Math.abs(lng) < 0.0001) return null;
+  return { lat, lng };
+}
 
 export default function DirectoryListingClient({
   initialNegocio,
@@ -30,6 +45,11 @@ export default function DirectoryListingClient({
   const [showClaimModal, setShowClaimModal] = useState(searchParams.get("auto_claim") === "1");
   const rubro = negocio.categoria?.nombre?.trim() || "Directorio";
   const isAdmin = session?.user?.role === "Admin";
+  const whatsappUrl = buildWhatsappUrl(
+    negocio.whatsapp || negocio.telefono || "",
+    `¡Hola! Vi tu negocio "${negocio.nombre}" en sanrafael360.com y quería hacerte una consulta.`
+  );
+  const mapPoint = mappedCoordinates(negocio);
   const canClaim =
     Boolean(negocio.reclamar_habilitado) &&
     !negocio.owner &&
@@ -68,6 +88,7 @@ export default function DirectoryListingClient({
 
   return (
     <main className={styles.page} data-testid="business-directory-listing">
+      <NavigationFAB isVisible type="back" onClick={() => router.back()} />
       <article className={styles.panel}>
         <AdminListingActions
           jwt={session?.jwt ?? undefined}
@@ -82,15 +103,27 @@ export default function DirectoryListingClient({
         />
         <p className={styles.rubro}>{rubro}</p>
         <h1 className={styles.nombre}>{negocio.nombre}</h1>
-        <div className={styles.meta}>
-          <Link
-            href="/contacto"
-            className={styles.subscribe}
-            data-testid="directory-subscribe-cta"
-          >
-            ¿Querés suscribirte? Hacé click acá
-          </Link>
-        </div>
+        {whatsappUrl || mapPoint ? (
+          <div className={styles.contact}>
+            {whatsappUrl ? (
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.whatsapp}
+                data-testid="directory-whatsapp"
+              >
+                <MessageCircle className={styles.whatsappIcon} aria-hidden="true" />
+                WhatsApp
+              </a>
+            ) : null}
+            {mapPoint ? (
+              <div className={styles.map} data-testid="directory-map">
+                <GoogleMap lat={mapPoint.lat} lng={mapPoint.lng} title={negocio.nombre} compact />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         {canClaim ? (
           <button
             data-testid="claim-profile-button"
@@ -103,6 +136,13 @@ export default function DirectoryListingClient({
             Reclamar perfil
           </button>
         ) : null}
+        <Link
+          href="/contacto"
+          className={styles.owner}
+          data-testid="directory-subscribe-cta"
+        >
+          Si sos dueño de este local suscríbete a nuestra comunidad
+        </Link>
       </article>
 
       {showClaimModal ? (

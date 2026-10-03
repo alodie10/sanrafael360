@@ -37,7 +37,12 @@ export default function NavigationFAB({
           initial={{ opacity: 0, y: 50, scale: 0.8 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.8 }}
-          className="hidden md:block fixed bottom-6 md:right-8 z-[9999]"
+          className={cn(
+            "fixed z-[70]",
+            type === "back"
+              ? "left-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] md:left-8 md:bottom-6"
+              : "hidden md:block bottom-6 md:right-8"
+          )}
         >
           <button
             onClick={onClick}
@@ -45,7 +50,11 @@ export default function NavigationFAB({
               "flex items-center transition-all duration-500 group relative",
               "bg-zinc-950/90 backdrop-blur-2xl border border-primary/40 text-white",
               "shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:border-primary/80 active:scale-95",
-              isExpanded ? "px-6 py-4 rounded-full gap-3" : "p-4 rounded-2xl"
+              type === "back"
+                ? "px-4 py-2 rounded-full gap-2"
+                : isExpanded
+                  ? "px-6 py-4 rounded-full gap-3"
+                  : "p-4 rounded-2xl"
             )}
           >
             {/* Brillo dinámico de fondo */}
@@ -53,16 +62,19 @@ export default function NavigationFAB({
             
             <div className={cn(
               "flex items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/20 transition-transform duration-500",
-              isExpanded ? "w-8 h-8" : "w-6 h-6 group-hover:-translate-y-1"
+              type === "back" ? "w-7 h-7" : isExpanded ? "w-8 h-8" : "w-6 h-6 group-hover:-translate-y-1"
             )}>
               {type === 'top' && <ChevronUp className="w-4 h-4 text-black" />}
               {type === 'reset' && <ArrowRight className="w-4 h-4 text-black -rotate-90 group-hover:-translate-y-1 transition-transform" />}
-              {type === 'back' && <ArrowLeft className="w-4 h-4 text-black group-hover:-translate-x-1 transition-transform" />}
+              {type === 'back' && <ArrowLeft className="w-3.5 h-3.5 text-black group-hover:-translate-x-0.5 transition-transform" />}
             </div>
 
             {isExpanded && (
-              <span className="font-bold text-sm tracking-tight uppercase">
-                {label || (type === 'back' ? 'Volver' : 'Volver')}
+              <span className={cn(
+                "font-bold tracking-tight uppercase",
+                type === "back" ? "text-xs" : "text-sm"
+              )}>
+                {label || "Volver"}
               </span>
             )}
           </button>
