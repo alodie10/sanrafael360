@@ -217,24 +217,44 @@ export class NegocioRepository {
   }
 
   async findPublishedWithPagos() {
-    return this.strapi.documents('api::negocio.negocio').findMany({
-      populate: {
-        owner: { fields: ['id', 'email', 'updatedAt'] },
-        pagos: {
-          fields: [
-            'documentId',
-            'monto',
-            'estado',
-            'fecha_pago',
-            'createdAt',
-            'mp_payment_id',
-            'external_reference',
-          ],
+    const pageSize = 200;
+    const rows: any[] = [];
+    const seen = new Set<string>();
+
+    for (let start = 0; start < 20000; start += pageSize) {
+      const page = await this.strapi.documents('api::negocio.negocio').findMany({
+        populate: {
+          owner: { fields: ['id', 'email', 'updatedAt'] },
+          pagos: {
+            fields: [
+              'documentId',
+              'monto',
+              'estado',
+              'fecha_pago',
+              'createdAt',
+              'mp_payment_id',
+              'external_reference',
+            ],
+          },
         },
-      },
-      limit: 1000,
-      status: 'published',
-    });
+        status: 'published',
+        sort: ['id:asc'],
+        start,
+        limit: pageSize,
+      });
+      const batch = Array.isArray(page) ? page : [];
+      let fresh = 0;
+      for (const row of batch) {
+        const id = String(row?.documentId || '');
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        rows.push(row);
+        fresh += 1;
+      }
+      if (batch.length < pageSize || fresh === 0) break;
+    }
+
+    return rows;
   }
 
   async listTelefonos() {
