@@ -1,9 +1,13 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import PlantillaSlotEditor from "@/components/portal/PlantillaSlotEditor";
 import type { CrmPieza } from "@/lib/crm";
 import { normalizePlantillaSlots, type PlantillaSlot } from "@/lib/plantilla-slots";
+
+function plantillaKey(firma: string, slots: PlantillaSlot[]) {
+  return JSON.stringify({ firma, slots });
+}
 
 type Props = {
   mensaje: string;
@@ -29,15 +33,47 @@ export default function CrmPlantillaForm({
   const [items, setItems] = useState(() => normalizePlantillaSlots(slots, mensaje));
   const [active, setActive] = useState(0);
   const [sign, setSign] = useState(firma);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const itemsRef = useRef(items);
+  const signRef = useRef(sign);
+  const appliedKey = useRef<string | null>(null);
+  itemsRef.current = items;
+  signRef.current = sign;
 
   useEffect(() => {
-    setItems(normalizePlantillaSlots(slots, mensaje));
+    const nextItems = normalizePlantillaSlots(slots, mensaje);
+    const nextKey = plantillaKey(firma, nextItems);
+    const localKey = plantillaKey(signRef.current, itemsRef.current);
+    if (appliedKey.current !== null && localKey !== appliedKey.current) return;
+    appliedKey.current = nextKey;
+    setItems(nextItems);
     setSign(firma);
   }, [mensaje, firma, slots]);
 
+  function editSign(value: string) {
+    setSaved(false);
+    setSign(value);
+  }
+
+  function editSlot(index: number, patch: Partial<PlantillaSlot>) {
+    setSaved(false);
+    setItems((prev) => prev.map((slot, idx) => (idx === index ? { ...slot, ...patch } : slot)));
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    await onSave({ firma: sign, slots: items });
+    setSaving(true);
+    setSaved(false);
+    try {
+      await onSave({ firma: sign, slots: items });
+      appliedKey.current = plantillaKey(sign, items);
+      setSaved(true);
+    } catch {
+      setSaved(false);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -46,9 +82,7 @@ export default function CrmPlantillaForm({
         slots={items}
         activeIndex={active}
         onActiveIndex={setActive}
-        onChangeSlot={(i, patch) =>
-          setItems((prev) => prev.map((slot, idx) => (idx === i ? { ...slot, ...patch } : slot)))
-        }
+        onChangeSlot={editSlot}
         testId="crm-plantilla-slots"
       />
       <CrmPiezaSlot
@@ -59,16 +93,30 @@ export default function CrmPlantillaForm({
       />
       <input
         value={sign}
-        onChange={(e) => setSign(e.target.value)}
+        onChange={(e) => editSign(e.target.value)}
         placeholder="Firma (compartida)"
         className="w-full px-4 py-3 rounded-2xl bg-black/40 border border-white/10 text-white text-sm"
       />
+      {saved && (
+        <p
+          role="status"
+          data-testid="crm-plantilla-saved"
+          className="rounded-2xl border border-primary/40 bg-primary/15 px-4 py-3 text-sm font-bold text-primary"
+        >
+          Plantilla guardada
+        </p>
+      )}
       <button
         type="submit"
-        disabled={busy}
-        className="px-6 py-3 bg-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl border border-white/10"
+        disabled={busy || saving}
+        data-testid="crm-plantilla-save"
+        className={`px-6 py-3 font-black uppercase tracking-widest text-[10px] rounded-2xl border disabled:opacity-50 ${
+          saved
+            ? "bg-primary text-black border-primary"
+            : "bg-white/10 text-white border-white/10"
+        }`}
       >
-        Guardar plantillas
+        {saving ? "Guardando…" : saved ? "Guardado" : "Guardar plantillas"}
       </button>
     </form>
   );

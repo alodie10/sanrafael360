@@ -14,16 +14,24 @@ export const metadata = canonicalPage(
 );
 
 function ofertasPopulateQuery() {
-  return `${strapiOfertaVigenteFilters()}&filters[publishedAt][$notNull]=true&populate[negocio][populate][0]=logo&populate[negocio][populate][1]=imagen_portada&populate[negocio][populate][2]=categoria&sort=publishedAt:desc`;
+  // populate[0]=banners junto con populate[negocio] hace que Strapi ignore los banners
+  // y la tarjeta caiga a la foto de portada. El anidado sí trae el carrusel.
+  return [
+    strapiOfertaVigenteFilters(),
+    "filters[publishedAt][$notNull]=true",
+    "populate[banners][fields][0]=url",
+    "populate[banners][fields][1]=width",
+    "populate[banners][fields][2]=height",
+    "populate[negocio][populate][logo][fields][0]=url",
+    "populate[negocio][populate][imagen_portada][fields][0]=url",
+    "populate[negocio][populate][categoria][fields][0]=nombre",
+    "pagination[pageSize]=100",
+    "sort=publishedAt:desc",
+  ].join("&");
 }
 
 async function fetchActiveOfertas() {
-  const populate = ofertasPopulateQuery();
-  try {
-    return await fetchFromStrapi(`ofertas?populate[0]=banners&${populate}`);
-  } catch {
-    return fetchFromStrapi(`ofertas?${populate}`);
-  }
+  return fetchFromStrapi(`ofertas?${ofertasPopulateQuery()}`);
 }
 
 export default async function OfertasPage() {

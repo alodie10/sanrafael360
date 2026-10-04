@@ -290,10 +290,12 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo guardar la plantilla"));
-      setNotice("Plantilla CRM guardada");
+      setNotice("Plantilla guardada");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error");
+      const message = err instanceof Error ? err.message : "Error";
+      setError(message);
+      throw err instanceof Error ? err : new Error(message);
     } finally {
       setBusy(false);
     }
