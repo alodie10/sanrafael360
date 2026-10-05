@@ -18,9 +18,10 @@ export default function OfferCard({ oferta, index = 0 }: { oferta: Oferta, index
   const coverUrl = negocio.imagen_portada?.url || negocio.logo?.url;
   const businessSlug = negocio.slug || negocio.documentId;
 
-  const formattedDate = oferta.valida_hasta
-    ? formatCalendarDate(oferta.valida_hasta, { day: "numeric", month: "short" })
-    : "";
+  const formattedDate =
+    !oferta.vigencia_permanente && oferta.valida_hasta
+      ? formatCalendarDate(oferta.valida_hasta, { day: "numeric", month: "short" })
+      : "";
 
   return (
     <motion.div

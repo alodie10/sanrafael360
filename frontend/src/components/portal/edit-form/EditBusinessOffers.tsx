@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Tag, Plus, Edit2, Trash2, Check, X, Loader2, Clock } from "lucide-react";
+import { Tag, Plus, Edit2, Trash2, Check, X, Loader2, Clock, Infinity } from "lucide-react";
 import { toast } from "sonner";
 import { Oferta, StrapiMedia } from "@/types/strapi";
 import { fetchFromStrapi, getStrapiUrl } from "@/lib/strapi";
@@ -52,6 +52,11 @@ const VIGENCIA_BADGE: Record<OfertaVigenciaEstado, { label: string; className: s
     className: "bg-rose-500/20 text-rose-400 border border-rose-500/30",
     Icon: X,
   },
+  permanente: {
+    label: "Permanente",
+    className: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+    Icon: Infinity,
+  },
 };
 
 function VigenciaBadge({ oferta }: { oferta: Oferta }) {
@@ -88,6 +93,7 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
   const [porcentajeDescuento, setPorcentajeDescuento] = useState<number | "">("");
   const [validaDesde, setValidaDesde] = useState("");
   const [validaHasta, setValidaHasta] = useState("");
+  const [vigenciaPermanente, setVigenciaPermanente] = useState(false);
   const [formatoVisual, setFormatoVisual] = useState<FormatoVisualOferta>("Ficha");
   const [bannerIds, setBannerIds] = useState<number[]>([]);
   const pickerImages = selectableFichaImages(gallery, cover);
@@ -134,6 +140,7 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
     setPorcentajeDescuento("");
     setValidaDesde("");
     setValidaHasta("");
+    setVigenciaPermanente(false);
     setFormatoVisual("Ficha");
     setBannerIds([]);
     setIsModalOpen(true);
@@ -149,6 +156,7 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
     setPorcentajeDescuento(oferta.porcentaje_descuento || "");
     setValidaDesde(toDateInputValue(oferta.valida_desde));
     setValidaHasta(toDateInputValue(oferta.valida_hasta));
+    setVigenciaPermanente(Boolean(oferta.vigencia_permanente));
     setFormatoVisual(parseFormatoVisual(oferta.formato_visual));
     setBannerIds(galleryImageIds(oferta));
     setIsModalOpen(true);
@@ -180,7 +188,14 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!titulo) return toast.error("El título es obligatorio");
-    if (!validaDesde || !validaHasta) return toast.error("Las fechas de validez son obligatorias");
+    const permanente = formatoVisual === "Banners" && vigenciaPermanente;
+    if (!permanente && (!validaDesde || !validaHasta)) {
+      return toast.error(
+        formatoVisual === "Banners"
+          ? "Las fechas de validez son obligatorias, o marcá vigencia permanente."
+          : "Las fechas de validez son obligatorias"
+      );
+    }
     if (descripcion.length > OFERTA_DESCRIPCION_MAX) {
       return toast.error(`La descripción no puede superar ${OFERTA_DESCRIPCION_MAX} caracteres (tenés ${descripcion.length}).`);
     }
@@ -204,8 +219,9 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
           precio_original: precioOriginal === "" ? null : Number(precioOriginal),
           precio_descuento: precioDescuento === "" ? null : Number(precioDescuento),
           porcentaje_descuento: porcentajeDescuento === "" ? null : Number(porcentajeDescuento),
-          valida_desde: validaDesde ? dateInputToStartOfDayISO(validaDesde) : null,
-          valida_hasta: validaHasta ? dateInputToEndOfDayISO(validaHasta) : null,
+          vigencia_permanente: permanente,
+          valida_desde: permanente || !validaDesde ? null : dateInputToStartOfDayISO(validaDesde),
+          valida_hasta: permanente || !validaHasta ? null : dateInputToEndOfDayISO(validaHasta),
           formato_visual: formatoVisual,
           banners: formatoVisual === "Banners"
             ? pickerImages.filter((item) => bannerIds.includes(item.id)).map((item) => item.id)
@@ -367,12 +383,44 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
 
                 <OfferFormatPicker
                   formato={formatoVisual}
-                  onFormato={setFormatoVisual}
+                  onFormato={(value) => {
+                    setFormatoVisual(value);
+                    if (value !== "Banners") {
+                      setVigenciaPermanente(false);
+                      return;
+                    }
+                    if (!validaDesde && !validaHasta) setVigenciaPermanente(true);
+                  }}
                   gallery={pickerImages}
                   selectedIds={bannerIds}
                   onToggle={toggleBannerId}
                   coverId={cover?.id}
                 />
+
+                {formatoVisual === "Banners" && (
+                  <label className="flex items-start gap-3 p-4 bg-black/40 border border-white/10 rounded-xl cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={vigenciaPermanente}
+                      onChange={(event) => {
+                        const next = event.target.checked;
+                        setVigenciaPermanente(next);
+                        if (next) {
+                          setValidaDesde("");
+                          setValidaHasta("");
+                        }
+                      }}
+                      className="mt-1 accent-[#FFBF00]"
+                      data-testid="oferta-vigencia-permanente"
+                    />
+                    <span>
+                      <span className="block text-sm font-bold text-white">Vigencia permanente</span>
+                      <span className="block text-xs text-slate-400 mt-0.5">
+                        Sin fecha de vencimiento. La ficha no muestra vigencia.
+                      </span>
+                    </span>
+                  </label>
+                )}
 
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
@@ -421,41 +469,51 @@ export default function EditBusinessOffers({ negocioId, session, gallery, cover 
                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FFBF00]/50"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Válida Desde *</label>
-                    <input 
-                      type="date" 
-                      value={validaDesde} 
-                      onChange={e => setValidaDesde(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FFBF00]/50"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Válida Hasta *</label>
-                    <input 
-                      type="date" 
-                      value={validaHasta} 
-                      onChange={e => setValidaHasta(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FFBF00]/50"
-                      required
-                    />
-                  </div>
+                  {!(formatoVisual === "Banners" && vigenciaPermanente) && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Válida Desde *</label>
+                        <input 
+                          type="date" 
+                          value={validaDesde} 
+                          onChange={e => setValidaDesde(e.target.value)}
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FFBF00]/50"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Válida Hasta *</label>
+                        <input 
+                          type="date" 
+                          value={validaHasta} 
+                          onChange={e => setValidaHasta(e.target.value)}
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FFBF00]/50"
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="p-4 bg-black/40 border border-white/10 rounded-xl">
                   <span className="block text-sm font-bold text-white">Publicación automática</span>
                   <span className="block text-xs text-slate-400 mt-0.5">
-                    Se activa y se apaga sola según el rango de fechas. No hace falta un tilde extra.
+                    {formatoVisual === "Banners" && vigenciaPermanente
+                      ? "Queda publicada sin fecha de vencimiento. La ficha no muestra vigencia."
+                      : "Se activa y se apaga sola según el rango de fechas. No hace falta un tilde extra."}
                   </span>
-                  {validaDesde && validaHasta && (
+                  {formatoVisual === "Banners" && vigenciaPermanente ? (
+                    <span className="mt-3 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold border border-white/10 text-slate-200">
+                      Permanente
+                    </span>
+                  ) : validaDesde && validaHasta ? (
                     <span className="mt-3 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold border border-white/10 text-slate-200">
                       {VIGENCIA_BADGE[ofertaVigenciaEstado({
                         valida_desde: dateInputToStartOfDayISO(validaDesde),
                         valida_hasta: dateInputToEndOfDayISO(validaHasta),
                       })].label} con estas fechas
                     </span>
-                  )}
+                  ) : null}
                 </div>
 
               </div>

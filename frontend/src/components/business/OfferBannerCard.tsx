@@ -27,9 +27,10 @@ export default function OfferBannerCard({ oferta, index = 0 }: { oferta: Oferta;
   if (!negocio || images.length === 0) return null;
 
   const slug = negocio.slug || negocio.documentId;
-  const formattedDate = oferta.valida_hasta
-    ? formatCalendarDate(oferta.valida_hasta, { day: "numeric", month: "short" })
-    : "";
+  const formattedDate =
+    !oferta.vigencia_permanente && oferta.valida_hasta
+      ? formatCalendarDate(oferta.valida_hasta, { day: "numeric", month: "short" })
+      : "";
 
   return (
     <>

@@ -58,8 +58,9 @@ export interface Oferta {
   precio_descuento?: number;
   porcentaje_descuento?: number;
   descripcion?: string;
-  valida_desde: string;
-  valida_hasta: string;
+  valida_desde?: string | null;
+  valida_hasta?: string | null;
+  vigencia_permanente?: boolean;
   condiciones?: string;
   activa: boolean;
   formato_visual?: "Ficha" | "Banners";

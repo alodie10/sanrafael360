@@ -35,11 +35,16 @@
     },
     "valida_desde": {
       "type": "datetime",
-      "required": true
+      "description": "Inicio de vigencia. Vacío si la oferta de banners es permanente."
     },
     "valida_hasta": {
       "type": "datetime",
-      "required": true
+      "description": "Fin de vigencia. Vacío si la oferta de banners es permanente."
+    },
+    "vigencia_permanente": {
+      "type": "boolean",
+      "default": false,
+      "description": "Solo banners: sin fecha de vencimiento y sin mostrar vigencia en la ficha."
     },
     "condiciones": {
       "type": "string"
@@ -47,7 +52,7 @@
     "activa": {
       "type": "boolean",
       "default": false,
-      "description": "Se calcula solo: true si ahora está entre valida_desde y valida_hasta."
+      "description": "Se calcula solo: true si la vigencia es permanente o si ahora está entre valida_desde y valida_hasta."
     },
     "formato_visual": {
       "type": "enumeration",
