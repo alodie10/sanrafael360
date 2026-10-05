@@ -1305,8 +1305,10 @@ export interface ApiOfertaOferta extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    valida_desde: Schema.Attribute.DateTime & Schema.Attribute.Required;
-    valida_hasta: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    valida_desde: Schema.Attribute.DateTime;
+    valida_hasta: Schema.Attribute.DateTime;
+    vigencia_permanente: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
   };
 }
 

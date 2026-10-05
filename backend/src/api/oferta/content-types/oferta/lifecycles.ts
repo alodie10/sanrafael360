@@ -1,6 +1,6 @@
 import { syncNegocioToAlgolia } from '../../../negocio/services/algolia';
 import { createOfertaRepository } from '../../repositories/oferta-repository';
-import { shouldAutoPublish, stampActivaOnPayload } from '../../services/oferta-vigencia';
+import { applyVigenciaRules, shouldAutoPublish, stampActivaOnPayload } from '../../services/oferta-vigencia';
 
 const publishingSet = new Set<string>();
 const algoliaQueued = new Set<string>();
@@ -9,11 +9,19 @@ async function stampActivaFromDates(event: any, isUpdate: boolean) {
   const data = event.params?.data;
   if (!data || typeof data !== 'object') return;
   let existing = null;
-  if (isUpdate && (data.valida_desde == null || data.valida_hasta == null)) {
+  if (isUpdate) {
     const documentId = event.params?.where?.documentId || event.params?.where?.id;
     if (documentId) {
       existing = await createOfertaRepository(strapi).findDatesByDocumentId(String(documentId));
     }
+  }
+  const touchesVigencia =
+    Object.prototype.hasOwnProperty.call(data, 'valida_desde') ||
+    Object.prototype.hasOwnProperty.call(data, 'valida_hasta') ||
+    Object.prototype.hasOwnProperty.call(data, 'vigencia_permanente') ||
+    Object.prototype.hasOwnProperty.call(data, 'formato_visual');
+  if (!isUpdate || touchesVigencia) {
+    applyVigenciaRules(data, existing);
   }
   stampActivaOnPayload(data, existing);
 }

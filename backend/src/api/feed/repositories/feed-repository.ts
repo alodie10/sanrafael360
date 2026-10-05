@@ -1,3 +1,5 @@
+import { publicVigenciaClause } from '../../oferta/services/oferta-vigencia';
+
 export class FeedRepository {
   constructor(private readonly strapi: any) {}
 
@@ -12,10 +14,7 @@ export class FeedRepository {
 
   async findActiveOfertas(nowIso: string) {
     return this.strapi.documents('api::oferta.oferta').findMany({
-      filters: {
-        valida_desde: { $lte: nowIso },
-        valida_hasta: { $gte: nowIso },
-      },
+      filters: publicVigenciaClause(new Date(nowIso)),
       status: 'published',
       populate: {
         banners: true,

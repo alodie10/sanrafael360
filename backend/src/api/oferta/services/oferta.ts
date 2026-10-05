@@ -5,6 +5,7 @@ import { createOfertaRepository } from '../repositories/oferta-repository';
 import { assertCanPublishListing } from '../../../utils/negocio-acl';
 import { resolveAdminUser } from '../../../utils/admin-access';
 import {
+  applyVigenciaRules,
   mergePublicVigenciaFilters,
   planVigenciaUpdates,
   stampActivaOnPayload,
@@ -35,6 +36,7 @@ export default factories.createCoreService('api::oferta.oferta', ({ strapi }) =>
     await loadOwnedNegocio(strapi, negocioId, caller);
 
     const payload: Record<string, any> = { ...data, negocio: negocioId };
+    applyVigenciaRules(payload);
     stampActivaOnPayload(payload);
     return strapi.documents('api::oferta.oferta').create({
       data: payload as any,
@@ -59,6 +61,7 @@ export default factories.createCoreService('api::oferta.oferta', ({ strapi }) =>
     }
 
     const { negocio: _ignored, ...rest } = data;
+    applyVigenciaRules(rest, existing);
     stampActivaOnPayload(rest, existing);
     return strapi.documents('api::oferta.oferta').update({
       documentId,

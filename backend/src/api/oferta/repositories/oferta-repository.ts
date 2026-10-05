@@ -4,7 +4,7 @@ export class OfertaRepository {
   async findDatesByDocumentId(documentId: string) {
     return this.strapi.documents('api::oferta.oferta').findOne({
       documentId,
-      fields: ['valida_desde', 'valida_hasta', 'activa'],
+      fields: ['valida_desde', 'valida_hasta', 'vigencia_permanente', 'formato_visual', 'activa'],
       status: 'published',
     });
   }
@@ -12,7 +12,7 @@ export class OfertaRepository {
   async findPublishedForVigencia() {
     return this.strapi.documents('api::oferta.oferta').findMany({
       status: 'published',
-      fields: ['documentId', 'activa', 'valida_desde', 'valida_hasta'],
+      fields: ['documentId', 'activa', 'valida_desde', 'valida_hasta', 'vigencia_permanente', 'formato_visual'],
       limit: -1,
     });
   }

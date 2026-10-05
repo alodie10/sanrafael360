@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  applyVigenciaRules,
   isOfertaEnVentana,
   mergePublicVigenciaFilters,
   planVigenciaUpdates,
@@ -47,9 +48,51 @@ describe('isOfertaEnVentana', () => {
     expect(isOfertaEnVentana({ valida_desde: '2026-09-01T00:00:00.000Z' }, NOW)).toBe(false);
     expect(isOfertaEnVentana({}, NOW)).toBe(false);
   });
+
+  it('is true for permanent banners without dates', () => {
+    expect(isOfertaEnVentana({ vigencia_permanente: true }, NOW)).toBe(true);
+  });
+});
+
+describe('applyVigenciaRules', () => {
+  it('clears dates when a banner is permanent', () => {
+    const data: Record<string, unknown> = {
+      formato_visual: 'Banners',
+      vigencia_permanente: true,
+      valida_desde: '2026-09-01T00:00:00.000Z',
+      valida_hasta: '2026-09-30T23:59:59.999Z',
+    };
+    applyVigenciaRules(data);
+    expect(data.vigencia_permanente).toBe(true);
+    expect(data.valida_desde).toBeNull();
+    expect(data.valida_hasta).toBeNull();
+  });
+
+  it('rejects a banner without dates or permanent flag', () => {
+    expect(() => applyVigenciaRules({ formato_visual: 'Banners' })).toThrow(
+      /vigencia permanente/
+    );
+  });
+
+  it('rejects a classic card without dates', () => {
+    expect(() => applyVigenciaRules({ formato_visual: 'Ficha', vigencia_permanente: true })).toThrow(
+      /obligatorias/
+    );
+  });
 });
 
 describe('stampActivaOnPayload', () => {
+  it('keeps a permanent banner active without dates', () => {
+    const data: Record<string, unknown> = {
+      vigencia_permanente: true,
+      valida_desde: null,
+      valida_hasta: null,
+      activa: false,
+    };
+    stampActivaOnPayload(data);
+    expect(data.activa).toBe(true);
+  });
+
   it('derives activa from payload dates', () => {
     const data: Record<string, unknown> = {
       valida_desde: '2026-09-14T00:00:00.000Z',
@@ -92,23 +135,40 @@ describe('planVigenciaUpdates', () => {
           valida_desde: '2026-09-01T00:00:00.000Z',
           valida_hasta: '2026-09-30T23:59:59.999Z',
         },
+        {
+          documentId: 'forever',
+          activa: false,
+          vigencia_permanente: true,
+        },
       ],
       NOW
     );
     expect(updates).toEqual([
       { documentId: 'on', activa: true },
       { documentId: 'off', activa: false },
+      { documentId: 'forever', activa: true },
     ]);
   });
 });
 
 
 describe('mergePublicVigenciaFilters', () => {
-  it('keeps caller filters and forces the date window', () => {
+  it('keeps caller filters and includes permanent offers', () => {
     const merged = mergePublicVigenciaFilters({ activa: { $eq: true } }, NOW);
-    expect(merged.activa).toEqual({ $eq: true });
-    expect(merged.valida_desde).toEqual({ $lte: NOW.toISOString() });
-    expect(merged.valida_hasta).toEqual({ $gte: NOW.toISOString() });
+    expect(merged).toEqual({
+      $and: [
+        { activa: { $eq: true } },
+        {
+          $or: [
+            { vigencia_permanente: { $eq: true } },
+            {
+              valida_desde: { $lte: NOW.toISOString() },
+              valida_hasta: { $gte: NOW.toISOString() },
+            },
+          ],
+        },
+      ],
+    });
   });
 });
 

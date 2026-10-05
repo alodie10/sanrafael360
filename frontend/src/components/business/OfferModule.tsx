@@ -11,9 +11,10 @@ import { isOfertaEnVentana } from "@/lib/oferta-vigencia";
 
 function OfferBlock({ oferta }: { oferta: Oferta }) {
   const [open, setOpen] = useState(false);
-  const formattedDate = oferta.valida_hasta
-    ? formatCalendarDate(oferta.valida_hasta, { day: "numeric", month: "long" })
-    : "";
+  const formattedDate =
+    !oferta.vigencia_permanente && oferta.valida_hasta
+      ? formatCalendarDate(oferta.valida_hasta, { day: "numeric", month: "long" })
+      : "";
   const images = isBannerOffer(oferta) ? ofertaBannerSrcs(oferta) : [];
   const preview = images[0] ? optimizeCloudinaryUrl(images[0], "c_limit,w_900,q_auto,f_auto") : null;
 
