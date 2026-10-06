@@ -6,6 +6,7 @@ import { postGuideTurn } from "@/lib/asistente/client";
 import type { GuideCta, GuideFicha, GuideHistoryItem, GuideMissTrace, GuideResponseType } from "@/lib/asistente/types";
 import { GuideAnunciarCta } from "./GuideFichaCard";
 import { GuideFichaCarousel } from "./GuideFichaCarousel";
+import { GuideMessageText, GuidePortalPreviews } from "./GuideMessageBody";
 import GuideRafiMark from "./GuideRafiMark";
 import styles from "./GuideChat.module.css";
 
@@ -147,9 +148,15 @@ export default function GuideChatPanel({
             className={styles.turn}
             ref={index === lines.length - 1 ? latestTurnRef : undefined}
           >
-            <p className={line.role === "user" ? styles.bubbleUser : styles.bubbleAssist}>
-              {line.content}
-            </p>
+            <div className={line.role === "user" ? styles.bubbleUser : styles.bubbleAssist}>
+              <GuideMessageText text={line.content} />
+            </div>
+            {line.role === "assistant" ? (
+              <GuidePortalPreviews
+                text={line.content}
+                skipPaths={(line.hits ?? []).map((hit) => hit.url).filter(Boolean)}
+              />
+            ) : null}
             {line.hits?.length ? <GuideFichaCarousel hits={line.hits} /> : null}
             {line.cta ? (
               <div className={styles.ctas}>
