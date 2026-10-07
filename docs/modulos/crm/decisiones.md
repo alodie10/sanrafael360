@@ -69,7 +69,7 @@ Numeración **CRM-DEC-…**.
 
 ### 2026-10-07 — CRM-DEC-018 — El HTML se abre en Mail para quedar en Enviados
 - **Contexto:** El HTML salía por el servicio de email y no aparecía en la bandeja de enviados de Mail.
-- **Decisión:** Mail abre un borrador HTML (negro y oro, imagen hosteada de la pieza) como redacción, con la cuenta por defecto de Mail y el botón Enviar. En el sitio publicado, esta Mac abre ese borrador. Al enviarlo queda en Enviados. El cupo se descuenta al preparar el borrador. Si no se puede abrir, el contacto sigue en la cola.
+- **Decisión:** Mail abre un borrador HTML (negro y oro, imagen hosteada de la pieza) como redacción, con la cuenta por defecto de Mail y el botón Enviar. En esta Mac lo abre el servidor local. En el sitio publicado lo abre la app San Rafael 360 de esta Mac, igual que en desarrollo. No se descarga un archivo. Al enviarlo queda en Enviados.
 - **Qué se descartó:** Enviar la captación por el servicio de email, porque esa copia no entra en Enviados.
 
 ### 2026-10-07 — CRM-DEC-017 — El mail de captación es HTML

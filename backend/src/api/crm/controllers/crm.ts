@@ -1,6 +1,5 @@
 import type { Core } from '@strapi/strapi';
 import { asyncHandler } from '../../../utils/asyncHandler';
-import { abrirBorradorMail } from '../crm-mail-draft';
 import { createCrmService } from '../services/crm-service';
 import type { CrmActor } from '../crm-tenant';
 
@@ -123,11 +122,6 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
         ctx.request.body.plantillaIndex
       ),
     });
-  }),
-
-  abrirBorrador: asyncHandler(async (ctx: any) => {
-    await abrirBorradorMail(ctx.state.crmBorrador);
-    ctx.send({ data: { abierto: true } });
   }),
 
   enviarMail: asyncHandler(async (ctx: any) => {

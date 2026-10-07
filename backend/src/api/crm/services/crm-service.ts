@@ -2,7 +2,7 @@ import { ForbiddenError, ValidationError } from '../../../utils/errors';
 import { calendarDateInTimeZone, greetingNow } from '../../../utils/prospeccion-saludo';
 import { buildWhatsappUrl, normalizeWhatsappDigits } from '../../../utils/whatsapp';
 import { composeCrmMensaje } from '../crm-compose';
-import { abrirBorradorMail, renderCrmMailEml } from '../crm-mail-draft';
+import { abrirBorradorMail } from '../crm-mail-draft';
 import { renderCrmMailHtml } from '../crm-mail-html';
 import {
   asDateOnly,
@@ -573,8 +573,18 @@ async function enviarMail(
     nombre: contacto.nombre,
     pieza,
   });
-  const eml = await prepararBorrador(listo);
-  return registrarMailEnviado(repo, comercio, contacto, slot, texto, to, eml, listo.subject, listo.html);
+  const mailAbierto = await prepararBorrador(listo);
+  return registrarMailEnviado(
+    repo,
+    comercio,
+    contacto,
+    slot,
+    texto,
+    to,
+    mailAbierto,
+    listo.subject,
+    listo.html
+  );
 }
 
 async function registrarMailEnviado(
@@ -584,7 +594,7 @@ async function registrarMailEnviado(
   slot: { campana: string; plantillaIndex: number },
   texto: string,
   to: string,
-  eml: string | null,
+  mailAbierto: boolean,
   subject: string,
   html: string
 ) {
@@ -597,16 +607,14 @@ async function registrarMailEnviado(
     plantilla_index: slot.plantillaIndex,
     contacto: contacto.documentId,
   });
-  const aviso = eml
-    ? `Descargué el borrador para ${to}. Abrilo y envialo: queda en Enviados.`
-    : `Borrador abierto en Mail para ${to}, con tu cuenta. El botón es Enviar.`;
+  const aviso = `Borrador abierto en Mail para ${to}, con tu cuenta. El botón es Enviar.`;
   return {
     enviado: true,
     texto,
     to,
     subject,
     html,
-    eml,
+    mailAbierto,
     cupoMail: await bumpCupoMail(repo, comercio),
     aviso,
     contacto: mapCrmContacto(await repo.findContacto(contacto.documentId)),
@@ -639,10 +647,10 @@ async function cerrarMailInvalido(
 }
 
 async function prepararBorrador(input: { to: string; subject: string; html: string }) {
-  if (process.platform !== 'darwin') return renderCrmMailEml(input);
+  if (process.platform !== 'darwin') return false;
   try {
     await abrirBorradorMail(input);
-    return null;
+    return true;
   } catch (err) {
     const raw = err instanceof Error ? err.message : '';
     const denied = /-1743|not authorized|autoriz/i.test(raw);
