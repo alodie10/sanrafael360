@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { origenPuedeAbrirMail, renderCrmMailEml } from '../../src/api/crm/crm-mail-draft';
 import { renderCrmMailHtml } from '../../src/api/crm/crm-mail-html';
 
 describe('renderCrmMailHtml', () => {
@@ -35,35 +34,5 @@ describe('renderCrmMailHtml', () => {
     });
     expect(html).toContain('&lt;script&gt;');
     expect(html).not.toContain('<img');
-  });
-});
-
-describe('renderCrmMailEml', () => {
-  it('builds an unsent html draft and keeps the hosted image', () => {
-    const html = renderCrmMailHtml({
-      saludo: 'Hola',
-      nombre: 'MTM',
-      mensaje: 'Texto',
-      firma: 'Diego',
-      pieza: { previewUrl: 'https://res.cloudinary.com/demo/pieza.jpg' },
-    });
-    const eml = renderCrmMailEml({
-      to: 'mtmferreteria@hotmail.com',
-      subject: 'Información sobre San Rafael 360',
-      html,
-    });
-    expect(eml).toContain('X-Unsent: 1');
-    expect(eml).toContain('To: mtmferreteria@hotmail.com');
-    expect(eml).toContain('=?UTF-8?B?');
-    expect(eml).toContain('src="https://res.cloudinary.com/demo/pieza.jpg"');
-    expect(eml).not.toContain('localhost');
-  });
-});
-
-describe('origenPuedeAbrirMail', () => {
-  it('allows the public site and this Mac', () => {
-    expect(origenPuedeAbrirMail('https://www.sanrafael360.com')).toBe(true);
-    expect(origenPuedeAbrirMail('http://localhost:3000')).toBe(true);
-    expect(origenPuedeAbrirMail('https://evil.example')).toBe(false);
   });
 });

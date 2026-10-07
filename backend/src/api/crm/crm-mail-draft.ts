@@ -6,20 +6,6 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
-const ORIGENES_MAIL = new Set([
-  'https://sanrafael360.com',
-  'https://www.sanrafael360.com',
-  'https://sanrafael360.vercel.app',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-]);
-
-export function origenPuedeAbrirMail(origin?: string | null): boolean {
-  const value = String(origin || '').trim();
-  if (!value) return true;
-  return ORIGENES_MAIL.has(value);
-}
-
 const ABRIR_BORRADOR = `on run argv
   set theSubject to item 1 of argv
   set theTo to item 2 of argv
@@ -42,30 +28,6 @@ const ABRIR_BORRADOR = `on run argv
   end tell
 end run
 `;
-
-export function renderCrmMailEml(input: { to: string; subject: string; html: string }): string {
-  return [
-    `To: ${input.to}`,
-    `Subject: ${encodeMailSubject(input.subject)}`,
-    'X-Unsent: 1',
-    'MIME-Version: 1.0',
-    'Content-Type: text/html; charset=UTF-8',
-    'Content-Transfer-Encoding: 8bit',
-    '',
-    input.html,
-    '',
-  ].join('\r\n');
-}
-
-function encodeMailSubject(value: string): string {
-  if (/^[\t\x20-\x7E]*$/.test(value)) return value;
-  const words: string[] = [];
-  for (let i = 0; i < value.length; i += 18) {
-    const slice = Buffer.from(value.slice(i, i + 18), 'utf8').toString('base64');
-    words.push(`=?UTF-8?B?${slice}?=`);
-  }
-  return words.join('\r\n ');
-}
 
 export async function abrirBorradorMail(input: {
   to: string;
