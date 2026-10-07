@@ -18,7 +18,6 @@ type Props = {
   canCrearFicha: boolean;
   busyId: string | null;
   cupoLleno?: boolean;
-  cupoMailLleno?: boolean;
 };
 
 export default function CrmContactList({
@@ -31,7 +30,6 @@ export default function CrmContactList({
   canCrearFicha,
   busyId,
   cupoLleno = false,
-  cupoMailLleno = false,
 }: Props) {
   if (!contactos.length) {
     return (
@@ -55,7 +53,6 @@ export default function CrmContactList({
           canCrearFicha={canCrearFicha}
           busy={busyId === c.documentId}
           cupoLleno={cupoLleno}
-          cupoMailLleno={cupoMailLleno}
         />
       ))}
     </ul>
@@ -72,7 +69,6 @@ function CrmContactoRow({
   canCrearFicha,
   busy,
   cupoLleno,
-  cupoMailLleno,
 }: {
   contacto: CrmContacto;
   categorias: CrmCategoria[];
@@ -83,7 +79,6 @@ function CrmContactoRow({
   canCrearFicha: boolean;
   busy: boolean;
   cupoLleno: boolean;
-  cupoMailLleno: boolean;
 }) {
   const [nota, setNota] = useState(c.nota || "");
   const [categoriaId, setCategoriaId] = useState(c.categoriaId || "");
@@ -170,7 +165,6 @@ function CrmContactoRow({
                 contacto={c}
                 busy={busy}
                 cupoLleno={cupoLleno}
-                cupoMailLleno={cupoMailLleno}
                 onEnviar={onEnviar}
               />
             </>
@@ -183,7 +177,6 @@ function CrmContactoRow({
             contacto={c}
             busy={busy}
             cupoLleno={cupoLleno}
-            cupoMailLleno={cupoMailLleno}
             onEnviar={onEnviar}
           />
         </div>
@@ -196,13 +189,11 @@ function CanalButtons({
   contacto: c,
   busy,
   cupoLleno,
-  cupoMailLleno,
   onEnviar,
 }: {
   contacto: CrmContacto;
   busy: boolean;
   cupoLleno: boolean;
-  cupoMailLleno: boolean;
   onEnviar: (documentId: string, canal: CrmCanal) => Promise<void>;
 }) {
   return (
@@ -219,7 +210,7 @@ function CanalButtons({
       <button
         type="button"
         data-testid="crm-enviar-mail"
-        disabled={busy || c.no_contactar || cupoMailLleno || !c.email}
+        disabled={busy || c.no_contactar || !c.email}
         onClick={() => onEnviar(c.documentId, "email")}
         className="px-4 py-2 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
       >

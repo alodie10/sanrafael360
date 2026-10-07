@@ -116,13 +116,13 @@ describe('resumenCupoActividades', () => {
 });
 
 describe('cupo de mail', () => {
-  it('uses its own counter and the tenant WhatsApp limit', () => {
+  it('keeps the daily count even after the old WhatsApp limit', () => {
     expect(
       cupoMailFromComercio(
-        { cupo_mail_fecha: '2026-09-17', cupo_mail_count: 2, cupo_wsp_limite: 10 },
+        { cupo_mail_fecha: '2026-09-17', cupo_mail_count: 40, cupo_wsp_limite: 25 },
         '2026-09-17'
-      )
-    ).toEqual({ enviados: 2, limite: 10, fecha: '2026-09-17' });
+      ).enviados
+    ).toBe(40);
   });
 
   it('counts a real mail today and refunds once', () => {

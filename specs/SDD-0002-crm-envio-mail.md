@@ -26,7 +26,7 @@ El contacto puede tener un mail. En la cola y en el lote hay un botón Mail que 
 - Botón Mail junto a WhatsApp, en la cola y en el lote de otra campaña.
 - Borrador HTML en Mail, negro y oro, con el texto de la campaña, la firma y la imagen `https` de la pieza. El asunto es el título de la campaña. Al enviarlo queda en Enviados.
 - Actividad `envio_email`, salida de la cola y estado `contactado` cuando el mail es válido.
-- Cupo diario de mail con el mismo límite del tenant que WhatsApp y contador propio.
+- Cuenta diaria de mail, sin tope. El contador es propio y no frena el botón.
 - Si el mail no es válido, el contacto sale de la cola sin consumir cupo.
 - Los envíos de mail entran en Contactos alcanzados.
 - El aviso de contacto reciente aplica también antes de abrir el mail.
@@ -43,7 +43,7 @@ El contacto puede tener un mail. En la cola y en el lote hay un botón Mail que 
 ### Supuestos y dependencias
 
 - El borrador se abre en Mail en esta Mac. El cupo se descuenta al abrirlo. Si Mail no abre, el contacto sigue en la cola.
-- El límite diario sigue siendo `cupo_wsp_limite` (25 si no hay otro valor).
+- El mail no tiene tope. La cuenta del día sigue en `cupo_mail_count`. WhatsApp sigue con `cupo_wsp_limite`.
 - En modo guía, Mail se habilita con ficha publicada, igual que WhatsApp. En modo agenda no hace falta ficha.
 - El trabajo queda en la rama `develop`.
 
@@ -66,7 +66,7 @@ El contacto puede tener un mail. En la cola y en el lote hay un botón Mail que 
 | AC-001 | **Dado** un alta manual o un JSON con `email` **Cuando** se carga el contacto **Entonces** el mail queda guardado y un segundo ítem con el mismo mail es duplicado. | Test unitario de ingest y revisión del alta. | Pasa en unitarios. Falta el alta en el navegador. |
 | AC-002 | **Dado** un contacto con mail válido, pieza con imagen `https` y cupo disponible **Cuando** se pulsa Mail **Entonces** Mail abre el borrador HTML con esa imagen, el contacto sale de la cola como contactado y el cupo de mail suma 1. Al enviar el borrador queda en Enviados. | Test del HTML y prueba en Mail. | Pasa el HTML. Falta el clic en el portal. |
 | AC-003 | **Dado** un mail vacío o inválido **Cuando** se intenta el envío **Entonces** sale de la cola, el cupo de mail no cambia y hay aviso. | Test unitario. | Pasa |
-| AC-004 | **Dado** modo guía sin ficha, o `no_contactar`, o cupo de mail lleno **Cuando** se intenta Mail **Entonces** no se abre el envío. | Test unitario de las guardas y del cupo. | Pasa en unitarios. |
+| AC-004 | **Dado** modo guía sin ficha, o `no_contactar` **Cuando** se intenta Mail **Entonces** no se abre el envío. Un conteo alto de mails del día no frena el botón. | Test unitario de las guardas. | Pasa en unitarios. |
 | AC-005 | **Dado** un mail enviado hoy **Cuando** el estado pasa a `error` **Entonces** el cupo de mail baja 1 y el de WhatsApp no. | Test unitario del cupo. | Pasa |
 | AC-006 | **Dado** actividades de WhatsApp y de mail **Cuando** se abre Contactos alcanzados **Entonces** ambos envíos aparecen y, si el último tiene menos de un mes, Mail pide confirmación. | Test de plegado y revisión de la UI. | Pasa el plegado. Falta ver la lista en el navegador. |
 | AC-007 | **Dado** el prompt default anterior, texto exacto **Cuando** carga el tenant **Entonces** el prompt pasa a pedir `email`. Un WhatsApp válido sigue abriendo `wa.me` y consumiendo solo su cupo. | Test del prompt y revisión del flujo WhatsApp existente. | Pasa el prompt y el cupo de WhatsApp no cuenta mails. |

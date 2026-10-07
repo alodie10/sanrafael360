@@ -67,6 +67,11 @@ Numeración **CRM-DEC-…**.
 - **Decisión:** Si el estado pasa a `error` y hubo un WhatsApp que consumió cupo **hoy** (calendario Mendoza), se resta 1. Un teléfono inválido (sin `wa.me`) no resta porque no había sumado. Un error de otro día no toca el cupo de hoy.
 - **Qué se descartó:** Cron de reset; devolver cupo al marcar Error sobre envíos viejos.
 
+### 2026-10-07 — CRM-DEC-019 — El mail no tiene tope
+- **Contexto:** El cupo de mail frenaba el botón al llegar al mismo límite que WhatsApp.
+- **Decisión:** Mail no tiene tope. Cada borrador abierto suma 1 a la cuenta del día. Si se marca error ese día, esa cuenta baja 1. WhatsApp sigue con su límite.
+- **Qué se descartó:** Compartir el tope de WhatsApp.
+
 ### 2026-10-07 — CRM-DEC-018 — El HTML se abre en Mail para quedar en Enviados
 - **Contexto:** El HTML salía por el servicio de email y no aparecía en la bandeja de enviados de Mail.
 - **Decisión:** Mail abre un borrador HTML (negro y oro, imagen hosteada de la pieza) como redacción, con la cuenta por defecto de Mail y el botón Enviar. En esta Mac lo abre el servidor local. En el sitio publicado lo abre la app San Rafael 360 de esta Mac, igual que en desarrollo. No se descarga un archivo. Al enviarlo queda en Enviados.
