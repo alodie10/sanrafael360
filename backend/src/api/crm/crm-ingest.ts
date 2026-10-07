@@ -1,6 +1,7 @@
 export type CrmIngestItem = {
   nombre: string;
   telefono: string;
+  email: string;
   instagram: string;
   nota: string;
 };
@@ -24,6 +25,7 @@ function asItem(row: unknown): CrmIngestItem | null {
   return {
     nombre,
     telefono: String(r.telefono || '').trim(),
+    email: String(r.email || '').trim(),
     instagram: String(r.instagram || '').trim(),
     nota: String(r.nota || '').trim(),
   };

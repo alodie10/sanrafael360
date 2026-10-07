@@ -67,6 +67,26 @@ Numeración **CRM-DEC-…**.
 - **Decisión:** Si el estado pasa a `error` y hubo un WhatsApp que consumió cupo **hoy** (calendario Mendoza), se resta 1. Un teléfono inválido (sin `wa.me`) no resta porque no había sumado. Un error de otro día no toca el cupo de hoy.
 - **Qué se descartó:** Cron de reset; devolver cupo al marcar Error sobre envíos viejos.
 
+### 2026-10-07 — CRM-DEC-018 — El HTML se abre en Mail para quedar en Enviados
+- **Contexto:** El HTML salía por el servicio de email y no aparecía en la bandeja de enviados de Mail.
+- **Decisión:** Mail abre un borrador HTML (negro y oro, imagen hosteada de la pieza). En esta Mac se abre Mail. En el servidor de producción se descarga el `.eml` y la persona lo abre en Mail. Al enviarlo queda en Enviados. El cupo se descuenta al preparar el borrador. Si no se puede abrir, el contacto sigue en la cola.
+- **Qué se descartó:** Enviar la captación por el servicio de email, porque esa copia no entra en Enviados.
+
+### 2026-10-07 — CRM-DEC-017 — El mail de captación es HTML
+- **Contexto:** El `mailto:` abría texto plano y un link a localhost. No mostraba la pieza.
+- **Decisión:** El cuerpo es HTML negro y oro, con la imagen hosteada de la pieza. Quedó reemplazada por CRM-DEC-018 en el modo de entrega: el borrador se abre en Mail.
+- **Qué se descartó:** Seguir abriendo el cliente de correo con texto plano.
+
+### 2026-10-07 — CRM-DEC-016 — Ficha mínima con mail
+- **Contexto:** La lista de la IA trae mail y no teléfono. Crear ficha exigía teléfono, así que el botón quedaba apagado y no se podía abrir el mail.
+- **Decisión:** Alcanza nombre + categoría + teléfono válido o mail válido. El mail se guarda en la ficha. Sin categoría el botón sigue apagado.
+- **Qué se descartó:** Seguir exigiendo teléfono para publicar.
+
+### 2026-10-07 — CRM-DEC-015 — Mail abre el correo, igual que wa.me
+- **Contexto:** La cola solo abordaba por WhatsApp. Diego también escribe por mail y quiere el mismo mensaje, el mismo registro y un cupo que no se coma el de WhatsApp.
+- **Decisión:** El contacto guarda `email`. Cupo de mail aparte, con el mismo límite del tenant. Modo guía sigue exigiendo ficha. El `mailto:` de esta decisión quedó reemplazado por CRM-DEC-017.
+- **Qué se descartó:** Compartir el contador de WhatsApp; un estado de error nuevo.
+
 ### 2026-09-23 — CRM-DEC-014 — Prospector = vigencia admin, no un build por cliente
 - **Contexto:** El primer cliente (dueño `argendeli01@gmail.com`) paga Captación. No es un producto llamado Argendeli: es el mismo CRM con tenant `agenda`. Diego carga ~25 leads/día y el cliente también puede ingerir; el WhatsApp sale por `wa.me` en la línea del cliente.
 - **Decisión:** Alta de cliente = fecha de vencimiento en Pagos (como Elite), campos `is_prospector` + `prospector_valid_until`. Un botón guarda Premium y otro Prospector para no pisarse. Al guardar se crea/reactiva `crm-comercio` modo `agenda` (cupo 25) ligado al email del dueño. En agenda no hay **Crear ficha**; `wa.me` no exige listing. Los comentarios se apilan como `crm-actividad` tipo `nota`. Cobro MP más adelante, mismo sistema de pagos.

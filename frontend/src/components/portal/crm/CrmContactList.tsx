@@ -2,21 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { CrmContacto } from "@/lib/crm";
-import { formatCrmFecha } from "@/lib/crm";
+import { formatCrmFecha, type CrmContacto } from "@/lib/crm";
+
+type CrmCanal = "whatsapp" | "email";
 
 export type CrmCategoria = { documentId: string; nombre: string };
 
 type Props = {
   contactos: CrmContacto[];
   categorias: CrmCategoria[];
-  onEnviar: (documentId: string) => Promise<void>;
+  onEnviar: (documentId: string, canal: CrmCanal) => Promise<void>;
   onNota: (documentId: string, nota: string) => Promise<void>;
   onCategoria: (documentId: string, categoriaId: string) => Promise<void>;
-  onCrearFicha: (documentId: string, categoriaId?: string) => Promise<void>;
+  onCrearFicha: (documentId: string, categoriaId?: string, email?: string) => Promise<void>;
   canCrearFicha: boolean;
   busyId: string | null;
   cupoLleno?: boolean;
+  cupoMailLleno?: boolean;
 };
 
 export default function CrmContactList({
@@ -29,6 +31,7 @@ export default function CrmContactList({
   canCrearFicha,
   busyId,
   cupoLleno = false,
+  cupoMailLleno = false,
 }: Props) {
   if (!contactos.length) {
     return (
@@ -52,6 +55,7 @@ export default function CrmContactList({
           canCrearFicha={canCrearFicha}
           busy={busyId === c.documentId}
           cupoLleno={cupoLleno}
+          cupoMailLleno={cupoMailLleno}
         />
       ))}
     </ul>
@@ -68,21 +72,23 @@ function CrmContactoRow({
   canCrearFicha,
   busy,
   cupoLleno,
+  cupoMailLleno,
 }: {
   contacto: CrmContacto;
   categorias: CrmCategoria[];
-  onEnviar: (documentId: string) => Promise<void>;
+  onEnviar: (documentId: string, canal: CrmCanal) => Promise<void>;
   onNota: (documentId: string, nota: string) => Promise<void>;
   onCategoria: (documentId: string, categoriaId: string) => Promise<void>;
-  onCrearFicha: (documentId: string, categoriaId?: string) => Promise<void>;
+  onCrearFicha: (documentId: string, categoriaId?: string, email?: string) => Promise<void>;
   canCrearFicha: boolean;
   busy: boolean;
   cupoLleno: boolean;
+  cupoMailLleno: boolean;
 }) {
   const [nota, setNota] = useState(c.nota || "");
   const [categoriaId, setCategoriaId] = useState(c.categoriaId || "");
   const tieneFicha = Boolean(c.negocio?.documentId || c.negocio?.slug);
-  const ready = Boolean(c.nombre && c.telefono && categoriaId);
+  const ready = Boolean(c.nombre && categoriaId && (c.telefono || c.email));
   const dirty = nota !== (c.nota || "");
 
   useEffect(() => {
@@ -101,7 +107,7 @@ function CrmContactoRow({
       <div className="xl:w-52 shrink-0">
         <p className="text-white font-serif text-lg italic leading-tight">{c.nombre}</p>
         <p className="text-zinc-500 text-xs mt-1">
-          {c.telefono || "sin teléfono"} · {c.origen} · {formatCrmFecha(c.createdAt)}
+          {c.telefono || "sin teléfono"} · {c.email || "sin mail"} · {c.origen} · {formatCrmFecha(c.createdAt)}
         </p>
       </div>
       <div className="flex-1 space-y-2 min-w-0">
@@ -146,7 +152,7 @@ function CrmContactoRow({
             type="button"
             data-testid="crm-crear-ficha"
             disabled={busy || tieneFicha || !ready}
-            onClick={() => onCrearFicha(c.documentId, categoriaId)}
+            onClick={() => onCrearFicha(c.documentId, categoriaId, c.email)}
             className="px-4 py-2 bg-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-xl border border-white/10 disabled:opacity-40"
           >
             Crear ficha
@@ -160,30 +166,65 @@ function CrmContactoRow({
               >
                 Ver ficha
               </Link>
-              <button
-                type="button"
-                data-testid="crm-enviar-wsp"
-                disabled={busy || c.no_contactar || cupoLleno}
-                onClick={() => onEnviar(c.documentId)}
-                className="px-4 py-2 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
-              >
-                WhatsApp
-              </button>
+              <CanalButtons
+                contacto={c}
+                busy={busy}
+                cupoLleno={cupoLleno}
+                cupoMailLleno={cupoMailLleno}
+                onEnviar={onEnviar}
+              />
             </>
           )}
         </div>
       )}
       {!canCrearFicha && (
-        <button
-          type="button"
-          data-testid="crm-enviar-wsp"
-          disabled={busy || c.no_contactar || cupoLleno}
-          onClick={() => onEnviar(c.documentId)}
-          className="px-4 py-2 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40 xl:self-center"
-        >
-          WhatsApp
-        </button>
+        <div className="flex flex-wrap gap-2 xl:self-center">
+          <CanalButtons
+            contacto={c}
+            busy={busy}
+            cupoLleno={cupoLleno}
+            cupoMailLleno={cupoMailLleno}
+            onEnviar={onEnviar}
+          />
+        </div>
       )}
     </li>
+  );
+}
+
+function CanalButtons({
+  contacto: c,
+  busy,
+  cupoLleno,
+  cupoMailLleno,
+  onEnviar,
+}: {
+  contacto: CrmContacto;
+  busy: boolean;
+  cupoLleno: boolean;
+  cupoMailLleno: boolean;
+  onEnviar: (documentId: string, canal: CrmCanal) => Promise<void>;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        data-testid="crm-enviar-wsp"
+        disabled={busy || c.no_contactar || cupoLleno}
+        onClick={() => onEnviar(c.documentId, "whatsapp")}
+        className="px-4 py-2 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
+      >
+        WhatsApp
+      </button>
+      <button
+        type="button"
+        data-testid="crm-enviar-mail"
+        disabled={busy || c.no_contactar || cupoMailLleno || !c.email}
+        onClick={() => onEnviar(c.documentId, "email")}
+        className="px-4 py-2 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
+      >
+        Mail
+      </button>
+    </>
   );
 }

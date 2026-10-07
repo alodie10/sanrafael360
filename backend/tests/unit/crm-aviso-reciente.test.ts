@@ -12,6 +12,7 @@ function row(partial: Partial<CrmAlcanzado> & Pick<CrmAlcanzado, 'documentId' | 
   return {
     nombre: 'Taller',
     telefono: '',
+    email: '',
     nota: '',
     estado: 'contactado',
     origen: 'manual',

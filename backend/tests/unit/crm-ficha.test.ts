@@ -10,7 +10,7 @@ import {
 } from '../../src/api/crm/crm-ficha';
 
 describe('crm-ficha', () => {
-  it('requires nombre, teléfono and categoría', () => {
+  it('requires nombre, categoría and a phone or a mail', () => {
     expect(() => assertFichaMinima({ nombre: 'Taller', telefono: '2615550000' })).toThrow(
       ValidationError
     );
@@ -21,6 +21,13 @@ describe('crm-ficha', () => {
       assertFichaMinima({
         nombre: 'Taller',
         telefono: '2615550000',
+        categoriaId: 'cat-1',
+      })
+    ).not.toThrow();
+    expect(() =>
+      assertFichaMinima({
+        nombre: 'Ferretería',
+        email: 'mtmferreteria@hotmail.com',
         categoriaId: 'cat-1',
       })
     ).not.toThrow();

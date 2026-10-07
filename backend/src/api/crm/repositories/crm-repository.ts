@@ -11,6 +11,8 @@ export type CrmContactoInput = {
   nombre: string;
   telefono?: string;
   telefono_normalizado?: string | null;
+  email?: string;
+  email_normalizado?: string | null;
   instagram?: string;
   nota?: string;
   origen: 'manual' | 'lista_ia';
@@ -98,11 +100,29 @@ export class CrmRepository {
   async findDuplicate(input: {
     comercioDocumentId: string;
     telefonoNormalizado?: string | null;
+    emailNormalizado?: string | null;
     nombreKey: string;
   }) {
     const byPhone = await this.findDuplicateByPhone(input);
     if (byPhone) return byPhone;
+    const byEmail = await this.findDuplicateByEmail(input);
+    if (byEmail) return byEmail;
     return this.findDuplicateByNombre(input);
+  }
+
+  private async findDuplicateByEmail(input: {
+    comercioDocumentId: string;
+    emailNormalizado?: string | null;
+  }) {
+    if (!input.emailNormalizado) return null;
+    const rows = await this.strapi.documents(CONTACTO).findMany({
+      filters: {
+        comercio: { documentId: { $eq: input.comercioDocumentId } },
+        email_normalizado: { $eq: input.emailNormalizado },
+      },
+      limit: 1,
+    });
+    return rows?.[0] || null;
   }
 
   private async findDuplicateByPhone(input: {
@@ -144,6 +164,8 @@ export class CrmRepository {
         nombre: data.nombre,
         telefono: data.telefono || '',
         telefono_normalizado: data.telefono_normalizado || null,
+        email: data.email || '',
+        email_normalizado: data.email_normalizado || null,
         instagram: data.instagram || '',
         nota: data.nota || '',
         origen: data.origen,
@@ -159,10 +181,10 @@ export class CrmRepository {
     return this.strapi.documents(CONTACTO).update({ documentId, data });
   }
 
-  listEnviosWhatsapp(comercioDocumentId: string) {
+  listEnvios(comercioDocumentId: string) {
     return this.strapi.documents(ACTIVIDAD).findMany({
       filters: {
-        tipo: { $eq: 'envio_whatsapp' },
+        tipo: { $in: ['envio_whatsapp', 'envio_email'] },
         contacto: { comercio: { documentId: { $eq: comercioDocumentId } } },
       },
       populate: { contacto: { populate: ['categoria', 'negocio'] } },

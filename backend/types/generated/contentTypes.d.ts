@@ -609,7 +609,9 @@ export interface ApiCrmActividadCrmActividad
   };
   attributes: {
     campana: Schema.Attribute.String;
-    canal: Schema.Attribute.Enumeration<['whatsapp', 'instagram', 'sistema']> &
+    canal: Schema.Attribute.Enumeration<
+      ['whatsapp', 'instagram', 'sistema', 'email']
+    > &
       Schema.Attribute.Required;
     contacto: Schema.Attribute.Relation<
       'manyToOne',
@@ -634,7 +636,9 @@ export interface ApiCrmActividadCrmActividad
       >;
     publishedAt: Schema.Attribute.DateTime;
     texto: Schema.Attribute.Text;
-    tipo: Schema.Attribute.Enumeration<['envio_whatsapp', 'nota', 'estado']> &
+    tipo: Schema.Attribute.Enumeration<
+      ['envio_whatsapp', 'envio_email', 'nota', 'estado']
+    > &
       Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -662,6 +666,15 @@ export interface ApiCrmComercioCrmComercio extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    cupo_mail_count: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    cupo_mail_fecha: Schema.Attribute.Date;
     cupo_wsp_count: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
         {
@@ -730,6 +743,8 @@ export interface ApiCrmContactoCrmContacto extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    email: Schema.Attribute.String;
+    email_normalizado: Schema.Attribute.String;
     en_cola: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     estado: Schema.Attribute.Enumeration<
       [

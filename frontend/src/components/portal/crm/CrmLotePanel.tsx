@@ -2,14 +2,23 @@
 
 import type { CrmContacto } from "@/lib/crm";
 
+type CrmCanal = "whatsapp" | "email";
+
 type Props = {
   contactos: CrmContacto[];
-  onEnviar: (documentId: string) => void;
+  onEnviar: (documentId: string, canal: CrmCanal) => void;
   busyId: string | null;
   cupoLleno?: boolean;
+  cupoMailLleno?: boolean;
 };
 
-export default function CrmLotePanel({ contactos, onEnviar, busyId, cupoLleno = false }: Props) {
+export default function CrmLotePanel({
+  contactos,
+  onEnviar,
+  busyId,
+  cupoLleno = false,
+  cupoMailLleno = false,
+}: Props) {
   if (!contactos.length) return null;
 
   return (
@@ -30,16 +39,30 @@ export default function CrmLotePanel({ contactos, onEnviar, busyId, cupoLleno = 
             key={contacto.documentId}
             className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 px-3 py-2"
           >
-            <span className="text-white text-sm truncate">{contacto.nombre || "Contacto"}</span>
-            <button
-              type="button"
-              data-testid="crm-lote-enviar"
-              disabled={busyId === contacto.documentId || cupoLleno}
-              onClick={() => onEnviar(contacto.documentId)}
-              className="px-3 py-1.5 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40 shrink-0"
-            >
-              WhatsApp
-            </button>
+            <span className="text-white text-sm truncate">
+              {contacto.nombre || "Contacto"}
+              {contacto.email ? <span className="block text-zinc-500 text-xs">{contacto.email}</span> : null}
+            </span>
+            <span className="flex gap-2 shrink-0">
+              <button
+                type="button"
+                data-testid="crm-lote-enviar"
+                disabled={busyId === contacto.documentId || cupoLleno}
+                onClick={() => onEnviar(contacto.documentId, "whatsapp")}
+                className="px-3 py-1.5 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
+              >
+                WhatsApp
+              </button>
+              <button
+                type="button"
+                data-testid="crm-lote-enviar-mail"
+                disabled={busyId === contacto.documentId || cupoMailLleno || !contacto.email}
+                onClick={() => onEnviar(contacto.documentId, "email")}
+                className="px-3 py-1.5 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
+              >
+                Mail
+              </button>
+            </span>
           </li>
         ))}
       </ul>

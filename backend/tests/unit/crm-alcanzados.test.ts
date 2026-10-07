@@ -33,6 +33,29 @@ describe('foldAlcanzados', () => {
     expect(folded[1].nombre).toBe('Salon');
     expect(folded[1].envios[0].campana).toBe(SIN_CAMPANA);
     expect(folded[1].envios[0].plantillaIndex).toBeNull();
+    expect(folded[0].envios[0].canal).toBe('whatsapp');
+  });
+
+  it('keeps a mail send next to WhatsApp for the same contact', () => {
+    const folded = foldAlcanzados([
+      {
+        documentId: 'a1',
+        createdAt: '2026-10-07T12:00:00.000Z',
+        campana: 'SR360',
+        canal: 'email',
+        contacto: { documentId: 'c1', nombre: 'Ana', email: 'ana@taller.com' },
+      },
+      {
+        documentId: 'a2',
+        createdAt: '2026-10-01T12:00:00.000Z',
+        campana: 'SR360',
+        canal: 'whatsapp',
+        contacto: { documentId: 'c1', nombre: 'Ana', email: 'ana@taller.com' },
+      },
+    ]);
+    expect(folded).toHaveLength(1);
+    expect(folded[0].email).toBe('ana@taller.com');
+    expect(folded[0].envios.map((envio) => envio.canal)).toEqual(['email', 'whatsapp']);
   });
 
   it('keeps the contact comment and filters by campaign date', () => {

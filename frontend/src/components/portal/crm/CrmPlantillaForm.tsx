@@ -147,7 +147,7 @@ function CrmPiezaSlot({
         />
       ) : (
         <p className="text-xs text-zinc-500">
-          Subí un JPG, PNG o WEBP. El link público se agrega al WhatsApp y ahí se ve la imagen.
+          Subí un JPG, PNG o WEBP. El link público se agrega al WhatsApp y al mail, y ahí se ve la imagen.
         </p>
       )}
       {pieza ? (
