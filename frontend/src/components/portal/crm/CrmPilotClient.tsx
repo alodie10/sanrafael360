@@ -28,6 +28,18 @@ function apiError(json: any, fallback: string) {
   return json?.error?.message || json?.error || fallback;
 }
 
+function descargarEml(eml: string) {
+  const blob = new Blob([eml], { type: "message/rfc822" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "san-rafael-360.eml";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 export default function CrmPilotClient({ jwt, isAdmin }: Props) {
   const [boot, setBoot] = useState<CrmBootstrap | null>(null);
   const [slug, setSlug] = useState("");
@@ -49,6 +61,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
     documentId: string;
     campana: string;
     enviadoAt: string;
+    canal: "whatsapp" | "email";
   } | null>(null);
 
   const plantillaSlots = normalizePlantillaSlots(boot?.plantilla.slots, boot?.plantilla.mensaje);
@@ -108,6 +121,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
   async function createManual(input: {
     nombre: string;
     telefono: string;
+    email: string;
     instagram: string;
     nota: string;
   }) {
@@ -160,11 +174,12 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
     }
   }
 
-  async function enviar(documentId: string) {
+  async function enviar(documentId: string, canal: "whatsapp" | "email" = "whatsapp") {
     setBusyId(documentId);
     setError(null);
     try {
-      const res = await fetch(`${STRAPI_URL}/api/crm/enviar`, {
+      const path = canal === "email" ? "enviar-mail" : "enviar";
+      const res = await fetch(`${STRAPI_URL}/api/crm/${path}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${jwt}`,
@@ -173,7 +188,9 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
         body: JSON.stringify(withSlug({ contactoDocumentId: documentId, plantillaIndex })),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(apiError(json, "No se pudo armar WhatsApp"));
+      if (!res.ok) {
+        throw new Error(apiError(json, canal === "email" ? "No se pudo armar el mail" : "No se pudo armar WhatsApp"));
+      }
       setLote((prev) => prev.filter((c) => c.documentId !== documentId));
       setBoot((prev) =>
         prev
@@ -183,8 +200,11 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
       if (json.data?.whatsappUrl) {
         window.open(json.data.whatsappUrl, "_blank", "noopener,noreferrer");
       }
-      if (json.data?.aviso) setNotice(json.data.aviso);
+      if (json.data?.eml) descargarEml(json.data.eml);
+      if (json.data?.enviado) setNotice(json.data.aviso || "Mail enviado");
+      else if (json.data?.aviso) setNotice(json.data.aviso);
       if (json.data?.cupo) patchCupo(json.data.cupo);
+      if (json.data?.cupoMail) patchCupoMail(json.data.cupoMail);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
     } finally {
@@ -201,20 +221,20 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
     return ultimoEnvioReciente(row);
   }
 
-  async function pedirEnviar(documentId: string) {
+  async function pedirEnviar(documentId: string, canal: "whatsapp" | "email" = "whatsapp") {
     const aviso = avisoPara(documentId);
     if (aviso) {
-      setPendingEnvio({ documentId, campana: aviso.campana, enviadoAt: aviso.enviadoAt });
+      setPendingEnvio({ documentId, campana: aviso.campana, enviadoAt: aviso.enviadoAt, canal });
       return;
     }
-    await enviar(documentId);
+    await enviar(documentId, canal);
   }
 
   async function confirmarEnvio() {
     if (!pendingEnvio) return;
-    const documentId = pendingEnvio.documentId;
+    const { documentId, canal } = pendingEnvio;
     setPendingEnvio(null);
-    await enviar(documentId);
+    await enviar(documentId, canal);
   }
 
   function llevarAlEscritorio(visibles: CrmAlcanzado[]) {
@@ -228,6 +248,10 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
 
   function patchCupo(cupo: CrmCupo) {
     setBoot((prev) => (prev ? { ...prev, cupo } : prev));
+  }
+
+  function patchCupoMail(cupoMail: CrmCupo) {
+    setBoot((prev) => (prev ? { ...prev, cupoMail } : prev));
   }
 
   async function subirPieza(slotIndex: number, file: File) {
@@ -381,7 +405,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
     );
   }
 
-  async function crearFicha(documentId: string, categoriaId?: string) {
+  async function crearFicha(documentId: string, categoriaId?: string, email?: string) {
     setBusyId(documentId);
     setError(null);
     try {
@@ -391,7 +415,7 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
           Authorization: `Bearer ${jwt}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(withSlug({ contactoDocumentId: documentId, categoriaId })),
+        body: JSON.stringify(withSlug({ contactoDocumentId: documentId, categoriaId, email })),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(apiError(json, "No se pudo crear la ficha"));
@@ -458,9 +482,15 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
           </div>
           {!forbidden && (
             <p className="text-zinc-400 text-xs" data-testid="crm-cupo">
-              Cupo {boot?.cupo.enviados ?? "—"}/{boot?.cupo.limite ?? 25}
+              WhatsApp {boot?.cupo.enviados ?? "—"}/{boot?.cupo.limite ?? 25}
+              {" · "}
+              Mail {boot?.cupoMail?.enviados ?? "—"}/{boot?.cupoMail?.limite ?? boot?.cupo.limite ?? 25}
               {(boot?.cupo.enviados ?? 0) >= (boot?.cupo.limite ?? 25)
-                ? ". El resto sigue en la cola hasta mañana."
+                ? ". WhatsApp: el resto sigue en la cola hasta mañana."
+                : ""}
+              {(boot?.cupoMail?.enviados ?? 0) >= (boot?.cupoMail?.limite ?? boot?.cupo.limite ?? 25) &&
+              boot?.cupoMail
+                ? ". Mail: el resto sigue en la cola hasta mañana."
                 : ""}
             </p>
           )}
@@ -593,6 +623,10 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
                 onEnviar={pedirEnviar}
                 busyId={busyId}
                 cupoLleno={(boot?.cupo.enviados ?? 0) >= (boot?.cupo.limite ?? 25)}
+                cupoMailLleno={
+                  Boolean(boot?.cupoMail) &&
+                  (boot?.cupoMail?.enviados ?? 0) >= (boot?.cupoMail?.limite ?? 25)
+                }
               />
               <CrmContactList
                 contactos={boot?.contactos || []}
@@ -604,6 +638,10 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
                 canCrearFicha={isAdmin && boot?.comercio.modo !== "agenda"}
                 busyId={busyId}
                 cupoLleno={(boot?.cupo.enviados ?? 0) >= (boot?.cupo.limite ?? 25)}
+                cupoMailLleno={
+                  Boolean(boot?.cupoMail) &&
+                  (boot?.cupoMail?.enviados ?? 0) >= (boot?.cupoMail?.limite ?? 25)
+                }
               />
             </section>
           </div>

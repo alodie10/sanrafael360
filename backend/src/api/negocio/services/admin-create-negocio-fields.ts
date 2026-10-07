@@ -17,6 +17,7 @@ export type AdminCreateNegocioInput = {
   categoriaId?: unknown;
   direccion?: unknown;
   telefono?: unknown;
+  email?: unknown;
   descripcion?: unknown;
   whatsapp?: unknown;
   website?: unknown;

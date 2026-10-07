@@ -6,6 +6,7 @@ type Props = {
   onCreate: (input: {
     nombre: string;
     telefono: string;
+    email: string;
     instagram: string;
     nota: string;
   }) => Promise<void>;
@@ -15,6 +16,7 @@ type Props = {
 export default function CrmManualForm({ onCreate, busy }: Props) {
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [email, setEmail] = useState("");
   const [instagram, setInstagram] = useState("");
   const [nota, setNota] = useState("");
 
@@ -25,6 +27,7 @@ export default function CrmManualForm({ onCreate, busy }: Props) {
     const next = {
       nombre: String(data.get("crm-lead-nombre") || nombre).trim(),
       telefono: String(data.get("crm-lead-telefono") || telefono).trim(),
+      email: String(data.get("crm-lead-email") || email).trim(),
       instagram: String(data.get("crm-lead-instagram") || instagram).trim(),
       nota: String(data.get("crm-lead-nota") || nota).trim(),
     };
@@ -33,6 +36,7 @@ export default function CrmManualForm({ onCreate, busy }: Props) {
     form.reset();
     setNombre("");
     setTelefono("");
+    setEmail("");
     setInstagram("");
     setNota("");
   }
@@ -69,6 +73,19 @@ export default function CrmManualForm({ onCreate, busy }: Props) {
           placeholder="Ej: 2615550000"
           autoComplete="off"
           inputMode="tel"
+          className="mt-1 w-full px-4 py-3 rounded-2xl bg-black/40 border border-white/10 text-white text-sm"
+        />
+      </label>
+      <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500">
+        Mail
+        <input
+          data-testid="crm-manual-email"
+          name="crm-lead-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Ej: ana@comercio.com"
+          autoComplete="off"
           className="mt-1 w-full px-4 py-3 rounded-2xl bg-black/40 border border-white/10 text-white text-sm"
         />
       </label>

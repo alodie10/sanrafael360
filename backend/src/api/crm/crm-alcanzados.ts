@@ -4,6 +4,7 @@ export type CrmEnvioResumen = {
   campana: string;
   enviadoAt: string;
   plantillaIndex: number | null;
+  canal: 'whatsapp' | 'email';
 };
 
 export type AlcanzadoFiltro = {
@@ -20,6 +21,7 @@ export function mapCrmAlcanzado(row: any) {
     enviadoAt: row.createdAt,
     nombre: contacto.nombre || '',
     telefono: contacto.telefono || '',
+    email: contacto.email || '',
     nota: contacto.nota || '',
     estado: contacto.estado || 'contactado',
     origen: contacto.origen || 'manual',
@@ -34,6 +36,7 @@ export function mapEnvio(row: any): CrmEnvioResumen {
     campana: String(row?.campana || '').trim() || SIN_CAMPANA,
     enviadoAt: row?.createdAt || '',
     plantillaIndex: indicePlantilla(row?.plantilla_index),
+    canal: row?.canal === 'email' ? 'email' : 'whatsapp',
   };
 }
 

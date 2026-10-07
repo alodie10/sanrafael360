@@ -31,7 +31,7 @@ export default function CrmContactadosList({
   if (!contactos.length) {
     return (
       <p className="text-zinc-500 text-sm italic" data-testid="crm-alcanzados-empty">
-        No hay contactos alcanzados con este filtro. Aparecen acá cuando abrís WhatsApp.
+        No hay contactos alcanzados con este filtro. Aparecen acá cuando abrís WhatsApp o el mail.
       </p>
     );
   }
@@ -68,6 +68,7 @@ function CampanaChips({ envios }: { envios: CrmEnvio[] }) {
           data-testid="crm-campana-chip"
           className="px-2 py-0.5 rounded-full border border-white/10 text-[10px] uppercase tracking-widest text-zinc-300"
         >
+          {envio.canal === "email" ? "Mail · " : ""}
           {envio.campana} · {formatCrmFecha(envio.enviadoAt)}
         </span>
       ))}

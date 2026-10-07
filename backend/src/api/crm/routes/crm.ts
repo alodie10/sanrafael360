@@ -100,6 +100,15 @@ export default {
     },
     {
       method: 'POST',
+      path: '/crm/enviar-mail',
+      handler: 'crm.enviarMail',
+      config: {
+        ...portalAuth,
+        middlewares: ['api::crm.require-crm-portal', 'api::crm.crm-enviar-validator'],
+      },
+    },
+    {
+      method: 'POST',
       path: '/crm/crear-ficha',
       handler: 'crm.crearFicha',
       config: {

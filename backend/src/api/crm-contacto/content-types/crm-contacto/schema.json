@@ -21,6 +21,12 @@
     "telefono_normalizado": {
       "type": "string"
     },
+    "email": {
+      "type": "string"
+    },
+    "email_normalizado": {
+      "type": "string"
+    },
     "instagram": {
       "type": "string"
     },

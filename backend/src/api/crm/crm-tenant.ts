@@ -1,5 +1,10 @@
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../utils/errors';
-import { CRM_TENANT_SLUG, plantillaDefaults, type CrmModo } from './crm-defaults';
+import {
+  CRM_TENANT_SLUG,
+  plantillaDefaults,
+  promptReemplazaDefaultViejo,
+  type CrmModo,
+} from './crm-defaults';
 import type { CrmRepository } from './repositories/crm-repository';
 
 export type CrmActor = {
@@ -77,7 +82,11 @@ export function mapTenant(comercio: any) {
 
 export async function ensurePlantilla(repo: CrmRepository, comercio: any) {
   const existing = await repo.findPlantillaByComercio(comercio.documentId);
-  if (existing) return existing;
+  if (existing) {
+    const next = promptReemplazaDefaultViejo(existing.prompt_ia, modoOf(comercio));
+    if (!next) return existing;
+    return repo.updatePlantilla(existing.documentId, { prompt_ia: next });
+  }
   const defaults = plantillaDefaults(modoOf(comercio), comercio.nombre);
   return repo.createPlantilla({
     ...defaults,

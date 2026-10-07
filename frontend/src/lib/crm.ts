@@ -12,6 +12,7 @@ export type CrmContacto = {
   documentId: string;
   nombre: string;
   telefono: string;
+  email: string;
   instagram: string;
   nota: string;
   origen: "manual" | "lista_ia";
@@ -50,6 +51,7 @@ export type CrmBootstrap = {
   plantilla: { mensaje: string; firma: string; prompt_ia: string; slots: { titulo: string; texto: string }[] };
   piezas?: CrmPieza[];
   cupo: CrmCupo;
+  cupoMail?: CrmCupo;
   contactos: CrmContacto[];
   canPrestar?: boolean;
   tenants?: CrmTenant[];
@@ -78,6 +80,7 @@ export type CrmEnvio = {
   campana: string;
   enviadoAt: string;
   plantillaIndex: number | null;
+  canal?: "whatsapp" | "email";
 };
 
 export function crmQuery(params: Record<string, string | undefined>) {
@@ -126,6 +129,7 @@ export type CrmAlcanzado = {
   enviadoAt: string;
   nombre: string;
   telefono: string;
+  email: string;
   nota: string;
   estado: CrmEstado;
   origen: CrmContacto["origen"];
@@ -175,6 +179,7 @@ export function alcanzadoAsContacto(row: CrmAlcanzado): CrmContacto {
     documentId: row.contactoDocumentId || row.documentId,
     nombre: row.nombre,
     telefono: row.telefono,
+    email: row.email || "",
     instagram: "",
     nota: row.nota || "",
     origen: row.origen || "manual",

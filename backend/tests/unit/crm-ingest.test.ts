@@ -7,13 +7,21 @@ describe('parseCrmIngestPayload', () => {
       JSON.stringify([{ nombre: 'Taller X', telefono: '2611234567' }])
     );
     expect(items).toEqual([
-      { nombre: 'Taller X', telefono: '2611234567', instagram: '', nota: '' },
+      { nombre: 'Taller X', telefono: '2611234567', email: '', instagram: '', nota: '' },
     ]);
   });
 
   it('extracts the first array from markdown fences', () => {
     const raw = 'Acá va:\n```json\n[{"nombre":"Salon Y"}]\n```\n';
     expect(parseCrmIngestPayload(raw)[0].nombre).toBe('Salon Y');
+  });
+
+  it('keeps a trimmed email from the IA list', () => {
+    const items = parseCrmIngestPayload(
+      JSON.stringify([{ nombre: 'Ana', email: ' Ana@Taller.com ' }])
+    );
+    expect(items[0].email).toBe('Ana@Taller.com');
+    expect(items[0].telefono).toBe('');
   });
 
   it('drops rows without nombre', () => {

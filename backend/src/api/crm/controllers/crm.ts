@@ -35,13 +35,14 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
   }),
 
   createManual: asyncHandler(async (ctx: any) => {
-    const { nombre, telefono, instagram, nota } = ctx.request.body || {};
+    const { nombre, telefono, instagram, nota, email } = ctx.request.body || {};
     ctx.send({
       data: await createCrmService(strapi).createManual(
         actorFrom(ctx),
         {
           nombre,
           telefono: telefono || '',
+          email: email || '',
           instagram: instagram || '',
           nota: nota || '',
         },
@@ -123,13 +124,25 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     });
   }),
 
+  enviarMail: asyncHandler(async (ctx: any) => {
+    ctx.send({
+      data: await createCrmService(strapi).enviarMail(
+        actorFrom(ctx),
+        ctx.request.body.contactoDocumentId,
+        slugFrom(ctx),
+        ctx.request.body.plantillaIndex
+      ),
+    });
+  }),
+
   crearFicha: asyncHandler(async (ctx: any) => {
     ctx.send({
       data: await createCrmService(strapi).crearFicha(
         actorFrom(ctx),
         ctx.request.body.contactoDocumentId,
         ctx.request.body.categoriaId,
-        slugFrom(ctx)
+        slugFrom(ctx),
+        ctx.request.body.email
       ),
     });
   }),

@@ -15,7 +15,7 @@ export default function CrmAvisoReciente({ campana, enviadoAt, onConfirm, onCanc
       <div className="w-full max-w-md p-6 rounded-2xl border border-white/10 bg-zinc-950 space-y-4">
         <h3 className="text-xl font-serif text-white italic">Contacto reciente</h3>
         <p className="text-zinc-300 text-sm leading-relaxed">
-          El último WhatsApp fue el {formatCrmFecha(enviadoAt)} ({campana}). Pasó menos de un mes.
+          El último envío fue el {formatCrmFecha(enviadoAt)} ({campana}). Pasó menos de un mes.
           ¿Enviar igual?
         </p>
         <div className="flex justify-end gap-2">

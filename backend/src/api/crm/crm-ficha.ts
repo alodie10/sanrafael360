@@ -73,16 +73,24 @@ export function fichaPorTelefono(
   };
 }
 
+export function mailDeFicha(raw?: string | null): string {
+  const value = String(raw || '').trim().toLowerCase();
+  if (!value || value.length > 254) return '';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return '';
+  return value;
+}
+
 export function assertFichaMinima(input: {
   nombre?: string;
   telefono?: string;
+  email?: string;
   categoriaId?: string;
 }) {
   if (!String(input.nombre || '').trim()) {
     throw new ValidationError('nombre es requerido');
   }
-  if (!normalizeWhatsappDigits(input.telefono || '')) {
-    throw new ValidationError('teléfono o WhatsApp es requerido');
+  if (!normalizeWhatsappDigits(input.telefono || '') && !mailDeFicha(input.email)) {
+    throw new ValidationError('teléfono o mail es requerido');
   }
   if (!String(input.categoriaId || '').trim()) {
     throw new ValidationError('categoría es requerida');

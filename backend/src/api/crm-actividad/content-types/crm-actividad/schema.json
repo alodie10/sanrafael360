@@ -13,12 +13,12 @@
   "attributes": {
     "tipo": {
       "type": "enumeration",
-      "enum": ["envio_whatsapp", "nota", "estado"],
+      "enum": ["envio_whatsapp", "envio_email", "nota", "estado"],
       "required": true
     },
     "canal": {
       "type": "enumeration",
-      "enum": ["whatsapp", "instagram", "sistema"],
+      "enum": ["whatsapp", "instagram", "sistema", "email"],
       "required": true
     },
     "texto": {

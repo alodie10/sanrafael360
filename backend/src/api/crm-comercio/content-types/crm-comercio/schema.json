@@ -37,6 +37,14 @@
       "default": 25,
       "min": 1
     },
+    "cupo_mail_fecha": {
+      "type": "date"
+    },
+    "cupo_mail_count": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
     "modo": {
       "type": "enumeration",
       "enum": ["guia", "agenda"],

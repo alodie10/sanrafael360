@@ -9,6 +9,13 @@ import { uniqueNegocioSlug } from './negocio-utils';
 
 export type { AdminCreateNegocioInput };
 
+function mailPublicable(raw: unknown): string {
+  const value = String(raw ?? '').trim().toLowerCase();
+  if (!value || value.length > 254) return '';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return '';
+  return value;
+}
+
 async function assertPlaceIdAvailable(repo: ReturnType<typeof createNegocioRepository>, placeId: unknown) {
   if (typeof placeId !== 'string' || !placeId) return;
   const existing = await repo.findByGooglePlaceId(placeId);
@@ -33,6 +40,7 @@ export async function adminCreateNegocio(strapi: any, input: AdminCreateNegocioI
 
   const direccion = asTrimmed(input.direccion, 300) || null;
   const telefono = asTrimmed(input.telefono, 40) || null;
+  const email = mailPublicable(input.email);
   const slug = await uniqueNegocioSlug(
     (candidate) => repo.slugTaken(candidate),
     String(input.slug || nombre)
@@ -48,6 +56,7 @@ export async function adminCreateNegocio(strapi: any, input: AdminCreateNegocioI
       direccion,
       telefono,
       whatsapp: telefono,
+      ...(email ? { email } : {}),
       categoria: categoria.documentId,
       reclamar_habilitado: true,
       ...extras,
