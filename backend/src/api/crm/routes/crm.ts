@@ -100,6 +100,15 @@ export default {
     },
     {
       method: 'POST',
+      path: '/crm/abrir-borrador',
+      handler: 'crm.abrirBorrador',
+      config: {
+        ...portalAuth,
+        middlewares: ['api::crm.crm-abrir-borrador-validator'],
+      },
+    },
+    {
+      method: 'POST',
       path: '/crm/enviar-mail',
       handler: 'crm.enviarMail',
       config: {

@@ -574,7 +574,7 @@ async function enviarMail(
     pieza,
   });
   const eml = await prepararBorrador(listo);
-  return registrarMailEnviado(repo, comercio, contacto, slot, texto, to, eml);
+  return registrarMailEnviado(repo, comercio, contacto, slot, texto, to, eml, listo.subject, listo.html);
 }
 
 async function registrarMailEnviado(
@@ -584,7 +584,9 @@ async function registrarMailEnviado(
   slot: { campana: string; plantillaIndex: number },
   texto: string,
   to: string,
-  eml: string | null
+  eml: string | null,
+  subject: string,
+  html: string
 ) {
   await repo.updateContacto(contacto.documentId, patchTrasWhatsapp(contacto.estado, true));
   await repo.createActividad({
@@ -597,10 +599,13 @@ async function registrarMailEnviado(
   });
   const aviso = eml
     ? `Descargué el borrador para ${to}. Abrilo y envialo: queda en Enviados.`
-    : `Borrador abierto en Mail para ${to}. Al enviarlo queda en Enviados.`;
+    : `Borrador abierto en Mail para ${to}, con tu cuenta. El botón es Enviar.`;
   return {
     enviado: true,
     texto,
+    to,
+    subject,
+    html,
     eml,
     cupoMail: await bumpCupoMail(repo, comercio),
     aviso,

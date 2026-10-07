@@ -28,6 +28,25 @@ function apiError(json: any, fallback: string) {
   return json?.error?.message || json?.error || fallback;
 }
 
+async function abrirBorradorEnEstaMac(data: { to?: string; subject?: string; html?: string }) {
+  if (!data.to || !data.subject || !data.html) return false;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const res = await fetch("http://127.0.0.1:1337/api/crm/abrir-borrador", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: data.to, subject: data.subject, html: data.html }),
+      signal: ctrl.signal,
+    });
+    return res.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function descargarEml(eml: string) {
   const blob = new Blob([eml], { type: "message/rfc822" });
   const url = URL.createObjectURL(blob);
@@ -200,8 +219,15 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
       if (json.data?.whatsappUrl) {
         window.open(json.data.whatsappUrl, "_blank", "noopener,noreferrer");
       }
-      if (json.data?.eml) descargarEml(json.data.eml);
-      if (json.data?.enviado) setNotice(json.data.aviso || "Mail enviado");
+      if (json.data?.eml) {
+        const abierto = await abrirBorradorEnEstaMac(json.data);
+        if (abierto) {
+          setNotice(`Borrador abierto en Mail para ${json.data.to}, con tu cuenta. El botón es Enviar.`);
+        } else {
+          descargarEml(json.data.eml);
+          setNotice(json.data.aviso || "Mail enviado");
+        }
+      } else if (json.data?.enviado) setNotice(json.data.aviso || "Mail enviado");
       else if (json.data?.aviso) setNotice(json.data.aviso);
       if (json.data?.cupo) patchCupo(json.data.cupo);
       if (json.data?.cupoMail) patchCupoMail(json.data.cupoMail);

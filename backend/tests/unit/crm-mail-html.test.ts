@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderCrmMailEml } from '../../src/api/crm/crm-mail-draft';
+import { origenPuedeAbrirMail, renderCrmMailEml } from '../../src/api/crm/crm-mail-draft';
 import { renderCrmMailHtml } from '../../src/api/crm/crm-mail-html';
 
 describe('renderCrmMailHtml', () => {
@@ -57,5 +57,13 @@ describe('renderCrmMailEml', () => {
     expect(eml).toContain('=?UTF-8?B?');
     expect(eml).toContain('src="https://res.cloudinary.com/demo/pieza.jpg"');
     expect(eml).not.toContain('localhost');
+  });
+});
+
+describe('origenPuedeAbrirMail', () => {
+  it('allows the public site and this Mac', () => {
+    expect(origenPuedeAbrirMail('https://www.sanrafael360.com')).toBe(true);
+    expect(origenPuedeAbrirMail('http://localhost:3000')).toBe(true);
+    expect(origenPuedeAbrirMail('https://evil.example')).toBe(false);
   });
 });
