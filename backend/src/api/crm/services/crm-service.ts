@@ -116,9 +116,6 @@ async function bumpCupo(repo: CrmRepository, comercio: any): Promise<CupoWhatsap
 async function bumpCupoMail(repo: CrmRepository, comercio: any): Promise<CupoWhatsapp> {
   const today = calendarDateInTimeZone();
   const current = cupoMailFromComercio(comercio, today);
-  if (current.enviados >= current.limite) {
-    throw new ValidationError(`Llegaste al cupo CRM de ${current.limite} mails de hoy`);
-  }
   const next = nextCupoCount({
     storedFecha: asDateOnly(comercio.cupo_mail_fecha),
     storedCount: Number(comercio.cupo_mail_count || 0),
@@ -559,10 +556,6 @@ async function enviarMail(
   assertPuedeEnviarMail(contacto, modoOf(comercio));
   const to = normalizeCrmEmail(contacto.email);
   if (!to) return cerrarMailInvalido(repo, comercio, contacto, slot, texto);
-  const cupoActual = readCupoMail(comercio);
-  if (cupoLleno(cupoActual)) {
-    throw new ValidationError(`Llegaste al cupo CRM de ${cupoActual.limite} mails de hoy`);
-  }
   const listo = mailListo({
     to,
     slot,

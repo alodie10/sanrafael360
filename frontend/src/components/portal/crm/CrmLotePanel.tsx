@@ -9,7 +9,6 @@ type Props = {
   onEnviar: (documentId: string, canal: CrmCanal) => void;
   busyId: string | null;
   cupoLleno?: boolean;
-  cupoMailLleno?: boolean;
 };
 
 export default function CrmLotePanel({
@@ -17,7 +16,6 @@ export default function CrmLotePanel({
   onEnviar,
   busyId,
   cupoLleno = false,
-  cupoMailLleno = false,
 }: Props) {
   if (!contactos.length) return null;
 
@@ -56,7 +54,7 @@ export default function CrmLotePanel({
               <button
                 type="button"
                 data-testid="crm-lote-enviar-mail"
-                disabled={busyId === contacto.documentId || cupoMailLleno || !contacto.email}
+                disabled={busyId === contacto.documentId || !contacto.email}
                 onClick={() => onEnviar(contacto.documentId, "email")}
                 className="px-3 py-1.5 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
               >

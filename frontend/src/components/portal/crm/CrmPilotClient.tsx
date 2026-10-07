@@ -483,13 +483,9 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
             <p className="text-zinc-400 text-xs" data-testid="crm-cupo">
               WhatsApp {boot?.cupo.enviados ?? "—"}/{boot?.cupo.limite ?? 25}
               {" · "}
-              Mail {boot?.cupoMail?.enviados ?? "—"}/{boot?.cupoMail?.limite ?? boot?.cupo.limite ?? 25}
+              Mail {boot?.cupoMail ? boot.cupoMail.enviados : "—"} hoy
               {(boot?.cupo.enviados ?? 0) >= (boot?.cupo.limite ?? 25)
                 ? ". WhatsApp: el resto sigue en la cola hasta mañana."
-                : ""}
-              {(boot?.cupoMail?.enviados ?? 0) >= (boot?.cupoMail?.limite ?? boot?.cupo.limite ?? 25) &&
-              boot?.cupoMail
-                ? ". Mail: el resto sigue en la cola hasta mañana."
                 : ""}
             </p>
           )}
@@ -622,10 +618,6 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
                 onEnviar={pedirEnviar}
                 busyId={busyId}
                 cupoLleno={(boot?.cupo.enviados ?? 0) >= (boot?.cupo.limite ?? 25)}
-                cupoMailLleno={
-                  Boolean(boot?.cupoMail) &&
-                  (boot?.cupoMail?.enviados ?? 0) >= (boot?.cupoMail?.limite ?? 25)
-                }
               />
               <CrmContactList
                 contactos={boot?.contactos || []}
@@ -637,10 +629,6 @@ export default function CrmPilotClient({ jwt, isAdmin }: Props) {
                 canCrearFicha={isAdmin && boot?.comercio.modo !== "agenda"}
                 busyId={busyId}
                 cupoLleno={(boot?.cupo.enviados ?? 0) >= (boot?.cupo.limite ?? 25)}
-                cupoMailLleno={
-                  Boolean(boot?.cupoMail) &&
-                  (boot?.cupoMail?.enviados ?? 0) >= (boot?.cupoMail?.limite ?? 25)
-                }
               />
             </section>
           </div>
