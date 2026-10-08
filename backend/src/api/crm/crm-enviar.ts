@@ -1,9 +1,13 @@
 import { ValidationError } from '../../utils/errors';
+import { normalizeWhatsappDigits } from '../../utils/whatsapp';
 import { negocioResumen } from './crm-ficha';
 
 export function assertPuedeEnviarWhatsapp(contacto: any, modo?: string) {
   if (contacto?.no_contactar) {
     throw new ValidationError('Este contacto está marcado como no contactar');
+  }
+  if (!normalizeWhatsappDigits(contacto?.telefono)) {
+    throw new ValidationError('Este contacto no tiene un teléfono de WhatsApp válido');
   }
   if (modo === 'agenda') return;
   if (!negocioResumen(contacto)?.documentId) {

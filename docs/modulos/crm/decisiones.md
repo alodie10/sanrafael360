@@ -67,6 +67,11 @@ Numeración **CRM-DEC-…**.
 - **Decisión:** Si el estado pasa a `error` y hubo un WhatsApp que consumió cupo **hoy** (calendario Mendoza), se resta 1. Un teléfono inválido (sin `wa.me`) no resta porque no había sumado. Un error de otro día no toca el cupo de hoy.
 - **Qué se descartó:** Cron de reset; devolver cupo al marcar Error sobre envíos viejos.
 
+### 2026-10-08 — CRM-DEC-020 — WhatsApp solo con teléfono usable
+- **Contexto:** El botón WhatsApp se podía pulsar sin teléfono o con uno que no arma `wa.me`. Ese clic sacaba el contacto de la cola y pedía marcarlo Error.
+- **Decisión:** Sin un teléfono que normalice a WhatsApp, el botón queda apagado. Si igual llega el pedido, el contacto sigue en la cola y no se registra envío. Reemplaza, en ese punto, a CRM-DEC-012.
+- **Qué se descartó:** Seguir sacando de la cola un teléfono que no abre WhatsApp.
+
 ### 2026-10-07 — CRM-DEC-019 — El mail no tiene tope
 - **Contexto:** El cupo de mail frenaba el botón al llegar al mismo límite que WhatsApp.
 - **Decisión:** Mail no tiene tope. Cada borrador abierto suma 1 a la cuenta del día. Si se marca error ese día, esa cuenta baja 1. WhatsApp sigue con su límite.

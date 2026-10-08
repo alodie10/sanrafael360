@@ -45,10 +45,8 @@ import {
   assertPuedeEnviarMail,
   assertPuedeEnviarWhatsapp,
   avisoMailSinUrl,
-  avisoWhatsappSinUrl,
   CRM_MAIL_NO_ENVIADO,
   normalizeCrmEmail,
-  CRM_WSP_NO_ENVIADO,
   patchTrasWhatsapp,
 } from '../crm-enviar';
 import { mapCrmPlantilla, plantillaSavePayload, slotDePlantilla, type CrmPlantillaInput } from '../crm-plantilla-map';
@@ -488,28 +486,28 @@ async function enviarWhatsapp(
   );
   assertPuedeEnviarWhatsapp(contacto, modoOf(comercio));
   const whatsappUrl = buildWhatsappUrl(contacto.telefono, texto);
-  const hasUrl = Boolean(whatsappUrl);
+  if (!whatsappUrl) {
+    throw new ValidationError('Este contacto no tiene un teléfono de WhatsApp válido');
+  }
   const cupoActual = readCupo(comercio);
-  if (hasUrl && cupoLleno(cupoActual)) {
+  if (cupoLleno(cupoActual)) {
     throw new ValidationError(`Llegaste al cupo CRM de ${cupoActual.limite} WhatsApp de hoy`);
   }
-  await repo.updateContacto(contacto.documentId, patchTrasWhatsapp(contacto.estado, hasUrl));
+  await repo.updateContacto(contacto.documentId, patchTrasWhatsapp(contacto.estado, true));
   await repo.createActividad({
     tipo: 'envio_whatsapp',
     canal: 'whatsapp',
-    texto: hasUrl ? texto : `${CRM_WSP_NO_ENVIADO} teléfono inválido. ${texto}`,
+    texto,
     campana: slot.campana,
     plantilla_index: slot.plantillaIndex,
     contacto: contacto.documentId,
   });
-  let cupo = readCupo(comercio);
-  if (hasUrl) cupo = await bumpCupo(repo, comercio);
+  const cupo = await bumpCupo(repo, comercio);
   const updated = mapCrmContacto(await repo.findContacto(contacto.documentId));
   return {
-    whatsappUrl: whatsappUrl || null,
+    whatsappUrl,
     texto,
     cupo,
-    aviso: avisoWhatsappSinUrl(hasUrl),
     contacto: updated,
   };
 }

@@ -22,8 +22,21 @@ describe('crm-enviar', () => {
       assertPuedeEnviarWhatsapp({
         negocio: { documentId: 'n1', slug: 'taller' },
         no_contactar: false,
+        telefono: '2615550000',
       })
     ).not.toThrow();
+  });
+
+  it('refuses WhatsApp when the phone cannot open wa.me', () => {
+    expect(() =>
+      assertPuedeEnviarWhatsapp({
+        negocio: { documentId: 'n1' },
+        telefono: '',
+      })
+    ).toThrow(/teléfono/);
+    expect(() =>
+      assertPuedeEnviarWhatsapp({ nombre: 'Ana', telefono: 'sin-numero' }, 'agenda')
+    ).toThrow(/teléfono/);
   });
 
   it('lets agenda tenants open WhatsApp without a listing', () => {
