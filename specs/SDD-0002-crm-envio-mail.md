@@ -57,7 +57,7 @@ El contacto puede tener un mail. En la cola y en el lote hay un botón Mail que 
 | REQ-004 | Un mail inválido saca el contacto de la cola, no consume cupo y avisa para marcarlo Error. | Must |
 | REQ-005 | Marcar `error` el mismo día devuelve 1 del cupo de mail si ese contacto consumió cupo de mail hoy. El cupo de WhatsApp no se mezcla. | Must |
 | REQ-006 | Contactos alcanzados incluye envíos de mail y de WhatsApp. El aviso de envío reciente aparece también al pulsar Mail. | Must |
-| REQ-007 | El prompt por defecto incluye `email`. El flujo de WhatsApp sigue igual. | Must |
+| REQ-007 | El prompt por defecto incluye `email`. WhatsApp solo se habilita si el teléfono arma `wa.me`. Si no hay teléfono usable, el botón queda apagado y el contacto sigue en la cola. | Must |
 
 ## Criterios de aceptación
 
@@ -69,7 +69,7 @@ El contacto puede tener un mail. En la cola y en el lote hay un botón Mail que 
 | AC-004 | **Dado** modo guía sin ficha, o `no_contactar` **Cuando** se intenta Mail **Entonces** no se abre el envío. Un conteo alto de mails del día no frena el botón. | Test unitario de las guardas. | Pasa en unitarios. |
 | AC-005 | **Dado** un mail enviado hoy **Cuando** el estado pasa a `error` **Entonces** el cupo de mail baja 1 y el de WhatsApp no. | Test unitario del cupo. | Pasa |
 | AC-006 | **Dado** actividades de WhatsApp y de mail **Cuando** se abre Contactos alcanzados **Entonces** ambos envíos aparecen y, si el último tiene menos de un mes, Mail pide confirmación. | Test de plegado y revisión de la UI. | Pasa el plegado. Falta ver la lista en el navegador. |
-| AC-007 | **Dado** el prompt default anterior, texto exacto **Cuando** carga el tenant **Entonces** el prompt pasa a pedir `email`. Un WhatsApp válido sigue abriendo `wa.me` y consumiendo solo su cupo. | Test del prompt y revisión del flujo WhatsApp existente. | Pasa el prompt y el cupo de WhatsApp no cuenta mails. |
+| AC-007 | **Dado** el prompt default anterior, texto exacto **Cuando** carga el tenant **Entonces** el prompt pasa a pedir `email`. Un WhatsApp válido sigue abriendo `wa.me` y consumiendo solo su cupo. Sin teléfono usable el botón queda apagado. | Test del prompt y de la guarda de teléfono. | Pasa el prompt y la guarda. |
 
 ## Restricciones e invariantes
 

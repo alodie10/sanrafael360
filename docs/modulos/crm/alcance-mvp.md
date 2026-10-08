@@ -8,7 +8,7 @@ Fecha: **17 de septiembre de 2026**.
 2. Contactos (`crm-contacto`): alta **manual** y **pegar JSON** de IA.
 3. Prompt copiable para cualquier IA (formato JSON fijo).
 4. Pipeline: `nuevo` / `contactado` / `en_conversacion` / `error` / `ganado` / `descartado`. Se puede volver a `nuevo`. Filtro por estado y fecha. Comentario en el lead.
-5. WhatsApp click-to-chat (`wa.me`). Enter lo da el humano. El sistema registra texto y fecha.
+5. WhatsApp click-to-chat (`wa.me`). El botón queda apagado si no hay un teléfono usable. Enter lo da el humano. El sistema registra texto y fecha.
 6. Mail del contacto y botón Mail. Abre un borrador HTML en Mail, con la estética del sitio y la imagen de la pieza. Al enviarlo queda en Enviados. Cuenta diaria propia, sin tope. El de WhatsApp no se mezcla.
 7. Cola entre contactos `nuevo` con teléfono.
 8. Opt-out `no_contactar`.

@@ -1,6 +1,7 @@
 "use client";
 
 import type { CrmContacto } from "@/lib/crm";
+import { normalizeWhatsappDigits } from "@/lib/whatsapp";
 
 type CrmCanal = "whatsapp" | "email";
 
@@ -45,7 +46,11 @@ export default function CrmLotePanel({
               <button
                 type="button"
                 data-testid="crm-lote-enviar"
-                disabled={busyId === contacto.documentId || cupoLleno}
+                disabled={
+                  busyId === contacto.documentId ||
+                  cupoLleno ||
+                  !normalizeWhatsappDigits(contacto.telefono)
+                }
                 onClick={() => onEnviar(contacto.documentId, "whatsapp")}
                 className="px-3 py-1.5 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
               >

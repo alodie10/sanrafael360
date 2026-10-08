@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCrmFecha, type CrmContacto } from "@/lib/crm";
+import { normalizeWhatsappDigits } from "@/lib/whatsapp";
 
 type CrmCanal = "whatsapp" | "email";
 
@@ -201,7 +202,7 @@ function CanalButtons({
       <button
         type="button"
         data-testid="crm-enviar-wsp"
-        disabled={busy || c.no_contactar || cupoLleno}
+        disabled={busy || c.no_contactar || cupoLleno || !normalizeWhatsappDigits(c.telefono)}
         onClick={() => onEnviar(c.documentId, "whatsapp")}
         className="px-4 py-2 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-40"
       >
