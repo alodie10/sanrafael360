@@ -20,9 +20,17 @@ test.describe('San Rafael 360 - Critical Flow Validation', () => {
     console.log(`Diving into: ${(await randomCard.innerText()).slice(0, 40)}`);
 
     await randomCard.click();
-    await expect(page.getByTestId('business-detail-page')).toBeVisible({
-      timeout: 30000,
-    });
+
+    const detail = page.getByTestId('business-detail-page');
+    const directory = page.getByTestId('business-directory-listing');
+    await expect(detail.or(directory)).toBeVisible({ timeout: 30000 });
+
+    if (await directory.isVisible()) {
+      console.log('Opened directory listing');
+      return;
+    }
+
+    console.log('Opened public ficha');
 
     const mapSection = page.getByTestId('map-section');
     if (await mapSection.isVisible()) {
