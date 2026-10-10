@@ -37,7 +37,8 @@ export function slugFromNombre(nombre: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-    .slice(0, 40);
+    .slice(0, 40)
+    .replace(/^-+|-+$/g, '');
   return slug;
 }
 
@@ -163,7 +164,7 @@ export async function createPrestamo(repo: CrmRepository, input: CrmPrestamoInpu
 }
 
 export async function pickAgendaSlug(repo: CrmRepository, preferred: string) {
-  const base = assertPrestamoSlug(preferred || slugFromNombre('comercio'));
+  const base = assertPrestamoSlug(slugFromNombre(preferred) || 'comercio');
   if (!(await repo.findComercioBySlug(base))) return base;
   for (let i = 2; i < 30; i += 1) {
     const candidate = `${base}-${i}`.slice(0, 40);

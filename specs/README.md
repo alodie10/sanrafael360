@@ -17,6 +17,7 @@ Aquí viven los specs de features y de bugs. El proceso y los campos obligatorio
 | --- | --- | --- | --- |
 | SDD-0001 | Adoptar el desarrollo guiado por specs | Verified | [`SDD-0001-adoptar-specs.md`](SDD-0001-adoptar-specs.md) |
 | SDD-0002 | Mail en el CRM de captación | Implemented | [`SDD-0002-crm-envio-mail.md`](SDD-0002-crm-envio-mail.md) |
+| SDD-0003 | Slug de ficha al crear la mesa Prospector | Implemented | [`SDD-0003-crm-slug-desde-ficha.md`](SDD-0003-crm-slug-desde-ficha.md) |
 
 ## Plantilla
 
