@@ -80,5 +80,16 @@ export function sanitizePortalUpdatePayload(
     updateData.tripadvisor_url = parsed.url;
   }
 
+  if (Array.isArray(updateData.atributos)) {
+    updateData.atributos = {
+      set: updateData.atributos
+        .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+        .map((id) => ({ documentId: id.trim() })),
+    };
+  }
+  if (typeof updateData.categoria === 'string' && updateData.categoria.trim()) {
+    updateData.categoria = { documentId: updateData.categoria.trim() };
+  }
+
   return updateData;
 }
