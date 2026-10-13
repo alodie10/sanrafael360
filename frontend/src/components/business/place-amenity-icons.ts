@@ -1,7 +1,9 @@
 import {
   Accessibility,
   AirVent,
+  Ambulance,
   Baby,
+  Bell,
   Bath,
   BedDouble,
   Bike,
@@ -37,7 +39,9 @@ import {
 const ICONS: Record<string, LucideIcon> = {
   accessibility: Accessibility,
   "air-vent": AirVent,
+  ambulance: Ambulance,
   baby: Baby,
+  bell: Bell,
   bath: Bath,
   "bed-double": BedDouble,
   bike: Bike,
