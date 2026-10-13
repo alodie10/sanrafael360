@@ -32,6 +32,10 @@
   color: hsl(var(--primary) / 0.9);
 }
 
+.amenities {
+  margin-top: 1.4rem;
+}
+
 .nombre {
   margin: 0;
   font-family: ui-serif, Georgia, "Times New Roman", serif;

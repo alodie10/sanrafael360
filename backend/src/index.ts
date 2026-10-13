@@ -1,5 +1,6 @@
 import { Core } from '@strapi/strapi';
 import { createDailyStatRepository } from './api/daily-stat/repositories/daily-stat-repository';
+import { ensureAmenityCatalog } from './api/atributo/services/amenity-catalog';
 import { seedJaditekReservaComercio } from './api/reserva-comercio/services/seed-jaditek';
 import { syncUntrustedRestPermissions } from './bootstrap/rest-permissions';
 
@@ -306,14 +307,21 @@ export default {
         strapi.log.error('❌ Error en seed de palabras clave de categorías:', err.message);
       }
 
-      // 9. SEED MÓDULO RESERVAS — primer cliente Jaditek (idempotente)
+      // 9. SEED CATÁLOGO DE AMENITIES (idempotente; no pisa tags)
+      try {
+        await ensureAmenityCatalog(strapi);
+      } catch (err: any) {
+        strapi.log.error('❌ Error en seed del catálogo de amenities:', err.message);
+      }
+
+      // 10. SEED MÓDULO RESERVAS — primer cliente Jaditek (idempotente)
       try {
         await seedJaditekReservaComercio(strapi);
       } catch (err: any) {
         strapi.log.error('❌ Error en seed de reservas Jaditek:', err.message);
       }
 
-      // 10. SEED PLANTILLA DE PROSPECCIÓN (idempotente)
+      // 11. SEED PLANTILLA DE PROSPECCIÓN (idempotente)
       try {
         const { createProspeccionService } = require('./api/prospeccion/services/prospeccion-service');
         await createProspeccionService(strapi).ensurePlantilla();
@@ -322,7 +330,7 @@ export default {
         strapi.log.error('❌ Error en seed de plantilla de prospección:', err.message);
       }
 
-      // 11. SEED DICCIONARIO DEL ASISTENTE (idempotente)
+      // 12. SEED DICCIONARIO DEL ASISTENTE (idempotente)
       try {
         const { seedGuideExpansionsIfEmpty } = require('./api/guide-expansion/services/seed-expansions');
         const seeded = await seedGuideExpansionsIfEmpty(strapi);

@@ -34,7 +34,11 @@
     },
     "icono": {
       "type": "string",
-      "description": "Nombre del ícono (emoji o clase CSS)"
+      "description": "Nombre del ícono Lucide en kebab-case, por ejemplo wifi"
+    },
+    "rubros": {
+      "type": "json",
+      "description": "Rubros del amenity: alojamiento, gastronomia, comercios. Vacío en los tags de categoría."
     },
     "negocios": {
       "type": "relation",

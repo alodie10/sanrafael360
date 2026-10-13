@@ -507,6 +507,7 @@ export interface ApiAtributoAtributo extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
     publishedAt: Schema.Attribute.DateTime;
+    rubros: Schema.Attribute.JSON;
     slug: Schema.Attribute.UID<'nombre'> & Schema.Attribute.Required;
     tipo: Schema.Attribute.Enumeration<
       ['tag', 'facilidad', 'ambiente', 'servicio', 'otro']

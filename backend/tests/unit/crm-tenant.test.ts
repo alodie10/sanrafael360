@@ -44,6 +44,7 @@ function fakeRepo(seed: any[] = []) {
 describe('crm-tenant', () => {
   it('slugifies a commerce name', () => {
     expect(slugFromNombre('Taller El Sol')).toBe('taller-el-sol');
+    expect(slugFromNombre('gen_social')).toBe('gen-social');
   });
 
   it('rejects lending the sr360 slug', () => {
@@ -139,6 +140,22 @@ describe('crm-tenant', () => {
     expect(tenant?.modo).toBe('agenda');
     expect(tenant?.owner_email).toBe('argendeli01@gmail.com');
     expect(tenant?.slug).toBe('argendeli');
+  });
+
+  it('turns an underscored ficha slug into a CRM slug', async () => {
+    const repo = fakeRepo();
+    const tenant = await syncProspectorTenant(
+      repo,
+      {
+        documentId: 'n-gen',
+        nombre: 'Gen Social',
+        slug: 'gen_social',
+        owner: { email: 'gen@social.com' },
+      },
+      true
+    );
+    expect(tenant?.slug).toBe('gen-social');
+    expect(tenant?.modo).toBe('agenda');
   });
 
   it('reuses the CRM of the same owner email', async () => {

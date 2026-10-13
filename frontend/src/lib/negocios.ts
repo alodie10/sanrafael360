@@ -8,7 +8,7 @@ import { isOfertaEnVentana } from "@/lib/oferta-vigencia";
 
 const NEGOCIO_DETAIL_POPULATE =
   "populate[categoria][fields][0]=nombre&populate[categoria][fields][1]=slug&" +
-  "populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo&" +
+  "populate[atributos][fields][0]=nombre&populate[atributos][fields][1]=tipo&populate[atributos][fields][2]=icono&" +
   "populate[logo][fields][0]=url&" +
   "populate[imagen_portada][fields][0]=url&" +
   "populate[galeria][fields][0]=url&" +

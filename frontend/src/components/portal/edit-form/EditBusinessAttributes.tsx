@@ -1,157 +1,98 @@
 "use client";
 
-import { useState } from "react";
-import { Tag, Plus, Loader2 } from "lucide-react";
+import { Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
-import { getStrapiUrl } from "@/lib/strapi";
-
-function normalizeTagName(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
+import { rubroLabel, rubrosFromSlugs, visibleAmenities } from "@/lib/place-amenity-rubros";
 
 interface EditBusinessAttributesProps {
   atributosSeleccionados: string[];
   setAtributosSeleccionados: (val: string[]) => void;
-  availableAtributos: any[];
-  setAvailableAtributos: (val: any[]) => void;
-  session: any;
+  availableAtributos: Array<{ documentId: string; nombre?: string; tipo?: string }>;
+  categoriaSlug?: string;
+  listo: boolean;
+  etiquetas?: Array<{ documentId: string; nombre?: string }>;
 }
 
 export default function EditBusinessAttributes({
   atributosSeleccionados,
   setAtributosSeleccionados,
   availableAtributos,
-  setAvailableAtributos,
-  session
+  categoriaSlug,
+  listo,
+  etiquetas = [],
 }: EditBusinessAttributesProps) {
-  
-  const [newTag, setNewTag] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
+  const rubros = rubrosFromSlugs([categoriaSlug]);
+  const visibles = visibleAmenities(availableAtributos, categoriaSlug, atributosSeleccionados);
+  const etiquetasMarcadas = etiquetas.filter((item) =>
+    atributosSeleccionados.includes(item.documentId)
+  );
 
   const toggleAtributo = (documentId: string) => {
-    const nextAtributos = atributosSeleccionados.includes(documentId) 
-        ? atributosSeleccionados.filter((id: string) => id !== documentId)
-        : [...atributosSeleccionados, documentId];
-    setAtributosSeleccionados(nextAtributos);
-  };
-
-  const handleCreateTag = async () => {
-    const trimmed = newTag.trim();
-    if (!trimmed) return;
-
-    const existing = availableAtributos.find(
-      (attr) => normalizeTagName(attr.nombre || "") === normalizeTagName(trimmed)
-    );
-    if (existing) {
-      if (!atributosSeleccionados.includes(existing.documentId)) {
-        setAtributosSeleccionados([...atributosSeleccionados, existing.documentId]);
-      }
-      setNewTag("");
-      toast.success("Esa etiqueta ya existía, la seleccioné");
-      return;
-    }
-
-    setIsCreating(true);
-    
-    try {
-      const strapiUrl = getStrapiUrl();
-      const slug = normalizeTagName(trimmed).replace(/[^a-z0-9]+/g, "-");
-      
-      const res = await fetch(`${strapiUrl}/api/atributos?status=published`, {
-        method: "POST",
-        headers: { 
-          "Authorization": `Bearer ${session.jwt}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          data: {
-            nombre: trimmed,
-            slug: slug,
-            tipo: "tag"
-          }
-        })
-      });
-
-      if (res.ok) {
-        const body = await res.json();
-        const createdAttr = body.data;
-        // Agregarlo a la lista de disponibles
-        setAvailableAtributos([...availableAtributos, createdAttr]);
-        // Y seleccionarlo automáticamente
-        setAtributosSeleccionados([...atributosSeleccionados, createdAttr.documentId]);
-        setNewTag("");
-        toast.success("Etiqueta creada y seleccionada");
-      } else {
-        toast.error("No tienes permisos para crear. Solicita acceso al Admin.");
-      }
-    } catch (err) {
-      toast.error("Error al crear la etiqueta");
-    } finally {
-      setIsCreating(false);
-    }
+    const next = atributosSeleccionados.includes(documentId)
+      ? atributosSeleccionados.filter((id) => id !== documentId)
+      : [...atributosSeleccionados, documentId];
+    setAtributosSeleccionados(next);
   };
 
   return (
     <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
-      <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
-            <Tag className="w-6 h-6 text-primary" />
-            Etiquetas y Facilidades
-          </h2>
-          <p className="text-slate-400 text-sm">
-            Selecciona las etiquetas que mejor describen los servicios de tu negocio, o crea una nueva si no existe.
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <input 
-            type="text"
-            value={newTag}
-            onChange={(e) => setNewTag(e.target.value)}
-            placeholder="Nueva etiqueta..."
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateTag())}
-            className="px-4 py-2 bg-slate-800 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary w-40"
-          />
-          <button
-            type="button"
-            onClick={handleCreateTag}
-            disabled={isCreating || !newTag.trim()}
-            className="p-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-xl border border-primary/30 transition-all disabled:opacity-50"
-          >
-            {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-          </button>
-        </div>
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
+          <Tag className="w-6 h-6 text-primary" />
+          Lo que ofrece este lugar
+        </h2>
+        <p className="text-slate-400 text-sm">
+          {rubros.length
+            ? `Solo facilidades de ${rubroLabel(rubros)}, en orden alfabético.`
+            : "Esta categoría no tiene facilidades en el catálogo."}
+        </p>
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        {availableAtributos.map((attr) => {
-          const isSelected = atributosSeleccionados.includes(attr.documentId);
-          return (
-            <button
-              key={attr.documentId}
-              type="button"
-              onClick={() => toggleAtributo(attr.documentId)}
-              className={cn(
-                "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all border",
-                isSelected 
-                  ? "bg-primary text-black border-primary shadow-lg shadow-primary/20"
-                  : "bg-slate-800 text-slate-400 border-white/5 hover:border-white/20 hover:text-white"
-              )}
-            >
-              {attr.nombre}
-            </button>
-          );
-        })}
-        {availableAtributos.length === 0 && (
-          <p className="text-sm text-slate-500 italic">No hay etiquetas disponibles. ¡Crea la primera!</p>
-        )}
-      </div>
+      {!listo ? (
+        <p className="text-sm text-slate-500">Cargando facilidades…</p>
+      ) : (
+        <div className="flex flex-wrap gap-3" data-testid="place-amenity-picker">
+          {etiquetasMarcadas.map((attr) => {
+            const isSelected = atributosSeleccionados.includes(attr.documentId);
+            return (
+              <button
+                key={attr.documentId}
+                type="button"
+                onClick={() => toggleAtributo(attr.documentId)}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all border",
+                  isSelected
+                    ? "bg-primary text-black border-primary shadow-lg shadow-primary/20"
+                    : "bg-slate-800 text-slate-400 border-white/5 hover:border-white/20 hover:text-white"
+                )}
+              >
+                {attr.nombre}
+              </button>
+            );
+          })}
+          {visibles.map((attr) => {
+            const isSelected = atributosSeleccionados.includes(attr.documentId);
+            return (
+              <button
+                key={attr.documentId}
+                type="button"
+                onClick={() => toggleAtributo(attr.documentId)}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all border",
+                  isSelected
+                    ? "bg-primary text-black border-primary shadow-lg shadow-primary/20"
+                    : "bg-slate-800 text-slate-400 border-white/5 hover:border-white/20 hover:text-white"
+                )}
+              >
+                {attr.nombre}
+              </button>
+            );
+          })}
+          {visibles.length === 0 && (
+            <p className="text-sm text-slate-500">No hay facilidades para esta categoría.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
