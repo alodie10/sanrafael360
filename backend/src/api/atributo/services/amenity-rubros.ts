@@ -86,5 +86,6 @@ export function rubrosFromSlugs(slugs: Array<string | null | undefined>): Amenit
       if (candidate === key) found.add(rubro);
     }
   }
-  return ['alojamiento', 'gastronomia', 'comercios'].filter((rubro) => found.has(rubro));
+  const order: AmenityRubro[] = ['alojamiento', 'gastronomia', 'comercios'];
+  return order.filter((rubro) => found.has(rubro));
 }
