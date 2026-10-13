@@ -224,10 +224,11 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
               {(() => {
                 // Deduplicar: si algún atributo ya cubre la categoría, no mostrar categoría por separado
                 const categoriaNombre = negocio.categoria?.nombre?.toLowerCase().trim();
-                const atributosFiltrados = (negocio.atributos || []).filter(
+                const tags = (negocio.atributos || []).filter((attr) => attr.tipo !== "facilidad");
+                const atributosFiltrados = tags.filter(
                   (attr) => attr.nombre?.toLowerCase().trim() !== categoriaNombre
                 );
-                const categoriaYaCubierta = atributosFiltrados.length < (negocio.atributos || []).length;
+                const categoriaYaCubierta = atributosFiltrados.length < tags.length;
 
                 return (
                   <>
@@ -236,9 +237,9 @@ export default function BusinessHero({ negocio, businessStatus }: BusinessHeroPr
                         {negocio.categoria.nombre}
                       </div>
                     )}
-                    {negocio.atributos && negocio.atributos.length > 0 && (
+                    {tags.length > 0 && (
                       <div className="flex gap-1.5 flex-wrap">
-                        {(categoriaYaCubierta ? negocio.atributos : atributosFiltrados).map((attr, index) => (
+                        {(categoriaYaCubierta ? tags : atributosFiltrados).map((attr, index) => (
                           <div key={attr.documentId || attr.nombre || `attr-${index}`} className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 text-slate-400">
                             {attr.nombre}
                           </div>

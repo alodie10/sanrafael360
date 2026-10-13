@@ -65,6 +65,7 @@ export default function EditBusinessForm({ negocio, session, returnTo: returnToP
   const [categories, setCategories] = useState<any[]>([]);
   const [atributosSeleccionados, setAtributosSeleccionados] = useState<string[]>(negocio.atributos?.map((a: any) => a.documentId) || []);
   const [availableAtributos, setAvailableAtributos] = useState<any[]>([]);
+  const [amenitiesListos, setAmenitiesListos] = useState(false);
   
   // Ratings & Discovery
   const [triggerDiscovery, setTriggerDiscovery] = useState(false);
@@ -136,17 +137,20 @@ export default function EditBusinessForm({ negocio, session, returnTo: returnToP
     const fetchAtributos = async () => {
       try {
         const strapiUrl = getStrapiUrl();
-        const res = await fetch(`${strapiUrl}/api/atributos?sort=nombre:asc&pagination[pageSize]=100`, {
-          headers: { "Authorization": `Bearer ${session.jwt}` }
-        });
+        const res = await fetch(
+          `${strapiUrl}/api/atributos?filters[tipo][$eq]=facilidad&sort=nombre:asc&pagination[pageSize]=100`,
+          { headers: { Authorization: `Bearer ${session.jwt}` } }
+        );
         const data = await res.json();
         setAvailableAtributos(data.data || []);
       } catch (e) {
         console.error("Error fetching atributos:", e);
+      } finally {
+        setAmenitiesListos(true);
       }
     };
     fetchAtributos();
-  }, []);
+  }, [session.jwt]);
 
   // Corrige la orientación EXIF de una imagen usando un canvas y la comprime
   const isHeicFile = (file: File): boolean => {
@@ -564,6 +568,7 @@ export default function EditBusinessForm({ negocio, session, returnTo: returnToP
           categoria={categoria}
           setCategoria={setCategoria}
           categories={categories}
+          hayEtiquetas={atributosSeleccionados.length > 0}
         />
 
         <EditBusinessVisualIdentity 
@@ -615,8 +620,12 @@ export default function EditBusinessForm({ negocio, session, returnTo: returnToP
           atributosSeleccionados={atributosSeleccionados}
           setAtributosSeleccionados={setAtributosSeleccionados}
           availableAtributos={availableAtributos}
-          setAvailableAtributos={setAvailableAtributos}
-          session={session}
+          categoriaSlug={
+            categories.find((cat) => (cat.documentId || cat.id) === categoria)?.slug
+            || negocio.categoria?.slug
+          }
+          listo={amenitiesListos}
+          etiquetas={(negocio.atributos || []).filter((item: { tipo?: string }) => item.tipo !== "facilidad")}
         />
 
         <EditBusinessReservations 

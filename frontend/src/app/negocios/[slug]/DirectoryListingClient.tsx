@@ -13,6 +13,7 @@ import { buildWhatsappUrl } from "@/lib/whatsapp";
 import AdminListingActions from "@/components/home/AdminListingActions";
 import NavigationFAB from "@/components/layout/NavigationFAB";
 import GoogleMap from "@/components/common/GoogleMap";
+import PlaceAmenities from "@/components/business/PlaceAmenities";
 import styles from "./DirectoryListing.module.css";
 
 function mappedCoordinates(negocio: Negocio): { lat: number; lng: number } | null {
@@ -103,6 +104,11 @@ export default function DirectoryListingClient({
         />
         <p className={styles.rubro}>{rubro}</p>
         <h1 className={styles.nombre}>{negocio.nombre}</h1>
+        {(negocio.atributos || []).some((item) => item.tipo === "facilidad") ? (
+          <div className={styles.amenities}>
+            <PlaceAmenities atributos={negocio.atributos} />
+          </div>
+        ) : null}
         {whatsappUrl || mapPoint ? (
           <div className={styles.contact}>
             {whatsappUrl ? (

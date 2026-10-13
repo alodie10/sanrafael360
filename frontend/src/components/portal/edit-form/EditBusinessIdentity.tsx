@@ -22,6 +22,7 @@ interface EditBusinessIdentityProps {
   categoria?: string;
   setCategoria?: (val: string) => void;
   categories?: any[];
+  hayEtiquetas?: boolean;
 }
 
 export default function EditBusinessIdentity({
@@ -41,7 +42,8 @@ export default function EditBusinessIdentity({
   isAdmin,
   categoria,
   setCategoria,
-  categories
+  categories,
+  hayEtiquetas = false,
 }: EditBusinessIdentityProps) {
   return (
     <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 md:p-8">
@@ -152,8 +154,12 @@ export default function EditBusinessIdentity({
               <div className="relative">
                 <select 
                   value={categoria}
-                  onChange={(e) => setCategoria(e.target.value)}
-                  className="w-full px-5 py-4 bg-slate-800 border border-white/10 rounded-2xl text-white text-base focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none cursor-pointer"
+                  disabled={hayEtiquetas}
+                  onChange={(e) => {
+                    if (hayEtiquetas) return;
+                    setCategoria(e.target.value);
+                  }}
+                  className="w-full px-5 py-4 bg-slate-800 border border-white/10 rounded-2xl text-white text-base focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <option value="">Seleccionar Categoría...</option>
                   {categories.map((cat: any) => (
@@ -167,6 +173,11 @@ export default function EditBusinessIdentity({
               <p className="text-[10px] text-slate-500 mt-2 ml-1 italic">
                 Cambiar la categoría moverá este negocio a la nueva sección del sitio público.
               </p>
+              {hayEtiquetas ? (
+                <p className="text-xs font-medium text-amber-300 mt-2 ml-1" data-testid="category-change-warning">
+                  Desmarcá todas las etiquetas antes de cambiar la categoría.
+                </p>
+              ) : null}
             </div>
           )}
         </div>
