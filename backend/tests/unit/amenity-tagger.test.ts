@@ -8,6 +8,16 @@ const cabana = {
 };
 
 describe('tagNegocio', () => {
+  it('marks alarm, medical cover, and white linen synonyms for lodging', () => {
+    const proposals = tagNegocio({
+      ...cabana,
+      descripcion: 'Cuenta con alarma, servicio médico de guardia y juego de blanco.',
+    });
+    expect(proposals.find((item) => item.amenitySlug === 'alarma')?.confianza).toBe('alta');
+    expect(proposals.find((item) => item.amenitySlug === 'servicio-de-emergencia-medica')?.confianza).toBe('alta');
+    expect(proposals.find((item) => item.amenitySlug === 'ropa-blanca')?.confianza).toBe('alta');
+  });
+
   it('marks pileta in the description as Piscina with high confidence', () => {
     const [hit] = tagNegocio({
       ...cabana,

@@ -23,7 +23,7 @@ Existe un catálogo único de amenities (`tipo=facilidad`) con ícono Lucide y r
 ### Incluido
 
 - Campo `rubros` (JSON) en `api::atributo`.
-- 33 amenities, una sola vez, con los íconos pedidos.
+- 35 amenities, una sola vez, con los íconos pedidos. Alarma y Servicio de emergencia médica son solo de alojamiento. Juego de blanco no se duplica: sigue siendo Ropa blanca.
 - Semilla idempotente que crea los que faltan y no pisa un tag existente.
 - Carga en producción de nombre, slug, tipo e ícono.
 

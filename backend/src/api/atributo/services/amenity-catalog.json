@@ -18,6 +18,8 @@
   { "nombre": "Accesible", "icono": "accessibility", "rubros": ["alojamiento", "gastronomia", "comercios"] },
   { "nombre": "Lavarropas", "icono": "washing-machine", "rubros": ["alojamiento"] },
   { "nombre": "Juegos para niños", "icono": "baby", "rubros": ["alojamiento", "gastronomia"] },
+  { "nombre": "Alarma", "icono": "bell", "rubros": ["alojamiento"] },
+  { "nombre": "Servicio de emergencia médica", "icono": "ambulance", "rubros": ["alojamiento"] },
   { "nombre": "Delivery", "icono": "bike", "rubros": ["gastronomia"] },
   { "nombre": "Take away", "icono": "shopping-bag", "rubros": ["gastronomia"] },
   { "nombre": "Reservas", "icono": "calendar-check", "rubros": ["gastronomia"] },
