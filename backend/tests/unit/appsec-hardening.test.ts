@@ -104,6 +104,23 @@ describe('portal-update sanitize', () => {
     expect(cleaned.is_premium).toBeUndefined();
     expect(cleaned.website).toContain('https://ejemplo.com');
   });
+
+  it('envía documentId aunque empiece con un número', () => {
+    const cleaned = sanitizePortalUpdatePayload(
+      {
+        atributos: ['2axo1ygqgf222t6f5i8h2gap', 'wifi'],
+        categoria: 'o7wan3ifgfj8azjvkiz3u45s',
+      },
+      true
+    );
+    expect(cleaned.atributos).toEqual({
+      set: [
+        { documentId: '2axo1ygqgf222t6f5i8h2gap' },
+        { documentId: 'wifi' },
+      ],
+    });
+    expect(cleaned.categoria).toEqual({ documentId: 'o7wan3ifgfj8azjvkiz3u45s' });
+  });
 });
 
 describe('cloudinary folder', () => {
