@@ -23,7 +23,7 @@ Existe un catálogo único de amenities (`tipo=facilidad`) con ícono Lucide y r
 ### Incluido
 
 - Campo `rubros` (JSON) en `api::atributo`.
-- 35 amenities, una sola vez, con los íconos pedidos. Alarma y Servicio de emergencia médica son solo de alojamiento. Juego de blanco no se duplica: sigue siendo Ropa blanca.
+- 57 amenities, una sola vez, con los íconos pedidos. Alarma, Servicio de emergencia médica y las 22 tomadas de Booking (balcón, patio, terraza de alojamiento, plancha, secadora, horno, cafetera, secador de pelo, tendedero, sofá cama, productos de limpieza, ascensor, no fumadores, piscina vallada, detector de humo, extintor, cámaras de seguridad, seguridad 24 horas, acceso con llave, seguridad para bebés, mosquitera y vistas) son solo de alojamiento. Terraza de alojamiento no reemplaza a Terraza / aire libre de gastronomía. Juego de blanco no se duplica: sigue siendo Ropa blanca.
 - Semilla idempotente que crea los que faltan y no pisa un tag existente.
 - Carga en producción de nombre, slug, tipo e ícono.
 
@@ -101,3 +101,4 @@ Existe un catálogo único de amenities (`tipo=facilidad`) con ícono Lucide y r
 | Fecha | Cambio | Motivo |
 | --- | --- | --- |
 | 2026-10-13 | Aprobado e implementado | OK de Diego al catálogo |
+| 2026-10-13 | 22 amenities de alojamiento desde Booking | OK de Diego a la lista del departamento |
