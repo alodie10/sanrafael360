@@ -9,7 +9,7 @@ describe('amenity catalog', () => {
     const slugs = AMENITY_CATALOG.map((item) => item.slug);
     expect(new Set(names).size).toBe(AMENITY_CATALOG.length);
     expect(new Set(slugs).size).toBe(AMENITY_CATALOG.length);
-    expect(AMENITY_CATALOG).toHaveLength(35);
+    expect(AMENITY_CATALOG).toHaveLength(57);
   });
 
   it('derives the slug from the name and avoids existing category tags', () => {
@@ -37,5 +37,9 @@ describe('amenity catalog', () => {
     expect(byName.get('Estacionamiento')?.icono).toBe('car');
     expect(byName.get('Alarma')?.rubros).toEqual(['alojamiento']);
     expect(byName.get('Servicio de emergencia médica')?.rubros).toEqual(['alojamiento']);
+    expect(byName.get('Terraza')?.rubros).toEqual(['alojamiento']);
+    expect(byName.get('Terraza / aire libre')?.rubros).toEqual(['gastronomia']);
+    expect(byName.get('Balcón')?.rubros).toEqual(['alojamiento']);
+    expect(byName.get('Cámaras de seguridad')?.rubros).toEqual(['alojamiento']);
   });
 });

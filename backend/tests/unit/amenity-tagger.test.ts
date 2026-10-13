@@ -18,6 +18,52 @@ describe('tagNegocio', () => {
     expect(proposals.find((item) => item.amenitySlug === 'ropa-blanca')?.confianza).toBe('alta');
   });
 
+  it('marks lodging amenities from an apartment listing and keeps restaurant terrace separate', () => {
+    const lodging = tagNegocio({
+      ...cabana,
+      descripcion:
+        'Departamento con balcón, patio, terraza, plancha, secadora, horno, cafetera, secador de pelo, tendedero, sofá cama, productos de limpieza, ascensor, prohibido fumar, piscina vallada, detector de humo, matafuegos, cámaras de seguridad, seguridad 24 horas, acceso con llave, barandillas para bebés, mosquitera y vistas a la montaña.',
+    });
+    for (const slug of [
+      'balcon',
+      'patio',
+      'terraza',
+      'plancha',
+      'secadora',
+      'horno',
+      'cafetera',
+      'secador-de-pelo',
+      'tendedero',
+      'sofa-cama',
+      'productos-de-limpieza',
+      'ascensor',
+      'no-fumadores',
+      'piscina-vallada',
+      'detector-de-humo',
+      'extintor',
+      'camaras-de-seguridad',
+      'seguridad-24-horas',
+      'acceso-con-llave',
+      'seguridad-para-bebes',
+      'mosquitera',
+      'vistas',
+    ]) {
+      const hit = lodging.find((item) => item.amenitySlug === slug);
+      expect(hit?.confianza, slug).toBe('alta');
+    }
+    expect(lodging.find((item) => item.amenitySlug === 'terraza-aire-libre')).toBeUndefined();
+
+    const resto = tagNegocio({
+      id: 'resto-2',
+      nombre: 'Lo de Juan',
+      categoriaSlugs: ['restaurante'],
+      descripcion: 'Mesas en la terraza y un patio interno.',
+    });
+    expect(resto.find((item) => item.amenitySlug === 'terraza-aire-libre')?.confianza).toBe('alta');
+    expect(resto.find((item) => item.amenitySlug === 'terraza')).toBeUndefined();
+    expect(resto.find((item) => item.amenitySlug === 'patio')).toBeUndefined();
+  });
+
   it('marks pileta in the description as Piscina with high confidence', () => {
     const [hit] = tagNegocio({
       ...cabana,
